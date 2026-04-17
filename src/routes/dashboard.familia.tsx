@@ -41,7 +41,7 @@ type Offer = {
 };
 
 function FamilyDashboard() {
-  const { user, loading, logout } = useAppUser();
+  const { user, loading, logout } = useAppUser({ allow: ["family", "superadmin"] });
   const [dataLoading, setDataLoading] = useState(true);
   const [offers, setOffers] = useState<Offer[]>([]);
 
