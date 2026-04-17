@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useAppUser } from "@/hooks/use-app-user";
 import {
   Loader2,
   Sparkles,
@@ -107,7 +108,9 @@ const COP = (n: number | null | undefined) =>
     : "—";
 
 function ProDashboard() {
-  const navigate = useNavigate();
+  const { user, loading: authLoading, logout: appLogout } = useAppUser({
+    allow: ["professional", "superadmin"],
+  });
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
   const [fullName, setFullName] = useState<string>("");
@@ -142,72 +145,88 @@ function ProDashboard() {
   );
 
   const loadAll = async (uid: string) => {
-    const [p, pr, off, ap] = await Promise.all([
-      supabase.from("professional_profiles").select("*").eq("user_id", uid).maybeSingle(),
-      supabase.from("profiles").select("full_name").eq("user_id", uid).maybeSingle(),
-      supabase
-        .from("job_offers")
-        .select("*")
-        .eq("status", "open")
-        .order("created_at", { ascending: false })
-        .limit(20),
-      supabase
-        .from("applications")
-        .select("id, job_offer_id, status, created_at")
-        .eq("professional_id", uid)
-        .order("created_at", { ascending: false }),
-    ]);
-    if (pr.data?.full_name) setFullName(pr.data.full_name);
-    if (off.data) setOffers(off.data as Offer[]);
-    if (ap.data) setApps(ap.data as AppRow[]);
-    if (p.data) {
-      const pp = p.data as unknown as ProProfile;
-      setProfile(pp);
-      setSpecialty(pp.specialty ?? "");
-      setYears(pp.years_experience ?? "");
-      setRethus(pp.rethus_number ?? "");
-      setHourly(pp.hourly_rate ?? "");
-      setShift(pp.shift_rate ?? "");
-      setMonthly(pp.monthly_rate ?? "");
-      setCities((pp.service_cities ?? []).join(", "));
-      setSubs((pp.sub_specialties ?? []).join(", "));
-      setCerts(
-        Array.isArray(pp.certifications)
-          ? (pp.certifications as string[]).join(", ")
-          : "",
-      );
-      setBio(pp.bio ?? "");
-      setWorkExp(Array.isArray(pp.work_experience) ? pp.work_experience : []);
-    } else {
-      await supabase.from("professional_profiles").insert({ user_id: uid });
+    try {
+      const [p, pr, off, ap] = await Promise.all([
+        supabase.from("professional_profiles").select("*").eq("user_id", uid).maybeSingle(),
+        supabase.from("profiles").select("full_name").eq("user_id", uid).maybeSingle(),
+        supabase
+          .from("job_offers")
+          .select("*")
+          .eq("status", "open")
+          .order("created_at", { ascending: false })
+          .limit(20),
+        supabase
+          .from("applications")
+          .select("id, job_offer_id, status, created_at")
+          .eq("professional_id", uid)
+          .order("created_at", { ascending: false }),
+      ]);
+      if (pr.data?.full_name) setFullName(pr.data.full_name);
+      if (off.data) setOffers(off.data as Offer[]);
+      if (ap.data) setApps(ap.data as AppRow[]);
+      if (p.data) {
+        const pp = p.data as unknown as ProProfile;
+        setProfile(pp);
+        setSpecialty(pp.specialty ?? "");
+        setYears(pp.years_experience ?? "");
+        setRethus(pp.rethus_number ?? "");
+        setHourly(pp.hourly_rate ?? "");
+        setShift(pp.shift_rate ?? "");
+        setMonthly(pp.monthly_rate ?? "");
+        setCities((pp.service_cities ?? []).join(", "));
+        setSubs((pp.sub_specialties ?? []).join(", "));
+        setCerts(
+          Array.isArray(pp.certifications)
+            ? (pp.certifications as string[]).join(", ")
+            : "",
+        );
+        setBio(pp.bio ?? "");
+        setWorkExp(Array.isArray(pp.work_experience) ? pp.work_experience : []);
+      } else {
+        // Best-effort create. Don't block the UI if RLS rejects it.
+        const ins = await supabase.from("professional_profiles").insert({ user_id: uid });
+        if (ins.error) {
+          // eslint-disable-next-line no-console
+          console.warn("[pro dashboard] could not create empty profile:", ins.error.message);
+        }
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error("[pro dashboard] loadAll failed:", err);
+      toast.error("No pudimos cargar todos tus datos. Intenta refrescar.");
     }
   };
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) return; // useAppUser handles redirects
     let active = true;
+    const uid = user.id;
+    setUserId(uid);
+    setFullName(user.fullName);
     (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) {
-        navigate({ to: "/auth" });
-        return;
+      try {
+        await loadAll(uid);
+      } finally {
+        if (active) setLoading(false);
       }
-      const uid = sess.session.user.id;
-      if (!active) return;
-      setUserId(uid);
-      await loadAll(uid);
-      // tour first time (sin specialty)
       try {
         const seen = localStorage.getItem(`hx_tour_${uid}`);
-        if (!seen) setShowTour(true);
+        if (!seen && active) setShowTour(true);
       } catch {
         // ignore
       }
-      setLoading(false);
     })();
+    // Hard safety net: never stay loading forever.
+    const safety = setTimeout(() => {
+      if (active) setLoading(false);
+    }, 6000);
     return () => {
       active = false;
+      clearTimeout(safety);
     };
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
   const closeTour = () => {
     setShowTour(false);
@@ -362,8 +381,7 @@ function ProDashboard() {
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/" });
+    await appLogout();
   };
 
   const appliedIds = new Set(apps.map((a) => a.job_offer_id));
@@ -375,7 +393,7 @@ function ProDashboard() {
   const removeExp = (i: number) =>
     setWorkExp((prev) => prev.filter((_, idx) => idx !== i));
 
-  if (loading) {
+  if (authLoading || loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin mr-2" />
