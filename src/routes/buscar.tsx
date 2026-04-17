@@ -173,7 +173,7 @@ function BuscarPage() {
       let query = supabase
         .from("professional_profiles")
         .select(
-          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary"
+          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, available, reserved_until, active, lat, lng"
         )
         .eq("active", true)
         .order("avg_rating", { ascending: false })
@@ -242,8 +242,8 @@ function BuscarPage() {
     (async () => {
       let query = supabase
         .from("job_offers")
-        .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, created_at")
-        .eq("status", "open")
+        .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, status, reserved_until, lat, lng, created_at")
+        .in("status", ["open", "filled"])
         .order("created_at", { ascending: false })
         .limit(60);
 
