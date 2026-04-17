@@ -82,6 +82,50 @@ export type Database = {
           },
         ]
       }
+      availability_slots: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          job_offer_id: string | null
+          note: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          job_offer_id?: string | null
+          note?: string | null
+          starts_at: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          job_offer_id?: string | null
+          note?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "availability_slots_job_offer_id_fkey"
+            columns: ["job_offer_id"]
+            isOneToOne: false
+            referencedRelation: "job_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           application_id: string
@@ -199,10 +243,13 @@ export type Database = {
           description: string | null
           end_date: string | null
           id: string
+          lat: number | null
+          lng: number | null
           modality: Database["public"]["Enums"]["offer_modality"]
           posted_by: string
           poster_type: Database["public"]["Enums"]["poster_type"]
           requirements: string[] | null
+          reserved_until: string | null
           shifts_count: number | null
           specialty_required: string | null
           start_date: string | null
@@ -219,10 +266,13 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           modality: Database["public"]["Enums"]["offer_modality"]
           posted_by: string
           poster_type: Database["public"]["Enums"]["poster_type"]
           requirements?: string[] | null
+          reserved_until?: string | null
           shifts_count?: number | null
           specialty_required?: string | null
           start_date?: string | null
@@ -239,10 +289,13 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
+          lat?: number | null
+          lng?: number | null
           modality?: Database["public"]["Enums"]["offer_modality"]
           posted_by?: string
           poster_type?: Database["public"]["Enums"]["poster_type"]
           requirements?: string[] | null
+          reserved_until?: string | null
           shifts_count?: number | null
           specialty_required?: string | null
           start_date?: string | null
@@ -366,15 +419,20 @@ export type Database = {
           ai_suggestions: string[] | null
           ai_summary: string | null
           availability: Json | null
+          available: boolean
           avatar_url: string | null
           avg_rating: number | null
           bio: string | null
           certifications: Json | null
           created_at: string
+          home_city: string | null
           hourly_rate: number | null
           id: string
           languages: string[] | null
+          lat: number | null
+          lng: number | null
           monthly_rate: number | null
+          reserved_until: string | null
           rethus_number: string | null
           rethus_verified: boolean | null
           service_cities: string[] | null
@@ -396,15 +454,20 @@ export type Database = {
           ai_suggestions?: string[] | null
           ai_summary?: string | null
           availability?: Json | null
+          available?: boolean
           avatar_url?: string | null
           avg_rating?: number | null
           bio?: string | null
           certifications?: Json | null
           created_at?: string
+          home_city?: string | null
           hourly_rate?: number | null
           id?: string
           languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
           monthly_rate?: number | null
+          reserved_until?: string | null
           rethus_number?: string | null
           rethus_verified?: boolean | null
           service_cities?: string[] | null
@@ -426,15 +489,20 @@ export type Database = {
           ai_suggestions?: string[] | null
           ai_summary?: string | null
           availability?: Json | null
+          available?: boolean
           avatar_url?: string | null
           avg_rating?: number | null
           bio?: string | null
           certifications?: Json | null
           created_at?: string
+          home_city?: string | null
           hourly_rate?: number | null
           id?: string
           languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
           monthly_rate?: number | null
+          reserved_until?: string | null
           rethus_number?: string | null
           rethus_verified?: boolean | null
           service_cities?: string[] | null
@@ -639,6 +707,83 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_contacts: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          last_message_at: string | null
+          last_message_preview: string | null
+          owner_id: string
+          phone: string
+          tag: string | null
+          unread_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          owner_id: string
+          phone: string
+          tag?: string | null
+          unread_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_message_at?: string | null
+          last_message_preview?: string | null
+          owner_id?: string
+          phone?: string
+          tag?: string | null
+          unread_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          body: string
+          contact_id: string
+          created_at: string
+          direction: string
+          id: string
+          is_ai: boolean
+          wa_message_id: string | null
+        }
+        Insert: {
+          body: string
+          contact_id: string
+          created_at?: string
+          direction: string
+          id?: string
+          is_ai?: boolean
+          wa_message_id?: string | null
+        }
+        Update: {
+          body?: string
+          contact_id?: string
+          created_at?: string
+          direction?: string
+          id?: string
+          is_ai?: boolean
+          wa_message_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_profiles_safe: {
@@ -724,6 +869,11 @@ export type Database = {
           email: string
           role: Database["public"]["Enums"]["app_role"]
         }[]
+      }
+      release_expired_reservations: { Args: never; Returns: undefined }
+      set_offer_reserved: {
+        Args: { _offer_id: string; _professional_id: string }
+        Returns: undefined
       }
       staff_get_profile: {
         Args: { _user_id: string }
