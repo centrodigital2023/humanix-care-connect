@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
@@ -68,6 +69,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const SuperadminFraudeRoute = SuperadminFraudeRouteImport.update({
   id: '/fraude',
   path: '/fraude',
@@ -103,12 +109,12 @@ export interface FileRoutesByFullPath {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
@@ -118,6 +124,7 @@ export interface FileRoutesByTo {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +141,7 @@ export interface FileRoutesById {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,12 +159,12 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/superadmin/fraude'
+    | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/buscar'
-    | '/dashboard'
     | '/evaluador'
     | '/mensajes'
     | '/planes'
@@ -166,6 +174,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/superadmin/fraude'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
@@ -181,6 +190,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/superadmin/fraude'
+    | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -260,6 +270,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/superadmin/fraude': {
       id: '/superadmin/fraude'
       path: '/fraude'
@@ -295,12 +312,14 @@ interface DashboardRouteChildren {
   DashboardFamiliaRoute: typeof DashboardFamiliaRoute
   DashboardInstitucionRoute: typeof DashboardInstitucionRoute
   DashboardProfesionalRoute: typeof DashboardProfesionalRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardFamiliaRoute: DashboardFamiliaRoute,
   DashboardInstitucionRoute: DashboardInstitucionRoute,
   DashboardProfesionalRoute: DashboardProfesionalRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
@@ -333,3 +352,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
