@@ -27,7 +27,7 @@ export const Route = createFileRoute("/dashboard/familia")({
 });
 
 
-const NAV: NavItem[] = [
+const getNav = (): NavItem[] => [
   { label: "Inicio", to: "/dashboard/familia", icon: LayoutDashboard },
   { label: "Buscar", to: "/buscar", icon: Search },
   { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
