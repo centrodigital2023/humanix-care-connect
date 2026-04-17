@@ -1,1 +1,10 @@
 project_id = "rwllmouomrytejtbpxvn"
+
+[functions.humanix-assistant]
+verify_jwt = false
+
+[functions.onboarding-extractor]
+verify_jwt = false
+
+[functions.profile-validator]
+verify_jwt = false
