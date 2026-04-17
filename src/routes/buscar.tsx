@@ -592,10 +592,15 @@ function BuscarPage() {
   );
 }
 
-function ProCard({ pro }: { pro: Pro }) {
+function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
   const name = pro.profiles?.full_name ?? "Profesional Humanix";
   const city = pro.profiles?.city ?? pro.service_cities?.[0] ?? "Colombia";
   const rating = Number(pro.avg_rating ?? 0);
+  const status = deriveProStatus(pro);
+  const km =
+    userLoc && pro.lat != null && pro.lng != null
+      ? distanceKm(userLoc, { lat: pro.lat, lng: pro.lng })
+      : null;
   return (
     <article className="group rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 transition-all">
       <div className="flex items-start gap-3">
