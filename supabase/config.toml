@@ -17,3 +17,24 @@ verify_jwt = false
 
 [functions.match-offers]
 verify_jwt = false
+
+[functions.embed-text]
+verify_jwt = false
+
+[functions.embed-profile]
+verify_jwt = false
+
+[functions.embed-offer]
+verify_jwt = false
+
+[functions.semantic-match]
+verify_jwt = false
+
+[functions.hiring-copilot]
+verify_jwt = false
+
+[functions.chat-copilot]
+verify_jwt = false
+
+[functions.fraud-detector]
+verify_jwt = false

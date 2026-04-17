@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/familia")({
@@ -85,9 +86,8 @@ function FamilyDashboard() {
               <Search className="h-4 w-4 mr-1.5" /> Buscar
             </Link>
           </Button>
-          <Button variant="hero">
-            <Plus className="h-4 w-4 mr-1.5" /> Publicar solicitud
-          </Button>
+          <HiringCopilot />
+
         </>
       }
     >
@@ -113,14 +113,10 @@ function FamilyDashboard() {
             }
           />
           <ActionCard
-            icon={Plus}
-            title="Publica una solicitud"
-            desc="Cuéntanos qué necesitas y la IA te recomienda 5 perfiles ideales en segundos."
-            cta={
-              <Button variant="copper" disabled>
-                Próximamente
-              </Button>
-            }
+            icon={Sparkles}
+            title="Copiloto IA de contratación"
+            desc="Describe en lenguaje natural lo que necesitas: la IA redacta la oferta, sugiere tarifa COP justa y te muestra los 5 mejores perfiles."
+            cta={<HiringCopilot />}
           />
         </section>
 
