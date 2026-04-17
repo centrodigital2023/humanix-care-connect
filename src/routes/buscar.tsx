@@ -215,7 +215,7 @@ function BuscarPage() {
   const applySearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate({
-      search: (prev) => ({
+      search: (prev: z.infer<typeof searchSchema>) => ({
         ...prev,
         q: q || undefined,
         specialty: specialty || undefined,
