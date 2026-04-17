@@ -53,6 +53,10 @@ const TOOL = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
+
   try {
     const { file_url, mime_type } = await req.json();
     if (!file_url || typeof file_url !== "string") {
@@ -61,17 +65,65 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // SSRF protection: only allow Supabase Storage URLs from this project
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    if (!supabaseUrl) throw new Error("SUPABASE_URL no configurada");
+    let parsed: URL;
+    try {
+      parsed = new URL(file_url);
+    } catch {
+      return new Response(JSON.stringify({ error: "URL inválida" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const allowedHost = new URL(supabaseUrl).hostname;
+    if (parsed.protocol !== "https:" || parsed.hostname !== allowedHost) {
+      return new Response(JSON.stringify({ error: "URL de archivo no permitida" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
-    // Descargar el archivo y convertirlo a base64 data URL para el modelo multimodal
-    const fileResp = await fetch(file_url);
+    // Descargar el archivo (con timeout) y convertirlo a base64 data URL.
+    // Reenviamos el JWT del usuario para que las URLs firmadas/privadas funcionen.
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    let fileResp: Response;
+    try {
+      fileResp = await fetch(file_url, {
+        signal: ctrl.signal,
+        headers: { Authorization: `Bearer ${auth.token}` },
+        redirect: "error",
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!fileResp.ok) throw new Error("No se pudo descargar el archivo");
-    const buf = new Uint8Array(await fileResp.arrayBuffer());
+
+    const mt = mime_type || fileResp.headers.get("content-type") || "application/pdf";
+    if (!ALLOWED_MIME_PREFIXES.some((p) => mt.startsWith(p))) {
+      return new Response(JSON.stringify({ error: "Tipo de archivo no permitido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const ab = await fileResp.arrayBuffer();
+    if (ab.byteLength > MAX_BYTES) {
+      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 15MB)" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const buf = new Uint8Array(ab);
     let bin = "";
     for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
     const b64 = btoa(bin);
-    const mt = mime_type || fileResp.headers.get("content-type") || "application/pdf";
     const dataUrl = `data:${mt};base64,${b64}`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
