@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Moon, Sun, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
@@ -54,11 +55,14 @@ export function Navbar() {
           >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex">
-            Iniciar sesión
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+            <Link to="/buscar">Buscar</Link>
           </Button>
-          <Button variant="hero" size="sm" className="hidden sm:inline-flex">
-            Empezar gratis
+          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+            <Link to="/auth">Iniciar sesión</Link>
+          </Button>
+          <Button variant="hero" size="sm" className="hidden sm:inline-flex" asChild>
+            <Link to="/auth">Empezar gratis</Link>
           </Button>
           <button
             onClick={() => setOpen(!open)}
@@ -83,8 +87,8 @@ export function Navbar() {
                 {l.label}
               </a>
             ))}
-            <Button variant="hero" size="sm" className="mt-2 w-full">
-              Empezar gratis
+            <Button variant="hero" size="sm" className="mt-2 w-full" asChild>
+              <Link to="/auth">Empezar gratis</Link>
             </Button>
           </div>
         </div>
