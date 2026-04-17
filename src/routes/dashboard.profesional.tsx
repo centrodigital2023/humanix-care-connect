@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAppUser } from "@/hooks/use-app-user";
 import {
   Loader2,
@@ -108,7 +108,6 @@ const COP = (n: number | null | undefined) =>
     : "—";
 
 function ProDashboard() {
-  const navigate = useNavigate();
   const { user, loading: authLoading, logout: appLogout } = useAppUser({
     allow: ["professional", "superadmin"],
   });
