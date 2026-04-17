@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 
 const cols = [
@@ -54,9 +55,20 @@ export function Footer() {
             © {new Date().getFullYear()} Humanix Colombia · Todos los derechos
             reservados.
           </p>
-          <p className="text-xs text-muted-foreground">
-            Hecho con <span className="text-fuchsia-neural">♥</span> en Colombia
-          </p>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-muted-foreground">
+              Hecho con <span className="text-fuchsia-neural">♥</span> en Colombia
+            </p>
+            <span className="text-muted-foreground/40">·</span>
+            <Link
+              to="/auth"
+              search={{ staff: "1" } as never}
+              className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 hover:text-foreground transition-colors"
+              title="Acceso staff"
+            >
+              Admin
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
