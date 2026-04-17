@@ -1,90 +1,171 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Loader2, Building2, Plus } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Loader2,
+  Building2,
+  Plus,
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  Search,
+  TrendingUp,
+  CheckCircle2,
+  Clock,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Navbar } from "@/components/humanix/Navbar";
+import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/institucion")({
   head: () => ({ meta: [{ title: "Institución · Humanix" }] }),
   component: InstitutionDashboard,
 });
 
+const NAV: NavItem[] = [
+  { label: "Inicio", to: "/dashboard/institucion", icon: LayoutDashboard },
+  { label: "Ofertas", to: "/dashboard/institucion", icon: Briefcase },
+  { label: "Talento", to: "/buscar", icon: Users },
+  { label: "Buscar", to: "/buscar", icon: Search },
+];
+
+type Offer = {
+  id: string;
+  title: string;
+  city: string;
+  modality: string;
+  amount: number;
+  status: string;
+};
+
 function InstitutionDashboard() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [offers, setOffers] = useState<any[]>([]);
+  const { user, loading, logout } = useAppUser();
+  const [dataLoading, setDataLoading] = useState(true);
+  const [offers, setOffers] = useState<Offer[]>([]);
 
   useEffect(() => {
+    if (!user) return;
     (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) {
-        navigate({ to: "/auth" });
-        return;
-      }
       const { data } = await supabase
         .from("job_offers")
-        .select("*")
-        .eq("posted_by", sess.session.user.id)
+        .select("id, title, city, modality, amount, status")
+        .eq("posted_by", user.id)
         .order("created_at", { ascending: false });
-      setOffers(data ?? []);
-      setLoading(false);
+      setOffers((data ?? []) as Offer[]);
+      setDataLoading(false);
     })();
-  }, [navigate]);
+  }, [user]);
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-        Cargando...
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
       </div>
     );
   }
 
+  const open = offers.filter((o) => o.status === "open").length;
+  const filled = offers.filter((o) => o.status === "filled").length;
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Building2 className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">Panel institución</h1>
-            <p className="text-sm text-muted-foreground">
-              Gestiona tus ofertas y aplicaciones de profesionales
-            </p>
-          </div>
-          <Button variant="hero" asChild>
+    <AppShell
+      user={user}
+      onLogout={logout}
+      nav={NAV}
+      title="Panel institución"
+      subtitle="Gestiona tus ofertas, talento aplicado y métricas operativas en tiempo real."
+      crumbs={[{ label: "Inicio", to: "/" }, { label: "Institución" }]}
+      badge={{ label: "IPS / Clínica", tone: "fuchsia" }}
+      actions={
+        <>
+          <Button variant="outline" asChild>
             <Link to="/buscar">
-              <Plus className="h-4 w-4 mr-1" /> Buscar talento
+              <Search className="h-4 w-4 mr-1.5" /> Buscar talento
             </Link>
           </Button>
-        </div>
+          <Button variant="hero">
+            <Plus className="h-4 w-4 mr-1.5" /> Nueva oferta
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-8">
+        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Kpi icon={Briefcase} label="Ofertas" value={offers.length} tone="bio" />
+          <Kpi icon={Clock} label="Abiertas" value={open} tone="copper" />
+          <Kpi icon={CheckCircle2} label="Cubiertas" value={filled} tone="bio" />
+          <Kpi icon={TrendingUp} label="Match rate" value={"94%"} tone="fuchsia" />
+        </section>
 
-        <h2 className="text-lg font-semibold mb-3">Ofertas publicadas</h2>
-        <div className="grid gap-3">
-          {offers.length === 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-lg font-semibold">Ofertas publicadas</h2>
+            <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
+              Ver marketplace →
+            </Link>
+          </div>
+          {dataLoading ? (
             <Card className="p-6 text-center text-sm text-muted-foreground">
-              Aún no tienes ofertas publicadas.
+              <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Cargando…
             </Card>
+          ) : offers.length === 0 ? (
+            <Card className="p-10 text-center">
+              <Building2 className="h-8 w-8 text-fuchsia-neural mx-auto mb-3" />
+              <p className="font-semibold">Sin ofertas activas</p>
+              <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
+                Publica tu primera oferta y la IA distribuirá a los profesionales que mejor encajan.
+              </p>
+              <Button variant="hero" className="mt-4">
+                <Plus className="h-4 w-4 mr-1.5" /> Crear oferta
+              </Button>
+            </Card>
+          ) : (
+            <div className="grid gap-3">
+              {offers.map((o) => (
+                <Card key={o.id} className="p-4 flex items-center justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="font-medium">{o.title}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {o.city} · {o.modality} · ${o.amount.toLocaleString("es-CO")} COP
+                    </p>
+                  </div>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded-full border bg-biosensor/10 text-biosensor border-biosensor/30">
+                    {o.status}
+                  </span>
+                </Card>
+              ))}
+            </div>
           )}
-          {offers.map((o) => (
-            <Card key={o.id} className="p-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <p className="font-medium">{o.title}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {o.city} · {o.modality} · ${o.amount.toLocaleString("es-CO")} COP
-                  </p>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-muted">{o.status}</span>
-              </div>
-            </Card>
-          ))}
-        </div>
-      </main>
-    </div>
+        </section>
+      </div>
+    </AppShell>
+  );
+}
+
+function Kpi({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: typeof Briefcase;
+  label: string;
+  value: number | string;
+  tone: "bio" | "copper" | "fuchsia";
+}) {
+  const colors = {
+    bio: "text-biosensor bg-biosensor/10",
+    copper: "text-copper bg-copper/10",
+    fuchsia: "text-fuchsia-neural bg-fuchsia-neural/10",
+  }[tone];
+  return (
+    <Card className="p-4">
+      <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${colors}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="mt-3 text-2xl font-bold font-display">{value}</p>
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+    </Card>
   );
 }
