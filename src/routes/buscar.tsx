@@ -6,15 +6,20 @@ import {
   Stethoscope,
   Star,
   CheckCircle2,
-  Filter,
   Briefcase,
   Users as UsersIcon,
   SlidersHorizontal,
+  Map as MapIcon,
+  List,
+  Navigation,
 } from "lucide-react";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { StatusBadge, deriveProStatus, deriveOfferStatus } from "@/components/humanix/StatusBadge";
+import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 
 type SearchParams = {
   tab: "profesionales" | "ofertas";
@@ -84,6 +89,11 @@ type Pro = {
   rethus_verified: boolean | null;
   total_jobs: number | null;
   ai_summary: string | null;
+  available: boolean | null;
+  reserved_until: string | null;
+  active: boolean | null;
+  lat: number | null;
+  lng: number | null;
   profiles: { full_name: string | null; city: string | null; avatar_url: string | null } | null;
 };
 
@@ -97,6 +107,10 @@ type Offer = {
   specialty_required: string | null;
   requirements: string[] | null;
   poster_type: "family" | "institution";
+  status: "open" | "filled" | "closed";
+  reserved_until: string | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
 };
 
@@ -129,6 +143,13 @@ function BuscarPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
+  const [userLoc, setUserLoc] = useState<LatLng | null>(null);
+
+  // Pedir ubicación una vez (silencioso si la rechaza)
+  useEffect(() => {
+    getBrowserLocation().then(setUserLoc);
+  }, []);
 
   // Local filter state synced from URL
   const [q, setQ] = useState(search.q ?? "");
@@ -152,7 +173,7 @@ function BuscarPage() {
       let query = supabase
         .from("professional_profiles")
         .select(
-          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary"
+          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, available, reserved_until, active, lat, lng"
         )
         .eq("active", true)
         .order("avg_rating", { ascending: false })
@@ -221,8 +242,8 @@ function BuscarPage() {
     (async () => {
       let query = supabase
         .from("job_offers")
-        .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, created_at")
-        .eq("status", "open")
+        .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, status, reserved_until, lat, lng, created_at")
+        .in("status", ["open", "filled"])
         .order("created_at", { ascending: false })
         .limit(60);
 
@@ -239,6 +260,12 @@ function BuscarPage() {
         setOffers([]);
       } else {
         let rows = (data ?? []) as Offer[];
+        // Ocultar 'filled' cuya reserva de 15 días ya expiró
+        rows = rows.filter((o) => {
+          if (o.status !== "filled") return true;
+          if (!o.reserved_until) return false;
+          return new Date(o.reserved_until) > new Date();
+        });
         if (search.q) {
           const needle = search.q.toLowerCase();
           rows = rows.filter(
@@ -477,17 +504,59 @@ function BuscarPage() {
             )}
           </form>
 
+          {/* Toggle vista */}
+          <div className="mt-6 flex items-center justify-end">
+            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              <button
+                onClick={() => setView("list")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "list" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+              >
+                <List className="h-3.5 w-3.5" /> Lista
+              </button>
+              <button
+                onClick={() => setView("map")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "map" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+              >
+                <MapIcon className="h-3.5 w-3.5" /> Mapa
+              </button>
+            </div>
+          </div>
+
           {/* Results */}
-          <div className="mt-8">
+          <div className="mt-4">
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-56 rounded-2xl border border-border bg-card animate-pulse"
-                  />
+                  <div key={i} className="h-56 rounded-2xl border border-border bg-card animate-pulse" />
                 ))}
               </div>
+            ) : view === "map" ? (
+              <OffersMap
+                height={520}
+                points={
+                  tab === "profesionales"
+                    ? pros
+                        .filter((p) => p.lat && p.lng)
+                        .map<MapPoint>((p) => ({
+                          id: p.user_id,
+                          lat: p.lat!,
+                          lng: p.lng!,
+                          title: p.profiles?.full_name ?? "Profesional",
+                          subtitle: p.specialty ?? undefined,
+                          status: deriveProStatus(p) === "reserved" ? "reserved" : "available",
+                        }))
+                    : offers
+                        .filter((o) => o.lat && o.lng)
+                        .map<MapPoint>((o) => ({
+                          id: o.id,
+                          lat: o.lat!,
+                          lng: o.lng!,
+                          title: o.title,
+                          subtitle: `${o.city} · ${COP(o.amount)}`,
+                          status: o.status === "filled" ? "reserved" : "available",
+                        }))
+                }
+              />
             ) : tab === "profesionales" ? (
               pros.length === 0 ? (
                 <EmptyState
@@ -498,7 +567,7 @@ function BuscarPage() {
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pros.map((p) => (
-                    <ProCard key={p.user_id} pro={p} />
+                    <ProCard key={p.user_id} pro={p} userLoc={userLoc} />
                   ))}
                 </div>
               )
@@ -511,7 +580,7 @@ function BuscarPage() {
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {offers.map((o) => (
-                  <OfferCard key={o.id} offer={o} />
+                  <OfferCard key={o.id} offer={o} userLoc={userLoc} />
                 ))}
               </div>
             )}

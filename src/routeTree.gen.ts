@@ -20,6 +20,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
+import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
@@ -79,6 +80,11 @@ const SuperadminFraudeRoute = SuperadminFraudeRouteImport.update({
   path: '/fraude',
   getParentRoute: () => SuperadminRoute,
 } as any)
+const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
+  id: '/whatsapp',
+  path: '/whatsapp',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardProfesionalRoute = DashboardProfesionalRouteImport.update({
   id: '/profesional',
   path: '/profesional',
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/familia': typeof DashboardFamiliaRoute
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
+  '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/dashboard/familia': typeof DashboardFamiliaRoute
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
+  '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/dashboard/familia': typeof DashboardFamiliaRoute
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
+  '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -158,6 +167,7 @@ export interface FileRouteTypes {
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
+    | '/dashboard/whatsapp'
     | '/superadmin/fraude'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
+    | '/dashboard/whatsapp'
     | '/superadmin/fraude'
     | '/dashboard'
   id:
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
+    | '/dashboard/whatsapp'
     | '/superadmin/fraude'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
@@ -284,6 +296,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminFraudeRouteImport
       parentRoute: typeof SuperadminRoute
     }
+    '/dashboard/whatsapp': {
+      id: '/dashboard/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/dashboard/whatsapp'
+      preLoaderRoute: typeof DashboardWhatsappRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/profesional': {
       id: '/dashboard/profesional'
       path: '/profesional'
@@ -312,6 +331,7 @@ interface DashboardRouteChildren {
   DashboardFamiliaRoute: typeof DashboardFamiliaRoute
   DashboardInstitucionRoute: typeof DashboardInstitucionRoute
   DashboardProfesionalRoute: typeof DashboardProfesionalRoute
+  DashboardWhatsappRoute: typeof DashboardWhatsappRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
@@ -319,6 +339,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardFamiliaRoute: DashboardFamiliaRoute,
   DashboardInstitucionRoute: DashboardInstitucionRoute,
   DashboardProfesionalRoute: DashboardProfesionalRoute,
+  DashboardWhatsappRoute: DashboardWhatsappRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
