@@ -51,15 +51,34 @@ function InstitutionDashboard() {
 
   useEffect(() => {
     if (!user) return;
+    let active = true;
     (async () => {
-      const { data } = await supabase
-        .from("job_offers")
-        .select("id, title, city, modality, amount, status")
-        .eq("posted_by", user.id)
-        .order("created_at", { ascending: false });
-      setOffers((data ?? []) as Offer[]);
-      setDataLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from("job_offers")
+          .select("id, title, city, modality, amount, status")
+          .eq("posted_by", user.id)
+          .order("created_at", { ascending: false });
+        if (!active) return;
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.warn("[institucion dashboard] offers error:", error.message);
+        }
+        setOffers((data ?? []) as Offer[]);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("[institucion dashboard] load failed:", err);
+      } finally {
+        if (active) setDataLoading(false);
+      }
     })();
+    const safety = setTimeout(() => {
+      if (active) setDataLoading(false);
+    }, 6000);
+    return () => {
+      active = false;
+      clearTimeout(safety);
+    };
   }, [user]);
 
   if (loading || !user) {
