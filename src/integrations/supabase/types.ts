@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_credits_ledger: {
+        Row: {
+          created_at: string
+          credits_used: number
+          feature: string
+          id: string
+          meta: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_used?: number
+          feature: string
+          id?: string
+          meta?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_used?: number
+          feature?: string
+          id?: string
+          meta?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           created_at: string
@@ -54,6 +81,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      conversations: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          last_message_at: string
+          poster_id: string
+          professional_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          poster_id: string
+          professional_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          poster_id?: string
+          professional_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: true
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fraud_flags: {
+        Row: {
+          created_at: string
+          id: string
+          meta: Json | null
+          reason: string
+          resolved: boolean
+          severity: Database["public"]["Enums"]["fraud_severity"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          reason: string
+          resolved?: boolean
+          severity?: Database["public"]["Enums"]["fraud_severity"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meta?: Json | null
+          reason?: string
+          resolved?: boolean
+          severity?: Database["public"]["Enums"]["fraud_severity"]
+          user_id?: string
+        }
+        Relationships: []
       }
       institution_profiles: {
         Row: {
@@ -159,6 +251,70 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          is_ai_suggestion: boolean
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          is_ai_suggestion?: boolean
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          is_ai_suggestion?: boolean
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_embeddings: {
+        Row: {
+          embedding: string | null
+          offer_id: string
+          source_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          embedding?: string | null
+          offer_id: string
+          source_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          embedding?: string | null
+          offer_id?: string
+          source_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_embeddings_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: true
+            referencedRelation: "job_offers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_documents: {
         Row: {
@@ -295,6 +451,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_embeddings: {
+        Row: {
+          embedding: string | null
+          source_text: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          embedding?: string | null
+          source_text?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          embedding?: string | null
+          source_text?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -405,6 +582,42 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -483,6 +696,28 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      match_offers_for_professional: {
+        Args: {
+          _match_count?: number
+          _min_similarity?: number
+          _user_id: string
+        }
+        Returns: {
+          offer_id: string
+          similarity: number
+        }[]
+      }
+      match_professionals_for_offer: {
+        Args: {
+          _match_count?: number
+          _min_similarity?: number
+          _offer_id: string
+        }
+        Returns: {
+          similarity: number
+          user_id: string
+        }[]
+      }
       redeem_staff_invitation: {
         Args: { _token: string }
         Returns: {
@@ -523,9 +758,12 @@ export type Database = {
       application_status: "pending" | "accepted" | "rejected" | "withdrawn"
       doc_status: "pending" | "approved" | "rejected"
       doc_type: "cv" | "rethus" | "diploma" | "id_document" | "other"
+      fraud_severity: "low" | "medium" | "high" | "critical"
       offer_modality: "hour" | "shift" | "month" | "package"
       offer_status: "open" | "closed" | "filled"
       poster_type: "family" | "institution"
+      subscription_plan: "free" | "pro" | "family" | "institution"
+      subscription_status: "active" | "cancelled" | "past_due" | "trialing"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -664,9 +902,12 @@ export const Constants = {
       application_status: ["pending", "accepted", "rejected", "withdrawn"],
       doc_status: ["pending", "approved", "rejected"],
       doc_type: ["cv", "rethus", "diploma", "id_document", "other"],
+      fraud_severity: ["low", "medium", "high", "critical"],
       offer_modality: ["hour", "shift", "month", "package"],
       offer_status: ["open", "closed", "filled"],
       poster_type: ["family", "institution"],
+      subscription_plan: ["free", "pro", "family", "institution"],
+      subscription_status: ["active", "cancelled", "past_due", "trialing"],
     },
   },
 } as const
