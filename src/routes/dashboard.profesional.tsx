@@ -13,6 +13,9 @@ import {
   LogOut,
   CheckCircle2,
   TrendingUp,
+  DollarSign,
+  Plus,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +23,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Logo } from "@/components/humanix/Logo";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
+import { AvatarUploader } from "@/components/humanix/AvatarUploader";
+import { DocumentsManager } from "@/components/humanix/DocumentsManager";
+import { MatchingOffers } from "@/components/humanix/MatchingOffers";
+import { OnboardingTour } from "@/components/humanix/OnboardingTour";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -30,6 +37,15 @@ export const Route = createFileRoute("/dashboard/profesional")({
   }),
   component: ProDashboard,
 });
+
+type WorkExp = {
+  role: string;
+  employer: string;
+  city?: string;
+  start?: string;
+  end?: string;
+  description?: string;
+};
 
 type ProProfile = {
   user_id: string;
@@ -48,10 +64,14 @@ type ProProfile = {
   ai_summary: string | null;
   ai_strengths: string[] | null;
   ai_suggestions: string[] | null;
+  ai_preapproved: boolean | null;
   verified: boolean | null;
   active: boolean | null;
   total_jobs: number | null;
   avg_rating: number | null;
+  avatar_url: string | null;
+  bio: string | null;
+  work_experience: WorkExp[] | null;
 };
 
 type Offer = {
@@ -92,11 +112,13 @@ function ProDashboard() {
   const [profile, setProfile] = useState<ProProfile | null>(null);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [apps, setApps] = useState<AppRow[]>([]);
+  const [showTour, setShowTour] = useState(false);
 
   // Onboarding IA
   const [aiText, setAiText] = useState("");
   const [aiBusy, setAiBusy] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
 
   // Form fields
   const [specialty, setSpecialty] = useState("");
@@ -108,12 +130,56 @@ function ProDashboard() {
   const [cities, setCities] = useState("");
   const [subs, setSubs] = useState("");
   const [certs, setCerts] = useState("");
+  const [bio, setBio] = useState("");
+  const [workExp, setWorkExp] = useState<WorkExp[]>([]);
 
   const trust = profile?.trust_score ?? 0;
   const greetingName = useMemo(
     () => fullName.split(" ")[0] || "profesional",
     [fullName],
   );
+
+  const loadAll = async (uid: string) => {
+    const [p, pr, off, ap] = await Promise.all([
+      supabase.from("professional_profiles").select("*").eq("user_id", uid).maybeSingle(),
+      supabase.from("profiles").select("full_name").eq("user_id", uid).maybeSingle(),
+      supabase
+        .from("job_offers")
+        .select("*")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("applications")
+        .select("id, job_offer_id, status, created_at")
+        .eq("professional_id", uid)
+        .order("created_at", { ascending: false }),
+    ]);
+    if (pr.data?.full_name) setFullName(pr.data.full_name);
+    if (off.data) setOffers(off.data as Offer[]);
+    if (ap.data) setApps(ap.data as AppRow[]);
+    if (p.data) {
+      const pp = p.data as unknown as ProProfile;
+      setProfile(pp);
+      setSpecialty(pp.specialty ?? "");
+      setYears(pp.years_experience ?? "");
+      setRethus(pp.rethus_number ?? "");
+      setHourly(pp.hourly_rate ?? "");
+      setShift(pp.shift_rate ?? "");
+      setMonthly(pp.monthly_rate ?? "");
+      setCities((pp.service_cities ?? []).join(", "));
+      setSubs((pp.sub_specialties ?? []).join(", "));
+      setCerts(
+        Array.isArray(pp.certifications)
+          ? (pp.certifications as string[]).join(", ")
+          : "",
+      );
+      setBio(pp.bio ?? "");
+      setWorkExp(Array.isArray(pp.work_experience) ? pp.work_experience : []);
+    } else {
+      await supabase.from("professional_profiles").insert({ user_id: uid });
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -126,51 +192,13 @@ function ProDashboard() {
       const uid = sess.session.user.id;
       if (!active) return;
       setUserId(uid);
-
-      const [p, pr, off, ap] = await Promise.all([
-        supabase.from("professional_profiles").select("*").eq("user_id", uid).maybeSingle(),
-        supabase.from("profiles").select("full_name").eq("user_id", uid).maybeSingle(),
-        supabase
-          .from("job_offers")
-          .select("*")
-          .eq("status", "open")
-          .order("created_at", { ascending: false })
-          .limit(20),
-        supabase
-          .from("applications")
-          .select("id, job_offer_id, status, created_at")
-          .eq("professional_id", uid)
-          .order("created_at", { ascending: false }),
-      ]);
-
-      if (!active) return;
-      if (pr.data?.full_name) setFullName(pr.data.full_name);
-      if (off.data) setOffers(off.data as Offer[]);
-      if (ap.data) setApps(ap.data as AppRow[]);
-
-      if (p.data) {
-        const pp = p.data as ProProfile;
-        setProfile(pp);
-        setSpecialty(pp.specialty ?? "");
-        setYears(pp.years_experience ?? "");
-        setRethus(pp.rethus_number ?? "");
-        setHourly(pp.hourly_rate ?? "");
-        setShift(pp.shift_rate ?? "");
-        setMonthly(pp.monthly_rate ?? "");
-        setCities((pp.service_cities ?? []).join(", "));
-        setSubs((pp.sub_specialties ?? []).join(", "));
-        setCerts(
-          Array.isArray(pp.certifications)
-            ? (pp.certifications as string[]).join(", ")
-            : "",
-        );
-      } else {
-        // Crear shell si no existe
-        await supabase
-          .from("professional_profiles")
-          .insert({ user_id: uid })
-          .select()
-          .single();
+      await loadAll(uid);
+      // tour first time (sin specialty)
+      try {
+        const seen = localStorage.getItem(`hx_tour_${uid}`);
+        if (!seen) setShowTour(true);
+      } catch {
+        // ignore
       }
       setLoading(false);
     })();
@@ -178,6 +206,32 @@ function ProDashboard() {
       active = false;
     };
   }, [navigate]);
+
+  const closeTour = () => {
+    setShowTour(false);
+    if (userId) {
+      try {
+        localStorage.setItem(`hx_tour_${userId}`, "1");
+      } catch {
+        // ignore
+      }
+    }
+  };
+
+  const applyExtraction = (p: Record<string, unknown>) => {
+    if (typeof p.specialty === "string") setSpecialty(p.specialty);
+    if (typeof p.years_experience === "number") setYears(p.years_experience);
+    if (typeof p.rethus_number === "string") setRethus(p.rethus_number);
+    if (typeof p.hourly_rate === "number") setHourly(p.hourly_rate);
+    if (typeof p.shift_rate === "number") setShift(p.shift_rate);
+    if (typeof p.monthly_rate === "number") setMonthly(p.monthly_rate);
+    if (Array.isArray(p.service_cities)) setCities((p.service_cities as string[]).join(", "));
+    if (Array.isArray(p.sub_specialties)) setSubs((p.sub_specialties as string[]).join(", "));
+    if (Array.isArray(p.certifications)) setCerts((p.certifications as string[]).join(", "));
+    if (typeof p.bio === "string" && !bio) setBio(p.bio);
+    if (Array.isArray(p.work_experience)) setWorkExp(p.work_experience as WorkExp[]);
+    if (typeof p.full_name === "string" && !fullName) setFullName(p.full_name);
+  };
 
   const extractFromText = async () => {
     const text = aiText.trim();
@@ -191,16 +245,7 @@ function ProDashboard() {
         body: { text },
       });
       if (error) throw error;
-      const p = data?.profile ?? {};
-      if (p.specialty) setSpecialty(p.specialty);
-      if (typeof p.years_experience === "number") setYears(p.years_experience);
-      if (p.rethus_number) setRethus(p.rethus_number);
-      if (typeof p.hourly_rate === "number") setHourly(p.hourly_rate);
-      if (typeof p.shift_rate === "number") setShift(p.shift_rate);
-      if (typeof p.monthly_rate === "number") setMonthly(p.monthly_rate);
-      if (Array.isArray(p.service_cities)) setCities(p.service_cities.join(", "));
-      if (Array.isArray(p.sub_specialties)) setSubs(p.sub_specialties.join(", "));
-      if (Array.isArray(p.certifications)) setCerts(p.certifications.join(", "));
+      applyExtraction(data?.profile ?? {});
       toast.success("✨ Listo. Revisa los campos antes de guardar.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error procesando con IA");
@@ -209,31 +254,25 @@ function ProDashboard() {
     }
   };
 
+  const buildPayload = () => ({
+    specialty: specialty || null,
+    years_experience: years === "" ? null : Number(years),
+    rethus_number: rethus || null,
+    hourly_rate: hourly === "" ? null : Number(hourly),
+    shift_rate: shift === "" ? null : Number(shift),
+    monthly_rate: monthly === "" ? null : Number(monthly),
+    service_cities: cities.split(",").map((s) => s.trim()).filter(Boolean),
+    sub_specialties: subs.split(",").map((s) => s.trim()).filter(Boolean),
+    certifications: certs.split(",").map((s) => s.trim()).filter(Boolean),
+    bio: bio || null,
+    work_experience: workExp,
+  });
+
   const saveProfile = async () => {
     if (!userId) return;
-    const payload = {
-      specialty: specialty || null,
-      years_experience: years === "" ? null : Number(years),
-      rethus_number: rethus || null,
-      hourly_rate: hourly === "" ? null : Number(hourly),
-      shift_rate: shift === "" ? null : Number(shift),
-      monthly_rate: monthly === "" ? null : Number(monthly),
-      service_cities: cities
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      sub_specialties: subs
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      certifications: certs
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-    };
     const { data, error } = await supabase
       .from("professional_profiles")
-      .update(payload)
+      .update(buildPayload())
       .eq("user_id", userId)
       .select()
       .maybeSingle();
@@ -241,7 +280,7 @@ function ProDashboard() {
       toast.error(error.message);
       return;
     }
-    if (data) setProfile(data as ProProfile);
+    if (data) setProfile(data as unknown as ProProfile);
     toast.success("Perfil guardado");
   };
 
@@ -249,40 +288,56 @@ function ProDashboard() {
     if (!userId) return;
     setValidating(true);
     try {
-      const payload = {
-        specialty,
-        years_experience: years === "" ? null : Number(years),
-        rethus_number: rethus,
-        rethus_verified: profile?.rethus_verified ?? false,
-        hourly_rate: hourly === "" ? null : Number(hourly),
-        shift_rate: shift === "" ? null : Number(shift),
-        monthly_rate: monthly === "" ? null : Number(monthly),
-        service_cities: cities.split(",").map((s) => s.trim()).filter(Boolean),
-        sub_specialties: subs.split(",").map((s) => s.trim()).filter(Boolean),
-        certifications: certs.split(",").map((s) => s.trim()).filter(Boolean),
-      };
+      const payload = buildPayload();
       const { data, error } = await supabase.functions.invoke("profile-validator", {
-        body: { profile: payload },
+        body: { profile: { ...payload, rethus_verified: profile?.rethus_verified ?? false } },
       });
       if (error) throw error;
       const ev = data?.evaluation ?? {};
+      const score = typeof ev.trust_score === "number" ? Math.round(ev.trust_score) : 0;
       const upd = await supabase
         .from("professional_profiles")
         .update({
           ai_summary: ev.ai_summary ?? null,
           ai_strengths: ev.ai_strengths ?? [],
           ai_suggestions: ev.ai_suggestions ?? [],
-          trust_score: typeof ev.trust_score === "number" ? Math.round(ev.trust_score) : 0,
+          trust_score: score,
+          ai_preapproved: score >= 70,
         })
         .eq("user_id", userId)
         .select()
         .maybeSingle();
-      if (upd.data) setProfile(upd.data as ProProfile);
-      toast.success("✨ Trust Score actualizado");
+      if (upd.data) setProfile(upd.data as unknown as ProProfile);
+      if (score >= 70) {
+        toast.success("✨ Pre-aprobado por IA. Nuestro equipo confirmará pronto.");
+      } else {
+        toast.success("Trust Score actualizado");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error en validación IA");
     } finally {
       setValidating(false);
+    }
+  };
+
+  const suggestRatesAndBio = async () => {
+    if (!userId) return;
+    setSuggesting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("rate-suggester", {
+        body: { profile: buildPayload() },
+      });
+      if (error) throw error;
+      const s = data?.suggestion ?? {};
+      if (typeof s.hourly_rate === "number") setHourly(s.hourly_rate);
+      if (typeof s.shift_rate === "number") setShift(s.shift_rate);
+      if (typeof s.monthly_rate === "number") setMonthly(s.monthly_rate);
+      if (typeof s.bio === "string") setBio(s.bio);
+      toast.success("✨ Sugerencias aplicadas. Revisa antes de guardar.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error sugiriendo tarifas");
+    } finally {
+      setSuggesting(false);
     }
   };
 
@@ -311,6 +366,13 @@ function ProDashboard() {
 
   const appliedIds = new Set(apps.map((a) => a.job_offer_id));
 
+  const addExp = () =>
+    setWorkExp((prev) => [...prev, { role: "", employer: "", city: "", start: "", end: "" }]);
+  const updateExp = (i: number, k: keyof WorkExp, v: string) =>
+    setWorkExp((prev) => prev.map((e, idx) => (idx === i ? { ...e, [k]: v } : e)));
+  const removeExp = (i: number) =>
+    setWorkExp((prev) => prev.filter((_, idx) => idx !== i));
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
@@ -322,6 +384,8 @@ function ProDashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-aurora">
+      {showTour && <OnboardingTour onClose={closeTour} />}
+
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -330,6 +394,11 @@ function ProDashboard() {
             <span className="hidden sm:inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/30">
               <Stethoscope className="h-3 w-3" /> Profesional
             </span>
+            {profile?.ai_preapproved && (
+              <span className="hidden md:inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/30">
+                <Sparkles className="h-3 w-3" /> Pre-aprobado IA
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3">
@@ -353,15 +422,17 @@ function ProDashboard() {
               Tu carrera en salud, sin fricción.
             </h1>
             <p className="mt-2 text-muted-foreground text-sm">
-              Construye tu perfil con ayuda de IA, postúlate a turnos en tiempo real y mejora tu Trust Score.
+              Construye tu perfil con ayuda de IA, sube tus documentos, recibe ofertas que encajan y mejora tu Trust Score.
             </p>
             <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
               <Stat icon={<Briefcase className="h-4 w-4" />} label="Turnos" value={String(profile?.total_jobs ?? 0)} />
               <Stat icon={<Star className="h-4 w-4" />} label="Rating" value={(profile?.avg_rating ?? 0).toFixed(1)} />
               <Stat
                 icon={<ShieldCheck className="h-4 w-4" />}
-                label="RETHUS"
-                value={profile?.rethus_verified ? "Verificado" : "Pendiente"}
+                label="Estado"
+                value={
+                  profile?.verified ? "Verificado" : profile?.ai_preapproved ? "Pre-aprobado" : "En revisión"
+                }
               />
             </div>
           </div>
@@ -381,10 +452,13 @@ function ProDashboard() {
                 style={{ width: `${Math.min(100, trust)}%` }}
               />
             </div>
+            <p className="mt-2 text-[11px] text-muted-foreground">
+              ≥70 = pre-aprobado IA · staff confirma final.
+            </p>
             <Button
               variant="glass"
               size="sm"
-              className="mt-4 w-full"
+              className="mt-3 w-full"
               onClick={validateWithAI}
               disabled={validating}
             >
@@ -398,6 +472,20 @@ function ProDashboard() {
           </div>
         </section>
 
+        {/* Identidad */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <h2 className="font-semibold mb-4">Identidad</h2>
+            <AvatarUploader
+              userId={userId}
+              initialUrl={profile?.avatar_url ?? null}
+              onChange={(url) =>
+                setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev))
+              }
+            />
+          </section>
+        )}
+
         {/* IA onboarding */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">
           <div className="flex items-center gap-2">
@@ -405,14 +493,14 @@ function ProDashboard() {
             <h2 className="font-semibold">Llena tu perfil con IA</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Cuéntame en una frase tu experiencia y completo los campos por ti.
+            Cuéntame en una frase tu experiencia y completo los campos por ti. O sube tu hoja de vida abajo y la leo automáticamente.
           </p>
           <div className="mt-3 flex flex-col sm:flex-row gap-2">
             <Textarea
               value={aiText}
               onChange={(e) => setAiText(e.target.value)}
               rows={2}
-              placeholder='Ej: "Soy enfermera, 7 años en cuidado adulto mayor, RETHUS 12345, cobro 25 mil la hora o 220 mil el turno, atiendo Bogotá y Soacha, tengo BLS vigente."'
+              placeholder='Ej: "Soy enfermera, 7 años en cuidado adulto mayor, RETHUS 12345, atiendo Bogotá y Soacha, tengo BLS vigente."'
               className="flex-1"
             />
             <Button onClick={extractFromText} disabled={aiBusy} variant="hero">
@@ -426,9 +514,37 @@ function ProDashboard() {
           </div>
         </section>
 
+        {/* Documentos */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <h2 className="font-semibold mb-1">Documentos</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Sube tu hoja de vida (PDF) y la IA extrae tus datos. Los demás documentos los revisa nuestro equipo.
+            </p>
+            <DocumentsManager userId={userId} onCvExtracted={applyExtraction} />
+          </section>
+        )}
+
         {/* Profile form */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">
-          <h2 className="font-semibold mb-4">Datos de tu perfil profesional</h2>
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+            <h2 className="font-semibold">Datos de tu perfil profesional</h2>
+            <Button
+              size="sm"
+              variant="glass"
+              onClick={suggestRatesAndBio}
+              disabled={suggesting || !specialty}
+              title={!specialty ? "Llena la especialidad primero" : undefined}
+            >
+              {suggesting ? (
+                <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+              )}
+              Sugerir tarifas y bio con IA
+            </Button>
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Especialidad principal">
               <Input value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="Cuidado adulto mayor" />
@@ -473,8 +589,84 @@ function ProDashboard() {
                 onChange={(e) => setMonthly(e.target.value === "" ? "" : Number(e.target.value))}
               />
             </Field>
+            <Field label="Bio profesional (la ven familias e IPS)">
+              <Textarea
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows={3}
+                placeholder="Cuéntale al mundo quién eres en 2-3 frases."
+              />
+            </Field>
           </div>
-          <div className="mt-4 flex justify-end">
+
+          {/* Experiencia laboral */}
+          <div className="mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-semibold">Experiencia laboral</h3>
+              <Button size="sm" variant="ghost" onClick={addExp}>
+                <Plus className="h-3.5 w-3.5 mr-1" /> Agregar
+              </Button>
+            </div>
+            {workExp.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Sin experiencia agregada. Sube tu CV y la IA la llena por ti.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {workExp.map((e, i) => (
+                  <li key={i} className="rounded-lg border border-border bg-background p-3">
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => removeExp(i)}
+                        className="text-muted-foreground hover:text-destructive"
+                        aria-label="Eliminar experiencia"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-2">
+                      <Input
+                        placeholder="Cargo"
+                        value={e.role}
+                        onChange={(ev) => updateExp(i, "role", ev.target.value)}
+                      />
+                      <Input
+                        placeholder="Empresa / IPS"
+                        value={e.employer}
+                        onChange={(ev) => updateExp(i, "employer", ev.target.value)}
+                      />
+                      <Input
+                        placeholder="Ciudad"
+                        value={e.city ?? ""}
+                        onChange={(ev) => updateExp(i, "city", ev.target.value)}
+                      />
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Inicio (2020)"
+                          value={e.start ?? ""}
+                          onChange={(ev) => updateExp(i, "start", ev.target.value)}
+                        />
+                        <Input
+                          placeholder="Fin (Actual)"
+                          value={e.end ?? ""}
+                          onChange={(ev) => updateExp(i, "end", ev.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Textarea
+                      className="mt-2"
+                      rows={2}
+                      placeholder="Logros y responsabilidades"
+                      value={e.description ?? ""}
+                      onChange={(ev) => updateExp(i, "description", ev.target.value)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-end">
             <Button onClick={saveProfile} variant="hero">
               Guardar perfil
             </Button>
@@ -518,10 +710,29 @@ function ProDashboard() {
           )}
         </section>
 
+        {/* Match IA */}
+        <section className="rounded-2xl border border-border bg-card/95 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-fuchsia-neural" />
+              <h2 className="font-semibold">Ofertas que encajan contigo</h2>
+            </div>
+            <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
+              Ver todas →
+            </Link>
+          </div>
+          <MatchingOffers
+            profile={profile as unknown as Record<string, unknown> | null}
+            offers={offers}
+            appliedIds={appliedIds}
+            onApply={apply}
+          />
+        </section>
+
         {/* Offers */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">Ofertas de turno disponibles</h2>
+            <h2 className="font-semibold">Todas las ofertas activas</h2>
             <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
               Ver todas →
             </Link>

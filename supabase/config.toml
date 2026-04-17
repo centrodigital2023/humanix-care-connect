@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.profile-validator]
 verify_jwt = false
+
+[functions.cv-extractor]
+verify_jwt = false
+
+[functions.rate-suggester]
+verify_jwt = false
+
+[functions.match-offers]
+verify_jwt = false

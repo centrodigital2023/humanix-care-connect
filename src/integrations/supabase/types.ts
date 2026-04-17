@@ -160,14 +160,59 @@ export type Database = {
         }
         Relationships: []
       }
+      professional_documents: {
+        Row: {
+          created_at: string
+          doc_type: Database["public"]["Enums"]["doc_type"]
+          file_name: string | null
+          file_url: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: Database["public"]["Enums"]["doc_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type: Database["public"]["Enums"]["doc_type"]
+          file_name?: string | null
+          file_url: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["doc_type"]
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       professional_profiles: {
         Row: {
           active: boolean | null
+          ai_preapproved: boolean | null
           ai_strengths: string[] | null
           ai_suggestions: string[] | null
           ai_summary: string | null
           availability: Json | null
+          avatar_url: string | null
           avg_rating: number | null
+          bio: string | null
           certifications: Json | null
           created_at: string
           hourly_rate: number | null
@@ -185,15 +230,19 @@ export type Database = {
           updated_at: string
           user_id: string
           verified: boolean | null
+          work_experience: Json | null
           years_experience: number | null
         }
         Insert: {
           active?: boolean | null
+          ai_preapproved?: boolean | null
           ai_strengths?: string[] | null
           ai_suggestions?: string[] | null
           ai_summary?: string | null
           availability?: Json | null
+          avatar_url?: string | null
           avg_rating?: number | null
+          bio?: string | null
           certifications?: Json | null
           created_at?: string
           hourly_rate?: number | null
@@ -211,15 +260,19 @@ export type Database = {
           updated_at?: string
           user_id: string
           verified?: boolean | null
+          work_experience?: Json | null
           years_experience?: number | null
         }
         Update: {
           active?: boolean | null
+          ai_preapproved?: boolean | null
           ai_strengths?: string[] | null
           ai_suggestions?: string[] | null
           ai_summary?: string | null
           availability?: Json | null
+          avatar_url?: string | null
           avg_rating?: number | null
+          bio?: string | null
           certifications?: Json | null
           created_at?: string
           hourly_rate?: number | null
@@ -237,6 +290,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           verified?: boolean | null
+          work_experience?: Json | null
           years_experience?: number | null
         }
         Relationships: []
@@ -395,6 +449,8 @@ export type Database = {
         | "hr_staff"
         | "evaluator"
       application_status: "pending" | "accepted" | "rejected" | "withdrawn"
+      doc_status: "pending" | "approved" | "rejected"
+      doc_type: "cv" | "rethus" | "diploma" | "id_document" | "other"
       offer_modality: "hour" | "shift" | "month" | "package"
       offer_status: "open" | "closed" | "filled"
       poster_type: "family" | "institution"
@@ -534,6 +590,8 @@ export const Constants = {
         "evaluator",
       ],
       application_status: ["pending", "accepted", "rejected", "withdrawn"],
+      doc_status: ["pending", "approved", "rejected"],
+      doc_type: ["cv", "rethus", "diploma", "id_document", "other"],
       offer_modality: ["hour", "shift", "month", "package"],
       offer_status: ["open", "closed", "filled"],
       poster_type: ["family", "institution"],
