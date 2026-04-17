@@ -89,6 +89,11 @@ type Pro = {
   rethus_verified: boolean | null;
   total_jobs: number | null;
   ai_summary: string | null;
+  available: boolean | null;
+  reserved_until: string | null;
+  active: boolean | null;
+  lat: number | null;
+  lng: number | null;
   profiles: { full_name: string | null; city: string | null; avatar_url: string | null } | null;
 };
 
@@ -102,6 +107,10 @@ type Offer = {
   specialty_required: string | null;
   requirements: string[] | null;
   poster_type: "family" | "institution";
+  status: "open" | "filled" | "closed";
+  reserved_until: string | null;
+  lat: number | null;
+  lng: number | null;
   created_at: string;
 };
 
