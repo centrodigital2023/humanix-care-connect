@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { pathForRole, type AppRole } from "@/hooks/use-app-user";
@@ -20,51 +20,74 @@ const PRIORITY: AppRole[] = [
   "professional",
 ];
 
+function hardRedirect(to: string) {
+  if (typeof window === "undefined") return;
+  // Use replace so /dashboard isn't kept in history.
+  window.location.replace(to);
+}
+
 function DashboardRouter() {
-  const navigate = useNavigate();
   const [msg, setMsg] = useState("Verificando sesión...");
 
   useEffect(() => {
-    let cancelled = false;
     let done = false;
 
     const go = (to: string) => {
-      if (done || cancelled) return;
+      if (done) return;
       done = true;
-      // Use replace navigation; fallback to hard redirect if router doesn't unmount.
-      navigate({ to, replace: true }).catch(() => {
-        if (!cancelled) window.location.replace(to);
-      });
-      // Safety net: if still mounted after 600ms, force a hard redirect.
-      setTimeout(() => {
-        if (!cancelled && typeof window !== "undefined" && window.location.pathname === "/dashboard") {
-          window.location.replace(to);
-        }
-      }, 600);
+      // Always do a hard redirect — most reliable across edge cases.
+      hardRedirect(to);
     };
 
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (!data.session) {
+    // Hard safety net: if anything hangs, kick to /auth after 4s.
+    const safety = setTimeout(() => {
+      if (!done) {
+        // eslint-disable-next-line no-console
+        console.warn("[dashboard] safety timeout fired → /auth");
         go("/auth");
-        return;
       }
-      setMsg("Redirigiendo a tu panel...");
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", data.session.user.id);
-      if (cancelled) return;
-      const list = (roles?.map((x) => x.role) ?? []) as AppRole[];
-      const primary = PRIORITY.find((p) => list.includes(p)) ?? "family";
-      go(pathForRole(primary));
+    }, 4000);
+
+    (async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          // eslint-disable-next-line no-console
+          console.warn("[dashboard] getSession error:", error.message);
+        }
+        if (!data?.session) {
+          go("/auth");
+          return;
+        }
+        setMsg("Redirigiendo a tu panel...");
+        const uid = data.session.user.id;
+
+        // Race role lookup against a 2.5s timeout so we never hang.
+        const rolesPromise = supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", uid);
+        const timeout = new Promise<{ data: null }>((resolve) =>
+          setTimeout(() => resolve({ data: null }), 2500),
+        );
+        const result = (await Promise.race([rolesPromise, timeout])) as {
+          data: { role: AppRole }[] | null;
+        };
+
+        const list = (result.data?.map((x) => x.role) ?? []) as AppRole[];
+        const primary = PRIORITY.find((p) => list.includes(p)) ?? "family";
+        go(pathForRole(primary));
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("[dashboard] router error:", err);
+        go("/auth");
+      }
     })();
 
     return () => {
-      cancelled = true;
+      clearTimeout(safety);
     };
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center text-muted-foreground">
