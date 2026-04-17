@@ -23,11 +23,15 @@ export const Route = createFileRoute("/dashboard/institucion")({
   component: InstitutionDashboard,
 });
 
+import { MessageSquare, Crown } from "lucide-react";
+
 const NAV: NavItem[] = [
   { label: "Inicio", to: "/dashboard/institucion", icon: LayoutDashboard },
   { label: "Ofertas", to: "/dashboard/institucion", icon: Briefcase },
+  { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
   { label: "Talento", to: "/buscar", icon: Users },
   { label: "Buscar", to: "/buscar", icon: Search },
+  { label: "Planes", to: "/planes", icon: Crown },
 ];
 
 type Offer = {

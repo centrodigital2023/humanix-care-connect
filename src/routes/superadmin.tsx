@@ -42,8 +42,11 @@ type AppRole =
   | "hr_staff"
   | "evaluator";
 
+import { ShieldAlert } from "lucide-react";
+
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
+  { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
   { label: "Marketplace", to: "/buscar", icon: Briefcase },

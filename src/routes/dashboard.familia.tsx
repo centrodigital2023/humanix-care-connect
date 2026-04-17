@@ -24,11 +24,15 @@ export const Route = createFileRoute("/dashboard/familia")({
   component: FamilyDashboard,
 });
 
+import { MessageSquare, Crown } from "lucide-react";
+
 const NAV: NavItem[] = [
   { label: "Inicio", to: "/dashboard/familia", icon: LayoutDashboard },
   { label: "Buscar", to: "/buscar", icon: Search },
+  { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
   { label: "Mis solicitudes", to: "/dashboard/familia", icon: FileText },
   { label: "Profesionales", to: "/buscar", icon: Users },
+  { label: "Planes", to: "/planes", icon: Crown },
 ];
 
 type Offer = {

@@ -27,6 +27,8 @@ import { AvatarUploader } from "@/components/humanix/AvatarUploader";
 import { DocumentsManager } from "@/components/humanix/DocumentsManager";
 import { MatchingOffers } from "@/components/humanix/MatchingOffers";
 import { OnboardingTour } from "@/components/humanix/OnboardingTour";
+import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
+import { SemanticOffers } from "@/components/humanix/SemanticOffers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -401,6 +403,12 @@ function ProDashboard() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <Link to="/mensajes" className="text-sm text-muted-foreground hover:text-foreground px-3">
+              Mensajes
+            </Link>
+            <Link to="/planes" className="text-sm text-muted-foreground hover:text-foreground px-3">
+              Planes
+            </Link>
             <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3">
               Marketplace
             </Link>
@@ -710,11 +718,30 @@ function ProDashboard() {
           )}
         </section>
 
-        {/* Match IA */}
+        {/* Huella IA */}
+        {userId && <AiFingerprintCard userId={userId} />}
+
+        {/* Match semántico (vector) */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-fuchsia-neural" />
+              <h2 className="font-semibold">Matches semánticos (huella IA)</h2>
+            </div>
+            <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
+              Ver todas →
+            </Link>
+          </div>
+          {userId && (
+            <SemanticOffers userId={userId} appliedIds={appliedIds} onApply={apply} />
+          )}
+        </section>
+
+        {/* Match IA (heurístico contextual) */}
+        <section className="rounded-2xl border border-border bg-card/95 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-biosensor" />
               <h2 className="font-semibold">Ofertas que encajan contigo</h2>
             </div>
             <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
