@@ -25,7 +25,6 @@ export const Route = createFileRoute("/dashboard/institucion")({
   component: InstitutionDashboard,
 });
 
-import { MessageSquare, Crown } from "lucide-react";
 
 const NAV: NavItem[] = [
   { label: "Inicio", to: "/dashboard/institucion", icon: LayoutDashboard },

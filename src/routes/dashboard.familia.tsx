@@ -26,7 +26,6 @@ export const Route = createFileRoute("/dashboard/familia")({
   component: FamilyDashboard,
 });
 
-import { MessageSquare, Crown } from "lucide-react";
 
 const NAV: NavItem[] = [
   { label: "Inicio", to: "/dashboard/familia", icon: LayoutDashboard },
