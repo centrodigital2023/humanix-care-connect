@@ -79,7 +79,7 @@ function FamilyDashboard() {
     <AppShell
       user={user}
       onLogout={logout}
-      nav={NAV}
+      nav={getNav()}
       title={`Hola, ${user.fullName.split(" ")[0]}`}
       subtitle="Encuentra cuidado humano y verificado para tu familia, cuando lo necesites."
       crumbs={[{ label: "Inicio", to: "/" }, { label: "Familia" }]}

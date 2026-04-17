@@ -77,7 +77,7 @@ function InstitutionDashboard() {
     <AppShell
       user={user}
       onLogout={logout}
-      nav={NAV}
+      nav={getNav()}
       title="Panel institución"
       subtitle="Gestiona tus ofertas, talento aplicado y métricas operativas en tiempo real."
       crumbs={[{ label: "Inicio", to: "/" }, { label: "Institución" }]}
