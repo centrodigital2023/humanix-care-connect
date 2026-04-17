@@ -260,6 +260,12 @@ function BuscarPage() {
         setOffers([]);
       } else {
         let rows = (data ?? []) as Offer[];
+        // Ocultar 'filled' cuya reserva de 15 días ya expiró
+        rows = rows.filter((o) => {
+          if (o.status !== "filled") return true;
+          if (!o.reserved_until) return false;
+          return new Date(o.reserved_until) > new Date();
+        });
         if (search.q) {
           const needle = search.q.toLowerCase();
           rows = rows.filter(
