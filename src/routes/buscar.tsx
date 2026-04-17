@@ -93,9 +93,12 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+type SearchT = z.infer<typeof searchSchema>;
+
 function BuscarPage() {
   const search = Route.useSearch();
-  const navigate = Route.useNavigate() as (opts: { search: (p: z.infer<typeof searchSchema>) => z.infer<typeof searchSchema> } | { search: z.infer<typeof searchSchema> }) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const navigate = Route.useNavigate() as any;
 
   const [pros, setPros] = useState<Pro[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
