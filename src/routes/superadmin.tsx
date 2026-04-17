@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
   Shield,
+  ShieldAlert,
   Users,
   Briefcase,
   FileCheck,
@@ -42,7 +43,7 @@ type AppRole =
   | "hr_staff"
   | "evaluator";
 
-import { ShieldAlert } from "lucide-react";
+
 
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
