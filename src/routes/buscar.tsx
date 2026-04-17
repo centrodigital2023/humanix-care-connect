@@ -349,7 +349,7 @@ function BuscarPage() {
                     defaultValue={search.minRate ?? ""}
                     onBlur={(e) =>
                       navigate({
-                        search: (p) => ({
+                        search: (p: SearchT) => ({
                           ...p,
                           minRate: e.target.value ? Number(e.target.value) : undefined,
                         }),
@@ -365,7 +365,7 @@ function BuscarPage() {
                     defaultValue={search.maxRate ?? ""}
                     onBlur={(e) =>
                       navigate({
-                        search: (p) => ({
+                        search: (p: SearchT) => ({
                           ...p,
                           maxRate: e.target.value ? Number(e.target.value) : undefined,
                         }),
@@ -382,7 +382,7 @@ function BuscarPage() {
                         value={search.rating ?? ""}
                         onChange={(e) =>
                           navigate({
-                            search: (p) => ({
+                            search: (p: SearchT) => ({
                               ...p,
                               rating: e.target.value ? Number(e.target.value) : undefined,
                             }),
@@ -402,7 +402,7 @@ function BuscarPage() {
                         checked={!!search.verified}
                         onChange={(e) =>
                           navigate({
-                            search: (p) => ({
+                            search: (p: SearchT) => ({
                               ...p,
                               verified: e.target.checked || undefined,
                             }),
@@ -420,7 +420,7 @@ function BuscarPage() {
                       value={search.modality ?? ""}
                       onChange={(e) =>
                         navigate({
-                          search: (p) => ({
+                          search: (p: SearchT) => ({
                             ...p,
                             modality: (e.target.value || undefined) as
                               | "hour"
