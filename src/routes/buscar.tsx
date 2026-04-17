@@ -6,15 +6,20 @@ import {
   Stethoscope,
   Star,
   CheckCircle2,
-  Filter,
   Briefcase,
   Users as UsersIcon,
   SlidersHorizontal,
+  Map as MapIcon,
+  List,
+  Navigation,
 } from "lucide-react";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { StatusBadge, deriveProStatus, deriveOfferStatus } from "@/components/humanix/StatusBadge";
+import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 
 type SearchParams = {
   tab: "profesionales" | "ofertas";
