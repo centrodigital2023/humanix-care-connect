@@ -152,7 +152,7 @@ function BuscarPage() {
       let query = supabase
         .from("professional_profiles")
         .select(
-          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, profiles!inner(full_name, city, avatar_url)"
+          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary"
         )
         .eq("active", true)
         .order("avg_rating", { ascending: false })
@@ -170,19 +170,42 @@ function BuscarPage() {
       if (error) {
         console.error(error);
         setPros([]);
-      } else {
-        let rows = (data ?? []) as unknown as Pro[];
-        if (search.q) {
-          const needle = search.q.toLowerCase();
-          rows = rows.filter(
-            (p) =>
-              p.profiles?.full_name?.toLowerCase().includes(needle) ||
-              p.specialty?.toLowerCase().includes(needle) ||
-              p.ai_summary?.toLowerCase().includes(needle)
-          );
-        }
-        setPros(rows);
+        setLoading(false);
+        return;
       }
+      const baseRows = (data ?? []) as Array<Omit<Pro, "profiles">>;
+      const userIds = baseRows.map((p) => p.user_id);
+      let profilesMap = new Map<
+        string,
+        { full_name: string | null; city: string | null; avatar_url: string | null }
+      >();
+      if (userIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, full_name, city, avatar_url")
+          .in("user_id", userIds);
+        profilesMap = new Map(
+          (profs ?? []).map((p) => [
+            p.user_id,
+            { full_name: p.full_name, city: p.city, avatar_url: p.avatar_url },
+          ])
+        );
+      }
+      let rows: Pro[] = baseRows.map((p) => ({
+        ...p,
+        profiles: profilesMap.get(p.user_id) ?? null,
+      }));
+      if (search.q) {
+        const needle = search.q.toLowerCase();
+        rows = rows.filter(
+          (p) =>
+            p.profiles?.full_name?.toLowerCase().includes(needle) ||
+            p.specialty?.toLowerCase().includes(needle) ||
+            p.ai_summary?.toLowerCase().includes(needle)
+        );
+      }
+      if (cancelled) return;
+      setPros(rows);
       setLoading(false);
     })();
     return () => {
