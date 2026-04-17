@@ -1,55 +1,74 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2, Users, CheckCircle2, XCircle, Star } from "lucide-react";
+import { createFileRoute } from "@tanstack/react-router";
+import {
+  Loader2,
+  Users,
+  CheckCircle2,
+  XCircle,
+  Star,
+  LayoutDashboard,
+  FileCheck,
+  Briefcase,
+  Search,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Navbar } from "@/components/humanix/Navbar";
+import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/talento-humano")({
   head: () => ({ meta: [{ title: "Talento Humano · Humanix" }] }),
   component: HRPage,
 });
 
+const NAV: NavItem[] = [
+  { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
+  { label: "Talento Humano", to: "/talento-humano", icon: Users },
+  { label: "Evaluador", to: "/evaluador", icon: FileCheck },
+  { label: "Marketplace", to: "/buscar", icon: Search },
+];
+
+type Pro = {
+  id: string;
+  user_id: string;
+  specialty: string | null;
+  bio: string | null;
+  verified: boolean | null;
+  ai_preapproved: boolean | null;
+  rethus_verified: boolean | null;
+  trust_score: number | null;
+  years_experience: number | null;
+  avg_rating: number | null;
+  active: boolean | null;
+};
+
 function HRPage() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [pros, setPros] = useState<any[]>([]);
+  const { user, loading, logout } = useAppUser({ allow: ["superadmin", "hr_staff"] });
+  const [pros, setPros] = useState<Pro[]>([]);
+  const [filter, setFilter] = useState("");
+  const [tab, setTab] = useState<"all" | "pending" | "verified">("all");
 
   useEffect(() => {
-    (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) {
-        navigate({ to: "/auth" });
-        return;
-      }
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", sess.session.user.id);
-      const allowed = roles?.some((r) => ["superadmin", "hr_staff"].includes(r.role));
-      if (!allowed) {
-        toast.error("Acceso restringido");
-        navigate({ to: "/dashboard" });
-        return;
-      }
-      await load();
-      setLoading(false);
-    })();
-  }, [navigate]);
+    if (!user) return;
+    load();
+  }, [user]);
 
   const load = async () => {
     const { data } = await supabase
       .from("professional_profiles")
-      .select("*")
-      .order("created_at", { ascending: false })
+      .select(
+        "id, user_id, specialty, bio, verified, ai_preapproved, rethus_verified, trust_score, years_experience, avg_rating, active",
+      )
+      .order("trust_score", { ascending: false })
       .limit(100);
-    setPros(data ?? []);
+    setPros((data ?? []) as Pro[]);
   };
 
-  const toggleVerified = async (id: string, current: boolean) => {
+  const toggleVerified = async (id: string, current: boolean | null) => {
     const { error } = await supabase
       .from("professional_profiles")
       .update({ verified: !current })
@@ -59,34 +78,67 @@ function HRPage() {
     await load();
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-        Cargando...
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
       </div>
     );
   }
 
+  const filtered = pros
+    .filter((p) =>
+      tab === "verified" ? p.verified : tab === "pending" ? !p.verified : true,
+    )
+    .filter((p) =>
+      filter ? `${p.specialty ?? ""} ${p.bio ?? ""}`.toLowerCase().includes(filter.toLowerCase()) : true,
+    );
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Users className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Talento Humano</h1>
-            <p className="text-sm text-muted-foreground">Gestiona profesionales registrados</p>
-          </div>
+    <AppShell
+      user={user}
+      onLogout={logout}
+      nav={NAV}
+      title="Talento Humano"
+      subtitle="Verifica, activa y monitorea el roster de profesionales registrados."
+      crumbs={[{ label: "Inicio", to: "/" }, { label: "Staff", to: "/superadmin" }, { label: "Talento Humano" }]}
+      badge={{ label: "Staff", tone: "bio" }}
+    >
+      <div className="space-y-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <Stat label="Total" value={pros.length} />
+          <Stat label="Verificados" value={pros.filter((p) => p.verified).length} />
+          <Stat label="Pre-aprobados IA" value={pros.filter((p) => p.ai_preapproved).length} />
+          <Stat label="RETHUS verificado" value={pros.filter((p) => p.rethus_verified).length} />
         </div>
 
-        <div className="grid gap-4">
-          {pros.length === 0 && (
-            <p className="text-sm text-muted-foreground">No hay profesionales aún.</p>
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center rounded-xl border border-border bg-card p-1 text-xs">
+            {(["all", "pending", "verified"] as const).map((k) => (
+              <button
+                key={k}
+                onClick={() => setTab(k)}
+                className={`px-3 py-1.5 rounded-lg font-medium transition ${
+                  tab === k ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {k === "all" ? "Todos" : k === "pending" ? "Pendientes" : "Verificados"}
+              </button>
+            ))}
+          </div>
+          <Input
+            placeholder="Buscar por especialidad o bio…"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="max-w-xs"
+          />
+        </div>
+
+        <div className="grid gap-3">
+          {filtered.length === 0 && (
+            <Card className="p-8 text-center text-sm text-muted-foreground">Sin resultados.</Card>
           )}
-          {pros.map((p) => (
+          {filtered.map((p) => (
             <Card key={p.id} className="p-5">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex-1 min-w-0">
@@ -100,11 +152,11 @@ function HRPage() {
                     {p.ai_preapproved && <Badge variant="secondary">IA pre-aprobado</Badge>}
                     {p.rethus_verified && <Badge variant="outline">RETHUS</Badge>}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                    {p.bio || "Sin bio"}
-                  </p>
-                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                    <span>Trust: {p.trust_score ?? 0}/100</span>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio || "Sin bio"}</p>
+                  <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                    <span className="inline-flex items-center gap-1">
+                      <Briefcase className="h-3 w-3" /> Trust {p.trust_score ?? 0}/100
+                    </span>
                     <span>Exp: {p.years_experience ?? 0} años</span>
                     <span className="flex items-center gap-1">
                       <Star className="h-3 w-3" /> {p.avg_rating?.toFixed(1) ?? "—"}
@@ -130,7 +182,16 @@ function HRPage() {
             </Card>
           ))}
         </div>
-      </main>
-    </div>
+      </div>
+    </AppShell>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <Card className="p-4">
+      <p className="text-2xl font-bold font-display">{value}</p>
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+    </Card>
   );
 }

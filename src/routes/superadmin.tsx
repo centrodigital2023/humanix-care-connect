@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { Loader2, Shield, Users, Briefcase, FileCheck, Mail, Plus, Copy } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Loader2,
+  Shield,
+  Users,
+  Briefcase,
+  FileCheck,
+  Mail,
+  Plus,
+  Copy,
+  LayoutDashboard,
+  TrendingUp,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,7 +26,8 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Navbar } from "@/components/humanix/Navbar";
+import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/superadmin")({
   head: () => ({ meta: [{ title: "Superadmin · Humanix" }] }),
@@ -30,41 +42,34 @@ type AppRole =
   | "hr_staff"
   | "evaluator";
 
+const NAV: NavItem[] = [
+  { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
+  { label: "Talento Humano", to: "/talento-humano", icon: Users },
+  { label: "Evaluador", to: "/evaluador", icon: FileCheck },
+  { label: "Marketplace", to: "/buscar", icon: Briefcase },
+];
+
+type Invitation = {
+  id: string;
+  email: string;
+  role: AppRole;
+  token: string;
+  used_at: string | null;
+  created_at: string;
+};
+
 function SuperadminPage() {
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const { user, loading, logout } = useAppUser({ allow: ["superadmin"] });
   const [stats, setStats] = useState({ users: 0, professionals: 0, offers: 0, docs: 0 });
-  const [invitations, setInvitations] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AppRole>("hr_staff");
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) {
-        navigate({ to: "/auth" });
-        return;
-      }
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", sess.session.user.id);
-      const isAdmin = roles?.some((r) => r.role === "superadmin");
-      if (!isAdmin) {
-        toast.error("Acceso restringido. Solo superadministradores.");
-        navigate({ to: "/dashboard" });
-        return;
-      }
-      if (!active) return;
-      await loadData();
-      setLoading(false);
-    })();
-    return () => {
-      active = false;
-    };
-  }, [navigate]);
+    if (!user) return;
+    loadData();
+  }, [user]);
 
   const loadData = async () => {
     const [{ count: users }, { count: professionals }, { count: offers }, { count: docs }, { data: inv }] =
@@ -88,18 +93,17 @@ function SuperadminPage() {
       offers: offers ?? 0,
       docs: docs ?? 0,
     });
-    setInvitations(inv ?? []);
+    setInvitations((inv ?? []) as Invitation[]);
   };
 
   const createInvitation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     setCreating(true);
-    const { data: sess } = await supabase.auth.getSession();
     const { error } = await supabase.from("staff_invitations").insert({
       email,
       role,
-      created_by: sess.session?.user.id,
+      created_by: user?.id,
     });
     setCreating(false);
     if (error) {
@@ -116,40 +120,36 @@ function SuperadminPage() {
     toast.success("Token copiado");
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" />
-        Cargando panel...
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 pt-28 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Shield className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Panel Superadmin</h1>
-            <p className="text-sm text-muted-foreground">Control total de la plataforma</p>
-          </div>
-        </div>
+    <AppShell
+      user={user}
+      onLogout={logout}
+      nav={NAV}
+      title="Centro de control"
+      subtitle="Métricas globales, gobernanza de roles y salud operativa de la plataforma."
+      crumbs={[{ label: "Inicio", to: "/" }, { label: "Superadmin" }]}
+      badge={{ label: "Superadmin", tone: "fuchsia" }}
+    >
+      <div className="space-y-8">
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Stat icon={Users} label="Usuarios" value={stats.users} tone="bio" />
+          <Stat icon={Briefcase} label="Profesionales" value={stats.professionals} tone="copper" />
+          <Stat icon={FileCheck} label="Ofertas" value={stats.offers} tone="bio" />
+          <Stat icon={Mail} label="Docs pendientes" value={stats.docs} tone="fuchsia" />
+        </section>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard icon={Users} label="Usuarios" value={stats.users} />
-          <StatCard icon={Briefcase} label="Profesionales" value={stats.professionals} />
-          <StatCard icon={FileCheck} label="Ofertas" value={stats.offers} />
-          <StatCard icon={Mail} label="Docs pendientes" value={stats.docs} />
-        </div>
-
-        <div className="grid lg:grid-cols-2 gap-6">
+        <section className="grid lg:grid-cols-2 gap-4">
           <Card className="p-6">
-            <h2 className="font-semibold mb-4 flex items-center gap-2">
-              <Plus className="h-4 w-4" /> Invitar staff
+            <h2 className="font-display text-lg font-semibold mb-4 flex items-center gap-2">
+              <Plus className="h-4 w-4 text-biosensor" /> Invitar staff
             </h2>
             <form onSubmit={createInvitation} className="space-y-3">
               <div>
@@ -182,7 +182,7 @@ function SuperadminPage() {
           </Card>
 
           <Card className="p-6">
-            <h2 className="font-semibold mb-4">Invitaciones recientes</h2>
+            <h2 className="font-display text-lg font-semibold mb-4">Invitaciones recientes</h2>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {invitations.length === 0 && (
                 <p className="text-sm text-muted-foreground">Aún no hay invitaciones.</p>
@@ -210,36 +210,82 @@ function SuperadminPage() {
               ))}
             </div>
           </Card>
-        </div>
+        </section>
 
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button variant="outline" asChild>
-            <Link to="/talento-humano">Ir a Talento Humano</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/evaluador">Ir a Evaluador</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/buscar">Ver marketplace</Link>
-          </Button>
-        </div>
-      </main>
-    </div>
+        <section className="grid sm:grid-cols-3 gap-3">
+          <ShortcutCard
+            icon={Users}
+            title="Talento Humano"
+            desc="Verifica profesionales y gestiona el roster activo."
+            to="/talento-humano"
+          />
+          <ShortcutCard
+            icon={FileCheck}
+            title="Evaluador"
+            desc="Revisa documentos pendientes y aprueba RETHUS."
+            to="/evaluador"
+          />
+          <ShortcutCard
+            icon={TrendingUp}
+            title="Marketplace"
+            desc="Inspecciona ofertas en vivo y métricas de match."
+            to="/buscar"
+          />
+        </section>
+      </div>
+    </AppShell>
   );
 }
 
-function StatCard({ icon: Icon, label, value }: { icon: any; label: string; value: number }) {
+function Stat({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: typeof Users;
+  label: string;
+  value: number;
+  tone: "bio" | "copper" | "fuchsia";
+}) {
+  const colors = {
+    bio: "text-biosensor bg-biosensor/10",
+    copper: "text-copper bg-copper/10",
+    fuchsia: "text-fuchsia-neural bg-fuchsia-neural/10",
+  }[tone];
   return (
-    <Card className="p-5">
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <p className="text-2xl font-bold">{value}</p>
-          <p className="text-xs text-muted-foreground">{label}</p>
-        </div>
+    <Card className="p-4">
+      <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${colors}`}>
+        <Icon className="h-4 w-4" />
       </div>
+      <p className="mt-3 text-2xl font-bold font-display">{value}</p>
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
     </Card>
+  );
+}
+
+function ShortcutCard({
+  icon: Icon,
+  title,
+  desc,
+  to,
+}: {
+  icon: typeof Users;
+  title: string;
+  desc: string;
+  to: string;
+}) {
+  return (
+    <Link
+      to={to}
+      className="group block rounded-2xl border border-border bg-card p-5 hover:border-biosensor/40 hover:-translate-y-0.5 transition-all shadow-[var(--shadow-card)]"
+    >
+      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-biosensor/10 text-biosensor">
+        <Icon className="h-5 w-5" />
+      </div>
+      <h3 className="mt-3 font-display font-semibold">{title}</h3>
+      <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{desc}</p>
+      <p className="mt-3 text-xs text-biosensor font-medium">Abrir →</p>
+    </Link>
   );
 }
