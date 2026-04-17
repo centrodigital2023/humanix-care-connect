@@ -45,15 +45,30 @@ const TOOL = {
   },
 } as const;
 
-async function embed(text: string): Promise<number[]> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/text-embedding-004", input: text.slice(0, 8000) }),
-  });
-  if (!r.ok) throw new Error(`embed ${r.status}`);
-  return (await r.json()).data[0].embedding as number[];
+async function embed(text: string): Promise<number[] | null> {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) return null;
+  const models = ["google/text-embedding-004", "text-embedding-3-small"];
+  for (const model of models) {
+    try {
+      const r = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, input: text.slice(0, 8000) }),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        console.warn(`embed ${model} failed ${r.status}: ${t.slice(0, 200)}`);
+        continue;
+      }
+      const j = await r.json();
+      const emb = j?.data?.[0]?.embedding;
+      if (Array.isArray(emb)) return emb as number[];
+    } catch (err) {
+      console.warn(`embed ${model} threw:`, err);
+    }
+  }
+  return null;
 }
 
 function cosine(a: number[], b: number[]) {
