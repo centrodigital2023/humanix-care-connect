@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
-import { z } from "zod";
 import {
   Search,
   MapPin,
@@ -18,20 +16,47 @@ import { Footer } from "@/components/humanix/Footer";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-const searchSchema = z.object({
-  tab: fallback(z.enum(["profesionales", "ofertas"]), "profesionales").default("profesionales"),
-  q: fallback(z.string().optional(), undefined),
-  specialty: fallback(z.string().optional(), undefined),
-  city: fallback(z.string().optional(), undefined),
-  modality: fallback(z.enum(["hour", "shift", "month", "package"]).optional(), undefined),
-  minRate: fallback(z.number().optional(), undefined),
-  maxRate: fallback(z.number().optional(), undefined),
-  rating: fallback(z.number().optional(), undefined),
-  verified: fallback(z.boolean().optional(), undefined),
-});
+type SearchParams = {
+  tab: "profesionales" | "ofertas";
+  q?: string;
+  specialty?: string;
+  city?: string;
+  modality?: "hour" | "shift" | "month" | "package";
+  minRate?: number;
+  maxRate?: number;
+  rating?: number;
+  verified?: boolean;
+};
 
 export const Route = createFileRoute("/buscar")({
-  validateSearch: zodValidator(searchSchema),
+  validateSearch: (search: Record<string, unknown>): SearchParams => {
+    const tabRaw = search.tab;
+    const tab = tabRaw === "ofertas" ? "ofertas" : "profesionales";
+    const modalityRaw = search.modality;
+    const modality =
+      modalityRaw === "hour" ||
+      modalityRaw === "shift" ||
+      modalityRaw === "month" ||
+      modalityRaw === "package"
+        ? modalityRaw
+        : undefined;
+    const num = (v: unknown) => {
+      const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+      return Number.isFinite(n) ? n : undefined;
+    };
+    const str = (v: unknown) => (typeof v === "string" && v.length > 0 ? v : undefined);
+    return {
+      tab,
+      q: str(search.q),
+      specialty: str(search.specialty),
+      city: str(search.city),
+      modality,
+      minRate: num(search.minRate),
+      maxRate: num(search.maxRate),
+      rating: num(search.rating),
+      verified: search.verified === true || search.verified === "true" ? true : undefined,
+    };
+  },
   head: () => ({
     meta: [
       { title: "Buscar profesionales y ofertas · Humanix" },
@@ -93,7 +118,7 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-type SearchT = z.infer<typeof searchSchema>;
+type SearchT = SearchParams;
 
 function BuscarPage() {
   const search = Route.useSearch();
@@ -218,7 +243,7 @@ function BuscarPage() {
   const applySearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate({
-      search: (prev: z.infer<typeof searchSchema>) => ({
+      search: (prev: SearchT) => ({
         ...prev,
         q: q || undefined,
         specialty: specialty || undefined,
@@ -324,7 +349,7 @@ function BuscarPage() {
                     defaultValue={search.minRate ?? ""}
                     onBlur={(e) =>
                       navigate({
-                        search: (p) => ({
+                        search: (p: SearchT) => ({
                           ...p,
                           minRate: e.target.value ? Number(e.target.value) : undefined,
                         }),
@@ -340,7 +365,7 @@ function BuscarPage() {
                     defaultValue={search.maxRate ?? ""}
                     onBlur={(e) =>
                       navigate({
-                        search: (p) => ({
+                        search: (p: SearchT) => ({
                           ...p,
                           maxRate: e.target.value ? Number(e.target.value) : undefined,
                         }),
@@ -357,7 +382,7 @@ function BuscarPage() {
                         value={search.rating ?? ""}
                         onChange={(e) =>
                           navigate({
-                            search: (p) => ({
+                            search: (p: SearchT) => ({
                               ...p,
                               rating: e.target.value ? Number(e.target.value) : undefined,
                             }),
@@ -377,7 +402,7 @@ function BuscarPage() {
                         checked={!!search.verified}
                         onChange={(e) =>
                           navigate({
-                            search: (p) => ({
+                            search: (p: SearchT) => ({
                               ...p,
                               verified: e.target.checked || undefined,
                             }),
@@ -395,7 +420,7 @@ function BuscarPage() {
                       value={search.modality ?? ""}
                       onChange={(e) =>
                         navigate({
-                          search: (p) => ({
+                          search: (p: SearchT) => ({
                             ...p,
                             modality: (e.target.value || undefined) as
                               | "hour"
