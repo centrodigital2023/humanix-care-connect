@@ -504,17 +504,59 @@ function BuscarPage() {
             )}
           </form>
 
+          {/* Toggle vista */}
+          <div className="mt-6 flex items-center justify-end">
+            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              <button
+                onClick={() => setView("list")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "list" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+              >
+                <List className="h-3.5 w-3.5" /> Lista
+              </button>
+              <button
+                onClick={() => setView("map")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "map" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+              >
+                <MapIcon className="h-3.5 w-3.5" /> Mapa
+              </button>
+            </div>
+          </div>
+
           {/* Results */}
-          <div className="mt-8">
+          <div className="mt-4">
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="h-56 rounded-2xl border border-border bg-card animate-pulse"
-                  />
+                  <div key={i} className="h-56 rounded-2xl border border-border bg-card animate-pulse" />
                 ))}
               </div>
+            ) : view === "map" ? (
+              <OffersMap
+                height={520}
+                points={
+                  tab === "profesionales"
+                    ? pros
+                        .filter((p) => p.lat && p.lng)
+                        .map<MapPoint>((p) => ({
+                          id: p.user_id,
+                          lat: p.lat!,
+                          lng: p.lng!,
+                          title: p.profiles?.full_name ?? "Profesional",
+                          subtitle: p.specialty ?? undefined,
+                          status: deriveProStatus(p) === "reserved" ? "reserved" : "available",
+                        }))
+                    : offers
+                        .filter((o) => o.lat && o.lng)
+                        .map<MapPoint>((o) => ({
+                          id: o.id,
+                          lat: o.lat!,
+                          lng: o.lng!,
+                          title: o.title,
+                          subtitle: `${o.city} · ${COP(o.amount)}`,
+                          status: o.status === "filled" ? "reserved" : "available",
+                        }))
+                }
+              />
             ) : tab === "profesionales" ? (
               pros.length === 0 ? (
                 <EmptyState
@@ -525,7 +567,7 @@ function BuscarPage() {
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pros.map((p) => (
-                    <ProCard key={p.user_id} pro={p} />
+                    <ProCard key={p.user_id} pro={p} userLoc={userLoc} />
                   ))}
                 </div>
               )
@@ -538,7 +580,7 @@ function BuscarPage() {
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {offers.map((o) => (
-                  <OfferCard key={o.id} offer={o} />
+                  <OfferCard key={o.id} offer={o} userLoc={userLoc} />
                 ))}
               </div>
             )}
