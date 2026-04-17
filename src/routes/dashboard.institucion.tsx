@@ -40,7 +40,7 @@ type Offer = {
 };
 
 function InstitutionDashboard() {
-  const { user, loading, logout } = useAppUser();
+  const { user, loading, logout } = useAppUser({ allow: ["institution", "superadmin"] });
   const [dataLoading, setDataLoading] = useState(true);
   const [offers, setOffers] = useState<Offer[]>([]);
 
