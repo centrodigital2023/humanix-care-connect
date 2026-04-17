@@ -26,7 +26,7 @@ export const Route = createFileRoute("/dashboard/institucion")({
 });
 
 
-const NAV: NavItem[] = [
+const getNav = (): NavItem[] => [
   { label: "Inicio", to: "/dashboard/institucion", icon: LayoutDashboard },
   { label: "Ofertas", to: "/dashboard/institucion", icon: Briefcase },
   { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
@@ -77,7 +77,7 @@ function InstitutionDashboard() {
     <AppShell
       user={user}
       onLogout={logout}
-      nav={NAV}
+      nav={getNav()}
       title="Panel institución"
       subtitle="Gestiona tus ofertas, talento aplicado y métricas operativas en tiempo real."
       crumbs={[{ label: "Inicio", to: "/" }, { label: "Institución" }]}
