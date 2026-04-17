@@ -244,7 +244,7 @@ function BuscarPage() {
             </div>
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-1">
               <button
-                onClick={() => navigate({ search: (p) => ({ ...p, tab: "profesionales" }) })}
+                onClick={() => navigate({ search: (p: SearchT) => ({ ...p, tab: "profesionales" }) })}
                 className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition ${
                   tab === "profesionales"
                     ? "bg-foreground text-background"
@@ -255,7 +255,7 @@ function BuscarPage() {
                 Profesionales
               </button>
               <button
-                onClick={() => navigate({ search: (p) => ({ ...p, tab: "ofertas" }) })}
+                onClick={() => navigate({ search: (p: SearchT) => ({ ...p, tab: "ofertas" }) })}
                 className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition ${
                   tab === "ofertas"
                     ? "bg-foreground text-background"
