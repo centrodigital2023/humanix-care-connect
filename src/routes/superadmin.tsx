@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
   Shield,
+  ShieldAlert,
   Users,
   Briefcase,
   FileCheck,
@@ -42,8 +43,11 @@ type AppRole =
   | "hr_staff"
   | "evaluator";
 
+
+
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
+  { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
   { label: "Marketplace", to: "/buscar", icon: Briefcase },

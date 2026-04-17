@@ -11,6 +11,8 @@ import {
   Sparkles,
   Calendar,
   ShieldCheck,
+  MessageSquare,
+  Crown,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -24,11 +26,14 @@ export const Route = createFileRoute("/dashboard/familia")({
   component: FamilyDashboard,
 });
 
+
 const NAV: NavItem[] = [
   { label: "Inicio", to: "/dashboard/familia", icon: LayoutDashboard },
   { label: "Buscar", to: "/buscar", icon: Search },
+  { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
   { label: "Mis solicitudes", to: "/dashboard/familia", icon: FileText },
   { label: "Profesionales", to: "/buscar", icon: Users },
+  { label: "Planes", to: "/planes", icon: Crown },
 ];
 
 type Offer = {
