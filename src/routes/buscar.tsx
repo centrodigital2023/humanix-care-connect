@@ -95,7 +95,7 @@ function Stars({ value }: { value: number }) {
 
 function BuscarPage() {
   const search = Route.useSearch();
-  const navigate = Route.useNavigate();
+  const navigate = Route.useNavigate() as (opts: { search: (p: z.infer<typeof searchSchema>) => z.infer<typeof searchSchema> } | { search: z.infer<typeof searchSchema> }) => void;
 
   const [pros, setPros] = useState<Pro[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
