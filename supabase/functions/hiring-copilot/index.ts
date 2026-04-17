@@ -89,18 +89,31 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // 1) Embedding del brief y top candidatos por similitud
+    // 1) Embedding del brief y top candidatos por similitud (con fallback si embeddings no disponibles)
     const v = await embed(brief);
     const { data: pes } = await admin.from("profile_embeddings").select("user_id,embedding").limit(300);
-    const scored = (pes ?? [])
-      .map((p) => {
-        const emb = p.embedding as unknown as number[];
-        if (!Array.isArray(emb)) return null;
-        return { user_id: p.user_id, similarity: cosine(v, emb) };
-      })
-      .filter((x): x is {user_id:string;similarity:number} => !!x)
-      .sort((a,b)=>b.similarity-a.similarity)
-      .slice(0, 12);
+    let scored: { user_id: string; similarity: number }[] = [];
+    if (v && pes && pes.length) {
+      scored = (pes ?? [])
+        .map((p) => {
+          const emb = p.embedding as unknown as number[];
+          if (!Array.isArray(emb)) return null;
+          return { user_id: p.user_id, similarity: cosine(v, emb) };
+        })
+        .filter((x): x is { user_id: string; similarity: number } => !!x)
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 12);
+    }
+    // Fallback: sin embeddings, tomar profesionales activos top por rating
+    if (scored.length === 0) {
+      const { data: fallbackPros } = await admin
+        .from("professional_profiles")
+        .select("user_id")
+        .eq("active", true)
+        .order("avg_rating", { ascending: false })
+        .limit(12);
+      scored = (fallbackPros ?? []).map((p) => ({ user_id: p.user_id, similarity: 0.5 }));
+    }
 
     const ids = scored.map(s=>s.user_id);
     const { data: pros } = await admin
