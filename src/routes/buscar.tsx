@@ -143,6 +143,13 @@ function BuscarPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [view, setView] = useState<"list" | "map">("list");
+  const [userLoc, setUserLoc] = useState<LatLng | null>(null);
+
+  // Pedir ubicación una vez (silencioso si la rechaza)
+  useEffect(() => {
+    getBrowserLocation().then(setUserLoc);
+  }, []);
 
   // Local filter state synced from URL
   const [q, setQ] = useState(search.q ?? "");
