@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
+import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/familia")({
@@ -44,6 +45,9 @@ type Offer = {
   amount: number;
   status: string;
   created_at: string;
+  lat: number | null;
+  lng: number | null;
+  reserved_until: string | null;
 };
 
 function FamilyDashboard() {
@@ -58,7 +62,7 @@ function FamilyDashboard() {
       try {
         const { data, error } = await supabase
           .from("job_offers")
-          .select("id, title, city, modality, amount, status, created_at")
+          .select("id, title, city, modality, amount, status, created_at, lat, lng, reserved_until")
           .eq("posted_by", user.id)
           .order("created_at", { ascending: false });
         if (!active) return;
@@ -194,6 +198,26 @@ function FamilyDashboard() {
             </div>
           )}
         </section>
+
+        {/* Mapa de mis solicitudes */}
+        {offers.some((o) => o.lat != null && o.lng != null) && (
+          <section>
+            <h2 className="font-display text-lg font-semibold mb-3">Tus solicitudes en el mapa</h2>
+            <OffersMap
+              points={offers
+                .filter((o) => o.lat != null && o.lng != null)
+                .map<MapPoint>((o) => ({
+                  id: o.id,
+                  lat: o.lat as number,
+                  lng: o.lng as number,
+                  title: o.title,
+                  subtitle: `${o.city} · ${o.status === "open" ? "Disponible" : o.status === "filled" ? "Tomado" : "Cerrada"}`,
+                  status: o.status === "filled" ? "reserved" : "available",
+                }))}
+              height={360}
+            />
+          </section>
+        )}
       </div>
     </AppShell>
   );

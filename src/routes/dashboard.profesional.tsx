@@ -26,6 +26,7 @@ import { Logo } from "@/components/humanix/Logo";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { AvatarUploader } from "@/components/humanix/AvatarUploader";
 import { DocumentsManager } from "@/components/humanix/DocumentsManager";
+import { AvailabilityCalendar } from "@/components/humanix/AvailabilityCalendar";
 import { MatchingOffers } from "@/components/humanix/MatchingOffers";
 import { OnboardingTour } from "@/components/humanix/OnboardingTour";
 import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
@@ -372,12 +373,29 @@ function ProDashboard() {
       toast.error(error.message);
       return;
     }
-    toast.success("Aplicación enviada");
-    const { data } = await supabase
-      .from("applications")
-      .select("id, job_offer_id, status, created_at")
-      .eq("professional_id", userId);
-    if (data) setApps(data as AppRow[]);
+    // Reservar la oferta y al profesional por 15 días (status azul "Tomado").
+    const { error: rpcErr } = await supabase.rpc("set_offer_reserved", {
+      _offer_id: offerId,
+      _professional_id: userId,
+    });
+    if (rpcErr) {
+      console.warn("[reserve]", rpcErr.message);
+    }
+    toast.success("✓ Aplicación enviada · oferta reservada 15 días");
+    const [{ data: appsData }, { data: offersData }] = await Promise.all([
+      supabase
+        .from("applications")
+        .select("id, job_offer_id, status, created_at")
+        .eq("professional_id", userId),
+      supabase
+        .from("job_offers")
+        .select("*")
+        .eq("status", "open")
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
+    if (appsData) setApps(appsData as AppRow[]);
+    if (offersData) setOffers(offersData as Offer[]);
   };
 
   const logout = async () => {
@@ -754,6 +772,21 @@ function ProDashboard() {
             <SemanticOffers userId={userId} appliedIds={appliedIds} onApply={apply} />
           )}
         </section>
+
+        {/* Agenda virtual */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-semibold">Tu agenda virtual</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Marca las horas en que estás disponible. Las familias e instituciones lo verán al buscarte.
+                </p>
+              </div>
+            </div>
+            <AvailabilityCalendar userId={userId} />
+          </section>
+        )}
 
         {/* Match IA (heurístico contextual) */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">

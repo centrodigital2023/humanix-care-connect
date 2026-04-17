@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/institucion")({
@@ -42,6 +43,9 @@ type Offer = {
   modality: string;
   amount: number;
   status: string;
+  lat: number | null;
+  lng: number | null;
+  reserved_until: string | null;
 };
 
 function InstitutionDashboard() {
@@ -56,7 +60,7 @@ function InstitutionDashboard() {
       try {
         const { data, error } = await supabase
           .from("job_offers")
-          .select("id, title, city, modality, amount, status")
+          .select("id, title, city, modality, amount, status, lat, lng, reserved_until")
           .eq("posted_by", user.id)
           .order("created_at", { ascending: false });
         if (!active) return;
@@ -162,6 +166,26 @@ function InstitutionDashboard() {
             </div>
           )}
         </section>
+
+        {/* Mapa de ofertas geolocalizadas */}
+        {offers.some((o) => o.lat != null && o.lng != null) && (
+          <section>
+            <h2 className="font-display text-lg font-semibold mb-3">Mapa de tus ofertas</h2>
+            <OffersMap
+              points={offers
+                .filter((o) => o.lat != null && o.lng != null)
+                .map<MapPoint>((o) => ({
+                  id: o.id,
+                  lat: o.lat as number,
+                  lng: o.lng as number,
+                  title: o.title,
+                  subtitle: `${o.city} · ${o.status === "open" ? "Disponible" : o.status === "filled" ? "Tomado" : "Cerrada"}`,
+                  status: o.status === "filled" ? "reserved" : "available",
+                }))}
+              height={360}
+            />
+          </section>
+        )}
       </div>
     </AppShell>
   );
