@@ -9,12 +9,32 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
+import { Route as SuperadminRouteImport } from './routes/superadmin'
+import { Route as EvaluadorRouteImport } from './routes/evaluador'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
+import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
+import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 
+const TalentoHumanoRoute = TalentoHumanoRouteImport.update({
+  id: '/talento-humano',
+  path: '/talento-humano',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperadminRoute = SuperadminRouteImport.update({
+  id: '/superadmin',
+  path: '/superadmin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EvaluadorRoute = EvaluadorRouteImport.update({
+  id: '/evaluador',
+  path: '/evaluador',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -40,12 +60,27 @@ const DashboardProfesionalRoute = DashboardProfesionalRouteImport.update({
   path: '/profesional',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardInstitucionRoute = DashboardInstitucionRouteImport.update({
+  id: '/institucion',
+  path: '/institucion',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardFamiliaRoute = DashboardFamiliaRouteImport.update({
+  id: '/familia',
+  path: '/familia',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/evaluador': typeof EvaluadorRoute
+  '/superadmin': typeof SuperadminRoute
+  '/talento-humano': typeof TalentoHumanoRoute
+  '/dashboard/familia': typeof DashboardFamiliaRoute
+  '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +88,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/evaluador': typeof EvaluadorRoute
+  '/superadmin': typeof SuperadminRoute
+  '/talento-humano': typeof TalentoHumanoRoute
+  '/dashboard/familia': typeof DashboardFamiliaRoute
+  '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
 }
 export interface FileRoutesById {
@@ -61,19 +101,49 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/evaluador': typeof EvaluadorRoute
+  '/superadmin': typeof SuperadminRoute
+  '/talento-humano': typeof TalentoHumanoRoute
+  '/dashboard/familia': typeof DashboardFamiliaRoute
+  '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/buscar' | '/dashboard' | '/dashboard/profesional'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/buscar'
+    | '/dashboard'
+    | '/evaluador'
+    | '/superadmin'
+    | '/talento-humano'
+    | '/dashboard/familia'
+    | '/dashboard/institucion'
+    | '/dashboard/profesional'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/buscar' | '/dashboard' | '/dashboard/profesional'
+  to:
+    | '/'
+    | '/auth'
+    | '/buscar'
+    | '/dashboard'
+    | '/evaluador'
+    | '/superadmin'
+    | '/talento-humano'
+    | '/dashboard/familia'
+    | '/dashboard/institucion'
+    | '/dashboard/profesional'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/buscar'
     | '/dashboard'
+    | '/evaluador'
+    | '/superadmin'
+    | '/talento-humano'
+    | '/dashboard/familia'
+    | '/dashboard/institucion'
     | '/dashboard/profesional'
   fileRoutesById: FileRoutesById
 }
@@ -82,10 +152,34 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  EvaluadorRoute: typeof EvaluadorRoute
+  SuperadminRoute: typeof SuperadminRoute
+  TalentoHumanoRoute: typeof TalentoHumanoRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/talento-humano': {
+      id: '/talento-humano'
+      path: '/talento-humano'
+      fullPath: '/talento-humano'
+      preLoaderRoute: typeof TalentoHumanoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/superadmin': {
+      id: '/superadmin'
+      path: '/superadmin'
+      fullPath: '/superadmin'
+      preLoaderRoute: typeof SuperadminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/evaluador': {
+      id: '/evaluador'
+      path: '/evaluador'
+      fullPath: '/evaluador'
+      preLoaderRoute: typeof EvaluadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -121,14 +215,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfesionalRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/institucion': {
+      id: '/dashboard/institucion'
+      path: '/institucion'
+      fullPath: '/dashboard/institucion'
+      preLoaderRoute: typeof DashboardInstitucionRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/familia': {
+      id: '/dashboard/familia'
+      path: '/familia'
+      fullPath: '/dashboard/familia'
+      preLoaderRoute: typeof DashboardFamiliaRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardFamiliaRoute: typeof DashboardFamiliaRoute
+  DashboardInstitucionRoute: typeof DashboardInstitucionRoute
   DashboardProfesionalRoute: typeof DashboardProfesionalRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardFamiliaRoute: DashboardFamiliaRoute,
+  DashboardInstitucionRoute: DashboardInstitucionRoute,
   DashboardProfesionalRoute: DashboardProfesionalRoute,
 }
 
@@ -141,7 +253,19 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  EvaluadorRoute: EvaluadorRoute,
+  SuperadminRoute: SuperadminRoute,
+  TalentoHumanoRoute: TalentoHumanoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
