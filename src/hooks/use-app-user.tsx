@@ -57,84 +57,133 @@ export function useAppUser(options: { requireAuth?: boolean; allow?: AppRole[] }
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<AppUser | null>(null);
   const redirectedRef = useRef(false);
+  const loadedForUidRef = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
 
-    const loadUser = async (uid: string, email: string) => {
-      const [{ data: roles }, { data: profile }] = await Promise.all([
-        supabase.from("user_roles").select("role").eq("user_id", uid),
-        supabase
-          .from("profiles")
-          .select("full_name, avatar_url")
-          .eq("user_id", uid)
-          .maybeSingle(),
-      ]);
-      if (!active) return;
-      const list = (roles?.map((r) => r.role) ?? []) as AppRole[];
-      const finalRoles = list.length ? list : (["family"] as AppRole[]);
-      const primary = pickPrimary(finalRoles);
-
-      // If route restricted and user role not allowed → send to their primary panel.
-      if (allow && !finalRoles.some((r) => allow.includes(r))) {
-        if (!redirectedRef.current) {
-          redirectedRef.current = true;
-          navigate({ to: pathForRole(primary), replace: true });
-        }
-        return;
-      }
-
-      setUser({
-        id: uid,
-        email,
-        fullName: profile?.full_name ?? email,
-        avatarUrl: profile?.avatar_url ?? null,
-        roles: finalRoles,
-        primaryRole: primary,
+    const safeRedirect = (to: string) => {
+      if (redirectedRef.current) return;
+      redirectedRef.current = true;
+      navigate({ to, replace: true }).catch(() => {
+        if (typeof window !== "undefined") window.location.replace(to);
       });
-      setLoading(false);
+    };
+
+    const loadUser = async (uid: string, email: string) => {
+      // Avoid re-loading the same user multiple times (prevents flicker / loops).
+      if (loadedForUidRef.current === uid) return;
+      loadedForUidRef.current = uid;
+
+      try {
+        const [rolesRes, profileRes] = await Promise.all([
+          supabase.from("user_roles").select("role").eq("user_id", uid),
+          supabase
+            .from("profiles")
+            .select("full_name, avatar_url")
+            .eq("user_id", uid)
+            .maybeSingle(),
+        ]);
+
+        if (!active) return;
+
+        if (rolesRes.error) {
+          // eslint-disable-next-line no-console
+          console.warn("[useAppUser] user_roles error:", rolesRes.error.message);
+        }
+        if (profileRes.error) {
+          // eslint-disable-next-line no-console
+          console.warn("[useAppUser] profiles error:", profileRes.error.message);
+        }
+
+        const list = (rolesRes.data?.map((r) => r.role) ?? []) as AppRole[];
+        const finalRoles = list.length ? list : (["family"] as AppRole[]);
+        const primary = pickPrimary(finalRoles);
+
+        // Route restriction → redirect to the user's own panel (do NOT setUser).
+        if (allow && !finalRoles.some((r) => allow.includes(r))) {
+          safeRedirect(pathForRole(primary));
+          setLoading(false);
+          return;
+        }
+
+        setUser({
+          id: uid,
+          email,
+          fullName: profileRes.data?.full_name ?? email,
+          avatarUrl: profileRes.data?.avatar_url ?? null,
+          roles: finalRoles,
+          primaryRole: primary,
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("[useAppUser] loadUser failed:", err);
+        // Fail open: still let the user in with default role to avoid stuck loaders.
+        if (active) {
+          setUser({
+            id: uid,
+            email,
+            fullName: email,
+            avatarUrl: null,
+            roles: ["family"],
+            primaryRole: "family",
+          });
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
     };
 
     // 1) Subscribe FIRST so we react to login/logout.
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
       if (!active) return;
       if (!session) {
+        loadedForUidRef.current = null;
         setUser(null);
-        if (requireAuth && !redirectedRef.current) {
-          redirectedRef.current = true;
-          navigate({ to: "/auth", replace: true });
-        }
         setLoading(false);
+        if (requireAuth) safeRedirect("/auth");
         return;
       }
-      // defer to avoid running supabase calls inside the callback synchronously
+      // Defer to avoid running supabase calls inside the callback synchronously.
       setTimeout(() => {
+        if (!active) return;
         loadUser(session.user.id, session.user.email ?? "");
       }, 0);
     });
 
     // 2) Then check existing session.
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      if (!data.session) {
-        if (requireAuth && !redirectedRef.current) {
-          redirectedRef.current = true;
-          navigate({ to: "/auth", replace: true });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        if (!data.session) {
+          setLoading(false);
+          if (requireAuth) safeRedirect("/auth");
+          return;
         }
-        setLoading(false);
-        return;
-      }
-      loadUser(data.session.user.id, data.session.user.email ?? "");
-    });
+        loadUser(data.session.user.id, data.session.user.email ?? "");
+      })
+      .catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error("[useAppUser] getSession failed:", err);
+        if (active) setLoading(false);
+      });
+
+    // Hard safety net: never stay in loading forever.
+    const safety = setTimeout(() => {
+      if (active) setLoading(false);
+    }, 5000);
 
     return () => {
       active = false;
+      clearTimeout(safety);
       sub.subscription.unsubscribe();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const logout = async () => {
+    loadedForUidRef.current = null;
     await supabase.auth.signOut();
     navigate({ to: "/", replace: true });
   };
