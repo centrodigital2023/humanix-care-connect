@@ -1,11 +1,7 @@
 // Match Offers — recomienda 3-5 ofertas que mejor encajan con el perfil del profesional.
 // Recibe { profile, offers } y devuelve { matches: [{offer_id, score, reason}] }.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const TOOL = {
   type: "function",
@@ -37,6 +33,8 @@ const TOOL = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
   try {
     const { profile, offers } = await req.json();
     if (!profile || !Array.isArray(offers)) {

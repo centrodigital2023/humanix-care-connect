@@ -1,11 +1,7 @@
 // Profile Validator — calcula Trust Score y genera resumen + sugerencias
 // del perfil profesional usando tool calling.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const TOOL = {
   type: "function",
@@ -44,6 +40,9 @@ const TOOL = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const { profile } = await req.json();

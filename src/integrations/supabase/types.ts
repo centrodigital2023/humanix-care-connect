@@ -428,9 +428,53 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles_safe: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          full_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          full_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          city?: string | null
+          full_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      get_my_profile: {
+        Args: never
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -439,6 +483,27 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      staff_get_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       app_role:
