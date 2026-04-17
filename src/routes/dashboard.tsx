@@ -25,50 +25,44 @@ function DashboardRouter() {
   const [msg, setMsg] = useState("Verificando sesión...");
 
   useEffect(() => {
-    let active = true;
-    let redirected = false;
+    let cancelled = false;
+    let done = false;
 
-    const route = async (userId: string) => {
-      if (redirected || !active) return;
+    const go = (to: string) => {
+      if (done || cancelled) return;
+      done = true;
+      // Use replace navigation; fallback to hard redirect if router doesn't unmount.
+      navigate({ to, replace: true }).catch(() => {
+        if (!cancelled) window.location.replace(to);
+      });
+      // Safety net: if still mounted after 600ms, force a hard redirect.
+      setTimeout(() => {
+        if (!cancelled && typeof window !== "undefined" && window.location.pathname === "/dashboard") {
+          window.location.replace(to);
+        }
+      }, 600);
+    };
+
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (cancelled) return;
+      if (!data.session) {
+        go("/auth");
+        return;
+      }
+      setMsg("Redirigiendo a tu panel...");
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId);
-      if (!active || redirected) return;
+        .eq("user_id", data.session.user.id);
+      if (cancelled) return;
       const list = (roles?.map((x) => x.role) ?? []) as AppRole[];
       const primary = PRIORITY.find((p) => list.includes(p)) ?? "family";
-      redirected = true;
-      setMsg("Redirigiendo a tu panel...");
-      navigate({ to: pathForRole(primary), replace: true });
-    };
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
-      if (!active) return;
-      if (!session) {
-        if (!redirected) {
-          redirected = true;
-          navigate({ to: "/auth", replace: true });
-        }
-        return;
-      }
-      setTimeout(() => route(session.user.id), 0);
-    });
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      if (!data.session) {
-        if (!redirected) {
-          redirected = true;
-          navigate({ to: "/auth", replace: true });
-        }
-        return;
-      }
-      route(data.session.user.id);
-    });
+      go(pathForRole(primary));
+    })();
 
     return () => {
-      active = false;
-      sub.subscription.unsubscribe();
+      cancelled = true;
     };
   }, [navigate]);
 
