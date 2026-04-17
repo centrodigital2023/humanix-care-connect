@@ -118,7 +118,7 @@ function Stars({ value }: { value: number }) {
   );
 }
 
-type SearchT = z.infer<typeof searchSchema>;
+type SearchT = SearchParams;
 
 function BuscarPage() {
   const search = Route.useSearch();
@@ -243,7 +243,7 @@ function BuscarPage() {
   const applySearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate({
-      search: (prev: z.infer<typeof searchSchema>) => ({
+      search: (prev: SearchT) => ({
         ...prev,
         q: q || undefined,
         specialty: specialty || undefined,
