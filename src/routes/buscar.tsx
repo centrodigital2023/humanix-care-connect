@@ -592,10 +592,15 @@ function BuscarPage() {
   );
 }
 
-function ProCard({ pro }: { pro: Pro }) {
+function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
   const name = pro.profiles?.full_name ?? "Profesional Humanix";
   const city = pro.profiles?.city ?? pro.service_cities?.[0] ?? "Colombia";
   const rating = Number(pro.avg_rating ?? 0);
+  const status = deriveProStatus(pro);
+  const km =
+    userLoc && pro.lat != null && pro.lng != null
+      ? distanceKm(userLoc, { lat: pro.lat, lng: pro.lng })
+      : null;
   return (
     <article className="group rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 transition-all">
       <div className="flex items-start gap-3">
@@ -615,6 +620,7 @@ function ProCard({ pro }: { pro: Pro }) {
           <div className="flex items-center gap-2">
             <h3 className="font-semibold truncate">{name}</h3>
             {pro.verified && <CheckCircle2 className="h-4 w-4 text-biosensor shrink-0" />}
+            <StatusBadge status={status} reservedUntil={pro.reserved_until} />
           </div>
           <p className="text-xs text-muted-foreground truncate">
             {pro.specialty ?? "Profesional de salud"}
@@ -632,6 +638,7 @@ function ProCard({ pro }: { pro: Pro }) {
         <span className="inline-flex items-center gap-1 text-muted-foreground">
           <MapPin className="h-3.5 w-3.5" />
           {city}
+          {km !== null && <span className="ml-1 text-biosensor">· {formatKm(km)}</span>}
         </span>
         {pro.hourly_rate ? (
           <span className="font-semibold text-foreground">
@@ -672,7 +679,7 @@ function ProCard({ pro }: { pro: Pro }) {
   );
 }
 
-function OfferCard({ offer }: { offer: Offer }) {
+function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null }) {
   const modalityLabel =
     offer.modality === "hour"
       ? "Por hora"
@@ -681,6 +688,11 @@ function OfferCard({ offer }: { offer: Offer }) {
       : offer.modality === "month"
       ? "Mensual"
       : "Paquete";
+  const status = deriveOfferStatus(offer);
+  const km =
+    userLoc && offer.lat != null && offer.lng != null
+      ? distanceKm(userLoc, { lat: offer.lat, lng: offer.lng })
+      : null;
   return (
     <article className="group rounded-2xl border border-border bg-card p-5 hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 transition-all">
       <div className="flex items-start justify-between gap-3">
@@ -692,7 +704,11 @@ function OfferCard({ offer }: { offer: Offer }) {
           <p className="text-xs text-muted-foreground inline-flex items-center gap-1 mt-1">
             <MapPin className="h-3 w-3" />
             {offer.city}
+            {km !== null && <span className="ml-1 text-biosensor">· {formatKm(km)}</span>}
           </p>
+          <div className="mt-2">
+            <StatusBadge status={status} reservedUntil={offer.reserved_until} />
+          </div>
         </div>
         <div className="text-right shrink-0">
           <p className="font-display text-lg font-bold text-biosensor">{COP(offer.amount)}</p>
