@@ -483,6 +483,13 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      redeem_staff_invitation: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          role: Database["public"]["Enums"]["app_role"]
+        }[]
+      }
       staff_get_profile: {
         Args: { _user_id: string }
         Returns: {
