@@ -1,11 +1,11 @@
 // CV Extractor — extrae perfil profesional desde un PDF/imagen de hoja de vida
 // usando un modelo multimodal con tool calling.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
+
+const ALLOWED_MIME_PREFIXES = ["application/pdf", "image/"];
+const MAX_BYTES = 15 * 1024 * 1024; // 15 MB
+const FETCH_TIMEOUT_MS = 15_000;
 
 const TOOL = {
   type: "function",

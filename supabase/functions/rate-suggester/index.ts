@@ -1,11 +1,7 @@
 // Rate Suggester — sugiere tarifas en COP (hora/turno/mes) y una bio profesional
 // para profesionales de la salud en Colombia, basado en su perfil.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const TOOL = {
   type: "function",
@@ -37,6 +33,8 @@ const TOOL = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
   try {
     const { profile } = await req.json();
     if (!profile) {

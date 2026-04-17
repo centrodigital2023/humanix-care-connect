@@ -1,11 +1,7 @@
 // Humanix Assistant — chat IA con streaming (SSE) usando Lovable AI Gateway.
 // Acepta { messages, persona } y devuelve un stream OpenAI-compat.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const SYSTEM_BY_PERSONA: Record<string, string> = {
   professional:
@@ -31,6 +27,9 @@ const SYSTEM_BY_PERSONA: Record<string, string> = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const { messages, persona } = await req.json();
