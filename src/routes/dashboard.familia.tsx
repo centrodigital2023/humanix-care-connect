@@ -198,6 +198,26 @@ function FamilyDashboard() {
             </div>
           )}
         </section>
+
+        {/* Mapa de mis solicitudes */}
+        {offers.some((o) => o.lat != null && o.lng != null) && (
+          <section>
+            <h2 className="font-display text-lg font-semibold mb-3">Tus solicitudes en el mapa</h2>
+            <OffersMap
+              points={offers
+                .filter((o) => o.lat != null && o.lng != null)
+                .map<MapPoint>((o) => ({
+                  id: o.id,
+                  lat: o.lat as number,
+                  lng: o.lng as number,
+                  title: o.title,
+                  subtitle: `${o.city} · ${o.status === "open" ? "Disponible" : o.status === "filled" ? "Tomado" : "Cerrada"}`,
+                  status: o.status === "filled" ? "reserved" : "available",
+                }))}
+              height={360}
+            />
+          </section>
+        )}
       </div>
     </AppShell>
   );
