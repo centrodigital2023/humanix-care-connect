@@ -9,6 +9,7 @@ import {
   PhoneCall,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "@tanstack/react-router";
 
 const pro = [
   { icon: Calendar, title: "Turnos a tu medida", desc: "Por hora, jornada o paquetes prepago. Acepta desde WhatsApp." },
