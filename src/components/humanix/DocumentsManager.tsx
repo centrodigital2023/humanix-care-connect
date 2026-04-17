@@ -211,14 +211,13 @@ export function DocumentsManager({
                 <ul className="mt-3 space-y-1.5">
                   {items.map((d) => (
                     <li key={d.id} className="flex items-center justify-between gap-2 text-xs bg-muted/30 rounded px-2 py-1.5">
-                      <a
-                        href={d.file_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="truncate flex-1 hover:underline"
+                      <button
+                        type="button"
+                        onClick={() => openDoc(d)}
+                        className="truncate flex-1 text-left hover:underline"
                       >
                         {d.file_name || "Documento"}
-                      </a>
+                      </button>
                       <StatusBadge status={d.status} />
                       <button
                         onClick={() => remove(d)}
@@ -252,4 +251,18 @@ function StatusBadge({ status }: { status: DocStatus }) {
       {s.label}
     </span>
   );
+}
+
+// Extracts a storage path from either a stored path ("<userId>/file") or a
+// legacy public URL stored before the bucket was made private.
+function extractPath(stored: string): string | null {
+  if (!stored) return null;
+  if (!stored.includes("://")) return stored;
+  try {
+    const url = new URL(stored);
+    const idx = url.pathname.indexOf("/professional-docs/");
+    return idx >= 0 ? url.pathname.slice(idx + "/professional-docs/".length) : null;
+  } catch {
+    return null;
+  }
 }
