@@ -4,9 +4,11 @@ import { Hero } from "@/components/humanix/Hero";
 import { TrustBar } from "@/components/humanix/TrustBar";
 import { AudienceSection } from "@/components/humanix/AudienceSection";
 import { TechSection } from "@/components/humanix/TechSection";
+import { Testimonials } from "@/components/humanix/Testimonials";
 import { Pricing } from "@/components/humanix/Pricing";
 import { CTA } from "@/components/humanix/CTA";
 import { Footer } from "@/components/humanix/Footer";
+import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,10 +43,12 @@ function Index() {
         <TrustBar />
         <AudienceSection />
         <TechSection />
+        <Testimonials />
         <Pricing />
         <CTA />
       </main>
       <Footer />
+      <HumanixAssistant persona="default" />
     </div>
   );
 }
