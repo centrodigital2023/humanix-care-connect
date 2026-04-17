@@ -82,8 +82,8 @@ export function DocumentsManager({
         .from("professional-docs")
         .upload(path, file, { upsert: false, contentType: file.type });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("professional-docs").getPublicUrl(path);
-      const file_url = pub.publicUrl;
+      // Bucket is private — store the storage path; we generate signed URLs on demand.
+      const file_url = path;
       const { data: row, error } = await supabase
         .from("professional_documents")
         .insert({
@@ -98,13 +98,17 @@ export function DocumentsManager({
       setDocs((prev) => [row as Doc, ...prev]);
       toast.success("Documento subido");
 
-      // Si es CV, dispara extracción
+      // Si es CV, dispara extracción usando una URL firmada de corta vida.
       if (type === "cv" && onCvExtracted) {
         setExtractingCv(true);
         toast.info("✨ Analizando tu hoja de vida con IA...");
         try {
+          const { data: signed, error: sErr } = await supabase.storage
+            .from("professional-docs")
+            .createSignedUrl(path, 60);
+          if (sErr || !signed?.signedUrl) throw sErr ?? new Error("No se pudo firmar URL");
           const { data: ext, error: e2 } = await supabase.functions.invoke("cv-extractor", {
-            body: { file_url, mime_type: file.type },
+            body: { file_url: signed.signedUrl, mime_type: file.type },
           });
           if (e2) throw e2;
           if (ext?.profile) {
@@ -124,13 +128,24 @@ export function DocumentsManager({
     }
   };
 
+  const openDoc = async (doc: Doc) => {
+    try {
+      const path = extractPath(doc.file_url);
+      if (!path) throw new Error("Ruta no válida");
+      const { data, error } = await supabase.storage
+        .from("professional-docs")
+        .createSignedUrl(path, 60);
+      if (error || !data?.signedUrl) throw error ?? new Error("No se pudo abrir");
+      window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo abrir el documento");
+    }
+  };
+
   const remove = async (doc: Doc) => {
     if (!confirm("¿Eliminar este documento?")) return;
-    // Storage path es: <userId>/<filename> — derivar del URL público
     try {
-      const url = new URL(doc.file_url);
-      const idx = url.pathname.indexOf("/professional-docs/");
-      const path = idx >= 0 ? url.pathname.slice(idx + "/professional-docs/".length) : null;
+      const path = extractPath(doc.file_url);
       if (path) await supabase.storage.from("professional-docs").remove([path]);
       await supabase.from("professional_documents").delete().eq("id", doc.id);
       setDocs((prev) => prev.filter((d) => d.id !== doc.id));
