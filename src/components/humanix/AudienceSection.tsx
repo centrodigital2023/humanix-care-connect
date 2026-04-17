@@ -94,8 +94,8 @@ export function AudienceSection() {
               Contrata cuidadores certificados en minutos, con monitoreo en
               tiempo real y respaldo de pólizas médicas reconocidas.
             </p>
-            <Button variant="copper" size="lg" className="mt-6">
-              Buscar cuidador ahora
+            <Button variant="copper" size="lg" className="mt-6" asChild>
+              <Link to="/buscar">Buscar cuidador ahora</Link>
             </Button>
           </div>
           <div className="lg:col-span-8 lg:order-1 grid sm:grid-cols-2 gap-4">
