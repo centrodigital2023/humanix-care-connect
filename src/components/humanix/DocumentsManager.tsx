@@ -11,12 +11,24 @@ import {
   Clock,
   XCircle,
   Sparkles,
+  Receipt,
+  Briefcase,
+  Heart,
+  ShieldAlert,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-type DocType = "cv" | "rethus" | "diploma" | "id_document" | "other";
+type DocType =
+  | "cv"
+  | "rethus"
+  | "diploma"
+  | "id_document"
+  | "utility_bill"
+  | "work_reference"
+  | "family_reference"
+  | "other";
 type DocStatus = "pending" | "approved" | "rejected";
 
 type Doc = {
@@ -26,14 +38,27 @@ type Doc = {
   file_name: string | null;
   status: DocStatus;
   reviewer_note: string | null;
+  ai_verified?: boolean | null;
+  ai_score?: number | null;
+  ai_notes?: string | null;
   created_at: string;
 };
 
-const TYPES: { value: DocType; label: string; icon: React.ReactNode; hint: string; cvParse?: boolean }[] = [
-  { value: "cv", label: "Hoja de vida", icon: <FileText className="h-4 w-4" />, hint: "PDF · La IA extraerá tus datos automáticamente.", cvParse: true },
-  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "PDF o imagen del registro RETHUS." },
-  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "BLS, ACLS, diploma profesional, etc." },
-  { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso." },
+const TYPES: {
+  value: DocType;
+  label: string;
+  icon: React.ReactNode;
+  hint: string;
+  cvParse?: boolean;
+  required?: boolean;
+}[] = [
+  { value: "cv", label: "Hoja de vida", icon: <FileText className="h-4 w-4" />, hint: "PDF · La IA extrae tus datos.", cvParse: true, required: true },
+  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "PDF o foto del registro RETHUS.", required: true },
+  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "BLS, ACLS, diploma profesional, etc.", required: true },
+  { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso.", required: true },
+  { value: "utility_bill", label: "Recibo de servicios públicos", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
+  { value: "work_reference", label: "Carta de referencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Carta firmada de un empleador anterior." },
+  { value: "family_reference", label: "Referencia familiar (opcional)", icon: <Heart className="h-4 w-4" />, hint: "Constancia de un familiar cercano." },
 ];
 
 export function DocumentsManager({
@@ -46,12 +71,10 @@ export function DocumentsManager({
   const [docs, setDocs] = useState<Doc[]>([]);
   const [busyType, setBusyType] = useState<DocType | null>(null);
   const [extractingCv, setExtractingCv] = useState(false);
+  const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const inputRefs = useRef<Record<DocType, HTMLInputElement | null>>({
-    cv: null,
-    rethus: null,
-    diploma: null,
-    id_document: null,
-    other: null,
+    cv: null, rethus: null, diploma: null, id_document: null,
+    utility_bill: null, work_reference: null, family_reference: null, other: null,
   });
 
   useEffect(() => {
@@ -62,11 +85,9 @@ export function DocumentsManager({
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: false });
-      if (active && data) setDocs(data as Doc[]);
+      if (active && data) setDocs(data as unknown as Doc[]);
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [userId]);
 
   const upload = async (type: DocType, file: File) => {
@@ -82,44 +103,84 @@ export function DocumentsManager({
         .from("professional-docs")
         .upload(path, file, { upsert: false, contentType: file.type });
       if (upErr) throw upErr;
-      // Bucket is private — store the storage path; we generate signed URLs on demand.
       const file_url = path;
       const { data: row, error } = await supabase
         .from("professional_documents")
-        .insert({
-          user_id: userId,
-          doc_type: type,
-          file_url,
-          file_name: file.name,
-        })
+        .insert({ user_id: userId, doc_type: type, file_url, file_name: file.name })
         .select()
         .single();
       if (error) throw error;
-      setDocs((prev) => [row as Doc, ...prev]);
-      toast.success("Documento subido");
+      const newDoc = row as unknown as Doc;
+      setDocs((prev) => [newDoc, ...prev]);
+      toast.success("Documento subido. Verificando con IA…");
 
-      // Si es CV, dispara extracción usando una URL firmada de corta vida.
+      // Generar URL firmada para que la IA pueda leerlo
+      const { data: signed } = await supabase.storage
+        .from("professional-docs")
+        .createSignedUrl(path, 120);
+      if (!signed?.signedUrl) {
+        toast.warning("No se pudo verificar automáticamente. Quedó pendiente para revisión.");
+        return;
+      }
+
+      // 1) CV → extracción de perfil
       if (type === "cv" && onCvExtracted) {
         setExtractingCv(true);
-        toast.info("✨ Analizando tu hoja de vida con IA...");
         try {
-          const { data: signed, error: sErr } = await supabase.storage
-            .from("professional-docs")
-            .createSignedUrl(path, 60);
-          if (sErr || !signed?.signedUrl) throw sErr ?? new Error("No se pudo firmar URL");
           const { data: ext, error: e2 } = await supabase.functions.invoke("cv-extractor", {
             body: { file_url: signed.signedUrl, mime_type: file.type },
           });
           if (e2) throw e2;
           if (ext?.profile) {
             onCvExtracted(ext.profile);
-            toast.success("Datos extraídos. Revísalos antes de guardar.");
+            toast.success("✨ Datos extraídos del CV. Revísalos antes de guardar.");
           }
         } catch (e) {
           toast.error(e instanceof Error ? e.message : "No se pudo analizar el CV");
         } finally {
           setExtractingCv(false);
         }
+      }
+
+      // 2) Verificación IA: rechaza si no es real / no coincide
+      setVerifyingId(newDoc.id);
+      try {
+        const { data: vr, error: ve } = await supabase.functions.invoke("document-verifier", {
+          body: { file_url: signed.signedUrl, mime_type: file.type, doc_type: type },
+        });
+        if (ve) throw ve;
+        const v = vr?.verification;
+        if (!v) throw new Error("Sin respuesta de verificación");
+        const isValid = !!v.is_valid && Number(v.confidence ?? 0) >= 60;
+        const newStatus: DocStatus = isValid ? "pending" : "rejected";
+        const updates = {
+          ai_verified: isValid,
+          ai_score: typeof v.confidence === "number" ? v.confidence : null,
+          ai_notes: v.reason ?? null,
+          ai_extracted: v.extracted ?? null,
+          reviewer_note: !isValid ? v.reason ?? "Documento rechazado por IA" : null,
+          status: newStatus,
+        };
+        const { data: upd } = await supabase
+          .from("professional_documents")
+          .update(updates as never)
+          .eq("id", newDoc.id)
+          .select()
+          .single();
+        if (upd) {
+          setDocs((prev) => prev.map((d) => (d.id === newDoc.id ? (upd as unknown as Doc) : d)));
+        }
+        if (isValid) {
+          toast.success(`✅ Documento verificado por IA (${Math.round(v.confidence)}%)`);
+        } else {
+          toast.error(`❌ Rechazado: ${v.reason ?? "no coincide con el tipo declarado"}`);
+        }
+      } catch (e) {
+        // No bloqueamos si IA falla, queda pendiente para staff
+        console.warn("[verify]", e);
+        toast.warning("Documento subido. La verificación IA no estuvo disponible; quedó pendiente.");
+      } finally {
+        setVerifyingId(null);
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al subir");
@@ -157,8 +218,20 @@ export function DocumentsManager({
 
   const docsByType = (t: DocType) => docs.filter((d) => d.doc_type === t);
 
+  const requiredMissing = TYPES.filter(
+    (t) => t.required && !docs.some((d) => d.doc_type === t.value && d.status !== "rejected"),
+  ).length;
+
   return (
     <div className="space-y-4">
+      {requiredMissing > 0 && (
+        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+          <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+          <p className="text-amber-700 dark:text-amber-400">
+            Te faltan <strong>{requiredMissing}</strong> documento(s) obligatorio(s) para completar tu verificación.
+          </p>
+        </div>
+      )}
       <div className="grid sm:grid-cols-2 gap-3">
         {TYPES.map((t) => {
           const items = docsByType(t.value);
@@ -171,7 +244,10 @@ export function DocumentsManager({
                     {t.icon}
                   </span>
                   <div>
-                    <p className="text-sm font-semibold">{t.label}</p>
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      {t.label}
+                      {t.required && <span className="text-[10px] text-rose-500">*</span>}
+                    </p>
                     <p className="text-[11px] text-muted-foreground">{t.hint}</p>
                   </div>
                 </div>
@@ -181,19 +257,13 @@ export function DocumentsManager({
                   disabled={busy}
                   onClick={() => inputRefs.current[t.value]?.click()}
                 >
-                  {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <UploadCloud className="h-3.5 w-3.5" />
-                  )}
+                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
                   <span className="ml-1.5 text-xs">Subir</span>
                 </Button>
                 <input
-                  ref={(el) => {
-                    inputRefs.current[t.value] = el;
-                  }}
+                  ref={(el) => { inputRefs.current[t.value] = el; }}
                   type="file"
-                  accept={t.value === "cv" ? ".pdf,image/*" : ".pdf,image/*"}
+                  accept=".pdf,image/*"
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
@@ -210,22 +280,37 @@ export function DocumentsManager({
               {items.length > 0 && (
                 <ul className="mt-3 space-y-1.5">
                   {items.map((d) => (
-                    <li key={d.id} className="flex items-center justify-between gap-2 text-xs bg-muted/30 rounded px-2 py-1.5">
-                      <button
-                        type="button"
-                        onClick={() => openDoc(d)}
-                        className="truncate flex-1 text-left hover:underline"
-                      >
-                        {d.file_name || "Documento"}
-                      </button>
-                      <StatusBadge status={d.status} />
-                      <button
-                        onClick={() => remove(d)}
-                        className="text-muted-foreground hover:text-destructive"
-                        aria-label="Eliminar documento"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                    <li key={d.id} className="text-xs bg-muted/30 rounded px-2 py-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openDoc(d)}
+                          className="truncate flex-1 text-left hover:underline"
+                        >
+                          {d.file_name || "Documento"}
+                        </button>
+                        {verifyingId === d.id && (
+                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+                        )}
+                        <StatusBadge status={d.status} aiVerified={d.ai_verified ?? false} />
+                        <button
+                          onClick={() => remove(d)}
+                          className="text-muted-foreground hover:text-destructive"
+                          aria-label="Eliminar documento"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {d.ai_notes && (
+                        <p
+                          className={`mt-1 text-[10.5px] ${
+                            d.status === "rejected" ? "text-rose-600" : "text-muted-foreground"
+                          }`}
+                        >
+                          {d.status === "rejected" ? "❌ " : "🤖 "}
+                          {d.ai_notes}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -238,23 +323,25 @@ export function DocumentsManager({
   );
 }
 
-function StatusBadge({ status }: { status: DocStatus }) {
+function StatusBadge({ status, aiVerified }: { status: DocStatus; aiVerified: boolean }) {
   const map = {
-    pending: { icon: <Clock className="h-3 w-3" />, label: "Pendiente", cls: "bg-amber-500/10 text-amber-600" },
+    pending: {
+      icon: <Clock className="h-3 w-3" />,
+      label: aiVerified ? "IA ✓ pendiente staff" : "Pendiente",
+      cls: aiVerified ? "bg-biosensor/10 text-biosensor" : "bg-amber-500/10 text-amber-600",
+    },
     approved: { icon: <CheckCircle2 className="h-3 w-3" />, label: "Aprobado", cls: "bg-emerald-500/10 text-emerald-600" },
     rejected: { icon: <XCircle className="h-3 w-3" />, label: "Rechazado", cls: "bg-rose-500/10 text-rose-600" },
   } as const;
   const s = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls}`}>
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls} whitespace-nowrap`}>
       {s.icon}
       {s.label}
     </span>
   );
 }
 
-// Extracts a storage path from either a stored path ("<userId>/file") or a
-// legacy public URL stored before the bucket was made private.
 function extractPath(stored: string): string | null {
   if (!stored) return null;
   if (!stored.includes("://")) return stored;
