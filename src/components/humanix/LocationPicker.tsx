@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { ClientOnly } from "@tanstack/react-router";
 
 export type LocationPickerProps = {
   lat: number | null;
@@ -20,10 +21,11 @@ export function LocationPicker(props: LocationPickerProps) {
       style={{ height }}
     />
   );
-  if (typeof window === "undefined") return placeholder;
   return (
-    <Suspense fallback={placeholder}>
-      <LazyPicker {...props} />
-    </Suspense>
+    <ClientOnly fallback={placeholder}>
+      <Suspense fallback={placeholder}>
+        <LazyPicker {...props} />
+      </Suspense>
+    </ClientOnly>
   );
 }
