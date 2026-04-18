@@ -31,6 +31,8 @@ import { MatchingOffers } from "@/components/humanix/MatchingOffers";
 import { OnboardingTour } from "@/components/humanix/OnboardingTour";
 import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
 import { SemanticOffers } from "@/components/humanix/SemanticOffers";
+import { LocationPicker } from "@/components/humanix/LocationPicker";
+import { ReferencesManager } from "@/components/humanix/ReferencesManager";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
