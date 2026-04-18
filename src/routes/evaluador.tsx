@@ -160,12 +160,15 @@ function EvaluatorPage() {
               className="mb-3"
               rows={2}
             />
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button size="sm" variant="hero" onClick={() => review(d, "approved")}>
                 <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar
               </Button>
               <Button size="sm" variant="outline" onClick={() => review(d, "rejected")}>
                 <XCircle className="h-4 w-4 mr-1" /> Rechazar
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => aiValidate(d)}>
+                <Sparkles className="h-4 w-4 mr-1" /> Validar IA
               </Button>
             </div>
           </Card>
