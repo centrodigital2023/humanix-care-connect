@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     }
     const sizeHeader = headResp.headers.get("content-length");
     if (sizeHeader && Number(sizeHeader) > MAX_BYTES) {
-      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 8MB)" }), {
+      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 20MB)" }), {
         status: 413,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
