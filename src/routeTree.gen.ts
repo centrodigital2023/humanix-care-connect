@@ -9,10 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TecnologiaRouteImport } from './routes/tecnologia'
 import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
+import { Route as ProfesionalesRouteImport } from './routes/profesionales'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as MensajesRouteImport } from './routes/mensajes'
+import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BuscarRouteImport } from './routes/buscar'
@@ -25,6 +28,11 @@ import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.pro
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 
+const TecnologiaRoute = TecnologiaRouteImport.update({
+  id: '/tecnologia',
+  path: '/tecnologia',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TalentoHumanoRoute = TalentoHumanoRouteImport.update({
   id: '/talento-humano',
   path: '/talento-humano',
@@ -35,6 +43,11 @@ const SuperadminRoute = SuperadminRouteImport.update({
   path: '/superadmin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfesionalesRoute = ProfesionalesRouteImport.update({
+  id: '/profesionales',
+  path: '/profesionales',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanesRoute = PlanesRouteImport.update({
   id: '/planes',
   path: '/planes',
@@ -43,6 +56,11 @@ const PlanesRoute = PlanesRouteImport.update({
 const MensajesRoute = MensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FamiliasRoute = FamiliasRouteImport.update({
+  id: '/familias',
+  path: '/familias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EvaluadorRoute = EvaluadorRouteImport.update({
@@ -107,10 +125,13 @@ export interface FileRoutesByFullPath {
   '/buscar': typeof BuscarRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
+  '/familias': typeof FamiliasRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
+  '/tecnologia': typeof TecnologiaRoute
   '/dashboard/familia': typeof DashboardFamiliaRoute
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -123,10 +144,13 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
   '/evaluador': typeof EvaluadorRoute
+  '/familias': typeof FamiliasRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
+  '/tecnologia': typeof TecnologiaRoute
   '/dashboard/familia': typeof DashboardFamiliaRoute
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -141,10 +165,13 @@ export interface FileRoutesById {
   '/buscar': typeof BuscarRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
+  '/familias': typeof FamiliasRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
+  '/tecnologia': typeof TecnologiaRoute
   '/dashboard/familia': typeof DashboardFamiliaRoute
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -160,10 +187,13 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/dashboard'
     | '/evaluador'
+    | '/familias'
     | '/mensajes'
     | '/planes'
+    | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
+    | '/tecnologia'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -176,10 +206,13 @@ export interface FileRouteTypes {
     | '/auth'
     | '/buscar'
     | '/evaluador'
+    | '/familias'
     | '/mensajes'
     | '/planes'
+    | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
+    | '/tecnologia'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -193,10 +226,13 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/dashboard'
     | '/evaluador'
+    | '/familias'
     | '/mensajes'
     | '/planes'
+    | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
+    | '/tecnologia'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -211,14 +247,24 @@ export interface RootRouteChildren {
   BuscarRoute: typeof BuscarRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EvaluadorRoute: typeof EvaluadorRoute
+  FamiliasRoute: typeof FamiliasRoute
   MensajesRoute: typeof MensajesRoute
   PlanesRoute: typeof PlanesRoute
+  ProfesionalesRoute: typeof ProfesionalesRoute
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
+  TecnologiaRoute: typeof TecnologiaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tecnologia': {
+      id: '/tecnologia'
+      path: '/tecnologia'
+      fullPath: '/tecnologia'
+      preLoaderRoute: typeof TecnologiaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/talento-humano': {
       id: '/talento-humano'
       path: '/talento-humano'
@@ -233,6 +279,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profesionales': {
+      id: '/profesionales'
+      path: '/profesionales'
+      fullPath: '/profesionales'
+      preLoaderRoute: typeof ProfesionalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/planes': {
       id: '/planes'
       path: '/planes'
@@ -245,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/mensajes'
       fullPath: '/mensajes'
       preLoaderRoute: typeof MensajesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/familias': {
+      id: '/familias'
+      path: '/familias'
+      fullPath: '/familias'
+      preLoaderRoute: typeof FamiliasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/evaluador': {
@@ -365,10 +425,13 @@ const rootRouteChildren: RootRouteChildren = {
   BuscarRoute: BuscarRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EvaluadorRoute: EvaluadorRoute,
+  FamiliasRoute: FamiliasRoute,
   MensajesRoute: MensajesRoute,
   PlanesRoute: PlanesRoute,
+  ProfesionalesRoute: ProfesionalesRoute,
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
+  TecnologiaRoute: TecnologiaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

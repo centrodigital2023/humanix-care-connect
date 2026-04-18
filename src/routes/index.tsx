@@ -12,6 +12,8 @@ import { CTA } from "@/components/humanix/CTA";
 import { Footer } from "@/components/humanix/Footer";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { StickyCTA } from "@/components/humanix/StickyCTA";
+import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
+import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,6 +43,9 @@ function Index() {
       <Navbar />
       <main>
         <Hero />
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 -mt-10 sm:-mt-16 relative z-10">
+          <QuickCareWizard />
+        </section>
         <LiveSocialProof />
         <TrustBar />
         <AudienceSection />
@@ -53,6 +58,7 @@ function Index() {
       <Footer />
       <HumanixAssistant persona="default" />
       <StickyCTA />
+      <HabeasDataConsent />
     </div>
   );
 }
