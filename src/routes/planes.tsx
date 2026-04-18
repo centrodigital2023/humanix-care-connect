@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Sparkles, Stethoscope, Heart, Building2, Crown, Loader2 } from "lucide-react";
+import { Check, Sparkles, Stethoscope, Heart, Building2, Crown, Loader2, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,19 +15,19 @@ export const Route = createFileRoute("/planes")({
       {
         name: "description",
         content:
-          "Planes Humanix: gratis, Pro Profesional, Familia e Institución. Matching IA, copiloto y créditos para escalar tu cuidado humano.",
+          "Plan Esencial Humanix: $9.000 COP/mes para familias y profesionales. Sin comisiones por servicio: el profesional cobra directo.",
       },
       { property: "og:title", content: "Planes y precios · Humanix" },
       {
         property: "og:description",
-        content: "Elige el plan que activa la IA de Humanix: matching, copiloto y créditos.",
+        content: "Plan Esencial $9.000 COP/mes. Pagos Mercado Pago. El profesional cobra directo al cliente.",
       },
     ],
   }),
   component: PlansPage,
 });
 
-type PlanKey = "free" | "pro" | "family" | "institution";
+type PlanKey = "free" | "essential" | "pro" | "institution";
 
 const PLANS: {
   key: PlanKey;
@@ -40,15 +40,18 @@ const PLANS: {
   highlight?: boolean;
   features: string[];
   cta: string;
+  /** Monto en COP para Mercado Pago. 0 si no aplica. */
+  amount: number;
 }[] = [
   {
     key: "free",
     name: "Free",
     price: "COP 0",
     cycle: "siempre",
-    audience: "Para empezar y conocer Humanix.",
+    audience: "Para conocer Humanix sin compromiso.",
     icon: Sparkles,
     tone: "bio",
+    amount: 0,
     features: [
       "Crear perfil profesional o familiar",
       "Buscar y aplicar a ofertas abiertas",
@@ -58,38 +61,42 @@ const PLANS: {
     cta: "Empezar gratis",
   },
   {
+    key: "essential",
+    name: "Esencial",
+    price: "COP 9.000",
+    cycle: "/mes",
+    audience: "Familias y profesionales que quieren todo activo.",
+    icon: Zap,
+    tone: "copper",
+    highlight: true,
+    amount: 9000,
+    features: [
+      "Match IA en menos de 150 ms",
+      "Buzón de postulaciones ilimitado",
+      "Contacto directo por WhatsApp con la otra parte",
+      "Geolocalización en vivo y ETA",
+      "Verificación RETHUS y anti-fraude IA incluida",
+      "Sin comisión: el profesional cobra directo al cliente",
+    ],
+    cta: "Suscribirme por $9.000",
+  },
+  {
     key: "pro",
     name: "Pro Profesional",
     price: "COP 29.900",
     cycle: "/mes",
-    audience: "Profesionales de salud que quieren más turnos.",
+    audience: "Profesionales que quieren visibilidad máxima.",
     icon: Stethoscope,
     tone: "fuchsia",
-    highlight: true,
+    amount: 29900,
     features: [
-      "Matching semántico bidireccional con IA (huella vectorial)",
+      "Todo lo del Esencial",
+      "Boost de visibilidad en búsquedas",
       "Coach de carrera 24/7 (mejorar perfil y Trust Score)",
       "Sugerencias IA en cada mensaje",
-      "Boost de visibilidad en búsquedas",
       "Validación anti-fraude IA prioritaria",
     ],
     cta: "Activar Pro",
-  },
-  {
-    key: "family",
-    name: "Familia",
-    price: "5%",
-    cycle: "comisión por contratación",
-    audience: "Hogares que contratan cuidado humano.",
-    icon: Heart,
-    tone: "copper",
-    features: [
-      "Copiloto IA de contratación (descripción, tarifa COP, candidatos)",
-      "Top 5 profesionales recomendados por la IA",
-      "Verificación RETHUS y anti-fraude incluida",
-      "Pagos protegidos al aceptar la aplicación",
-    ],
-    cta: "Publicar mi necesidad",
   },
   {
     key: "institution",
@@ -99,11 +106,12 @@ const PLANS: {
     audience: "Clínicas, hospitales y agencias de cuidado.",
     icon: Building2,
     tone: "cyber",
+    amount: 299000,
     features: [
-      "Bolsa de créditos IA mensual (publicación, validación, matching)",
+      "Bolsa de créditos IA mensual",
       "Multi-usuario con roles (HR, evaluador, admin)",
       "Pipeline de candidatos con scoring IA",
-      "Detección automática de inconsistencias en CVs y RETHUS",
+      "Detección de inconsistencias en CVs y RETHUS",
       "Soporte prioritario y onboarding asistido",
     ],
     cta: "Hablar con ventas",
@@ -118,7 +126,7 @@ const TONE: Record<string, string> = {
 };
 
 function PlansPage() {
-  const [currentPlan, setCurrentPlan] = useState<PlanKey | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<PlanKey | null>(null);
 
@@ -129,41 +137,52 @@ function PlansPage() {
         setLoading(false);
         return;
       }
-      const { data } = await supabase
-        .from("subscriptions")
-        .select("plan")
-        .eq("user_id", sess.session.user.id)
-        .maybeSingle();
-      if (data?.plan) setCurrentPlan(data.plan as PlanKey);
+      const [subRes, mpRes] = await Promise.all([
+        supabase.from("subscriptions").select("plan").eq("user_id", sess.session.user.id).maybeSingle(),
+        supabase.from("mp_subscriptions").select("plan,status").eq("user_id", sess.session.user.id).maybeSingle(),
+      ]);
+      if (mpRes.data?.status === "active" || mpRes.data?.status === "approved") {
+        setCurrentPlan(mpRes.data.plan);
+      } else if (subRes.data?.plan) {
+        setCurrentPlan(subRes.data.plan);
+      }
       setLoading(false);
     })();
   }, []);
 
-  const choose = async (plan: PlanKey) => {
+  const choose = async (plan: PlanKey, amount: number) => {
     if (plan === "free") {
       toast.success("Ya tienes acceso gratuito a Humanix.");
       return;
     }
+    if (plan === "institution") {
+      window.location.href = "mailto:hola@humanix.co?subject=Plan Institucional Humanix";
+      return;
+    }
     setActing(plan);
-    // Stripe llega después; por ahora dejamos huella de interés
     try {
       const { data: sess } = await supabase.auth.getSession();
       if (!sess.session) {
         toast("Inicia sesión para activar tu plan", { description: "Te llevamos al login." });
-        window.location.href = "/auth";
+        window.location.href = `/auth?redirect=${encodeURIComponent("/planes")}`;
         return;
       }
-      await supabase.from("ai_credits_ledger").insert({
-        user_id: sess.session.user.id,
-        feature: `plan_intent:${plan}`,
-        credits_used: 0,
-        meta: { source: "/planes" },
+
+      const { data, error } = await supabase.functions.invoke("mp-create-subscription", {
+        body: {
+          plan: plan === "essential" ? "essential_monthly" : "pro_monthly",
+          amount,
+          email: sess.session.user.email,
+        },
       });
-      toast.success("¡Anotado! Activaremos pagos pronto y te avisaremos para confirmar.", {
-        description: "Mientras tanto, tu cuenta sigue activa con el plan free.",
-      });
+      if (error) throw error;
+
+      const url = (data as { init_point?: string; sandbox_init_point?: string })?.init_point ??
+        (data as { sandbox_init_point?: string })?.sandbox_init_point;
+      if (!url) throw new Error("No se pudo iniciar el checkout de Mercado Pago.");
+      window.location.href = url;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error al registrar interés");
+      toast.error(e instanceof Error ? e.message : "Error al iniciar el pago");
     } finally {
       setActing(null);
     }
@@ -181,24 +200,28 @@ function PlansPage() {
             La IA que trabaja para ti.
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Activa el plan que necesitas. Pagos integrados pronto: por ahora reservas tu lugar y mantenemos tu acceso gratis.
+            Plan Esencial desde <span className="font-semibold text-copper">$9.000 COP/mes</span>.
+            Sin comisiones por servicio: el profesional cobra directo al cliente en efectivo, Nequi o transferencia.
           </p>
         </header>
 
         <section className="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {PLANS.map((p) => {
             const Icon = p.icon;
-            const isCurrent = currentPlan === p.key;
+            const isCurrent =
+              currentPlan === p.key ||
+              (p.key === "essential" && currentPlan === "essential_monthly") ||
+              (p.key === "pro" && currentPlan === "pro_monthly");
             return (
               <Card
                 key={p.key}
                 className={`p-6 flex flex-col ${
-                  p.highlight ? "border-fuchsia-neural/50 shadow-[var(--shadow-elegant)]" : ""
+                  p.highlight ? "border-copper/50 shadow-[var(--shadow-elegant)] ring-1 ring-copper/20" : ""
                 }`}
               >
                 {p.highlight && (
-                  <span className="self-start inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/30 mb-3">
-                    Más elegido
+                  <span className="self-start inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-copper/10 text-copper border border-copper/30 mb-3">
+                    Más recomendado
                   </span>
                 )}
                 <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border ${TONE[p.tone]}`}>
@@ -220,9 +243,9 @@ function PlansPage() {
                 </ul>
                 <Button
                   className="mt-5 w-full"
-                  variant={p.highlight ? "hero" : "outline"}
+                  variant={p.highlight ? "copper" : "outline"}
                   disabled={loading || acting === p.key || isCurrent}
-                  onClick={() => choose(p.key)}
+                  onClick={() => choose(p.key, p.amount)}
                 >
                   {acting === p.key && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   {isCurrent ? "Tu plan actual" : p.cta}
