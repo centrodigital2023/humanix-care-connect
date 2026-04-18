@@ -104,21 +104,40 @@ function SuperadminPage() {
   }, [user]);
 
   const loadData = async () => {
-    const [{ count: users }, { count: professionals }, { count: offers }, { count: docs }, { data: inv }] =
-      await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("professional_profiles").select("*", { count: "exact", head: true }),
-        supabase.from("job_offers").select("*", { count: "exact", head: true }),
-        supabase
-          .from("professional_documents")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending"),
-        supabase
-          .from("staff_invitations")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(20),
-      ]);
+    const [
+      { count: users },
+      { count: professionals },
+      { count: offers },
+      { count: docs },
+      { data: inv },
+      { data: alerts },
+      { data: emerg },
+    ] = await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("professional_profiles").select("*", { count: "exact", head: true }),
+      supabase.from("job_offers").select("*", { count: "exact", head: true }),
+      supabase
+        .from("professional_documents")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("staff_invitations")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("service_ratings")
+        .select("id, booking_id, rated_id, stars, ai_sentiment, ai_summary, voice_transcript, voice_url, created_at")
+        .eq("ai_alert", true)
+        .order("created_at", { ascending: false })
+        .limit(15),
+      supabase
+        .from("emergency_incidents")
+        .select("id, booking_id, triggered_by, incident_type, lat, lng, resolved, created_at")
+        .eq("resolved", false)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
     setStats({
       users: users ?? 0,
       professionals: professionals ?? 0,
@@ -126,6 +145,17 @@ function SuperadminPage() {
       docs: docs ?? 0,
     });
     setInvitations((inv ?? []) as Invitation[]);
+    setAiAlerts((alerts ?? []) as AiRating[]);
+    setEmergencies((emerg ?? []) as Emergency[]);
+  };
+
+  const resolveEmergency = async (id: string) => {
+    await supabase
+      .from("emergency_incidents")
+      .update({ resolved: true, resolved_at: new Date().toISOString() })
+      .eq("id", id);
+    setEmergencies((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Emergencia marcada como resuelta");
   };
 
   const createInvitation = async (e: React.FormEvent) => {
