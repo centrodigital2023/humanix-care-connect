@@ -33,6 +33,10 @@ export const Route = createFileRoute("/talento-humano")({
 
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
+  { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
+  { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
+  { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
   { label: "Marketplace", to: "/buscar", icon: Search },
@@ -47,6 +51,8 @@ type Pro = {
   ai_preapproved: boolean | null;
   rethus_verified: boolean | null;
   trust_score: number | null;
+  social_trust_score: number | null;
+  social_trust_updated_at: string | null;
   years_experience: number | null;
   avg_rating: number | null;
   active: boolean | null;
