@@ -33,6 +33,9 @@ import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
 import { SemanticOffers } from "@/components/humanix/SemanticOffers";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { ReferencesManager } from "@/components/humanix/ReferencesManager";
+import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
+import { NotificationsBell } from "@/components/humanix/NotificationsBell";
+import { PublishGate } from "@/components/humanix/PublishGate";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -78,6 +81,10 @@ type ProProfile = {
   avatar_url: string | null;
   bio: string | null;
   work_experience: WorkExp[] | null;
+  lat: number | null;
+  lng: number | null;
+  home_city: string | null;
+  published: boolean | null;
 };
 
 type Offer = {
