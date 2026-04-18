@@ -4,7 +4,7 @@
 import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const ALLOWED_MIME_PREFIXES = ["application/pdf", "image/"];
-const MAX_BYTES = 15 * 1024 * 1024; // 15 MB
+const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 const FETCH_TIMEOUT_MS = 15_000;
 
 const TOOL = {
@@ -89,42 +89,33 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
-    // Descargar el archivo (con timeout) y convertirlo a base64 data URL.
-    // Reenviamos el JWT del usuario para que las URLs firmadas/privadas funcionen.
+    // HEAD request para validar tipo y tamaño SIN cargar el archivo en memoria.
+    // El gateway descarga la URL firmada por su cuenta (es pública temporalmente),
+    // así evitamos el "Memory limit exceeded" al hacer base64 en el worker.
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-    let fileResp: Response;
+    let headResp: Response;
     try {
-      fileResp = await fetch(file_url, {
-        signal: ctrl.signal,
-        headers: { Authorization: `Bearer ${auth.token}` },
-        redirect: "error",
-      });
+      headResp = await fetch(file_url, { method: "HEAD", signal: ctrl.signal, redirect: "error" });
     } finally {
       clearTimeout(timer);
     }
-    if (!fileResp.ok) throw new Error("No se pudo descargar el archivo");
+    if (!headResp.ok) throw new Error("No se pudo acceder al archivo");
 
-    const mt = mime_type || fileResp.headers.get("content-type") || "application/pdf";
+    const mt = mime_type || headResp.headers.get("content-type") || "application/pdf";
     if (!ALLOWED_MIME_PREFIXES.some((p) => mt.startsWith(p))) {
       return new Response(JSON.stringify({ error: "Tipo de archivo no permitido" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const ab = await fileResp.arrayBuffer();
-    if (ab.byteLength > MAX_BYTES) {
-      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 15MB)" }), {
+    const sizeHeader = headResp.headers.get("content-length");
+    if (sizeHeader && Number(sizeHeader) > MAX_BYTES) {
+      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 8MB)" }), {
         status: 413,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const buf = new Uint8Array(ab);
-    let bin = "";
-    for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
-    const b64 = btoa(bin);
-    const dataUrl = `data:${mt};base64,${b64}`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -146,7 +137,7 @@ Deno.serve(async (req) => {
             role: "user",
             content: [
               { type: "text", text: "Extrae el perfil profesional de esta hoja de vida." },
-              { type: "image_url", image_url: { url: dataUrl } },
+              { type: "image_url", image_url: { url: file_url } },
             ],
           },
         ],
