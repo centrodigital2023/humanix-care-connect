@@ -1,4 +1,4 @@
-import { Linkedin, Facebook, Twitter, MessageCircle, Link2, Check } from "lucide-react";
+import { MessageCircle, Link2, Check, Share2, Twitter as TwitterIcon, Facebook as FbIcon, Linkedin as LiIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
