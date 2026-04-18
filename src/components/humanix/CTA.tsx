@@ -1,7 +1,11 @@
+import { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { RoleGate } from "./RoleGate";
 
 export function CTA() {
+  const [gateOpen, setGateOpen] = useState(false);
+
   return (
     <section className="pb-24 sm:pb-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -16,19 +20,25 @@ export function CTA() {
             </h2>
             <p className="mt-5 text-lg text-cyber-foreground/70">
               Únete a Humanix y sé parte de la red de salud más conectada de
-              Colombia.
+              Colombia. Plan Esencial desde $9.000 COP/mes.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="hero" size="xl">
-                Empezar gratis <ArrowRight className="ml-1 h-5 w-5" />
+              <Button variant="hero" size="xl" onClick={() => setGateOpen(true)}>
+                Empezar ahora <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
-              <Button variant="glass" size="xl" className="text-cyber-foreground border-cyber-foreground/20 hover:bg-cyber-foreground/10">
-                Agendar demo
+              <Button
+                variant="glass"
+                size="xl"
+                className="text-cyber-foreground border-cyber-foreground/20 hover:bg-cyber-foreground/10"
+                asChild
+              >
+                <a href="/planes">Ver planes</a>
               </Button>
             </div>
           </div>
         </div>
       </div>
+      <RoleGate open={gateOpen} onOpenChange={setGateOpen} redirectTo="/buscar" />
     </section>
   );
 }

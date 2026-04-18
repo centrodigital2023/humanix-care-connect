@@ -4,7 +4,6 @@ import {
   Loader2,
   Heart,
   Search,
-  Plus,
   LayoutDashboard,
   FileText,
   Users,
@@ -13,6 +12,10 @@ import {
   ShieldCheck,
   MessageSquare,
   Crown,
+  Phone,
+  MapPin,
+  Star,
+  Inbox,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,7 +29,6 @@ export const Route = createFileRoute("/dashboard/familia")({
   head: () => ({ meta: [{ title: "Familia · Humanix" }] }),
   component: FamilyDashboard,
 });
-
 
 const getNav = (): NavItem[] => [
   { label: "Inicio", to: "/dashboard/familia", icon: LayoutDashboard },
@@ -50,10 +52,52 @@ type Offer = {
   reserved_until: string | null;
 };
 
+type ApplicationRow = {
+  id: string;
+  status: string;
+  created_at: string;
+  proposed_amount: number | null;
+  message: string | null;
+  professional_id: string;
+  job_offer_id: string;
+};
+
+type ProSummary = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  specialty: string | null;
+  avg_rating: number | null;
+  hourly_rate: number | null;
+  phone: string | null;
+};
+
+type NearbyOffer = {
+  id: string;
+  title: string;
+  city: string;
+  amount: number;
+  modality: string;
+  posted_by: string;
+  created_at: string;
+};
+
+function waLink(phone: string | null | undefined, text: string) {
+  if (!phone) return null;
+  const clean = phone.replace(/[^0-9]/g, "");
+  const normalized = clean.startsWith("57") ? clean : `57${clean}`;
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(text)}`;
+}
+
 function FamilyDashboard() {
   const { user, loading, logout } = useAppUser({ allow: ["family", "superadmin"] });
   const [dataLoading, setDataLoading] = useState(true);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [applications, setApplications] = useState<ApplicationRow[]>([]);
+  const [proMap, setProMap] = useState<Record<string, ProSummary>>({});
+  const [nearby, setNearby] = useState<NearbyOffer[]>([]);
+  const [familyCity, setFamilyCity] = useState<string>("Bogotá");
   const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   useEffect(() => {
@@ -61,7 +105,7 @@ function FamilyDashboard() {
     let active = true;
     (async () => {
       try {
-        const [offersRes, famRes] = await Promise.all([
+        const [offersRes, famRes, profRes] = await Promise.all([
           supabase
             .from("job_offers")
             .select("id, title, city, modality, amount, status, created_at, lat, lng, reserved_until")
@@ -72,20 +116,96 @@ function FamilyDashboard() {
             .select("id_number, default_address, emergency_contact_phone, habeas_data_accepted")
             .eq("user_id", user.id)
             .maybeSingle(),
+          supabase
+            .from("profiles")
+            .select("city")
+            .eq("user_id", user.id)
+            .maybeSingle(),
         ]);
         if (!active) return;
-        if (offersRes.error) {
-          console.warn("[familia dashboard] offers error:", offersRes.error.message);
-        }
-        setOffers((offersRes.data ?? []) as Offer[]);
+
+        const offerList = (offersRes.data ?? []) as Offer[];
+        setOffers(offerList);
+
         const fam = famRes.data;
-        const complete = !!(
-          fam?.id_number &&
-          fam?.default_address &&
-          fam?.emergency_contact_phone &&
-          fam?.habeas_data_accepted
+        setOnboardingComplete(
+          !!(fam?.id_number && fam?.default_address && fam?.emergency_contact_phone && fam?.habeas_data_accepted),
         );
-        setOnboardingComplete(complete);
+
+        const myCity = profRes.data?.city ?? offerList[0]?.city ?? "Bogotá";
+        setFamilyCity(myCity);
+
+        // Buzón de postulaciones a MIS ofertas
+        const offerIds = offerList.map((o) => o.id);
+        if (offerIds.length > 0) {
+          const { data: appsData } = await supabase
+            .from("applications")
+            .select("id, status, created_at, proposed_amount, message, professional_id, job_offer_id")
+            .in("job_offer_id", offerIds)
+            .order("created_at", { ascending: false })
+            .limit(50);
+          const apps = (appsData ?? []) as ApplicationRow[];
+          setApplications(apps);
+
+          // Cargar info de profesionales que se postularon
+          const proIds = Array.from(new Set(apps.map((a) => a.professional_id)));
+          if (proIds.length > 0) {
+            const [proRowsRes, profilesRowsRes] = await Promise.all([
+              supabase
+                .from("professional_profiles")
+                .select("user_id, specialty, avg_rating, hourly_rate")
+                .in("user_id", proIds),
+              supabase
+                .from("profiles")
+                .select("user_id, full_name, avatar_url, city, phone")
+                .in("user_id", proIds),
+            ]);
+            const map: Record<string, ProSummary> = {};
+            (proRowsRes.data ?? []).forEach((r) => {
+              map[r.user_id] = {
+                user_id: r.user_id,
+                full_name: null,
+                avatar_url: null,
+                city: null,
+                specialty: r.specialty,
+                avg_rating: r.avg_rating,
+                hourly_rate: r.hourly_rate,
+                phone: null,
+              };
+            });
+            (profilesRowsRes.data ?? []).forEach((p) => {
+              const existing = map[p.user_id] ?? {
+                user_id: p.user_id,
+                full_name: null,
+                avatar_url: null,
+                city: null,
+                specialty: null,
+                avg_rating: null,
+                hourly_rate: null,
+                phone: null,
+              };
+              map[p.user_id] = {
+                ...existing,
+                full_name: p.full_name,
+                avatar_url: p.avatar_url,
+                city: p.city,
+                phone: p.phone,
+              };
+            });
+            setProMap(map);
+          }
+        }
+
+        // Ofertas cercanas (mismo city) que NO son mías y están open
+        const { data: nearbyData } = await supabase
+          .from("job_offers")
+          .select("id, title, city, amount, modality, posted_by, created_at")
+          .eq("status", "open")
+          .ilike("city", `%${myCity}%`)
+          .neq("posted_by", user.id)
+          .order("created_at", { ascending: false })
+          .limit(6);
+        setNearby((nearbyData ?? []) as NearbyOffer[]);
       } catch (err) {
         console.error("[familia dashboard] load failed:", err);
       } finally {
@@ -94,7 +214,7 @@ function FamilyDashboard() {
     })();
     const safety = setTimeout(() => {
       if (active) setDataLoading(false);
-    }, 6000);
+    }, 8000);
     return () => {
       active = false;
       clearTimeout(safety);
@@ -111,6 +231,7 @@ function FamilyDashboard() {
 
   const open = offers.filter((o) => o.status === "open").length;
   const filled = offers.filter((o) => o.status === "filled").length;
+  const pendingApps = applications.filter((a) => a.status === "pending").length;
 
   return (
     <AppShell
@@ -129,7 +250,6 @@ function FamilyDashboard() {
             </Link>
           </Button>
           <HiringCopilot />
-
         </>
       }
     >
@@ -149,9 +269,7 @@ function FamilyDashboard() {
               </p>
             </div>
             <Button variant="copper" asChild>
-              <Link to="/dashboard/familia/onboarding">
-                Completar ahora
-              </Link>
+              <Link to="/dashboard/familia/onboarding">Completar ahora</Link>
             </Button>
           </Card>
         )}
@@ -160,31 +278,160 @@ function FamilyDashboard() {
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Kpi icon={FileText} label="Solicitudes" value={offers.length} tone="bio" />
           <Kpi icon={Calendar} label="Abiertas" value={open} tone="copper" />
+          <Kpi icon={Inbox} label="Postulaciones" value={pendingApps} tone="fuchsia" />
           <Kpi icon={ShieldCheck} label="Cubiertas" value={filled} tone="bio" />
-          <Kpi icon={Sparkles} label="Match IA" value={"24/7"} tone="fuchsia" />
         </section>
 
-        {/* Acciones */}
-        <section className="grid sm:grid-cols-2 gap-4">
-          <ActionCard
-            icon={Search}
-            title="Encuentra un cuidador"
-            desc="Filtra por especialidad, ciudad y disponibilidad. Match en menos de 150 ms."
-            cta={
-              <Button variant="hero" asChild>
-                <Link to="/buscar">Ir al buscador</Link>
-              </Button>
-            }
-          />
-          <ActionCard
-            icon={Sparkles}
-            title="Copiloto IA de contratación"
-            desc="Describe en lenguaje natural lo que necesitas: la IA redacta la oferta, sugiere tarifa COP justa y te muestra los 5 mejores perfiles."
-            cta={<HiringCopilot />}
-          />
+        {/* Buzón de postulaciones */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <Inbox className="h-5 w-5 text-fuchsia-neural" />
+              Buzón de postulaciones
+            </h2>
+            <span className="text-xs text-muted-foreground">
+              {applications.length} en total
+            </span>
+          </div>
+          {dataLoading ? (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Cargando…
+            </Card>
+          ) : applications.length === 0 ? (
+            <Card className="p-8 text-center">
+              <Inbox className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+              <p className="font-semibold">Aún no tienes postulaciones</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Publica una solicitud o usa el buscador para encontrar profesionales.
+              </p>
+            </Card>
+          ) : (
+            <div className="grid gap-3">
+              {applications.map((a) => {
+                const pro = proMap[a.professional_id];
+                const offer = offers.find((o) => o.id === a.job_offer_id);
+                const wa = waLink(
+                  pro?.phone,
+                  `Hola ${pro?.full_name ?? ""}, te escribo desde Humanix por tu postulación a "${offer?.title ?? "mi solicitud"}".`,
+                );
+                const stars = pro?.avg_rating ?? 0;
+                return (
+                  <Card key={a.id} className="p-4 flex flex-col sm:flex-row gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      {pro?.avatar_url ? (
+                        <img
+                          src={pro.avatar_url}
+                          alt={pro.full_name ?? ""}
+                          className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
+                        />
+                      ) : (
+                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-sm font-semibold shrink-0">
+                          {(pro?.full_name ?? "?").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold truncate">
+                            {pro?.full_name ?? "Profesional"}
+                          </p>
+                          {stars > 0 && (
+                            <span className="inline-flex items-center gap-0.5 text-xs text-copper">
+                              <Star className="h-3 w-3 fill-copper" />
+                              {Number(stars).toFixed(1)}
+                            </span>
+                          )}
+                          <StatusPill status={a.status} />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {pro?.specialty ?? "Profesional de la salud"} · {pro?.city ?? "—"}
+                          {pro?.hourly_rate
+                            ? ` · $${pro.hourly_rate.toLocaleString("es-CO")}/h`
+                            : ""}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Para: <span className="font-medium text-foreground">{offer?.title ?? "Solicitud"}</span>
+                          {a.proposed_amount
+                            ? ` · Propone $${a.proposed_amount.toLocaleString("es-CO")} COP`
+                            : ""}
+                        </p>
+                        {a.message && (
+                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                            "{a.message}"
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex sm:flex-col gap-2 sm:w-40 shrink-0">
+                      <Button size="sm" variant="hero" asChild className="flex-1">
+                        <Link
+                          to="/profesional/$proId"
+                          params={{ proId: a.professional_id }}
+                        >
+                          Ver perfil
+                        </Link>
+                      </Button>
+                      {wa && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          asChild
+                          className="flex-1 border-biosensor/40 text-biosensor hover:bg-biosensor/5"
+                        >
+                          <a href={wa} target="_blank" rel="noopener noreferrer">
+                            <Phone className="h-3.5 w-3.5 mr-1" /> WhatsApp
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </section>
 
-        {/* Solicitudes */}
+        {/* Ofertas cercanas en mi ciudad (otras familias / instituciones publicaron) */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-biosensor" />
+              Cuidadores activos cerca de ti
+            </h2>
+            <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
+              Ver todos →
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Otras solicitudes en {familyCity}. Útil para ver tarifas referenciales del mercado.
+          </p>
+          {nearby.length === 0 ? (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              Sin ofertas cercanas activas en {familyCity} por ahora.
+            </Card>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {nearby.map((n) => (
+                <Card key={n.id} className="p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-medium text-sm leading-tight">{n.title}</p>
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/30 shrink-0">
+                      Activa
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> {n.city}
+                  </p>
+                  <p className="mt-2 font-display text-lg font-semibold text-copper">
+                    ${n.amount.toLocaleString("es-CO")}{" "}
+                    <span className="text-xs font-normal text-muted-foreground">COP / {n.modality}</span>
+                  </p>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Mis solicitudes */}
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-display text-lg font-semibold">Mis solicitudes</h2>
@@ -192,17 +439,12 @@ function FamilyDashboard() {
               Ver todas →
             </Link>
           </div>
-          {dataLoading ? (
-            <Card className="p-6 text-center text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin inline mr-2" />
-              Cargando…
-            </Card>
-          ) : offers.length === 0 ? (
+          {offers.length === 0 ? (
             <Card className="p-10 text-center">
               <Heart className="h-8 w-8 text-copper mx-auto mb-3" />
               <p className="font-semibold">Aún no has publicado solicitudes</p>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                Empieza con una búsqueda directa o publica una solicitud para que los profesionales se postulen.
+                Empieza con una búsqueda directa o usa el copiloto IA para publicar.
               </p>
               <Button variant="hero" className="mt-4" asChild>
                 <Link to="/buscar">Buscar ahora</Link>
@@ -218,17 +460,7 @@ function FamilyDashboard() {
                       {o.city} · {o.modality} · ${o.amount.toLocaleString("es-CO")} COP
                     </p>
                   </div>
-                  <span
-                    className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded-full border ${
-                      o.status === "open"
-                        ? "bg-biosensor/10 text-biosensor border-biosensor/30"
-                        : o.status === "filled"
-                          ? "bg-fuchsia-neural/10 text-fuchsia-neural border-fuchsia-neural/30"
-                          : "bg-muted text-muted-foreground border-border"
-                    }`}
-                  >
-                    {o.status}
-                  </span>
+                  <StatusPill status={o.status} />
                 </Card>
               ))}
             </div>
@@ -259,6 +491,26 @@ function FamilyDashboard() {
   );
 }
 
+function StatusPill({ status }: { status: string }) {
+  const map: Record<string, string> = {
+    open: "bg-biosensor/10 text-biosensor border-biosensor/30",
+    pending: "bg-copper/10 text-copper border-copper/30",
+    accepted: "bg-fuchsia-neural/10 text-fuchsia-neural border-fuchsia-neural/30",
+    rejected: "bg-destructive/10 text-destructive border-destructive/30",
+    filled: "bg-fuchsia-neural/10 text-fuchsia-neural border-fuchsia-neural/30",
+    closed: "bg-muted text-muted-foreground border-border",
+  };
+  return (
+    <span
+      className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded-full border ${
+        map[status] ?? "bg-muted text-muted-foreground border-border"
+      }`}
+    >
+      {status}
+    </span>
+  );
+}
+
 function Kpi({
   icon: Icon,
   label,
@@ -282,29 +534,6 @@ function Kpi({
       </div>
       <p className="mt-3 text-2xl font-bold font-display">{value}</p>
       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
-    </Card>
-  );
-}
-
-function ActionCard({
-  icon: Icon,
-  title,
-  desc,
-  cta,
-}: {
-  icon: typeof Search;
-  title: string;
-  desc: string;
-  cta: React.ReactNode;
-}) {
-  return (
-    <Card className="p-6">
-      <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-biosensor/10 text-biosensor">
-        <Icon className="h-5 w-5" />
-      </div>
-      <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
-      <p className="mt-1.5 text-sm text-muted-foreground">{desc}</p>
-      <div className="mt-4">{cta}</div>
     </Card>
   );
 }
