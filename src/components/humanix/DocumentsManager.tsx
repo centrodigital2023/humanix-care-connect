@@ -26,8 +26,7 @@ type DocType =
   | "diploma"
   | "id_document"
   | "utility_bill"
-  | "work_reference"
-  | "family_reference"
+  | "work_experience"
   | "other";
 type DocStatus = "pending" | "approved" | "rejected";
 
@@ -57,8 +56,7 @@ const TYPES: {
   { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "BLS, ACLS, diploma profesional, etc.", required: true },
   { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso.", required: true },
   { value: "utility_bill", label: "Recibo de servicios públicos", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
-  { value: "work_reference", label: "Carta de referencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Carta firmada de un empleador anterior." },
-  { value: "family_reference", label: "Referencia familiar (opcional)", icon: <Heart className="h-4 w-4" />, hint: "Constancia de un familiar cercano." },
+  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud.", required: true },
 ];
 
 export function DocumentsManager({
