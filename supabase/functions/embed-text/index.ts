@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/text-embedding-004",
+        model: "openai/text-embedding-3-small",
         input: text.slice(0, 8000),
       }),
     });
