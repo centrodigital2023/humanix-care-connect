@@ -18,9 +18,8 @@ export type MapPoint = {
 export type OffersMapProps = {
   points: MapPoint[];
   height?: number;
-  center?: [number, number];
+  center?: { lat: number; lng: number };
   zoom?: number;
-  userLocation?: { lat: number; lng: number } | null;
 };
 
 const LazyMap = lazy(() =>
