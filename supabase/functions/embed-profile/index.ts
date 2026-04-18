@@ -7,9 +7,13 @@ async function embed(text: string): Promise<number[]> {
   const r = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
     method: "POST",
     headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "google/text-embedding-004", input: text.slice(0, 8000) }),
+    body: JSON.stringify({ model: "openai/text-embedding-3-small", input: text.slice(0, 8000) }),
   });
-  if (!r.ok) throw new Error(`embed ${r.status}`);
+  if (!r.ok) {
+    const errText = await r.text();
+    console.error("embed gateway error:", r.status, errText);
+    throw new Error(`embed ${r.status}: ${errText.slice(0, 200)}`);
+  }
   const j = await r.json();
   return j.data[0].embedding as number[];
 }
