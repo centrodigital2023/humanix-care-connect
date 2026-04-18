@@ -17,6 +17,7 @@ export type Database = {
       ad_banners: {
         Row: {
           active: boolean
+          ai_audience_match: Json | null
           ai_recommendation: string | null
           ai_score: number | null
           audience: string
@@ -31,12 +32,14 @@ export type Database = {
           impressions: number
           link_url: string | null
           position: string
+          shares_count: number
           starts_at: string | null
           title: string
           updated_at: string
         }
         Insert: {
           active?: boolean
+          ai_audience_match?: Json | null
           ai_recommendation?: string | null
           ai_score?: number | null
           audience?: string
@@ -51,12 +54,14 @@ export type Database = {
           impressions?: number
           link_url?: string | null
           position?: string
+          shares_count?: number
           starts_at?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           active?: boolean
+          ai_audience_match?: Json | null
           ai_recommendation?: string | null
           ai_score?: number | null
           audience?: string
@@ -71,6 +76,7 @@ export type Database = {
           impressions?: number
           link_url?: string | null
           position?: string
+          shares_count?: number
           starts_at?: string | null
           title?: string
           updated_at?: string
@@ -442,6 +448,59 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_at: string | null
+          id: string
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_at?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_tasks_contact_id_fkey"
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "crm_contacts"
@@ -1050,6 +1109,9 @@ export type Database = {
           rethus_verified: boolean | null
           service_cities: string[] | null
           shift_rate: number | null
+          social_trust_breakdown: Json | null
+          social_trust_score: number | null
+          social_trust_updated_at: string | null
           specialty: string | null
           sub_specialties: string[] | null
           total_jobs: number | null
@@ -1088,6 +1150,9 @@ export type Database = {
           rethus_verified?: boolean | null
           service_cities?: string[] | null
           shift_rate?: number | null
+          social_trust_breakdown?: Json | null
+          social_trust_score?: number | null
+          social_trust_updated_at?: string | null
           specialty?: string | null
           sub_specialties?: string[] | null
           total_jobs?: number | null
@@ -1126,6 +1191,9 @@ export type Database = {
           rethus_verified?: boolean | null
           service_cities?: string[] | null
           shift_rate?: number | null
+          social_trust_breakdown?: Json | null
+          social_trust_score?: number | null
+          social_trust_updated_at?: string | null
           specialty?: string | null
           sub_specialties?: string[] | null
           total_jobs?: number | null
