@@ -53,3 +53,13 @@ verify_jwt = false
 
 [functions.bio-summary]
 verify_jwt = false
+
+[functions.profile-holistic-validator]
+verify_jwt = false
+
+[functions.mp-create-subscription]
+verify_jwt = false
+
+[functions.mp-webhook]
+verify_jwt = false
+

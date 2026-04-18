@@ -33,6 +33,9 @@ import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
 import { SemanticOffers } from "@/components/humanix/SemanticOffers";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { ReferencesManager } from "@/components/humanix/ReferencesManager";
+import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
+import { NotificationsBell } from "@/components/humanix/NotificationsBell";
+import { PublishGate } from "@/components/humanix/PublishGate";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -78,6 +81,10 @@ type ProProfile = {
   avatar_url: string | null;
   bio: string | null;
   work_experience: WorkExp[] | null;
+  lat: number | null;
+  lng: number | null;
+  home_city: string | null;
+  published: boolean | null;
 };
 
 type Offer = {
@@ -441,13 +448,14 @@ function ProDashboard() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/mensajes" className="text-sm text-muted-foreground hover:text-foreground px-3">
+            {userId && <NotificationsBell userId={userId} />}
+            <Link to="/mensajes" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
               Mensajes
             </Link>
-            <Link to="/planes" className="text-sm text-muted-foreground hover:text-foreground px-3">
+            <Link to="/planes" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
               Planes
             </Link>
-            <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3">
+            <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
               Marketplace
             </Link>
             <Button variant="ghost" size="sm" onClick={logout}>
@@ -565,11 +573,48 @@ function ProDashboard() {
           <section className="rounded-2xl border border-border bg-card/95 p-6">
             <h2 className="font-semibold mb-1">Documentos</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Sube tu hoja de vida (PDF) y la IA extrae tus datos. Los demás documentos los revisa nuestro equipo.
+              Sube tu hoja de vida (PDF) y la IA extrae tus datos. La IA también verifica cada documento.
             </p>
             <DocumentsManager userId={userId} onCvExtracted={applyExtraction} />
           </section>
         )}
+
+        {/* Referencias laborales y familiares */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <h2 className="font-semibold mb-1">Referencias</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Necesitas mínimo 2 referencias laborales y 2 familiares (solo nombre y celular).
+            </p>
+            <ReferencesManager userId={userId} />
+          </section>
+        )}
+
+        {/* Ubicación en mapa */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <h2 className="font-semibold mb-1">Ubicación</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Marca tu ubicación principal de servicio en el mapa.
+            </p>
+            <LocationPicker
+              lat={profile?.lat ?? null}
+              lng={profile?.lng ?? null}
+              defaultCity={profile?.home_city ?? undefined}
+              onChange={async (lat, lng, address) => {
+                await supabase
+                  .from("professional_profiles")
+                  .update({ lat, lng, home_city: address ?? profile?.home_city ?? null } as never)
+                  .eq("user_id", userId);
+                setProfile((prev) => (prev ? { ...prev, lat, lng, home_city: address ?? prev.home_city } : prev));
+                toast.success("Ubicación guardada");
+              }}
+            />
+          </section>
+        )}
+
+        {/* Plan Humanix Pro (Mercado Pago) */}
+        {userId && <MercadoPagoSubscription userId={userId} />}
 
         {/* Profile form */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">
@@ -712,11 +757,20 @@ function ProDashboard() {
             )}
           </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button onClick={saveProfile} variant="hero">
-              Guardar perfil
-            </Button>
-          </div>
+          {/* Validación final IA + publicación */}
+          {userId && (
+            <div className="mt-6">
+              <PublishGate
+                userId={userId}
+                profilePayload={{ ...buildPayload(), full_name: fullName, rethus_verified: profile?.rethus_verified ?? false }}
+                published={profile?.published ?? false}
+                onSaved={saveProfile}
+                onPublished={async () => {
+                  setProfile((prev) => (prev ? { ...prev, published: true } : prev));
+                }}
+              />
+            </div>
+          )}
 
           {/* AI feedback */}
           {(profile?.ai_summary || (profile?.ai_strengths?.length ?? 0) > 0) && (

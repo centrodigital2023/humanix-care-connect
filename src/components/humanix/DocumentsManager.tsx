@@ -13,7 +13,6 @@ import {
   Sparkles,
   Receipt,
   Briefcase,
-  Heart,
   ShieldAlert,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,8 +25,7 @@ type DocType =
   | "diploma"
   | "id_document"
   | "utility_bill"
-  | "work_reference"
-  | "family_reference"
+  | "work_experience"
   | "other";
 type DocStatus = "pending" | "approved" | "rejected";
 
@@ -57,8 +55,7 @@ const TYPES: {
   { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "BLS, ACLS, diploma profesional, etc.", required: true },
   { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso.", required: true },
   { value: "utility_bill", label: "Recibo de servicios públicos", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
-  { value: "work_reference", label: "Carta de referencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Carta firmada de un empleador anterior." },
-  { value: "family_reference", label: "Referencia familiar (opcional)", icon: <Heart className="h-4 w-4" />, hint: "Constancia de un familiar cercano." },
+  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud.", required: true },
 ];
 
 export function DocumentsManager({
@@ -74,7 +71,7 @@ export function DocumentsManager({
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const inputRefs = useRef<Record<DocType, HTMLInputElement | null>>({
     cv: null, rethus: null, diploma: null, id_document: null,
-    utility_bill: null, work_reference: null, family_reference: null, other: null,
+    utility_bill: null, work_experience: null, other: null,
   });
 
   useEffect(() => {
