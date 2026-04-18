@@ -97,7 +97,7 @@ function ProfesionalesPage() {
             </p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <Button variant="hero" size="xl" asChild>
-                <Link to="/auth">
+                <Link to="/auth" search={{ role: "professional" }}>
                   Crear perfil gratis <ArrowRight className="ml-1 h-5 w-5" />
                 </Link>
               </Button>
@@ -136,7 +136,7 @@ function ProfesionalesPage() {
             </ol>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <Button variant="hero" size="lg" asChild>
-                <Link to="/auth">Empezar ahora</Link>
+                <Link to="/auth" search={{ role: "professional" }}>Empezar ahora</Link>
               </Button>
               <Button variant="ghost" size="lg" asChild>
                 <Link to="/planes">
