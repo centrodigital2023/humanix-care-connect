@@ -32,13 +32,22 @@ export function ReferencesManager({ userId }: { userId: string }) {
   useEffect(() => {
     let active = true;
     (async () => {
-      const { data } = await supabase
-        .from("professional_references" as never)
+      const client = supabase as unknown as {
+        from: (t: string) => {
+          select: (cols: string) => {
+            eq: (c: string, v: string) => {
+              order: (c: string, o: { ascending: boolean }) => Promise<{ data: Reference[] | null }>;
+            };
+          };
+        };
+      };
+      const { data } = await client
+        .from("professional_references")
         .select("*")
         .eq("user_id", userId)
         .order("created_at", { ascending: true });
       if (active) {
-        setRefs((data as Reference[] | null) ?? []);
+        setRefs(data ?? []);
         setLoading(false);
       }
     })();
@@ -60,8 +69,15 @@ export function ReferencesManager({ userId }: { userId: string }) {
       return;
     }
     setSaving(true);
-    const { data, error } = await supabase
-      .from("professional_references" as never)
+    const client = supabase as unknown as {
+      from: (t: string) => {
+        insert: (row: Record<string, unknown>) => {
+          select: () => { single: () => Promise<{ data: Reference | null; error: { message: string } | null }> };
+        };
+      };
+    };
+    const { data, error } = await client
+      .from("professional_references")
       .insert({
         user_id: userId,
         ref_type: t,
@@ -83,7 +99,10 @@ export function ReferencesManager({ userId }: { userId: string }) {
 
   async function removeRef(id: string) {
     if (!confirm("¿Eliminar esta referencia?")) return;
-    const { error } = await supabase.from("professional_references" as never).delete().eq("id", id);
+    const client = supabase as unknown as {
+      from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } };
+    };
+    const { error } = await client.from("professional_references").delete().eq("id", id);
     if (error) {
       toast.error(error.message);
       return;
