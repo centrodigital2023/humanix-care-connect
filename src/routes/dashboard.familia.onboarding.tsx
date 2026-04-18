@@ -1,6 +1,7 @@
-// Onboarding inteligente para familias: foto, cédula, dirección, contacto de
-// emergencia y Habeas Data. UX en pasos, responsive y guiado.
-import { useEffect, useState } from "react";
+// Onboarding inteligente para familias con asistente IA, autocompletado
+// por texto/voz, sugerencias dinámicas y conexión hiper-inteligente con
+// /buscar (especialidad pre-seleccionada) y /quick-care.
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   Loader2,
@@ -13,11 +14,20 @@ import {
   ShieldCheck,
   CheckCircle2,
   HeartHandshake,
+  Sparkles,
+  Mic,
+  MicOff,
+  Wand2,
+  Lightbulb,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppUser } from "@/hooks/use-app-user";
 import { Logo } from "@/components/humanix/Logo";
@@ -50,11 +60,29 @@ const schema = z.object({
 });
 
 const STEPS = [
+  { key: "ai", label: "Asistente IA", icon: Sparkles },
   { key: "identity", label: "Identidad", icon: IdCard },
   { key: "address", label: "Dirección", icon: MapPin },
   { key: "emergency", label: "Emergencia", icon: Phone },
   { key: "consent", label: "Consentimiento", icon: ShieldCheck },
 ] as const;
+
+type AIResult = {
+  fullName?: string;
+  idNumber?: string;
+  phone?: string;
+  city?: string;
+  defaultAddress?: string;
+  emergencyName?: string;
+  emergencyPhone?: string;
+  patientName?: string;
+  patientRelation?: string;
+  patientAge?: number;
+  careHints?: string[];
+  suggestedSpecialty?: string;
+  suggestedHourlyRateCop?: number;
+  nextStepHint?: string;
+};
 
 function FamilyOnboarding() {
   const { user, loading } = useAppUser({ allow: ["family", "superadmin"] });
@@ -64,6 +92,16 @@ function FamilyOnboarding() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [habeasOk, setHabeasOk] = useState(false);
+
+  // IA
+  const [aiText, setAiText] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiHints, setAiHints] = useState<string[]>([]);
+  const [aiSpecialty, setAiSpecialty] = useState<string>("");
+  const [aiRate, setAiRate] = useState<number | null>(null);
+  const [aiNext, setAiNext] = useState<string>("");
+  const [listening, setListening] = useState(false);
+  const recogRef = useRef<unknown>(null);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -84,7 +122,11 @@ function FamilyOnboarding() {
     let active = true;
     (async () => {
       const [{ data: prof }, { data: fam }] = await Promise.all([
-        supabase.from("profiles").select("full_name, phone, city, avatar_url").eq("user_id", user.id).maybeSingle(),
+        supabase
+          .from("profiles")
+          .select("full_name, phone, city, avatar_url")
+          .eq("user_id", user.id)
+          .maybeSingle(),
         supabase
           .from("family_profiles")
           .select(
@@ -118,6 +160,112 @@ function FamilyOnboarding() {
   const set = <K extends keyof typeof form>(k: K, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
 
+  // Progreso global (0-100)
+  const progress = useMemo(() => {
+    const fields = [
+      form.fullName,
+      form.idNumber,
+      form.phone,
+      form.city,
+      form.defaultAddress,
+      form.emergencyName,
+      form.emergencyPhone,
+    ];
+    const filled = fields.filter((v) => v.trim().length >= 3).length;
+    const base = Math.round((filled / fields.length) * 90);
+    return Math.min(100, base + (habeasOk ? 10 : 0));
+  }, [form, habeasOk]);
+
+  // Voz: dictado nativo del navegador (Web Speech API)
+  const toggleListen = () => {
+    type SpeechCtor = new () => {
+      lang: string;
+      interimResults: boolean;
+      continuous: boolean;
+      onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+      onend: (() => void) | null;
+      start: () => void;
+      stop: () => void;
+    };
+    const w = window as unknown as {
+      SpeechRecognition?: SpeechCtor;
+      webkitSpeechRecognition?: SpeechCtor;
+    };
+    const SR = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Tu navegador no soporta dictado por voz. Usa Chrome o escribe.");
+      return;
+    }
+    if (listening) {
+      (recogRef.current as { stop: () => void } | null)?.stop?.();
+      setListening(false);
+      return;
+    }
+    const r = new SR();
+    r.lang = "es-CO";
+    r.interimResults = true;
+    r.continuous = true;
+    let finalText = aiText;
+    r.onresult = (e) => {
+      let interim = "";
+      for (let i = 0; i < e.results.length; i++) {
+        const chunk = e.results[i][0].transcript;
+        // si es resultado parcial vs final, solo lo añadimos como interim al render
+        interim += chunk;
+      }
+      setAiText((finalText + " " + interim).trim());
+    };
+    r.onend = () => setListening(false);
+    recogRef.current = r;
+    r.start();
+    setListening(true);
+  };
+
+  const runAI = async () => {
+    if (!aiText.trim() && Object.values(form).every((v) => !v.trim())) {
+      toast.error("Escribe o dicta algo para que la IA pueda ayudarte.");
+      return;
+    }
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("family-onboarding-ai", {
+        body: {
+          freeText: aiText.trim(),
+          partial: form,
+        },
+      });
+      if (error) throw error;
+      const r: AIResult = data?.data ?? {};
+      setForm((f) => ({
+        ...f,
+        fullName: r.fullName?.trim() || f.fullName,
+        idNumber: r.idNumber?.trim() || f.idNumber,
+        phone: r.phone?.trim() || f.phone,
+        city: r.city?.trim() || f.city,
+        defaultAddress: r.defaultAddress?.trim() || f.defaultAddress,
+        emergencyName: r.emergencyName?.trim() || f.emergencyName,
+        emergencyPhone: r.emergencyPhone?.trim() || f.emergencyPhone,
+        patientName: r.patientName?.trim() || f.patientName,
+        patientRelation: r.patientRelation?.trim() || f.patientRelation,
+        patientAge:
+          r.patientAge != null && Number.isFinite(r.patientAge)
+            ? String(r.patientAge)
+            : f.patientAge,
+      }));
+      setAiHints(Array.isArray(r.careHints) ? r.careHints.slice(0, 5) : []);
+      setAiSpecialty(r.suggestedSpecialty?.trim() || "");
+      setAiRate(typeof r.suggestedHourlyRateCop === "number" ? r.suggestedHourlyRateCop : null);
+      setAiNext(r.nextStepHint?.trim() || "");
+      toast.success("✨ IA completó lo que pudo. Revisa y ajusta.");
+      // Avanza automáticamente al paso de identidad
+      setStep(1);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "La IA no pudo procesar tu solicitud");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const uploadAvatar = async (file: File) => {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -144,16 +292,16 @@ function FamilyOnboarding() {
   };
 
   const validateStep = (s: number): string | null => {
-    if (s === 0) {
+    if (s === 1) {
       if (form.fullName.trim().length < 3) return "Ingresa tu nombre completo";
       if (form.idNumber.trim().length < 5) return "Ingresa tu número de cédula";
       if (form.phone.trim().length < 7) return "Ingresa un teléfono válido";
     }
-    if (s === 1) {
+    if (s === 2) {
       if (form.city.trim().length < 2) return "Ingresa tu ciudad";
       if (form.defaultAddress.trim().length < 5) return "Ingresa tu dirección";
     }
-    if (s === 2) {
+    if (s === 3) {
       if (form.emergencyName.trim().length < 3) return "Nombre de contacto de emergencia";
       if (form.emergencyPhone.trim().length < 7) return "Teléfono de emergencia";
     }
@@ -184,13 +332,10 @@ function FamilyOnboarding() {
     setSaving(true);
     try {
       const v = parsed.data;
-      // 1) profiles
-      await supabase.from("profiles").update({
-        full_name: v.fullName,
-        phone: v.phone,
-        city: v.city,
-      }).eq("user_id", user.id);
-      // 2) family_profiles (upsert)
+      await supabase
+        .from("profiles")
+        .update({ full_name: v.fullName, phone: v.phone, city: v.city })
+        .eq("user_id", user.id);
       const { error: famErr } = await supabase.from("family_profiles").upsert(
         {
           user_id: user.id,
@@ -207,15 +352,22 @@ function FamilyOnboarding() {
         { onConflict: "user_id" },
       );
       if (famErr) throw famErr;
-      // 3) Registro de consentimiento
       await supabase.from("user_consents").insert({
         user_id: user.id,
         consent_type: "habeas_data_ley_1581",
         granted: true,
         user_agent: navigator.userAgent,
       });
-      toast.success("¡Perfil completo! Ya puedes contratar profesionales.");
-      navigate({ to: "/buscar", search: { tab: "profesionales" } });
+      toast.success("¡Perfil completo! Buscando profesionales para ti…");
+      // Conexión inteligente con /buscar usando especialidad sugerida si existe
+      navigate({
+        to: "/buscar",
+        search: {
+          tab: "profesionales",
+          ...(aiSpecialty ? { q: aiSpecialty } : {}),
+          ...(form.city ? { city: form.city } : {}),
+        } as never,
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo guardar");
     } finally {
@@ -231,13 +383,14 @@ function FamilyOnboarding() {
     );
   }
 
-  const Step = STEPS[step];
-
   return (
     <div className="min-h-screen bg-background bg-aurora">
       <header className="mx-auto max-w-3xl px-4 sm:px-6 py-6 flex items-center justify-between">
         <Logo />
-        <Link to="/dashboard/familia" className="text-xs text-muted-foreground hover:text-foreground">
+        <Link
+          to="/dashboard/familia"
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
           Saltar por ahora
         </Link>
       </header>
@@ -251,13 +404,22 @@ function FamilyOnboarding() {
             Completa tu perfil familiar
           </h1>
           <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-            Necesitamos algunos datos para conectarte con cuidadores verificados de forma segura.
-            Esto toma menos de 2 minutos.
+            Cuéntale a nuestra IA tu situación en una frase y completaremos el formulario por ti.
+            En menos de 2 minutos estarás conectada con cuidadores verificados.
           </p>
         </div>
 
+        {/* Progress bar */}
+        <div className="mt-6">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5">
+            <span className="font-semibold">Progreso del perfil</span>
+            <span>{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+
         {/* Stepper */}
-        <ol className="mt-8 grid grid-cols-4 gap-2">
+        <ol className="mt-5 grid grid-cols-5 gap-1.5">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = i < step;
@@ -265,13 +427,14 @@ function FamilyOnboarding() {
             return (
               <li
                 key={s.key}
-                className={`flex flex-col items-center gap-1.5 rounded-xl border p-2.5 text-[11px] font-medium transition ${
+                className={`flex flex-col items-center gap-1 rounded-xl border p-2 text-[10px] font-medium transition cursor-pointer ${
                   active
                     ? "border-biosensor bg-biosensor/10 text-biosensor"
                     : done
                       ? "border-biosensor/40 bg-biosensor/5 text-biosensor"
-                      : "border-border bg-card text-muted-foreground"
+                      : "border-border bg-card text-muted-foreground hover:border-muted-foreground/40"
                 }`}
+                onClick={() => i <= step + 1 && setStep(i)}
               >
                 {done ? (
                   <CheckCircle2 className="h-4 w-4" />
@@ -285,7 +448,7 @@ function FamilyOnboarding() {
         </ol>
 
         <Card className="mt-6 p-6 sm:p-8">
-          {/* Foto siempre visible arriba */}
+          {/* Foto + identidad rápida */}
           <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
             <div className="relative">
               {avatarUrl ? (
@@ -325,10 +488,124 @@ function FamilyOnboarding() {
             </div>
           </div>
 
-          {/* Step content */}
+          {/* Step 0: Asistente IA */}
           {step === 0 && (
             <div className="space-y-4">
-              <h2 className="font-display text-xl font-semibold">Sobre ti</h2>
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-fuchsia-neural" />
+                <h2 className="font-display text-xl font-semibold">
+                  Cuéntame tu situación, yo lleno el formulario
+                </h2>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Escribe o dicta en una frase: quién necesita el cuidado, qué condición tiene, dónde
+                vives y cómo contactarte. La IA detecta especialidad ideal, tarifa estimada y
+                completa los pasos.
+              </p>
+
+              <div className="relative">
+                <Textarea
+                  value={aiText}
+                  onChange={(e) => setAiText(e.target.value)}
+                  placeholder="Ej: Soy María García, cédula 1020345678, vivo en Bogotá Cra 15 # 100-25. Mi papá Pedro de 78 años necesita un auxiliar de enfermería en las mañanas porque sufre de Alzheimer. Mi celular es 3001234567 y mi hermano Juan 3009876543 es contacto de emergencia."
+                  rows={5}
+                  className="pr-12 resize-none"
+                />
+                <button
+                  type="button"
+                  onClick={toggleListen}
+                  className={`absolute top-2 right-2 h-9 w-9 rounded-full flex items-center justify-center transition ${
+                    listening
+                      ? "bg-fuchsia-neural text-white animate-pulse"
+                      : "bg-muted hover:bg-muted/70 text-foreground"
+                  }`}
+                  aria-label={listening ? "Detener dictado" : "Dictar por voz"}
+                >
+                  {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </button>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "Mi mamá de 82 años con Parkinson, vivo en Medellín El Poblado",
+                  "Necesito auxiliar de enfermería 8 horas/día para mi abuelo, Cali",
+                  "Cuidado infantil para mi hijo de 3 años con autismo, Bogotá",
+                ].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setAiText(s)}
+                    className="text-[11px] rounded-full border border-border px-3 py-1 hover:border-fuchsia-neural/50 hover:text-fuchsia-neural transition"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button
+                  variant="hero"
+                  onClick={runAI}
+                  disabled={aiLoading}
+                  className="flex-1"
+                >
+                  {aiLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Wand2 className="h-4 w-4 mr-2" />
+                  )}
+                  Completar con IA
+                </Button>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  Llenar manualmente
+                </Button>
+              </div>
+
+              {(aiHints.length > 0 || aiSpecialty || aiRate || aiNext) && (
+                <div className="mt-4 rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-fuchsia-neural">
+                    <Lightbulb className="h-4 w-4" /> Análisis de la IA
+                  </div>
+                  {aiSpecialty && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-muted-foreground">Especialidad ideal:</span>
+                      <Badge className="bg-fuchsia-neural text-white">{aiSpecialty}</Badge>
+                      {aiRate && (
+                        <Badge variant="outline">
+                          ~${aiRate.toLocaleString("es-CO")}/h COP
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                  {aiHints.length > 0 && (
+                    <ul className="space-y-1 text-xs">
+                      {aiHints.map((h, i) => (
+                        <li key={i} className="flex items-start gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-fuchsia-neural shrink-0 mt-0.5" />
+                          <span>{h}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {aiNext && (
+                    <p className="text-xs text-muted-foreground italic">→ {aiNext}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 1: Identidad */}
+          {step === 1 && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-xl font-semibold">Sobre ti</h2>
+                {aiSpecialty && (
+                  <Badge variant="outline" className="text-fuchsia-neural">
+                    <Sparkles className="h-3 w-3 mr-1" /> Asistido por IA
+                  </Badge>
+                )}
+              </div>
               <Field label="Nombre completo" required>
                 <Input
                   value={form.fullName}
@@ -341,15 +618,16 @@ function FamilyOnboarding() {
                   <Input
                     inputMode="numeric"
                     value={form.idNumber}
-                    onChange={(e) => set("idNumber", e.target.value)}
-                    placeholder="1.020.345.678"
+                    onChange={(e) => set("idNumber", e.target.value.replace(/\D/g, ""))}
+                    placeholder="1020345678"
                   />
                 </Field>
                 <Field label="Teléfono / WhatsApp" required>
                   <Input
                     type="tel"
+                    inputMode="numeric"
                     value={form.phone}
-                    onChange={(e) => set("phone", e.target.value)}
+                    onChange={(e) => set("phone", e.target.value.replace(/\D/g, ""))}
                     placeholder="3001234567"
                   />
                 </Field>
@@ -361,7 +639,8 @@ function FamilyOnboarding() {
             </div>
           )}
 
-          {step === 1 && (
+          {/* Step 2: Dirección y paciente */}
+          {step === 2 && (
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold">¿Dónde será el servicio?</h2>
               <div className="grid sm:grid-cols-3 gap-3">
@@ -384,7 +663,10 @@ function FamilyOnboarding() {
               </div>
 
               <div className="rounded-xl border border-border bg-muted/30 p-4 mt-4">
-                <p className="text-sm font-semibold">¿Para quién es el cuidado? <span className="text-muted-foreground font-normal">(opcional)</span></p>
+                <p className="text-sm font-semibold">
+                  ¿Para quién es el cuidado?{" "}
+                  <span className="text-muted-foreground font-normal">(opcional)</span>
+                </p>
                 <div className="mt-3 grid sm:grid-cols-3 gap-3">
                   <Field label="Nombre del paciente">
                     <Input
@@ -404,7 +686,7 @@ function FamilyOnboarding() {
                     <Input
                       inputMode="numeric"
                       value={form.patientAge}
-                      onChange={(e) => set("patientAge", e.target.value)}
+                      onChange={(e) => set("patientAge", e.target.value.replace(/\D/g, ""))}
                       placeholder="78"
                     />
                   </Field>
@@ -413,7 +695,8 @@ function FamilyOnboarding() {
             </div>
           )}
 
-          {step === 2 && (
+          {/* Step 3: Emergencia */}
+          {step === 3 && (
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold">Contacto de emergencia</h2>
               <p className="text-sm text-muted-foreground">
@@ -430,28 +713,33 @@ function FamilyOnboarding() {
                 <Field label="Teléfono" required>
                   <Input
                     type="tel"
+                    inputMode="numeric"
                     value={form.emergencyPhone}
-                    onChange={(e) => set("emergencyPhone", e.target.value)}
+                    onChange={(e) => set("emergencyPhone", e.target.value.replace(/\D/g, ""))}
                     placeholder="3009876543"
                   />
                 </Field>
               </div>
               <div className="rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-3.5 text-xs text-muted-foreground leading-relaxed">
-                <strong className="text-fuchsia-neural">Botón de pánico 24/7:</strong> en caso de emergencia,
-                Humanix notifica al contacto, comparte la ubicación en vivo y conecta con la línea 123.
+                <strong className="text-fuchsia-neural">Botón de pánico 24/7:</strong> en caso de
+                emergencia, Humanix notifica al contacto, comparte la ubicación en vivo y conecta
+                con la línea 123.
               </div>
             </div>
           )}
 
-          {step === 3 && (
+          {/* Step 4: Consentimiento */}
+          {step === 4 && (
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold">Consentimiento y privacidad</h2>
               <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground leading-relaxed max-h-56 overflow-auto">
-                <p className="font-semibold text-foreground mb-2">Tratamiento de datos personales — Ley 1581 de 2012</p>
+                <p className="font-semibold text-foreground mb-2">
+                  Tratamiento de datos personales — Ley 1581 de 2012
+                </p>
                 <p>
-                  En cumplimiento de la Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013, Humanix
-                  S.A.S. te informa que recolectará y tratará tus datos personales (incluida la información
-                  del paciente, dirección y contactos) con la finalidad exclusiva de:
+                  En cumplimiento de la Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013,
+                  Humanix S.A.S. te informa que recolectará y tratará tus datos personales (incluida
+                  la información del paciente, dirección y contactos) con la finalidad exclusiva de:
                 </p>
                 <ul className="list-disc pl-5 mt-2 space-y-1">
                   <li>Conectar tu solicitud con cuidadores verificados con RETHUS.</li>
@@ -460,8 +748,8 @@ function FamilyOnboarding() {
                   <li>Atender emergencias y notificar a tu contacto designado.</li>
                 </ul>
                 <p className="mt-2">
-                  Puedes ejercer tus derechos de conocer, actualizar, rectificar y suprimir tus datos en
-                  cualquier momento escribiendo a <strong>privacidad@humanix.co</strong>.
+                  Puedes ejercer tus derechos de conocer, actualizar, rectificar y suprimir tus
+                  datos en cualquier momento escribiendo a <strong>privacidad@humanix.co</strong>.
                 </p>
               </div>
 
@@ -479,11 +767,25 @@ function FamilyOnboarding() {
               </label>
 
               <div className="rounded-xl border border-copper/30 bg-copper/5 p-3.5 text-xs leading-relaxed">
-                <strong className="text-copper">Comisión Humanix:</strong> únicamente cobramos un{" "}
-                <strong>3%</strong> sobre cada contratación. Este porcentaje cubre verificación de
-                identidad, soporte 24/7, seguro de responsabilidad civil y la línea de emergencia.
-                El profesional recibe el <strong>97%</strong> restante.
+                <strong className="text-copper">Modelo Humanix:</strong> el profesional cobra
+                directamente al finalizar el servicio (efectivo o transferencia). Humanix solo cobra
+                una suscripción mensual de <strong>$9.000 COP</strong> que incluye verificación de
+                identidad, soporte 24/7 y la línea de emergencia.
               </div>
+
+              {aiSpecialty && (
+                <div className="rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-4">
+                  <p className="text-sm font-semibold flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-fuchsia-neural" />
+                    Listos para conectarte
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Al finalizar te llevaremos directo a buscar profesionales en{" "}
+                    <strong>{form.city || "tu ciudad"}</strong> filtrados por{" "}
+                    <strong>{aiSpecialty}</strong>.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
@@ -503,8 +805,18 @@ function FamilyOnboarding() {
                 Siguiente <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button type="button" variant="hero" onClick={submit} disabled={saving} className="min-w-40">
-                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              <Button
+                type="button"
+                variant="hero"
+                onClick={submit}
+                disabled={saving}
+                className="min-w-44"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4 mr-2" />
+                )}
                 Finalizar y buscar
               </Button>
             )}
