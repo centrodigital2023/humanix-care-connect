@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const plan = body.plan ?? "pro_monthly";
     const amount = Number(body.amount ?? 49900);
-    const userId = auth.user.id;
-    const email = auth.user.email ?? body.email ?? "comprador@humanix.com";
+    const userId = auth.userId;
+    const email = body.email ?? "comprador@humanix.com";
 
     const origin = req.headers.get("origin") ?? "https://humanix.com";
 
