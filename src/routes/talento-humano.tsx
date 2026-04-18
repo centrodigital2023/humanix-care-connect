@@ -10,6 +10,12 @@ import {
   FileCheck,
   Briefcase,
   Search,
+  ShieldAlert,
+  ScrollText,
+  Megaphone,
+  Mail,
+  Sparkles,
+  Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,6 +33,10 @@ export const Route = createFileRoute("/talento-humano")({
 
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
+  { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
+  { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
+  { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
   { label: "Marketplace", to: "/buscar", icon: Search },
@@ -41,6 +51,8 @@ type Pro = {
   ai_preapproved: boolean | null;
   rethus_verified: boolean | null;
   trust_score: number | null;
+  social_trust_score: number | null;
+  social_trust_updated_at: string | null;
   years_experience: number | null;
   avg_rating: number | null;
   active: boolean | null;
@@ -61,9 +73,9 @@ function HRPage() {
     const { data } = await supabase
       .from("professional_profiles")
       .select(
-        "id, user_id, specialty, bio, verified, ai_preapproved, rethus_verified, trust_score, years_experience, avg_rating, active",
+        "id, user_id, specialty, bio, verified, ai_preapproved, rethus_verified, trust_score, social_trust_score, social_trust_updated_at, years_experience, avg_rating, active",
       )
-      .order("trust_score", { ascending: false })
+      .order("social_trust_score", { ascending: false, nullsFirst: false })
       .limit(100);
     setPros((data ?? []) as Pro[]);
   };
@@ -75,6 +87,17 @@ function HRPage() {
       .eq("id", id);
     if (error) return toast.error(error.message);
     toast.success(!current ? "Profesional verificado" : "Verificación retirada");
+    await load();
+  };
+
+  const computeTrust = async (userId: string) => {
+    toast.loading("Calculando Social Trust Score…", { id: `trust-${userId}` });
+    const { data, error } = await supabase.functions.invoke("social-trust-score", {
+      body: { user_id: userId },
+    });
+    toast.dismiss(`trust-${userId}`);
+    if (error) return toast.error(error.message);
+    toast.success(`Trust Score: ${data?.score ?? "?"}/100`);
     await load();
   };
 
@@ -105,11 +128,12 @@ function HRPage() {
       badge={{ label: "Staff", tone: "bio" }}
     >
       <div className="space-y-5">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <Stat label="Total" value={pros.length} />
           <Stat label="Verificados" value={pros.filter((p) => p.verified).length} />
           <Stat label="Pre-aprobados IA" value={pros.filter((p) => p.ai_preapproved).length} />
-          <Stat label="RETHUS verificado" value={pros.filter((p) => p.rethus_verified).length} />
+          <Stat label="RETHUS" value={pros.filter((p) => p.rethus_verified).length} />
+          <Stat label="Trust ≥ 80" value={pros.filter((p) => (p.social_trust_score ?? 0) >= 80).length} />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -151,9 +175,17 @@ function HRPage() {
                     )}
                     {p.ai_preapproved && <Badge variant="secondary">IA pre-aprobado</Badge>}
                     {p.rethus_verified && <Badge variant="outline">RETHUS</Badge>}
+                    {(p.social_trust_score ?? 0) >= 80 && (
+                      <Badge className="bg-biosensor text-biosensor-foreground gap-1">
+                        <Shield className="h-3 w-3" /> Trust {p.social_trust_score}
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio || "Sin bio"}</p>
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                    <span className="inline-flex items-center gap-1">
+                      <Shield className="h-3 w-3" /> Social Trust {p.social_trust_score ?? 0}/100
+                    </span>
                     <span className="inline-flex items-center gap-1">
                       <Briefcase className="h-3 w-3" /> Trust {p.trust_score ?? 0}/100
                     </span>
@@ -163,21 +195,26 @@ function HRPage() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant={p.verified ? "outline" : "hero"}
-                  onClick={() => toggleVerified(p.id, p.verified)}
-                >
-                  {p.verified ? (
-                    <>
-                      <XCircle className="h-4 w-4 mr-1" /> Quitar
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 mr-1" /> Verificar
-                    </>
-                  )}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    variant={p.verified ? "outline" : "hero"}
+                    onClick={() => toggleVerified(p.id, p.verified)}
+                  >
+                    {p.verified ? (
+                      <>
+                        <XCircle className="h-4 w-4 mr-1" /> Quitar
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-1" /> Verificar
+                      </>
+                    )}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => computeTrust(p.user_id)}>
+                    <Sparkles className="h-4 w-4 mr-1" /> Trust IA
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
