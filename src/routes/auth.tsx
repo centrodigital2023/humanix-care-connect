@@ -58,7 +58,13 @@ function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signup");
-  const [role, setRole] = useState<Role>(search.role ?? "professional");
+  // Si vino con ?role=professional desde /profesionales, lo respetamos.
+  // Si no vino con rol, ocultamos profesional y dejamos solo family/institution.
+  const allowProfessional = search.role === "professional";
+  const visibleRoles: Role[] = allowProfessional
+    ? (["professional", "family", "institution"] as Role[])
+    : (["family", "institution"] as Role[]);
+  const [role, setRole] = useState<Role>(search.role ?? "family");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -180,8 +186,8 @@ function AuthPage() {
             {mode === "signup" && (
               <div className="mb-5">
                 <Label className="mb-2 block">¿Cómo te identificas?</Label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(Object.keys(roleConfig) as Role[]).map((r) => {
+                <div className={`grid gap-2 ${visibleRoles.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {visibleRoles.map((r) => {
                     const c = roleConfig[r];
                     const Icon = c.icon;
                     const active = role === r;
@@ -203,6 +209,14 @@ function AuthPage() {
                     );
                   })}
                 </div>
+                {!allowProfessional && (
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    ¿Eres profesional de la salud?{" "}
+                    <Link to="/profesionales" className="underline hover:text-foreground">
+                      Empieza por aquí
+                    </Link>.
+                  </p>
+                )}
               </div>
             )}
 
