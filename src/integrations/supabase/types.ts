@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_banners: {
+        Row: {
+          active: boolean
+          ai_recommendation: string | null
+          ai_score: number | null
+          audience: string
+          clicks: number
+          created_at: string
+          created_by: string | null
+          cta_label: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          image_url: string | null
+          impressions: number
+          link_url: string | null
+          position: string
+          starts_at: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          ai_recommendation?: string | null
+          ai_score?: number | null
+          audience?: string
+          clicks?: number
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          link_url?: string | null
+          position?: string
+          starts_at?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          ai_recommendation?: string | null
+          ai_score?: number | null
+          audience?: string
+          clicks?: number
+          created_at?: string
+          created_by?: string | null
+          cta_label?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          image_url?: string | null
+          impressions?: number
+          link_url?: string | null
+          position?: string
+          starts_at?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ai_credits_ledger: {
         Row: {
           created_at: string
@@ -81,6 +144,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      audit_log: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          id: string
+          ip_address: string | null
+          meta: Json | null
+          resource_id: string | null
+          resource_type: string | null
+          severity: string
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          meta?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity?: string
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          meta?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          severity?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       availability_slots: {
         Row: {
@@ -157,6 +262,189 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: true
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crm_campaigns: {
+        Row: {
+          ai_subject_suggestions: Json | null
+          channel: string
+          clicked_count: number | null
+          content: string | null
+          created_at: string
+          created_by: string | null
+          delivered_count: number | null
+          id: string
+          name: string
+          opened_count: number | null
+          recipients_count: number | null
+          scheduled_at: string | null
+          segment_filter: Json | null
+          sent_at: string | null
+          status: string
+          subject: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_subject_suggestions?: Json | null
+          channel?: string
+          clicked_count?: number | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number | null
+          id?: string
+          name: string
+          opened_count?: number | null
+          recipients_count?: number | null
+          scheduled_at?: string | null
+          segment_filter?: Json | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_subject_suggestions?: Json | null
+          channel?: string
+          clicked_count?: number | null
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number | null
+          id?: string
+          name?: string
+          opened_count?: number | null
+          recipients_count?: number | null
+          scheduled_at?: string | null
+          segment_filter?: Json | null
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_contacts: {
+        Row: {
+          ai_sentiment: string | null
+          ai_summary: string | null
+          city: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          full_name: string
+          id: string
+          last_contacted_at: string | null
+          lead_score: number | null
+          linked_user_id: string | null
+          notes: string | null
+          phone: string | null
+          segment: string | null
+          source: string | null
+          tags: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          last_contacted_at?: string | null
+          lead_score?: number | null
+          linked_user_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          segment?: string | null
+          source?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          last_contacted_at?: string | null
+          lead_score?: number | null
+          linked_user_id?: string | null
+          notes?: string | null
+          phone?: string | null
+          segment?: string | null
+          source?: string | null
+          tags?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_interactions: {
+        Row: {
+          body: string | null
+          campaign_id: string | null
+          completed_at: string | null
+          contact_id: string
+          created_at: string
+          created_by: string | null
+          direction: string | null
+          due_at: string | null
+          id: string
+          meta: Json | null
+          status: string | null
+          subject: string | null
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          campaign_id?: string | null
+          completed_at?: string | null
+          contact_id: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string | null
+          due_at?: string | null
+          id?: string
+          meta?: Json | null
+          status?: string | null
+          subject?: string | null
+          type: string
+        }
+        Update: {
+          body?: string | null
+          campaign_id?: string | null
+          completed_at?: string | null
+          contact_id?: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string | null
+          due_at?: string | null
+          id?: string
+          meta?: Json | null
+          status?: string | null
+          subject?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_interactions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "crm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_interactions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "crm_contacts"
             referencedColumns: ["id"]
           },
         ]
@@ -615,6 +903,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pqrs_tickets: {
+        Row: {
+          ai_category: string | null
+          ai_priority: string | null
+          ai_sentiment: string | null
+          ai_summary: string | null
+          assigned_to: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          description: string
+          id: string
+          resolution: string | null
+          resolved_at: string | null
+          status: string
+          subject: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ai_category?: string | null
+          ai_priority?: string | null
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          assigned_to?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ai_category?: string | null
+          ai_priority?: string | null
+          ai_sentiment?: string | null
+          ai_summary?: string | null
+          assigned_to?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       professional_documents: {
         Row: {
@@ -1415,6 +1766,16 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      log_audit: {
+        Args: {
+          _action: string
+          _meta?: Json
+          _resource_id?: string
+          _resource_type?: string
+          _severity?: string
+        }
+        Returns: string
+      }
       match_offers_for_professional: {
         Args: {
           _match_count?: number
