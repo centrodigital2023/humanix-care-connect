@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       if (!fileResp.ok || !fileResp.body) throw new Error("No se pudo descargar el archivo");
       const buf = new Uint8Array(await fileResp.arrayBuffer());
       if (buf.byteLength > MAX_BYTES) {
-        return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 8MB)" }), {
+        return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 20MB)" }), {
           status: 413,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
