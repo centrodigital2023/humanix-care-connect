@@ -23,6 +23,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
+import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
@@ -98,6 +99,11 @@ const SuperadminFraudeRoute = SuperadminFraudeRouteImport.update({
   path: '/fraude',
   getParentRoute: () => SuperadminRoute,
 } as any)
+const ServicioBookingIdRoute = ServicioBookingIdRouteImport.update({
+  id: '/servicio/$bookingId',
+  path: '/servicio/$bookingId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard': typeof DashboardIndexRoute
 }
@@ -176,6 +184,7 @@ export interface FileRoutesById {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/servicio/$bookingId'
     | '/superadmin/fraude'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/servicio/$bookingId'
     | '/superadmin/fraude'
     | '/dashboard'
   id:
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/servicio/$bookingId'
     | '/superadmin/fraude'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
@@ -254,6 +266,7 @@ export interface RootRouteChildren {
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
+  ServicioBookingIdRoute: typeof ServicioBookingIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -356,6 +369,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminFraudeRouteImport
       parentRoute: typeof SuperadminRoute
     }
+    '/servicio/$bookingId': {
+      id: '/servicio/$bookingId'
+      path: '/servicio/$bookingId'
+      fullPath: '/servicio/$bookingId'
+      preLoaderRoute: typeof ServicioBookingIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/whatsapp': {
       id: '/dashboard/whatsapp'
       path: '/whatsapp'
@@ -432,6 +452,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
+  ServicioBookingIdRoute: ServicioBookingIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
