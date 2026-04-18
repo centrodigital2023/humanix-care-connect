@@ -573,11 +573,43 @@ function ProDashboard() {
           <section className="rounded-2xl border border-border bg-card/95 p-6">
             <h2 className="font-semibold mb-1">Documentos</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Sube tu hoja de vida (PDF) y la IA extrae tus datos. Los demás documentos los revisa nuestro equipo.
+              Sube tu hoja de vida (PDF) y la IA extrae tus datos. La IA también verifica cada documento.
             </p>
             <DocumentsManager userId={userId} onCvExtracted={applyExtraction} />
           </section>
         )}
+
+        {/* Referencias laborales y familiares */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <h2 className="font-semibold mb-1">Referencias</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Necesitas mínimo 2 referencias laborales y 2 familiares (solo nombre y celular).
+            </p>
+            <ReferencesManager userId={userId} />
+          </section>
+        )}
+
+        {/* Ubicación en mapa */}
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <h2 className="font-semibold mb-1">Ubicación</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Marca tu ubicación principal de servicio en el mapa.
+            </p>
+            <LocationPicker
+              userId={userId}
+              initial={{
+                lat: profile?.lat ?? null,
+                lng: profile?.lng ?? null,
+                address: profile?.home_city ?? null,
+              }}
+            />
+          </section>
+        )}
+
+        {/* Plan Humanix Pro (Mercado Pago) */}
+        {userId && <MercadoPagoSubscription userId={userId} />}
 
         {/* Profile form */}
         <section className="rounded-2xl border border-border bg-card/95 p-6">
