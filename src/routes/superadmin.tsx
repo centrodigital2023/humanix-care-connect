@@ -65,10 +65,35 @@ type Invitation = {
   created_at: string;
 };
 
+type AiRating = {
+  id: string;
+  booking_id: string;
+  rated_id: string;
+  stars: number;
+  ai_sentiment: string | null;
+  ai_summary: string | null;
+  voice_transcript: string | null;
+  voice_url: string | null;
+  created_at: string;
+};
+
+type Emergency = {
+  id: string;
+  booking_id: string | null;
+  triggered_by: string;
+  incident_type: string;
+  lat: number | null;
+  lng: number | null;
+  resolved: boolean;
+  created_at: string;
+};
+
 function SuperadminPage() {
   const { user, loading, logout } = useAppUser({ allow: ["superadmin"] });
   const [stats, setStats] = useState({ users: 0, professionals: 0, offers: 0, docs: 0 });
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [aiAlerts, setAiAlerts] = useState<AiRating[]>([]);
+  const [emergencies, setEmergencies] = useState<Emergency[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AppRole>("hr_staff");
   const [creating, setCreating] = useState(false);
