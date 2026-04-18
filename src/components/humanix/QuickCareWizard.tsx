@@ -6,6 +6,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { Stethoscope, Calendar as CalendarIcon, Clock, Hourglass, Search, Heart, Baby, Activity, Bandage, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { RoleGate } from "./RoleGate";
 
 type CareType = {
   key: string;
@@ -42,6 +43,8 @@ export function QuickCareWizard() {
   const [time, setTime] = useState("08:00");
   const [duration, setDuration] = useState<number>(4);
   const [city, setCity] = useState("Bogotá");
+  const [gateOpen, setGateOpen] = useState(false);
+  const [pendingRedirect, setPendingRedirect] = useState("/buscar");
 
   const selected = useMemo(() => TYPES.find((t) => t.key === careKey) ?? TYPES[0], [careKey]);
 
@@ -52,16 +55,14 @@ export function QuickCareWizard() {
       specialty: selected.specialty,
       city,
     };
-    // Si no hay sesión, llevar primero a /auth con redirect de vuelta a /buscar.
+    // Si no hay sesión, mostrar el modal de selección de rol antes de /auth.
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
       const redirectUrl = `/buscar?tab=profesionales&specialty=${encodeURIComponent(
         selected.specialty,
       )}&city=${encodeURIComponent(city)}`;
-      navigate({
-        to: "/auth",
-        search: { role: "family", redirect: redirectUrl } as never,
-      });
+      setPendingRedirect(redirectUrl);
+      setGateOpen(true);
       return;
     }
     navigate({ to: "/buscar", search: targetSearch });

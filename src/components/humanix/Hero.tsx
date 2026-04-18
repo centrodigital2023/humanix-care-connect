@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { ArrowRight, Sparkles, MapPin, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-humanix.jpg";
+import { RoleGate } from "./RoleGate";
 
 export function Hero() {
+  const [gateOpen, setGateOpen] = useState(false);
+
   return (
     <section className="relative overflow-hidden pt-32 pb-20 sm:pt-40 sm:pb-28">
       <div className="absolute inset-0 bg-aurora pointer-events-none" />
@@ -24,18 +28,20 @@ export function Hero() {
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
               Humanix es la plataforma premium que conecta enfermeros, auxiliares
               y cuidadores con las familias, clínicas y agencias de Colombia —
-              con verificación por IA, geolocalización en vivo y pagos
-              inmediatos en Nequi, PSE y RappiPay.
+              con verificación por IA, geolocalización en vivo y pago directo
+              al profesional.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Button variant="hero" size="xl" asChild>
-                <a href="#familias">
-                  Encontrar cuidador <ArrowRight className="ml-1 h-5 w-5" />
-                </a>
+              <Button
+                variant="hero"
+                size="xl"
+                onClick={() => setGateOpen(true)}
+              >
+                Buscar cuidador <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
               <Button variant="glass" size="xl" asChild>
-                <a href="#profesionales">Soy profesional de salud</a>
+                <a href="/profesionales">Soy profesional de salud</a>
               </Button>
             </div>
 
@@ -67,7 +73,6 @@ export function Hero() {
               <div className="absolute inset-0 bg-gradient-to-t from-cyber/40 via-transparent to-transparent" />
             </div>
 
-            {/* Floating cards */}
             <div className="hidden sm:flex absolute -left-4 bottom-10 items-center gap-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-3.5 pr-5 shadow-[var(--shadow-card)]">
               <div className="h-10 w-10 rounded-xl bg-biosensor/15 flex items-center justify-center">
                 <Activity className="h-5 w-5 text-biosensor" />
@@ -91,6 +96,8 @@ export function Hero() {
           </div>
         </div>
       </div>
+
+      <RoleGate open={gateOpen} onOpenChange={setGateOpen} redirectTo="/buscar" />
     </section>
   );
 }
