@@ -23,6 +23,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
+import { Route as SuperadminAuditoriaRouteImport } from './routes/superadmin.auditoria'
 import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
 import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
@@ -101,6 +102,11 @@ const SuperadminFraudeRoute = SuperadminFraudeRouteImport.update({
   path: '/fraude',
   getParentRoute: () => SuperadminRoute,
 } as any)
+const SuperadminAuditoriaRoute = SuperadminAuditoriaRouteImport.update({
+  id: '/auditoria',
+  path: '/auditoria',
+  getParentRoute: () => SuperadminRoute,
+} as any)
 const ServicioBookingIdRoute = ServicioBookingIdRouteImport.update({
   id: '/servicio/$bookingId',
   path: '/servicio/$bookingId',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
+  '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
+  '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
@@ -203,6 +211,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
+  '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
@@ -228,6 +237,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/profesional/$proId'
     | '/servicio/$bookingId'
+    | '/superadmin/auditoria'
     | '/superadmin/fraude'
     | '/dashboard/'
     | '/dashboard/familia/onboarding'
@@ -250,6 +260,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/profesional/$proId'
     | '/servicio/$bookingId'
+    | '/superadmin/auditoria'
     | '/superadmin/fraude'
     | '/dashboard'
     | '/dashboard/familia/onboarding'
@@ -273,6 +284,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/profesional/$proId'
     | '/servicio/$bookingId'
+    | '/superadmin/auditoria'
     | '/superadmin/fraude'
     | '/dashboard/'
     | '/dashboard/familia/onboarding'
@@ -395,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminFraudeRouteImport
       parentRoute: typeof SuperadminRoute
     }
+    '/superadmin/auditoria': {
+      id: '/superadmin/auditoria'
+      path: '/auditoria'
+      fullPath: '/superadmin/auditoria'
+      preLoaderRoute: typeof SuperadminAuditoriaRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
     '/servicio/$bookingId': {
       id: '/servicio/$bookingId'
       path: '/servicio/$bookingId'
@@ -479,10 +498,12 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 )
 
 interface SuperadminRouteChildren {
+  SuperadminAuditoriaRoute: typeof SuperadminAuditoriaRoute
   SuperadminFraudeRoute: typeof SuperadminFraudeRoute
 }
 
 const SuperadminRouteChildren: SuperadminRouteChildren = {
+  SuperadminAuditoriaRoute: SuperadminAuditoriaRoute,
   SuperadminFraudeRoute: SuperadminFraudeRoute,
 }
 

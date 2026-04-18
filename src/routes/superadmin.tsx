@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
-  Shield,
   ShieldAlert,
   Users,
   Briefcase,
@@ -15,6 +14,9 @@ import {
   Mic,
   AlertOctagon,
   Star,
+  ScrollText,
+  Megaphone,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,9 @@ type AppRole =
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
   { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
+  { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
+  { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
   { label: "Marketplace", to: "/buscar", icon: Briefcase },
