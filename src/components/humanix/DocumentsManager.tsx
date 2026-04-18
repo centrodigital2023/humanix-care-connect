@@ -13,7 +13,6 @@ import {
   Sparkles,
   Receipt,
   Briefcase,
-  Heart,
   ShieldAlert,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
