@@ -12,6 +12,9 @@ import {
   Copy,
   LayoutDashboard,
   TrendingUp,
+  Mic,
+  AlertOctagon,
+  Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -62,10 +65,35 @@ type Invitation = {
   created_at: string;
 };
 
+type AiRating = {
+  id: string;
+  booking_id: string;
+  rated_id: string;
+  stars: number;
+  ai_sentiment: string | null;
+  ai_summary: string | null;
+  voice_transcript: string | null;
+  voice_url: string | null;
+  created_at: string;
+};
+
+type Emergency = {
+  id: string;
+  booking_id: string | null;
+  triggered_by: string;
+  incident_type: string;
+  lat: number | null;
+  lng: number | null;
+  resolved: boolean;
+  created_at: string;
+};
+
 function SuperadminPage() {
   const { user, loading, logout } = useAppUser({ allow: ["superadmin"] });
   const [stats, setStats] = useState({ users: 0, professionals: 0, offers: 0, docs: 0 });
   const [invitations, setInvitations] = useState<Invitation[]>([]);
+  const [aiAlerts, setAiAlerts] = useState<AiRating[]>([]);
+  const [emergencies, setEmergencies] = useState<Emergency[]>([]);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AppRole>("hr_staff");
   const [creating, setCreating] = useState(false);
@@ -76,21 +104,40 @@ function SuperadminPage() {
   }, [user]);
 
   const loadData = async () => {
-    const [{ count: users }, { count: professionals }, { count: offers }, { count: docs }, { data: inv }] =
-      await Promise.all([
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
-        supabase.from("professional_profiles").select("*", { count: "exact", head: true }),
-        supabase.from("job_offers").select("*", { count: "exact", head: true }),
-        supabase
-          .from("professional_documents")
-          .select("*", { count: "exact", head: true })
-          .eq("status", "pending"),
-        supabase
-          .from("staff_invitations")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(20),
-      ]);
+    const [
+      { count: users },
+      { count: professionals },
+      { count: offers },
+      { count: docs },
+      { data: inv },
+      { data: alerts },
+      { data: emerg },
+    ] = await Promise.all([
+      supabase.from("profiles").select("*", { count: "exact", head: true }),
+      supabase.from("professional_profiles").select("*", { count: "exact", head: true }),
+      supabase.from("job_offers").select("*", { count: "exact", head: true }),
+      supabase
+        .from("professional_documents")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending"),
+      supabase
+        .from("staff_invitations")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20),
+      supabase
+        .from("service_ratings")
+        .select("id, booking_id, rated_id, stars, ai_sentiment, ai_summary, voice_transcript, voice_url, created_at")
+        .eq("ai_alert", true)
+        .order("created_at", { ascending: false })
+        .limit(15),
+      supabase
+        .from("emergency_incidents")
+        .select("id, booking_id, triggered_by, incident_type, lat, lng, resolved, created_at")
+        .eq("resolved", false)
+        .order("created_at", { ascending: false })
+        .limit(10),
+    ]);
     setStats({
       users: users ?? 0,
       professionals: professionals ?? 0,
@@ -98,6 +145,17 @@ function SuperadminPage() {
       docs: docs ?? 0,
     });
     setInvitations((inv ?? []) as Invitation[]);
+    setAiAlerts((alerts ?? []) as AiRating[]);
+    setEmergencies((emerg ?? []) as Emergency[]);
+  };
+
+  const resolveEmergency = async (id: string) => {
+    await supabase
+      .from("emergency_incidents")
+      .update({ resolved: true, resolved_at: new Date().toISOString() })
+      .eq("id", id);
+    setEmergencies((prev) => prev.filter((e) => e.id !== id));
+    toast.success("Emergencia marcada como resuelta");
   };
 
   const createInvitation = async (e: React.FormEvent) => {
@@ -212,6 +270,135 @@ function SuperadminPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          </Card>
+        </section>
+
+        <section className="grid lg:grid-cols-2 gap-4">
+          <Card className="p-6 border-fuchsia-neural/30">
+            <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
+              <AlertOctagon className="h-4 w-4 text-fuchsia-neural" />
+              Emergencias activas
+              {emergencies.length > 0 && (
+                <Badge className="bg-fuchsia-neural text-fuchsia-neural-foreground">
+                  {emergencies.length}
+                </Badge>
+              )}
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              Botones de pánico activados. Línea 123 contactada por el usuario.
+            </p>
+            <div className="space-y-2 max-h-80 overflow-y-auto">
+              {emergencies.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sin emergencias activas. ✓</p>
+              ) : (
+                emergencies.map((e) => (
+                  <div
+                    key={e.id}
+                    className="rounded-lg border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-fuchsia-neural">
+                          {e.incident_type === "panic" ? "Botón de pánico" : e.incident_type}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(e.created_at).toLocaleString("es-CO")}
+                        </p>
+                        {e.lat && e.lng && (
+                          <a
+                            href={`https://www.google.com/maps?q=${e.lat},${e.lng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[11px] text-biosensor hover:underline"
+                          >
+                            Ver ubicación →
+                          </a>
+                        )}
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => resolveEmergency(e.id)}
+                      >
+                        Resolver
+                      </Button>
+                    </div>
+                    {e.booking_id && (
+                      <Link
+                        to="/servicio/$bookingId"
+                        params={{ bookingId: e.booking_id }}
+                        className="mt-2 inline-block text-[11px] text-foreground/80 hover:underline"
+                      >
+                        Abrir servicio relacionado →
+                      </Link>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </Card>
+
+          <Card className="p-6 border-copper/30">
+            <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
+              <Mic className="h-4 w-4 text-copper" />
+              Alertas IA · Voz
+              {aiAlerts.length > 0 && (
+                <Badge className="bg-copper text-copper-foreground">{aiAlerts.length}</Badge>
+              )}
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              Valoraciones por voz marcadas por Gemini con sentimiento negativo o riesgo.
+            </p>
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {aiAlerts.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Sin alertas. Las valoraciones recientes están saludables.
+                </p>
+              ) : (
+                aiAlerts.map((a) => (
+                  <div
+                    key={a.id}
+                    className="rounded-lg border border-copper/30 bg-copper/5 p-3"
+                  >
+                    <div className="flex items-center gap-2 text-sm font-semibold">
+                      <Star className="h-3.5 w-3.5 fill-copper text-copper" />
+                      {a.stars}/5 · {a.ai_sentiment ?? "—"}
+                    </div>
+                    {a.ai_summary && (
+                      <p className="mt-1 text-xs text-foreground/80">{a.ai_summary}</p>
+                    )}
+                    {a.voice_transcript && (
+                      <p className="mt-1 text-[11px] italic text-muted-foreground">
+                        "{a.voice_transcript.slice(0, 200)}
+                        {a.voice_transcript.length > 200 ? "…" : ""}"
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-center gap-3 text-[11px]">
+                      {a.voice_url && (
+                        <a
+                          href={a.voice_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-biosensor hover:underline"
+                        >
+                          Escuchar audio
+                        </a>
+                      )}
+                      <Link
+                        to="/servicio/$bookingId"
+                        params={{ bookingId: a.booking_id }}
+                        className="text-foreground/80 hover:underline"
+                      >
+                        Abrir servicio →
+                      </Link>
+                      <span className="text-muted-foreground ml-auto">
+                        {new Date(a.created_at).toLocaleDateString("es-CO")}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </Card>
         </section>

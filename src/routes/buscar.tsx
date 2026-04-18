@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, deriveProStatus, deriveOfferStatus } from "@/components/humanix/StatusBadge";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 
 type SearchParams = {
@@ -668,9 +669,19 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
       </div>
 
       <div className="mt-4 flex gap-2">
-        <Button variant="hero" size="sm" className="flex-1">
-          Contactar
-        </Button>
+        {pro.hourly_rate && deriveProStatus(pro) !== "reserved" ? (
+          <BookNowButton
+            professionalId={pro.user_id}
+            hourlyRate={pro.hourly_rate}
+            defaultLat={pro.lat ?? null}
+            defaultLng={pro.lng ?? null}
+            fullWidth
+          />
+        ) : (
+          <Button variant="hero" size="sm" className="flex-1" disabled={deriveProStatus(pro) === "reserved"}>
+            {deriveProStatus(pro) === "reserved" ? "Reservado" : "Contactar"}
+          </Button>
+        )}
         <Button variant="glass" size="sm">
           Ver perfil
         </Button>
