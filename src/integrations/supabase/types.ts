@@ -161,6 +161,53 @@ export type Database = {
           },
         ]
       }
+      emergency_incidents: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          id: string
+          incident_type: string
+          lat: number | null
+          lng: number | null
+          notes: string | null
+          resolved: boolean
+          resolved_at: string | null
+          triggered_by: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          incident_type?: string
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          triggered_by: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          incident_type?: string
+          lat?: number | null
+          lng?: number | null
+          notes?: string | null
+          resolved?: boolean
+          resolved_at?: string | null
+          triggered_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "emergency_incidents_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "service_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fraud_flags: {
         Row: {
           created_at: string
@@ -617,6 +664,134 @@ export type Database = {
           },
         ]
       }
+      service_bookings: {
+        Row: {
+          arrived_at: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          duration_hours: number
+          emergency_phone: string | null
+          hourly_rate: number
+          id: string
+          job_offer_id: string | null
+          notes: string | null
+          professional_id: string
+          scheduled_at: string
+          service_address: string | null
+          service_lat: number | null
+          service_lng: number | null
+          started_at: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          arrived_at?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          duration_hours?: number
+          emergency_phone?: string | null
+          hourly_rate: number
+          id?: string
+          job_offer_id?: string | null
+          notes?: string | null
+          professional_id: string
+          scheduled_at: string
+          service_address?: string | null
+          service_lat?: number | null
+          service_lng?: number | null
+          started_at?: string | null
+          status?: string
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          arrived_at?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          duration_hours?: number
+          emergency_phone?: string | null
+          hourly_rate?: number
+          id?: string
+          job_offer_id?: string | null
+          notes?: string | null
+          professional_id?: string
+          scheduled_at?: string
+          service_address?: string | null
+          service_lat?: number | null
+          service_lng?: number | null
+          started_at?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      service_ratings: {
+        Row: {
+          ai_alert: boolean
+          ai_sentiment: string | null
+          ai_sentiment_score: number | null
+          ai_summary: string | null
+          booking_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          rated_id: string
+          rater_id: string
+          stars: number
+          voice_transcript: string | null
+          voice_url: string | null
+        }
+        Insert: {
+          ai_alert?: boolean
+          ai_sentiment?: string | null
+          ai_sentiment_score?: number | null
+          ai_summary?: string | null
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rated_id: string
+          rater_id: string
+          stars: number
+          voice_transcript?: string | null
+          voice_url?: string | null
+        }
+        Update: {
+          ai_alert?: boolean
+          ai_sentiment?: string | null
+          ai_sentiment_score?: number | null
+          ai_summary?: string | null
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rated_id?: string
+          rater_id?: string
+          stars?: number
+          voice_transcript?: string | null
+          voice_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_ratings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "service_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_invitations: {
         Row: {
           created_at: string
@@ -682,6 +857,83 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tracking_pings: {
+        Row: {
+          accuracy_m: number | null
+          booking_id: string
+          created_at: string
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          professional_id: string
+          speed_mps: number | null
+        }
+        Insert: {
+          accuracy_m?: number | null
+          booking_id: string
+          created_at?: string
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          professional_id: string
+          speed_mps?: number | null
+        }
+        Update: {
+          accuracy_m?: number | null
+          booking_id?: string
+          created_at?: string
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          professional_id?: string
+          speed_mps?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_pings_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "service_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_consents: {
+        Row: {
+          consent_type: string
+          granted: boolean
+          granted_at: string
+          id: string
+          ip_address: string | null
+          revoked_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          consent_type: string
+          granted?: boolean
+          granted_at?: string
+          id?: string
+          ip_address?: string | null
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          consent_type?: string
+          granted?: boolean
+          granted_at?: string
+          id?: string
+          ip_address?: string | null
+          revoked_at?: string | null
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []

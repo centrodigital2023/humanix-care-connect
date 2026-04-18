@@ -6,10 +6,10 @@ import { Logo } from "./Logo";
 import { useTheme } from "@/hooks/use-theme";
 
 const links = [
-  { href: "#profesionales", label: "Profesionales" },
-  { href: "#familias", label: "Familias" },
-  { href: "#tecnologia", label: "Tecnología IA" },
-  { href: "#planes", label: "Planes" },
+  { to: "/profesionales" as const, label: "Profesionales" },
+  { to: "/familias" as const, label: "Familias" },
+  { to: "/tecnologia" as const, label: "Tecnología IA" },
+  { to: "/planes" as const, label: "Planes" },
 ];
 
 export function Navbar() {
@@ -33,17 +33,21 @@ export function Navbar() {
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4">
-        <Logo />
+        <Link to="/" aria-label="Humanix inicio">
+          <Logo />
+        </Link>
 
         <div className="hidden md:flex items-center gap-1">
           {links.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
+            <Link
+              key={l.to}
+              to={l.to}
+              preload="intent"
+              activeProps={{ className: "text-foreground bg-foreground/5" }}
               className="px-4 py-2 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </div>
 
@@ -56,7 +60,7 @@ export function Navbar() {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
-            <Link to="/buscar">Buscar</Link>
+            <Link to="/buscar" preload="intent">Buscar</Link>
           </Button>
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
             <Link to="/auth">Iniciar sesión</Link>
@@ -78,17 +82,17 @@ export function Navbar() {
         <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-xl">
           <div className="flex flex-col px-4 py-3 gap-1">
             {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
+              <Link
+                key={l.to}
+                to={l.to}
                 onClick={() => setOpen(false)}
                 className="px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-foreground/5"
               >
                 {l.label}
-              </a>
+              </Link>
             ))}
             <Button variant="hero" size="sm" className="mt-2 w-full" asChild>
-              <Link to="/auth">Empezar gratis</Link>
+              <Link to="/auth" onClick={() => setOpen(false)}>Empezar gratis</Link>
             </Button>
           </div>
         </div>
