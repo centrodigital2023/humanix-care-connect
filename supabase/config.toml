@@ -47,3 +47,9 @@ verify_jwt = true
 
 [functions.analyze-rating-voice]
 verify_jwt = true
+
+[functions.document-verifier]
+verify_jwt = false
+
+[functions.bio-summary]
+verify_jwt = false
