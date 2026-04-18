@@ -444,6 +444,149 @@ export type Database = {
           },
         ]
       }
+      mp_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          mp_payment_id: string | null
+          mp_preference_id: string | null
+          paid_at: string | null
+          raw_payload: Json | null
+          status: Database["public"]["Enums"]["mp_payment_status"]
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          paid_at?: string | null
+          raw_payload?: Json | null
+          status?: Database["public"]["Enums"]["mp_payment_status"]
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          paid_at?: string | null
+          raw_payload?: Json | null
+          status?: Database["public"]["Enums"]["mp_payment_status"]
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mp_payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "mp_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mp_subscriptions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          current_period_end: string | null
+          id: string
+          mp_payer_email: string | null
+          mp_preapproval_id: string | null
+          next_payment_at: string | null
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          id?: string
+          mp_payer_email?: string | null
+          mp_preapproval_id?: string | null
+          next_payment_at?: string | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          current_period_end?: string | null
+          id?: string
+          mp_payer_email?: string | null
+          mp_preapproval_id?: string | null
+          next_payment_at?: string | null
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          id: string
+          link: string | null
+          meta: Json | null
+          read_at: string | null
+          sent_via_wa: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          meta?: Json | null
+          read_at?: string | null
+          sent_via_wa?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          link?: string | null
+          meta?: Json | null
+          read_at?: string | null
+          sent_via_wa?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       offer_embeddings: {
         Row: {
           embedding: string | null
@@ -545,9 +688,12 @@ export type Database = {
           hourly_rate: number | null
           id: string
           languages: string[] | null
+          last_validation_id: string | null
           lat: number | null
           lng: number | null
           monthly_rate: number | null
+          published: boolean
+          published_at: string | null
           reserved_until: string | null
           rethus_number: string | null
           rethus_verified: boolean | null
@@ -580,9 +726,12 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           languages?: string[] | null
+          last_validation_id?: string | null
           lat?: number | null
           lng?: number | null
           monthly_rate?: number | null
+          published?: boolean
+          published_at?: string | null
           reserved_until?: string | null
           rethus_number?: string | null
           rethus_verified?: boolean | null
@@ -615,9 +764,12 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           languages?: string[] | null
+          last_validation_id?: string | null
           lat?: number | null
           lng?: number | null
           monthly_rate?: number | null
+          published?: boolean
+          published_at?: string | null
           reserved_until?: string | null
           rethus_number?: string | null
           rethus_verified?: boolean | null
@@ -633,7 +785,15 @@ export type Database = {
           work_experience?: Json | null
           years_experience?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "professional_profiles_last_validation_id_fkey"
+            columns: ["last_validation_id"]
+            isOneToOne: false
+            referencedRelation: "profile_validations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       professional_references: {
         Row: {
@@ -692,6 +852,42 @@ export type Database = {
           source_text?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      profile_validations: {
+        Row: {
+          ai_summary: string | null
+          created_at: string
+          critical_errors: Json
+          id: string
+          is_publishable: boolean
+          score: number | null
+          user_id: string
+          validated_at: string
+          warnings: Json
+        }
+        Insert: {
+          ai_summary?: string | null
+          created_at?: string
+          critical_errors?: Json
+          id?: string
+          is_publishable?: boolean
+          score?: number | null
+          user_id: string
+          validated_at?: string
+          warnings?: Json
+        }
+        Update: {
+          ai_summary?: string | null
+          created_at?: string
+          critical_errors?: Json
+          id?: string
+          is_publishable?: boolean
+          score?: number | null
+          user_id?: string
+          validated_at?: string
+          warnings?: Json
         }
         Relationships: []
       }
@@ -1078,11 +1274,13 @@ export type Database = {
       }
       whatsapp_contacts: {
         Row: {
+          ai_enabled: boolean
           created_at: string
           display_name: string | null
           id: string
           last_message_at: string | null
           last_message_preview: string | null
+          linked_user_id: string | null
           owner_id: string
           phone: string
           tag: string | null
@@ -1090,11 +1288,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_enabled?: boolean
           created_at?: string
           display_name?: string | null
           id?: string
           last_message_at?: string | null
           last_message_preview?: string | null
+          linked_user_id?: string | null
           owner_id: string
           phone: string
           tag?: string | null
@@ -1102,11 +1302,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_enabled?: boolean
           created_at?: string
           display_name?: string | null
           id?: string
           last_message_at?: string | null
           last_message_preview?: string | null
+          linked_user_id?: string | null
           owner_id?: string
           phone?: string
           tag?: string | null
@@ -1285,7 +1487,15 @@ export type Database = {
         | "utility_bill"
         | "work_reference"
         | "family_reference"
+        | "work_experience"
       fraud_severity: "low" | "medium" | "high" | "critical"
+      mp_payment_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+        | "refunded"
+        | "in_process"
       offer_modality: "hour" | "shift" | "month" | "package"
       offer_status: "open" | "closed" | "filled"
       poster_type: "family" | "institution"
@@ -1437,8 +1647,17 @@ export const Constants = {
         "utility_bill",
         "work_reference",
         "family_reference",
+        "work_experience",
       ],
       fraud_severity: ["low", "medium", "high", "critical"],
+      mp_payment_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "cancelled",
+        "refunded",
+        "in_process",
+      ],
       offer_modality: ["hour", "shift", "month", "package"],
       offer_status: ["open", "closed", "filled"],
       poster_type: ["family", "institution"],
