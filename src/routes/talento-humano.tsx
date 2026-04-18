@@ -128,11 +128,12 @@ function HRPage() {
       badge={{ label: "Staff", tone: "bio" }}
     >
       <div className="space-y-5">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <Stat label="Total" value={pros.length} />
           <Stat label="Verificados" value={pros.filter((p) => p.verified).length} />
           <Stat label="Pre-aprobados IA" value={pros.filter((p) => p.ai_preapproved).length} />
-          <Stat label="RETHUS verificado" value={pros.filter((p) => p.rethus_verified).length} />
+          <Stat label="RETHUS" value={pros.filter((p) => p.rethus_verified).length} />
+          <Stat label="Trust ≥ 80" value={pros.filter((p) => (p.social_trust_score ?? 0) >= 80).length} />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
