@@ -73,9 +73,9 @@ function HRPage() {
     const { data } = await supabase
       .from("professional_profiles")
       .select(
-        "id, user_id, specialty, bio, verified, ai_preapproved, rethus_verified, trust_score, years_experience, avg_rating, active",
+        "id, user_id, specialty, bio, verified, ai_preapproved, rethus_verified, trust_score, social_trust_score, social_trust_updated_at, years_experience, avg_rating, active",
       )
-      .order("trust_score", { ascending: false })
+      .order("social_trust_score", { ascending: false, nullsFirst: false })
       .limit(100);
     setPros((data ?? []) as Pro[]);
   };
@@ -87,6 +87,17 @@ function HRPage() {
       .eq("id", id);
     if (error) return toast.error(error.message);
     toast.success(!current ? "Profesional verificado" : "Verificación retirada");
+    await load();
+  };
+
+  const computeTrust = async (userId: string) => {
+    toast.loading("Calculando Social Trust Score…", { id: `trust-${userId}` });
+    const { data, error } = await supabase.functions.invoke("social-trust-score", {
+      body: { user_id: userId },
+    });
+    toast.dismiss(`trust-${userId}`);
+    if (error) return toast.error(error.message);
+    toast.success(`Trust Score: ${data?.score ?? "?"}/100`);
     await load();
   };
 
