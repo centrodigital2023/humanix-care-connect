@@ -117,6 +117,45 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Gemini acepta image_url solo para PNG/JPEG/WebP/GIF. Para PDFs hay que
+    // enviar el binario como data URL en una parte `file`. Descargamos el PDF
+    // (tope 8MB) y lo codificamos en base64 de forma chunked para no agotar RAM.
+    let userContent: unknown;
+    if (mt.startsWith("image/")) {
+      userContent = [
+        { type: "text", text: "Extrae el perfil profesional de esta hoja de vida." },
+        { type: "image_url", image_url: { url: file_url } },
+      ];
+    } else {
+      const ctrl2 = new AbortController();
+      const timer2 = setTimeout(() => ctrl2.abort(), FETCH_TIMEOUT_MS);
+      let fileResp: Response;
+      try {
+        fileResp = await fetch(file_url, { signal: ctrl2.signal, redirect: "error" });
+      } finally {
+        clearTimeout(timer2);
+      }
+      if (!fileResp.ok || !fileResp.body) throw new Error("No se pudo descargar el archivo");
+      const buf = new Uint8Array(await fileResp.arrayBuffer());
+      if (buf.byteLength > MAX_BYTES) {
+        return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 8MB)" }), {
+          status: 413,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      // base64 chunked para evitar "Maximum call stack size exceeded"
+      let bin = "";
+      const CHUNK = 0x8000;
+      for (let i = 0; i < buf.length; i += CHUNK) {
+        bin += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+      }
+      const dataUrl = `data:${mt};base64,${btoa(bin)}`;
+      userContent = [
+        { type: "text", text: "Extrae el perfil profesional de esta hoja de vida (PDF adjunto)." },
+        { type: "file", file: { filename: "cv.pdf", file_data: dataUrl } },
+      ];
+    }
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -133,13 +172,7 @@ Deno.serve(async (req) => {
               "Lee el documento y completa la herramienta. NO inventes datos: si un campo no aparece, omítelo. " +
               "Para tarifas, no las inventes. Para bio, redacta 2-3 frases en español neutro y profesional.",
           },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "Extrae el perfil profesional de esta hoja de vida." },
-              { type: "image_url", image_url: { url: file_url } },
-            ],
-          },
+          { role: "user", content: userContent },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "save_cv_profile" } },
