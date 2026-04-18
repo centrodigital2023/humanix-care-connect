@@ -311,7 +311,7 @@ function BuscarPage() {
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
               <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
-                Marketplace Humanix
+                Talento Humano
               </h1>
               <p className="mt-2 text-muted-foreground text-sm sm:text-base">
                 Encuentra el profesional o la oferta de salud ideal en Colombia.
