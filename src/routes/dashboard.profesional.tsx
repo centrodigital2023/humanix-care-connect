@@ -448,13 +448,14 @@ function ProDashboard() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Link to="/mensajes" className="text-sm text-muted-foreground hover:text-foreground px-3">
+            {userId && <NotificationsBell userId={userId} />}
+            <Link to="/mensajes" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
               Mensajes
             </Link>
-            <Link to="/planes" className="text-sm text-muted-foreground hover:text-foreground px-3">
+            <Link to="/planes" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
               Planes
             </Link>
-            <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3">
+            <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
               Marketplace
             </Link>
             <Button variant="ghost" size="sm" onClick={logout}>
