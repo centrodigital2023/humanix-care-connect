@@ -54,25 +54,39 @@ function FamilyDashboard() {
   const { user, loading, logout } = useAppUser({ allow: ["family", "superadmin"] });
   const [dataLoading, setDataLoading] = useState(true);
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [onboardingComplete, setOnboardingComplete] = useState(true);
 
   useEffect(() => {
     if (!user) return;
     let active = true;
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("job_offers")
-          .select("id, title, city, modality, amount, status, created_at, lat, lng, reserved_until")
-          .eq("posted_by", user.id)
-          .order("created_at", { ascending: false });
+        const [offersRes, famRes] = await Promise.all([
+          supabase
+            .from("job_offers")
+            .select("id, title, city, modality, amount, status, created_at, lat, lng, reserved_until")
+            .eq("posted_by", user.id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("family_profiles")
+            .select("id_number, default_address, emergency_contact_phone, habeas_data_accepted")
+            .eq("user_id", user.id)
+            .maybeSingle(),
+        ]);
         if (!active) return;
-        if (error) {
-          // eslint-disable-next-line no-console
-          console.warn("[familia dashboard] offers error:", error.message);
+        if (offersRes.error) {
+          console.warn("[familia dashboard] offers error:", offersRes.error.message);
         }
-        setOffers((data ?? []) as Offer[]);
+        setOffers((offersRes.data ?? []) as Offer[]);
+        const fam = famRes.data;
+        const complete = !!(
+          fam?.id_number &&
+          fam?.default_address &&
+          fam?.emergency_contact_phone &&
+          fam?.habeas_data_accepted
+        );
+        setOnboardingComplete(complete);
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error("[familia dashboard] load failed:", err);
       } finally {
         if (active) setDataLoading(false);
@@ -120,6 +134,28 @@ function FamilyDashboard() {
       }
     >
       <div className="space-y-8">
+        {/* Banner onboarding incompleto */}
+        {!dataLoading && !onboardingComplete && (
+          <Card className="p-5 sm:p-6 border-copper/40 bg-gradient-to-br from-copper/10 to-transparent flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-copper/15 text-copper shrink-0">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-display text-base sm:text-lg font-semibold">
+                Completa tu perfil para contratar de forma segura
+              </p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Te tomará menos de 2 minutos: foto, cédula, dirección y contacto de emergencia.
+              </p>
+            </div>
+            <Button variant="copper" asChild>
+              <Link to="/dashboard/familia/onboarding">
+                Completar ahora
+              </Link>
+            </Button>
+          </Card>
+        )}
+
         {/* KPIs */}
         <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Kpi icon={FileText} label="Solicitudes" value={offers.length} tone="bio" />

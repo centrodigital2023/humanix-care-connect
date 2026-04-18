@@ -682,8 +682,10 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
             {deriveProStatus(pro) === "reserved" ? "Reservado" : "Contactar"}
           </Button>
         )}
-        <Button variant="glass" size="sm">
-          Ver perfil
+        <Button variant="glass" size="sm" asChild>
+          <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>
+            Ver perfil
+          </Link>
         </Button>
       </div>
     </article>
