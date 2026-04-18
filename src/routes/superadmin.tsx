@@ -103,9 +103,43 @@ function SuperadminPage() {
   const [role, setRole] = useState<AppRole>("hr_staff");
   const [creating, setCreating] = useState(false);
 
+  const [recentAudit, setRecentAudit] = useState<
+    { id: string; action: string; actor_email: string | null; severity: string; created_at: string }[]
+  >([]);
+  const [fraudCount, setFraudCount] = useState(0);
+
   useEffect(() => {
     if (!user) return;
-    loadData();
+    void loadData();
+
+    // Realtime: emergencias + alertas IA + auditoría → auto-refresh
+    const ch = supabase
+      .channel("superadmin-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "emergency_incidents" },
+        () => void loadData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "service_ratings" },
+        () => void loadData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "audit_log" },
+        () => void loadData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fraud_flags" },
+        () => void loadData(),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [user]);
 
   const loadData = async () => {
@@ -117,6 +151,8 @@ function SuperadminPage() {
       { data: inv },
       { data: alerts },
       { data: emerg },
+      { data: audit },
+      { count: fraud },
     ] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("professional_profiles").select("*", { count: "exact", head: true }),
@@ -142,6 +178,15 @@ function SuperadminPage() {
         .eq("resolved", false)
         .order("created_at", { ascending: false })
         .limit(10),
+      supabase
+        .from("audit_log")
+        .select("id, action, actor_email, severity, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("fraud_flags")
+        .select("*", { count: "exact", head: true })
+        .eq("resolved", false),
     ]);
     setStats({
       users: users ?? 0,
@@ -152,6 +197,8 @@ function SuperadminPage() {
     setInvitations((inv ?? []) as Invitation[]);
     setAiAlerts((alerts ?? []) as AiRating[]);
     setEmergencies((emerg ?? []) as Emergency[]);
+    setRecentAudit((audit ?? []) as typeof recentAudit);
+    setFraudCount(fraud ?? 0);
   };
 
   const resolveEmergency = async (id: string) => {
