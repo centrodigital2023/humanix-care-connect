@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
-  Shield,
   ShieldAlert,
   Users,
   Briefcase,
@@ -15,6 +14,9 @@ import {
   Mic,
   AlertOctagon,
   Star,
+  ScrollText,
+  Megaphone,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -51,6 +53,9 @@ type AppRole =
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
   { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
+  { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
+  { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
   { label: "Marketplace", to: "/buscar", icon: Briefcase },
@@ -98,9 +103,43 @@ function SuperadminPage() {
   const [role, setRole] = useState<AppRole>("hr_staff");
   const [creating, setCreating] = useState(false);
 
+  const [recentAudit, setRecentAudit] = useState<
+    { id: string; action: string; actor_email: string | null; severity: string; created_at: string }[]
+  >([]);
+  const [fraudCount, setFraudCount] = useState(0);
+
   useEffect(() => {
     if (!user) return;
-    loadData();
+    void loadData();
+
+    // Realtime: emergencias + alertas IA + auditoría → auto-refresh
+    const ch = supabase
+      .channel("superadmin-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "emergency_incidents" },
+        () => void loadData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "service_ratings" },
+        () => void loadData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "audit_log" },
+        () => void loadData(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "fraud_flags" },
+        () => void loadData(),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [user]);
 
   const loadData = async () => {
@@ -112,6 +151,8 @@ function SuperadminPage() {
       { data: inv },
       { data: alerts },
       { data: emerg },
+      { data: audit },
+      { count: fraud },
     ] = await Promise.all([
       supabase.from("profiles").select("*", { count: "exact", head: true }),
       supabase.from("professional_profiles").select("*", { count: "exact", head: true }),
@@ -137,6 +178,15 @@ function SuperadminPage() {
         .eq("resolved", false)
         .order("created_at", { ascending: false })
         .limit(10),
+      supabase
+        .from("audit_log")
+        .select("id, action, actor_email, severity, created_at")
+        .order("created_at", { ascending: false })
+        .limit(8),
+      supabase
+        .from("fraud_flags")
+        .select("*", { count: "exact", head: true })
+        .eq("resolved", false),
     ]);
     setStats({
       users: users ?? 0,
@@ -147,6 +197,8 @@ function SuperadminPage() {
     setInvitations((inv ?? []) as Invitation[]);
     setAiAlerts((alerts ?? []) as AiRating[]);
     setEmergencies((emerg ?? []) as Emergency[]);
+    setRecentAudit((audit ?? []) as typeof recentAudit);
+    setFraudCount(fraud ?? 0);
   };
 
   const resolveEmergency = async (id: string) => {
@@ -201,6 +253,20 @@ function SuperadminPage() {
       badge={{ label: "Superadmin", tone: "fuchsia" }}
     >
       <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <Badge variant="outline" className="text-[10px]">
+            <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Realtime activo
+          </Badge>
+          {fraudCount > 0 && (
+            <Link to="/superadmin/fraude">
+              <Badge className="bg-fuchsia-neural text-fuchsia-neural-foreground gap-1.5">
+                <ShieldAlert className="h-3 w-3" />
+                {fraudCount} fraude{fraudCount === 1 ? "" : "s"} sin resolver
+              </Badge>
+            </Link>
+          )}
+        </div>
         <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat icon={Users} label="Usuarios" value={stats.users} tone="bio" />
           <Stat icon={Briefcase} label="Profesionales" value={stats.professionals} tone="copper" />
@@ -403,7 +469,86 @@ function SuperadminPage() {
           </Card>
         </section>
 
-        <section className="grid sm:grid-cols-3 gap-3">
+        <section>
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+                <ScrollText className="h-4 w-4 text-biosensor" />
+                Auditoría reciente
+              </h2>
+              <Link
+                to="/superadmin/auditoria"
+                className="text-xs text-biosensor hover:underline"
+              >
+                Ver todo →
+              </Link>
+            </div>
+            {recentAudit.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Aún no hay eventos registrados.</p>
+            ) : (
+              <div className="space-y-1">
+                {recentAudit.map((e) => (
+                  <div
+                    key={e.id}
+                    className="flex items-center justify-between text-xs py-1.5 border-b border-border/50 last:border-0"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                          e.severity === "critical"
+                            ? "bg-red-500"
+                            : e.severity === "error"
+                              ? "bg-fuchsia-neural"
+                              : e.severity === "warn"
+                                ? "bg-copper"
+                                : "bg-biosensor"
+                        }`}
+                      />
+                      <span className="font-mono truncate">{e.action}</span>
+                      {e.actor_email && (
+                        <span className="text-muted-foreground truncate hidden sm:inline">
+                          · {e.actor_email}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-muted-foreground whitespace-nowrap ml-2">
+                      {new Date(e.created_at).toLocaleTimeString("es-CO", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </section>
+
+        <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <ShortcutCard
+            icon={ShieldAlert}
+            title="Anti-fraude"
+            desc="Revisa y resuelve flags de fraude detectadas por IA."
+            to="/superadmin/fraude"
+          />
+          <ShortcutCard
+            icon={ScrollText}
+            title="Auditoría"
+            desc="Registro inmutable de acciones sensibles con realtime."
+            to="/superadmin/auditoria"
+          />
+          <ShortcutCard
+            icon={Megaphone}
+            title="Publicidad"
+            desc="CRUD de banners con recomendación IA y publicación."
+            to="/superadmin/publicidad"
+          />
+          <ShortcutCard
+            icon={MessageSquare}
+            title="CRM"
+            desc="Contactos, segmentación IA y campañas masivas."
+            to="/superadmin/crm"
+          />
           <ShortcutCard
             icon={Users}
             title="Talento Humano"
