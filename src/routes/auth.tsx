@@ -9,6 +9,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>) => {
+    const r = search.role;
+    const role: Role | undefined =
+      r === "professional" || r === "family" || r === "institution" ? r : undefined;
+    const redirect =
+      typeof search.redirect === "string" && search.redirect.startsWith("/")
+        ? search.redirect
+        : undefined;
+    return { role, redirect };
+  },
   head: () => ({
     meta: [
       { title: "Crear cuenta o iniciar sesión · Humanix" },
@@ -46,8 +56,9 @@ const roleConfig: Record<Role, { label: string; desc: string; icon: typeof Steth
 
 function AuthPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
   const [mode, setMode] = useState<"signin" | "signup">("signup");
-  const [role, setRole] = useState<Role>("professional");
+  const [role, setRole] = useState<Role>(search.role ?? "professional");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -58,14 +69,15 @@ function AuthPage() {
 
   // Redirect if already logged in
   useEffect(() => {
+    const target = search.redirect ?? "/dashboard";
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) navigate({ to: target });
     });
     const { data: sub } = supabase.auth.onAuthStateChange((_evt, session) => {
-      if (session) navigate({ to: "/dashboard" });
+      if (session) navigate({ to: target });
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, search.redirect]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +88,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}${search.redirect ?? "/dashboard"}`,
             data: {
               full_name: fullName,
               phone,
