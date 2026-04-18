@@ -1,41 +1,46 @@
 // SSR-safe wrapper. Leaflet touches `window` at import time, so we lazy-load
-// the real map only on the client and render a placeholder during SSR.
+// the real map only on the client. We re-declare the public types here to
+// avoid importing anything from the .client module in server code (the
+// TanStack import-protection plugin blocks those imports during SSR build).
 import { lazy, Suspense } from "react";
-import type { ComponentProps } from "react";
-import type { MapPoint } from "./OffersMap.client";
+import { ClientOnly } from "@tanstack/react-router";
 
-export type { MapPoint };
+export type MapPoint = {
+  id: string;
+  lat: number;
+  lng: number;
+  title: string;
+  subtitle?: string;
+  status?: "available" | "reserved";
+  href?: string;
+};
 
-const LazyMap =
-  typeof window === "undefined"
-    ? null
-    : lazy(() =>
-        import("./OffersMap.client").then((m) => ({ default: m.OffersMap })),
-      );
+export type OffersMapProps = {
+  points: MapPoint[];
+  height?: number;
+  center?: [number, number];
+  zoom?: number;
+  userLocation?: { lat: number; lng: number } | null;
+};
 
-type Props = ComponentProps<typeof import("./OffersMap.client")["OffersMap"]>;
+const LazyMap = lazy(() =>
+  import("./OffersMap.client").then((m) => ({ default: m.OffersMap })),
+);
 
-export function OffersMap(props: Props) {
+export function OffersMap(props: OffersMapProps) {
   const height = props.height ?? 420;
-  if (!LazyMap) {
-    return (
-      <div
-        style={{ height }}
-        className="w-full rounded-xl bg-muted/30 animate-pulse"
-        aria-label="Cargando mapa"
-      />
-    );
-  }
+  const placeholder = (
+    <div
+      style={{ height }}
+      className="w-full rounded-xl bg-muted/30 animate-pulse"
+      aria-label="Cargando mapa"
+    />
+  );
   return (
-    <Suspense
-      fallback={
-        <div
-          style={{ height }}
-          className="w-full rounded-xl bg-muted/30 animate-pulse"
-        />
-      }
-    >
-      <LazyMap {...props} />
-    </Suspense>
+    <ClientOnly fallback={placeholder}>
+      <Suspense fallback={placeholder}>
+        <LazyMap {...props} />
+      </Suspense>
+    </ClientOnly>
   );
 }
