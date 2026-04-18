@@ -95,7 +95,16 @@ function EvaluatorPage() {
     await load();
   };
 
-  if (loading || !user) {
+  const aiValidate = async (doc: Doc) => {
+    toast.loading("Validando con IA…", { id: `ai-${doc.id}` });
+    const { data, error } = await supabase.functions.invoke("document-verifier", {
+      body: { document_id: doc.id },
+    });
+    toast.dismiss(`ai-${doc.id}`);
+    if (error) return toast.error(error.message);
+    toast.success(`IA: ${data?.score ?? "?"}/100 — ${data?.recommendation ?? "validado"}`);
+    await load();
+  };
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
