@@ -1,4 +1,4 @@
-import { MessageCircle, Link2, Check, Share2, Twitter as TwitterIcon, Facebook as FbIcon, Linkedin as LiIcon } from "lucide-react";
+import { MessageCircle, Link2, Check, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -15,9 +15,9 @@ export interface ShareButtonsProps {
 }
 
 const ICONS = {
-  linkedin: Linkedin,
-  facebook: Facebook,
-  twitter: Twitter,
+  linkedin: Share2,
+  facebook: Share2,
+  twitter: Share2,
   whatsapp: MessageCircle,
   copy: Link2,
 } as const;
