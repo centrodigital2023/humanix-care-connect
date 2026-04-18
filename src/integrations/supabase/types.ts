@@ -475,6 +475,10 @@ export type Database = {
       }
       professional_documents: {
         Row: {
+          ai_extracted: Json | null
+          ai_notes: string | null
+          ai_score: number | null
+          ai_verified: boolean | null
           created_at: string
           doc_type: Database["public"]["Enums"]["doc_type"]
           file_name: string | null
@@ -488,6 +492,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          ai_extracted?: Json | null
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
           created_at?: string
           doc_type: Database["public"]["Enums"]["doc_type"]
           file_name?: string | null
@@ -501,6 +509,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          ai_extracted?: Json | null
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
           created_at?: string
           doc_type?: Database["public"]["Enums"]["doc_type"]
           file_name?: string | null
@@ -620,6 +632,45 @@ export type Database = {
           verified?: boolean | null
           work_experience?: Json | null
           years_experience?: number | null
+        }
+        Relationships: []
+      }
+      professional_references: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string
+          ref_type: string
+          relation: string | null
+          updated_at: string
+          user_id: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone: string
+          ref_type: string
+          relation?: string | null
+          updated_at?: string
+          user_id: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string
+          ref_type?: string
+          relation?: string | null
+          updated_at?: string
+          user_id?: string
+          verified?: boolean
         }
         Relationships: []
       }
@@ -1225,7 +1276,15 @@ export type Database = {
         | "evaluator"
       application_status: "pending" | "accepted" | "rejected" | "withdrawn"
       doc_status: "pending" | "approved" | "rejected"
-      doc_type: "cv" | "rethus" | "diploma" | "id_document" | "other"
+      doc_type:
+        | "cv"
+        | "rethus"
+        | "diploma"
+        | "id_document"
+        | "other"
+        | "utility_bill"
+        | "work_reference"
+        | "family_reference"
       fraud_severity: "low" | "medium" | "high" | "critical"
       offer_modality: "hour" | "shift" | "month" | "package"
       offer_status: "open" | "closed" | "filled"
@@ -1369,7 +1428,16 @@ export const Constants = {
       ],
       application_status: ["pending", "accepted", "rejected", "withdrawn"],
       doc_status: ["pending", "approved", "rejected"],
-      doc_type: ["cv", "rethus", "diploma", "id_document", "other"],
+      doc_type: [
+        "cv",
+        "rethus",
+        "diploma",
+        "id_document",
+        "other",
+        "utility_bill",
+        "work_reference",
+        "family_reference",
+      ],
       fraud_severity: ["low", "medium", "high", "critical"],
       offer_modality: ["hour", "shift", "month", "package"],
       offer_status: ["open", "closed", "filled"],
