@@ -157,10 +157,16 @@ export function QuickCareWizard() {
       <div className="mt-3 flex items-start gap-2 rounded-lg bg-biosensor/5 border border-biosensor/20 p-2.5">
         <ShieldCheck className="h-4 w-4 text-biosensor shrink-0 mt-0.5" />
         <p className="text-[11px] text-muted-foreground leading-relaxed">
-          Comisión Humanix <span className="font-semibold text-biosensor">3%</span> ·
-          Verificación RETHUS · Pago protegido · Habeas Data Ley 1581
+          Plan Esencial <span className="font-semibold text-biosensor">$9.000 COP/mes</span> ·
+          Verificación RETHUS · El profesional cobra directo · Habeas Data Ley 1581
         </p>
       </div>
+
+      <RoleGate
+        open={gateOpen}
+        onOpenChange={setGateOpen}
+        redirectTo={pendingRedirect}
+      />
     </form>
   );
 }
