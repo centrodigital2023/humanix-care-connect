@@ -567,8 +567,8 @@ function BuscarPage() {
                 />
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pros.map((p) => (
-                    <ProCard key={p.user_id} pro={p} userLoc={userLoc} />
+                  {Array.from(new Map(pros.map((p) => [p.user_id, p])).values()).map((p) => (
+                    <ProCard key={`pro-${p.user_id}`} pro={p} userLoc={userLoc} />
                   ))}
                 </div>
               )
@@ -580,8 +580,8 @@ function BuscarPage() {
               />
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {offers.map((o) => (
-                  <OfferCard key={o.id} offer={o} userLoc={userLoc} />
+                {Array.from(new Map(offers.map((o) => [o.id, o])).values()).map((o) => (
+                  <OfferCard key={`offer-${o.id}`} offer={o} userLoc={userLoc} />
                 ))}
               </div>
             )}

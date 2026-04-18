@@ -323,7 +323,7 @@ function FamilyDashboard() {
             </Card>
           ) : (
             <div className="grid gap-3">
-              {applications.map((a) => {
+              {Array.from(new Map(applications.map((a) => [a.id, a])).values()).map((a) => {
                 const pro = proMap[a.professional_id];
                 const offer = offers.find((o) => o.id === a.job_offer_id);
                 const wa = waLink(
@@ -332,7 +332,7 @@ function FamilyDashboard() {
                 );
                 const stars = pro?.avg_rating ?? 0;
                 return (
-                  <Card key={a.id} className="p-4 flex flex-col sm:flex-row gap-4">
+                  <Card key={`app-${a.id}`} className="p-4 flex flex-col sm:flex-row gap-4">
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       {pro?.avatar_url ? (
                         <img
@@ -426,8 +426,8 @@ function FamilyDashboard() {
             </Card>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {nearby.map((n) => (
-                <Card key={n.id} className="p-4">
+              {Array.from(new Map(nearby.map((n) => [n.id, n])).values()).map((n) => (
+                <Card key={`nearby-${n.id}`} className="p-4">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-medium text-sm leading-tight">{n.title}</p>
                     <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/30 shrink-0">
@@ -468,8 +468,8 @@ function FamilyDashboard() {
             </Card>
           ) : (
             <div className="grid gap-3">
-              {offers.map((o) => (
-                <Card key={o.id} className="p-4 flex items-center justify-between gap-3 flex-wrap">
+              {Array.from(new Map(offers.map((o) => [o.id, o])).values()).map((o) => (
+                <Card key={`my-offer-${o.id}`} className="p-4 flex items-center justify-between gap-3 flex-wrap">
                   <div>
                     <p className="font-medium">{o.title}</p>
                     <p className="text-xs text-muted-foreground">
