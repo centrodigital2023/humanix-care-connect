@@ -106,7 +106,7 @@ function PublicidadPage() {
     await supabase.rpc("log_audit", {
       _action: editing.id ? "ad.update" : "ad.create",
       _resource_type: "ad_banners",
-      _resource_id: editing.id ?? null,
+      _resource_id: editing.id ?? undefined,
       _severity: "info",
       _meta: { title: editing.title } as never,
     });
