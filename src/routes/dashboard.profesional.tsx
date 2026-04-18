@@ -598,11 +598,16 @@ function ProDashboard() {
               Marca tu ubicación principal de servicio en el mapa.
             </p>
             <LocationPicker
-              userId={userId}
-              initial={{
-                lat: profile?.lat ?? null,
-                lng: profile?.lng ?? null,
-                address: profile?.home_city ?? null,
+              lat={profile?.lat ?? null}
+              lng={profile?.lng ?? null}
+              defaultCity={profile?.home_city ?? undefined}
+              onChange={async (lat, lng, address) => {
+                await supabase
+                  .from("professional_profiles")
+                  .update({ lat, lng, home_city: address ?? profile?.home_city ?? null } as never)
+                  .eq("user_id", userId);
+                setProfile((prev) => (prev ? { ...prev, lat, lng, home_city: address ?? prev.home_city } : prev));
+                toast.success("Ubicación guardada");
               }}
             />
           </section>
