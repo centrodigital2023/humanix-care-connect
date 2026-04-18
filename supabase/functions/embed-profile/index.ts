@@ -1,22 +1,7 @@
 // embed-profile — genera y guarda el embedding del perfil profesional autenticado.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { corsHeaders, requireUser } from "../_shared/auth.ts";
-
-async function embed(text: string): Promise<number[]> {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-  const r = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "openai/text-embedding-3-small", input: text.slice(0, 8000) }),
-  });
-  if (!r.ok) {
-    const errText = await r.text();
-    console.error("embed gateway error:", r.status, errText);
-    throw new Error(`embed ${r.status}: ${errText.slice(0, 200)}`);
-  }
-  const j = await r.json();
-  return j.data[0].embedding as number[];
-}
+import { embedText } from "../_shared/embed.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -53,7 +38,7 @@ Deno.serve(async (req) => {
       `Tarifas: hora ${pro.hourly_rate ?? "?"} / turno ${pro.shift_rate ?? "?"} / mes ${pro.monthly_rate ?? "?"}`,
     ].join("\n");
 
-    const embedding = await embed(text);
+    const embedding = embedText(text);
     const { error } = await supabase
       .from("profile_embeddings")
       .upsert({ user_id: auth.userId, embedding, source_text: text.slice(0, 4000), updated_at: new Date().toISOString() });
