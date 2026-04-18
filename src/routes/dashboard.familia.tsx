@@ -254,22 +254,38 @@ function FamilyDashboard() {
       }
     >
       <div className="space-y-8">
-        {/* Banner onboarding incompleto */}
-        {!dataLoading && !onboardingComplete && (
-          <Card className="p-5 sm:p-6 border-copper/40 bg-gradient-to-br from-copper/10 to-transparent flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-copper/15 text-copper shrink-0">
+        {/* Banner perfil — siempre visible (completar o editar) */}
+        {!dataLoading && (
+          <Card
+            className={`p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 ${
+              onboardingComplete
+                ? "border-biosensor/40 bg-gradient-to-br from-biosensor/10 to-transparent"
+                : "border-copper/40 bg-gradient-to-br from-copper/10 to-transparent"
+            }`}
+          >
+            <div
+              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl shrink-0 ${
+                onboardingComplete ? "bg-biosensor/15 text-biosensor" : "bg-copper/15 text-copper"
+              }`}
+            >
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-display text-base sm:text-lg font-semibold">
-                Completa tu perfil para contratar de forma segura
+                {onboardingComplete
+                  ? "Tu perfil familiar está completo"
+                  : "Completa tu perfil para contratar de forma segura"}
               </p>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Te tomará menos de 2 minutos: foto, cédula, dirección y contacto de emergencia.
+                {onboardingComplete
+                  ? "Puedes actualizar tus datos, contacto de emergencia o foto cuando quieras."
+                  : "Te tomará menos de 2 minutos: foto, cédula, dirección y contacto de emergencia."}
               </p>
             </div>
-            <Button variant="copper" asChild>
-              <Link to="/dashboard/familia/onboarding">Completar ahora</Link>
+            <Button variant={onboardingComplete ? "outline" : "copper"} asChild>
+              <Link to="/dashboard/familia/onboarding">
+                {onboardingComplete ? "Editar perfil" : "Completar ahora"}
+              </Link>
             </Button>
           </Card>
         )}
