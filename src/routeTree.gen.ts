@@ -22,7 +22,9 @@ import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
+import { Route as SuperadminPublicidadRouteImport } from './routes/superadmin.publicidad'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
+import { Route as SuperadminCrmRouteImport } from './routes/superadmin.crm'
 import { Route as SuperadminAuditoriaRouteImport } from './routes/superadmin.auditoria'
 import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
 import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
@@ -97,9 +99,19 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const SuperadminPublicidadRoute = SuperadminPublicidadRouteImport.update({
+  id: '/publicidad',
+  path: '/publicidad',
+  getParentRoute: () => SuperadminRoute,
+} as any)
 const SuperadminFraudeRoute = SuperadminFraudeRouteImport.update({
   id: '/fraude',
   path: '/fraude',
+  getParentRoute: () => SuperadminRoute,
+} as any)
+const SuperadminCrmRoute = SuperadminCrmRouteImport.update({
+  id: '/crm',
+  path: '/crm',
   getParentRoute: () => SuperadminRoute,
 } as any)
 const SuperadminAuditoriaRoute = SuperadminAuditoriaRouteImport.update({
@@ -164,7 +176,9 @@ export interface FileRoutesByFullPath {
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
+  '/superadmin/crm': typeof SuperadminCrmRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/superadmin/publicidad': typeof SuperadminPublicidadRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
 }
@@ -187,7 +201,9 @@ export interface FileRoutesByTo {
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
+  '/superadmin/crm': typeof SuperadminCrmRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/superadmin/publicidad': typeof SuperadminPublicidadRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
 }
@@ -212,7 +228,9 @@ export interface FileRoutesById {
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
+  '/superadmin/crm': typeof SuperadminCrmRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/superadmin/publicidad': typeof SuperadminPublicidadRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
 }
@@ -238,7 +256,9 @@ export interface FileRouteTypes {
     | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
+    | '/superadmin/crm'
     | '/superadmin/fraude'
+    | '/superadmin/publicidad'
     | '/dashboard/'
     | '/dashboard/familia/onboarding'
   fileRoutesByTo: FileRoutesByTo
@@ -261,7 +281,9 @@ export interface FileRouteTypes {
     | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
+    | '/superadmin/crm'
     | '/superadmin/fraude'
+    | '/superadmin/publicidad'
     | '/dashboard'
     | '/dashboard/familia/onboarding'
   id:
@@ -285,7 +307,9 @@ export interface FileRouteTypes {
     | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
+    | '/superadmin/crm'
     | '/superadmin/fraude'
+    | '/superadmin/publicidad'
     | '/dashboard/'
     | '/dashboard/familia/onboarding'
   fileRoutesById: FileRoutesById
@@ -400,11 +424,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/superadmin/publicidad': {
+      id: '/superadmin/publicidad'
+      path: '/publicidad'
+      fullPath: '/superadmin/publicidad'
+      preLoaderRoute: typeof SuperadminPublicidadRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
     '/superadmin/fraude': {
       id: '/superadmin/fraude'
       path: '/fraude'
       fullPath: '/superadmin/fraude'
       preLoaderRoute: typeof SuperadminFraudeRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
+    '/superadmin/crm': {
+      id: '/superadmin/crm'
+      path: '/crm'
+      fullPath: '/superadmin/crm'
+      preLoaderRoute: typeof SuperadminCrmRouteImport
       parentRoute: typeof SuperadminRoute
     }
     '/superadmin/auditoria': {
@@ -499,12 +537,16 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 interface SuperadminRouteChildren {
   SuperadminAuditoriaRoute: typeof SuperadminAuditoriaRoute
+  SuperadminCrmRoute: typeof SuperadminCrmRoute
   SuperadminFraudeRoute: typeof SuperadminFraudeRoute
+  SuperadminPublicidadRoute: typeof SuperadminPublicidadRoute
 }
 
 const SuperadminRouteChildren: SuperadminRouteChildren = {
   SuperadminAuditoriaRoute: SuperadminAuditoriaRoute,
+  SuperadminCrmRoute: SuperadminCrmRoute,
   SuperadminFraudeRoute: SuperadminFraudeRoute,
+  SuperadminPublicidadRoute: SuperadminPublicidadRoute,
 }
 
 const SuperadminRouteWithChildren = SuperadminRoute._addFileChildren(
