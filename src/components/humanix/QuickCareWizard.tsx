@@ -3,8 +3,9 @@
 // Guarda los criterios en URL y navega a /buscar?tab=profesionales con preselección.
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Stethoscope, Calendar as CalendarIcon, Clock, Hourglass, Search, Heart, Baby, Activity, Bandage } from "lucide-react";
+import { Stethoscope, Calendar as CalendarIcon, Clock, Hourglass, Search, Heart, Baby, Activity, Bandage, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 
 type CareType = {
   key: string;
@@ -44,16 +45,26 @@ export function QuickCareWizard() {
 
   const selected = useMemo(() => TYPES.find((t) => t.key === careKey) ?? TYPES[0], [careKey]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate({
-      to: "/buscar",
-      search: {
-        tab: "profesionales",
-        specialty: selected.specialty,
-        city,
-      },
-    });
+    const targetSearch = {
+      tab: "profesionales" as const,
+      specialty: selected.specialty,
+      city,
+    };
+    // Si no hay sesión, llevar primero a /auth con redirect de vuelta a /buscar.
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      const redirectUrl = `/buscar?tab=profesionales&specialty=${encodeURIComponent(
+        selected.specialty,
+      )}&city=${encodeURIComponent(city)}`;
+      navigate({
+        to: "/auth",
+        search: { role: "family", redirect: redirectUrl } as never,
+      });
+      return;
+    }
+    navigate({ to: "/buscar", search: targetSearch });
   };
 
   return (
@@ -142,9 +153,13 @@ export function QuickCareWizard() {
         Buscar profesional
       </Button>
 
-      <p className="mt-3 text-[11px] text-muted-foreground text-center">
-        Resultados en menos de 150 ms · Profesionales verificados con RETHUS · Pago protegido
-      </p>
+      <div className="mt-3 flex items-start gap-2 rounded-lg bg-biosensor/5 border border-biosensor/20 p-2.5">
+        <ShieldCheck className="h-4 w-4 text-biosensor shrink-0 mt-0.5" />
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Comisión Humanix <span className="font-semibold text-biosensor">3%</span> ·
+          Verificación RETHUS · Pago protegido · Habeas Data Ley 1581
+        </p>
+      </div>
     </form>
   );
 }
