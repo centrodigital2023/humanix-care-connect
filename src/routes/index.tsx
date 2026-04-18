@@ -14,6 +14,7 @@ import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { StickyCTA } from "@/components/humanix/StickyCTA";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
+import { LaunchBar } from "@/components/humanix/LaunchBar";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,6 +41,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <LaunchBar />
       <Navbar />
       <main>
         <Hero />
