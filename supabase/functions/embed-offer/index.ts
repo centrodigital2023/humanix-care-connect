@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
       `Descripción: ${o.description ?? ""}`,
     ].join("\n");
 
-    const embedding = await embed(text);
+    const embedding = embedText(text);
     const { error } = await admin
       .from("offer_embeddings")
       .upsert({ offer_id: o.id, embedding, source_text: text.slice(0, 4000), updated_at: new Date().toISOString() });

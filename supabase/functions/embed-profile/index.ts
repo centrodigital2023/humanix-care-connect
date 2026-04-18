@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       `Tarifas: hora ${pro.hourly_rate ?? "?"} / turno ${pro.shift_rate ?? "?"} / mes ${pro.monthly_rate ?? "?"}`,
     ].join("\n");
 
-    const embedding = await embed(text);
+    const embedding = embedText(text);
     const { error } = await supabase
       .from("profile_embeddings")
       .upsert({ user_id: auth.userId, embedding, source_text: text.slice(0, 4000), updated_at: new Date().toISOString() });
