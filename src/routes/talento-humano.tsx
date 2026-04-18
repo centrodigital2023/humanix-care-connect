@@ -175,9 +175,17 @@ function HRPage() {
                     )}
                     {p.ai_preapproved && <Badge variant="secondary">IA pre-aprobado</Badge>}
                     {p.rethus_verified && <Badge variant="outline">RETHUS</Badge>}
+                    {(p.social_trust_score ?? 0) >= 80 && (
+                      <Badge className="bg-biosensor text-biosensor-foreground gap-1">
+                        <Shield className="h-3 w-3" /> Trust {p.social_trust_score}
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio || "Sin bio"}</p>
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
+                    <span className="inline-flex items-center gap-1">
+                      <Shield className="h-3 w-3" /> Social Trust {p.social_trust_score ?? 0}/100
+                    </span>
                     <span className="inline-flex items-center gap-1">
                       <Briefcase className="h-3 w-3" /> Trust {p.trust_score ?? 0}/100
                     </span>
@@ -187,21 +195,26 @@ function HRPage() {
                     </span>
                   </div>
                 </div>
-                <Button
-                  size="sm"
-                  variant={p.verified ? "outline" : "hero"}
-                  onClick={() => toggleVerified(p.id, p.verified)}
-                >
-                  {p.verified ? (
-                    <>
-                      <XCircle className="h-4 w-4 mr-1" /> Quitar
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="h-4 w-4 mr-1" /> Verificar
-                    </>
-                  )}
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    size="sm"
+                    variant={p.verified ? "outline" : "hero"}
+                    onClick={() => toggleVerified(p.id, p.verified)}
+                  >
+                    {p.verified ? (
+                      <>
+                        <XCircle className="h-4 w-4 mr-1" /> Quitar
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-4 w-4 mr-1" /> Verificar
+                      </>
+                    )}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => computeTrust(p.user_id)}>
+                    <Sparkles className="h-4 w-4 mr-1" /> Trust IA
+                  </Button>
+                </div>
               </div>
             </Card>
           ))}
