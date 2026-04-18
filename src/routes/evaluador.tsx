@@ -101,7 +101,10 @@ function EvaluatorPage() {
       body: { document_id: doc.id },
     });
     toast.dismiss(`ai-${doc.id}`);
-    if (error) return toast.error(error.message);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`IA: ${data?.score ?? "?"}/100 — ${data?.recommendation ?? "validado"}`);
     await load();
   };
