@@ -4,7 +4,7 @@
 import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const ALLOWED_MIME_PREFIXES = ["application/pdf", "image/"];
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+const MAX_BYTES = 20 * 1024 * 1024; // 20 MB (límite Gemini inline)
 const FETCH_TIMEOUT_MS = 15_000;
 
 const TOOL = {
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
     }
     const sizeHeader = headResp.headers.get("content-length");
     if (sizeHeader && Number(sizeHeader) > MAX_BYTES) {
-      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 8MB)" }), {
+      return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 20MB)" }), {
         status: 413,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
       if (!fileResp.ok || !fileResp.body) throw new Error("No se pudo descargar el archivo");
       const buf = new Uint8Array(await fileResp.arrayBuffer());
       if (buf.byteLength > MAX_BYTES) {
-        return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 8MB)" }), {
+        return new Response(JSON.stringify({ error: "Archivo demasiado grande (máx 20MB)" }), {
           status: 413,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
