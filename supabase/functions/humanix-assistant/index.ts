@@ -1,7 +1,7 @@
 // Humanix Assistant — chat IA con streaming (SSE) usando Lovable AI Gateway.
 // Acepta { messages, persona } y devuelve un stream OpenAI-compat.
 
-import { corsHeaders, requireUser } from "../_shared/auth.ts";
+import { corsHeaders } from "../_shared/auth.ts";
 
 const SYSTEM_BY_PERSONA: Record<string, string> = {
   professional:
