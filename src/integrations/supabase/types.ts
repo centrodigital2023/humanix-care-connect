@@ -982,6 +982,7 @@ export type Database = {
           id: string
           job_offer_id: string | null
           notes: string | null
+          payment_mode: string
           platform_fee_amount: number
           platform_fee_pct: number
           professional_id: string
@@ -1008,6 +1009,7 @@ export type Database = {
           id?: string
           job_offer_id?: string | null
           notes?: string | null
+          payment_mode?: string
           platform_fee_amount?: number
           platform_fee_pct?: number
           professional_id: string
@@ -1034,6 +1036,7 @@ export type Database = {
           id?: string
           job_offer_id?: string | null
           notes?: string | null
+          payment_mode?: string
           platform_fee_amount?: number
           platform_fee_pct?: number
           professional_id?: string
