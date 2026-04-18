@@ -66,3 +66,18 @@ verify_jwt = false
 [functions.family-onboarding-ai]
 verify_jwt = false
 
+[functions.pqrs-classifier]
+verify_jwt = true
+
+[functions.ad-recommender]
+verify_jwt = true
+
+[functions.crm-segment-ai]
+verify_jwt = true
+
+[functions.social-trust-score]
+verify_jwt = true
+
+[functions.send-campaign]
+verify_jwt = true
+
