@@ -72,7 +72,7 @@ export function DocumentsManager({
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const inputRefs = useRef<Record<DocType, HTMLInputElement | null>>({
     cv: null, rethus: null, diploma: null, id_document: null,
-    utility_bill: null, work_reference: null, family_reference: null, other: null,
+    utility_bill: null, work_experience: null, other: null,
   });
 
   useEffect(() => {
