@@ -24,10 +24,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
 import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
+import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
+import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
 const TecnologiaRoute = TecnologiaRouteImport.update({
   id: '/tecnologia',
@@ -104,6 +106,11 @@ const ServicioBookingIdRoute = ServicioBookingIdRouteImport.update({
   path: '/servicio/$bookingId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfesionalProIdRoute = ProfesionalProIdRouteImport.update({
+  id: '/profesional/$proId',
+  path: '/profesional/$proId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -124,6 +131,12 @@ const DashboardFamiliaRoute = DashboardFamiliaRouteImport.update({
   path: '/familia',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardFamiliaOnboardingRoute =
+  DashboardFamiliaOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
+    getParentRoute: () => DashboardFamiliaRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,13 +151,15 @@ export interface FileRoutesByFullPath {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
-  '/dashboard/familia': typeof DashboardFamiliaRoute
+  '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -158,13 +173,15 @@ export interface FileRoutesByTo {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
-  '/dashboard/familia': typeof DashboardFamiliaRoute
+  '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -180,13 +197,15 @@ export interface FileRoutesById {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
-  '/dashboard/familia': typeof DashboardFamiliaRoute
+  '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -207,9 +226,11 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/fraude'
     | '/dashboard/'
+    | '/dashboard/familia/onboarding'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -227,9 +248,11 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/fraude'
     | '/dashboard'
+    | '/dashboard/familia/onboarding'
   id:
     | '__root__'
     | '/'
@@ -248,9 +271,11 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/fraude'
     | '/dashboard/'
+    | '/dashboard/familia/onboarding'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -266,6 +291,7 @@ export interface RootRouteChildren {
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
+  ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
 }
 
@@ -376,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicioBookingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profesional/$proId': {
+      id: '/profesional/$proId'
+      path: '/profesional/$proId'
+      fullPath: '/profesional/$proId'
+      preLoaderRoute: typeof ProfesionalProIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/whatsapp': {
       id: '/dashboard/whatsapp'
       path: '/whatsapp'
@@ -404,11 +437,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardFamiliaRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/familia/onboarding': {
+      id: '/dashboard/familia/onboarding'
+      path: '/onboarding'
+      fullPath: '/dashboard/familia/onboarding'
+      preLoaderRoute: typeof DashboardFamiliaOnboardingRouteImport
+      parentRoute: typeof DashboardFamiliaRoute
+    }
   }
 }
 
+interface DashboardFamiliaRouteChildren {
+  DashboardFamiliaOnboardingRoute: typeof DashboardFamiliaOnboardingRoute
+}
+
+const DashboardFamiliaRouteChildren: DashboardFamiliaRouteChildren = {
+  DashboardFamiliaOnboardingRoute: DashboardFamiliaOnboardingRoute,
+}
+
+const DashboardFamiliaRouteWithChildren =
+  DashboardFamiliaRoute._addFileChildren(DashboardFamiliaRouteChildren)
+
 interface DashboardRouteChildren {
-  DashboardFamiliaRoute: typeof DashboardFamiliaRoute
+  DashboardFamiliaRoute: typeof DashboardFamiliaRouteWithChildren
   DashboardInstitucionRoute: typeof DashboardInstitucionRoute
   DashboardProfesionalRoute: typeof DashboardProfesionalRoute
   DashboardWhatsappRoute: typeof DashboardWhatsappRoute
@@ -416,7 +467,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardFamiliaRoute: DashboardFamiliaRoute,
+  DashboardFamiliaRoute: DashboardFamiliaRouteWithChildren,
   DashboardInstitucionRoute: DashboardInstitucionRoute,
   DashboardProfesionalRoute: DashboardProfesionalRoute,
   DashboardWhatsappRoute: DashboardWhatsappRoute,
@@ -452,8 +503,18 @@ const rootRouteChildren: RootRouteChildren = {
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
+  ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

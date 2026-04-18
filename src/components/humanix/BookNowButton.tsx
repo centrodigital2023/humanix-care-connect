@@ -52,6 +52,8 @@ export function BookNowButton({
   const [notes, setNotes] = useState("");
 
   const total = Math.max(0, Math.round(hours * hourlyRate));
+  const platformFee = Math.round(total * 0.03);
+  const proPayout = total - platformFee;
 
   const submit = async () => {
     if (!hourlyRate) {
@@ -194,17 +196,27 @@ export function BookNowButton({
                 className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm"
               />
 
-              <div className="flex items-center justify-between rounded-xl bg-biosensor/5 border border-biosensor/20 p-3">
-                <div>
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    Total estimado
-                  </p>
-                  <p className="font-display text-2xl font-bold text-biosensor">{COP(total)}</p>
+              <div className="rounded-xl bg-biosensor/5 border border-biosensor/20 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      Total a pagar
+                    </p>
+                    <p className="font-display text-2xl font-bold text-biosensor">{COP(total)}</p>
+                  </div>
+                  <div className="text-right text-[10px] text-muted-foreground leading-tight">
+                    {hours} h × {COP(hourlyRate)}/h
+                  </div>
                 </div>
-                <div className="text-right text-[10px] text-muted-foreground leading-tight">
-                  {hours} h × {COP(hourlyRate)}/h
-                  <br />
-                  IVA/retención según tipo de contratante
+                <div className="border-t border-biosensor/20 pt-2 grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <p className="text-muted-foreground">Profesional recibe</p>
+                    <p className="font-semibold text-foreground">{COP(proPayout)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-muted-foreground">Comisión Humanix (3%)</p>
+                    <p className="font-semibold text-copper">{COP(platformFee)}</p>
+                  </div>
                 </div>
               </div>
             </div>
