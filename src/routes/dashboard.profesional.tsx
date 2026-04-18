@@ -757,11 +757,20 @@ function ProDashboard() {
             )}
           </div>
 
-          <div className="mt-6 flex justify-end">
-            <Button onClick={saveProfile} variant="hero">
-              Guardar perfil
-            </Button>
-          </div>
+          {/* Validación final IA + publicación */}
+          {userId && (
+            <div className="mt-6">
+              <PublishGate
+                userId={userId}
+                profilePayload={{ ...buildPayload(), full_name: fullName, rethus_verified: profile?.rethus_verified ?? false }}
+                published={profile?.published ?? false}
+                onSaved={saveProfile}
+                onPublished={async () => {
+                  setProfile((prev) => (prev ? { ...prev, published: true } : prev));
+                }}
+              />
+            </div>
+          )}
 
           {/* AI feedback */}
           {(profile?.ai_summary || (profile?.ai_strengths?.length ?? 0) > 0) && (
