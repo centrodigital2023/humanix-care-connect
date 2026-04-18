@@ -208,6 +208,63 @@ export type Database = {
           },
         ]
       }
+      family_profiles: {
+        Row: {
+          created_at: string
+          default_address: string | null
+          default_lat: number | null
+          default_lng: number | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          habeas_data_accepted: boolean
+          habeas_data_accepted_at: string | null
+          id: string
+          id_doc_url: string | null
+          id_number: string | null
+          patient_age: number | null
+          patient_name: string | null
+          patient_relation: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_address?: string | null
+          default_lat?: number | null
+          default_lng?: number | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          habeas_data_accepted?: boolean
+          habeas_data_accepted_at?: string | null
+          id?: string
+          id_doc_url?: string | null
+          id_number?: string | null
+          patient_age?: number | null
+          patient_name?: string | null
+          patient_relation?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_address?: string | null
+          default_lat?: number | null
+          default_lng?: number | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          habeas_data_accepted?: boolean
+          habeas_data_accepted_at?: string | null
+          id?: string
+          id_doc_url?: string | null
+          id_number?: string | null
+          patient_age?: number | null
+          patient_name?: string | null
+          patient_relation?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       fraud_flags: {
         Row: {
           created_at: string
@@ -678,7 +735,10 @@ export type Database = {
           id: string
           job_offer_id: string | null
           notes: string | null
+          platform_fee_amount: number
+          platform_fee_pct: number
           professional_id: string
+          professional_payout: number
           scheduled_at: string
           service_address: string | null
           service_lat: number | null
@@ -701,7 +761,10 @@ export type Database = {
           id?: string
           job_offer_id?: string | null
           notes?: string | null
+          platform_fee_amount?: number
+          platform_fee_pct?: number
           professional_id: string
+          professional_payout?: number
           scheduled_at: string
           service_address?: string | null
           service_lat?: number | null
@@ -724,7 +787,10 @@ export type Database = {
           id?: string
           job_offer_id?: string | null
           notes?: string | null
+          platform_fee_amount?: number
+          platform_fee_pct?: number
           professional_id?: string
+          professional_payout?: number
           scheduled_at?: string
           service_address?: string | null
           service_lat?: number | null
