@@ -4,7 +4,7 @@
 import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const ALLOWED_MIME_PREFIXES = ["application/pdf", "image/"];
-const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
+const MAX_BYTES = 20 * 1024 * 1024; // 20 MB (límite Gemini inline)
 const FETCH_TIMEOUT_MS = 15_000;
 
 const TOOL = {
