@@ -23,6 +23,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminPublicidadRouteImport } from './routes/superadmin.publicidad'
+import { Route as SuperadminMarketplaceRouteImport } from './routes/superadmin.marketplace'
 import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude'
 import { Route as SuperadminCrmRouteImport } from './routes/superadmin.crm'
 import { Route as SuperadminAuditoriaRouteImport } from './routes/superadmin.auditoria'
@@ -104,6 +105,11 @@ const SuperadminPublicidadRoute = SuperadminPublicidadRouteImport.update({
   path: '/publicidad',
   getParentRoute: () => SuperadminRoute,
 } as any)
+const SuperadminMarketplaceRoute = SuperadminMarketplaceRouteImport.update({
+  id: '/marketplace',
+  path: '/marketplace',
+  getParentRoute: () => SuperadminRoute,
+} as any)
 const SuperadminFraudeRoute = SuperadminFraudeRouteImport.update({
   id: '/fraude',
   path: '/fraude',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/superadmin/marketplace': typeof SuperadminMarketplaceRoute
   '/superadmin/publicidad': typeof SuperadminPublicidadRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/superadmin/marketplace': typeof SuperadminMarketplaceRoute
   '/superadmin/publicidad': typeof SuperadminPublicidadRoute
   '/dashboard': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
   '/superadmin/fraude': typeof SuperadminFraudeRoute
+  '/superadmin/marketplace': typeof SuperadminMarketplaceRoute
   '/superadmin/publicidad': typeof SuperadminPublicidadRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/familia/onboarding': typeof DashboardFamiliaOnboardingRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/superadmin/auditoria'
     | '/superadmin/crm'
     | '/superadmin/fraude'
+    | '/superadmin/marketplace'
     | '/superadmin/publicidad'
     | '/dashboard/'
     | '/dashboard/familia/onboarding'
@@ -283,6 +293,7 @@ export interface FileRouteTypes {
     | '/superadmin/auditoria'
     | '/superadmin/crm'
     | '/superadmin/fraude'
+    | '/superadmin/marketplace'
     | '/superadmin/publicidad'
     | '/dashboard'
     | '/dashboard/familia/onboarding'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/superadmin/auditoria'
     | '/superadmin/crm'
     | '/superadmin/fraude'
+    | '/superadmin/marketplace'
     | '/superadmin/publicidad'
     | '/dashboard/'
     | '/dashboard/familia/onboarding'
@@ -431,6 +443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminPublicidadRouteImport
       parentRoute: typeof SuperadminRoute
     }
+    '/superadmin/marketplace': {
+      id: '/superadmin/marketplace'
+      path: '/marketplace'
+      fullPath: '/superadmin/marketplace'
+      preLoaderRoute: typeof SuperadminMarketplaceRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
     '/superadmin/fraude': {
       id: '/superadmin/fraude'
       path: '/fraude'
@@ -539,6 +558,7 @@ interface SuperadminRouteChildren {
   SuperadminAuditoriaRoute: typeof SuperadminAuditoriaRoute
   SuperadminCrmRoute: typeof SuperadminCrmRoute
   SuperadminFraudeRoute: typeof SuperadminFraudeRoute
+  SuperadminMarketplaceRoute: typeof SuperadminMarketplaceRoute
   SuperadminPublicidadRoute: typeof SuperadminPublicidadRoute
 }
 
@@ -546,6 +566,7 @@ const SuperadminRouteChildren: SuperadminRouteChildren = {
   SuperadminAuditoriaRoute: SuperadminAuditoriaRoute,
   SuperadminCrmRoute: SuperadminCrmRoute,
   SuperadminFraudeRoute: SuperadminFraudeRoute,
+  SuperadminMarketplaceRoute: SuperadminMarketplaceRoute,
   SuperadminPublicidadRoute: SuperadminPublicidadRoute,
 }
 
