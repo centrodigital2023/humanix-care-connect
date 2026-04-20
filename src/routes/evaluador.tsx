@@ -725,8 +725,7 @@ function ProfessionalDetailDialog({
         </AlertDialog>
       </DialogContent>
     </Dialog>
-
-      {previewDoc && (
+      {previewDoc ? (
         <Dialog open onOpenChange={(o) => !o && setPreviewDoc(null)}>
           <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 overflow-hidden">
             <DialogHeader className="px-4 pt-4 pb-2 border-b">
@@ -791,7 +790,7 @@ function ProfessionalDetailDialog({
             </div>
           </DialogContent>
         </Dialog>
-      )}
+      ) : null}
     </>
   );
 }
