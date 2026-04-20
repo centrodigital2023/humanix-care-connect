@@ -678,23 +678,23 @@ function ProfessionalDetailDialog({
   return (
     <>
       <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-3">
-            <Avatar className="h-10 w-10">
+      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col p-3 sm:p-6 gap-3">
+        <DialogHeader className="text-left">
+          <DialogTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
+            <Avatar className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
               <AvatarImage src={pro.avatar_url ?? undefined} />
               <AvatarFallback>
                 {(pro.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            {pro.profile?.full_name || "Sin nombre"}
+            <span className="truncate min-w-0">{pro.profile?.full_name || "Sin nombre"}</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-xs sm:text-sm break-words">
             {pro.specialty || "—"} · {pro.home_city || "—"} · {pro.profile?.email}
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-3">
+        <ScrollArea className="flex-1 pr-2 sm:pr-3 -mx-1 px-1">
           <div className="space-y-4 py-2">
             {/* Status banner */}
             {pro.blocked && (
