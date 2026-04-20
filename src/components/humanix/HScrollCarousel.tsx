@@ -15,6 +15,9 @@ type Props = {
  */
 export function HScrollCarousel({ children, className, step = 280 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
+  const dragStartX = useRef(0);
+  const dragStartScrollLeft = useRef(0);
+  const isDragging = useRef(false);
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
 
@@ -42,12 +45,43 @@ export function HScrollCarousel({ children, className, step = 280 }: Props) {
     ref.current?.scrollBy({ left: dir * step, behavior: "smooth" });
   };
 
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+    const el = ref.current;
+    if (!el) return;
+    isDragging.current = true;
+    dragStartX.current = event.clientX;
+    dragStartScrollLeft.current = el.scrollLeft;
+    el.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging.current || event.pointerType === "touch") return;
+    const el = ref.current;
+    if (!el) return;
+    const delta = event.clientX - dragStartX.current;
+    el.scrollLeft = dragStartScrollLeft.current - delta;
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType === "touch") return;
+    const el = ref.current;
+    isDragging.current = false;
+    if (el?.hasPointerCapture(event.pointerId)) {
+      el.releasePointerCapture(event.pointerId);
+    }
+  };
+
   return (
     <div className="relative group">
       <div
         ref={ref}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         className={cn(
-          "overflow-x-auto overflow-y-hidden pb-2 -mx-1 snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain",
+          "overflow-x-auto overflow-y-hidden pb-2 -mx-1 snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain md:cursor-grab active:md:cursor-grabbing select-none",
           className,
         )}
         style={{ WebkitOverflowScrolling: "touch" }}
