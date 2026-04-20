@@ -163,7 +163,7 @@ function BuscarPage() {
     setCity(search.city ?? "");
   }, [search.q, search.specialty, search.city]);
 
-  const tab = search.tab;
+  const tab = search.tab ?? "profesionales";
 
   // Fetch professionals
   useEffect(() => {
