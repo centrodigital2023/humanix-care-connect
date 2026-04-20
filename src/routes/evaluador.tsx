@@ -175,15 +175,20 @@ function EvaluatorPage() {
       badge={{ label: "Staff", tone: "bio" }}
     >
       <Tabs value={tab} onValueChange={setTab}>
-        <TabsList className="mb-4">
-          <TabsTrigger value="profesionales">
-            <Users className="h-4 w-4 mr-1" /> Profesionales
+        <TabsList className="mb-4 w-full sm:w-auto grid grid-cols-3 sm:inline-flex h-auto">
+          <TabsTrigger value="profesionales" className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm">
+            <Users className="h-4 w-4 sm:mr-1" />
+            <span>Profesionales</span>
           </TabsTrigger>
-          <TabsTrigger value="ofertas">
-            <Briefcase className="h-4 w-4 mr-1" /> Ofertas familias
+          <TabsTrigger value="ofertas" className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm">
+            <Briefcase className="h-4 w-4 sm:mr-1" />
+            <span className="sm:hidden">Ofertas</span>
+            <span className="hidden sm:inline">Ofertas familias</span>
           </TabsTrigger>
-          <TabsTrigger value="documentos">
-            <FileCheck className="h-4 w-4 mr-1" /> Documentos pendientes
+          <TabsTrigger value="documentos" className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm">
+            <FileCheck className="h-4 w-4 sm:mr-1" />
+            <span className="sm:hidden">Docs</span>
+            <span className="hidden sm:inline">Documentos pendientes</span>
           </TabsTrigger>
         </TabsList>
         <TabsContent value="profesionales">
