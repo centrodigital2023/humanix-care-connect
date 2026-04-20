@@ -288,7 +288,19 @@ function PublicidadPage() {
           </Dialog>
         </div>
 
-        <Card className="p-6">
+        <Card className="p-6 border-fuchsia-neural/30 bg-gradient-to-br from-fuchsia-neural/5 via-background to-biosensor/5 shadow-[var(--shadow-glow-fuchsia)]">
+          <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-2">
+              <div className="h-9 w-9 rounded-lg bg-fuchsia-neural/15 flex items-center justify-center">
+                <Sparkles className="h-4 w-4 text-fuchsia-neural" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-base">Marketing en redes sociales</h2>
+                <p className="text-xs text-muted-foreground">8 plantillas listas para promocionar Humanix en Facebook, WhatsApp, LinkedIn y X.</p>
+              </div>
+            </div>
+            <Badge className="bg-fuchsia-neural text-fuchsia-neural-foreground text-[10px]">NUEVO</Badge>
+          </div>
           <PromoCards origin={origin} />
         </Card>
 
