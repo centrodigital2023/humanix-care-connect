@@ -23,6 +23,9 @@ import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { LocationPicker } from "@/components/humanix/LocationPicker";
+import { distanceKm, formatKm } from "@/lib/geo";
+import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/familia")({
@@ -83,6 +86,19 @@ type NearbyOffer = {
   created_at: string;
 };
 
+type NearbyPro = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  specialty: string | null;
+  avg_rating: number | null;
+  hourly_rate: number | null;
+  lat: number | null;
+  lng: number | null;
+  km: number | null;
+};
+
 function waLink(phone: string | null | undefined, text: string) {
   if (!phone) return null;
   const clean = phone.replace(/[^0-9]/g, "");
@@ -99,6 +115,13 @@ function FamilyDashboard() {
   const [nearby, setNearby] = useState<NearbyOffer[]>([]);
   const [familyCity, setFamilyCity] = useState<string>("Bogotá");
   const [onboardingComplete, setOnboardingComplete] = useState(true);
+  const [familyCoords, setFamilyCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
+  const [familyAddress, setFamilyAddress] = useState<string>("");
+  const [nearbyPros, setNearbyPros] = useState<NearbyPro[]>([]);
+  const [savingLoc, setSavingLoc] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -113,7 +136,7 @@ function FamilyDashboard() {
             .order("created_at", { ascending: false }),
           supabase
             .from("family_profiles")
-            .select("id_number, default_address, emergency_contact_phone, habeas_data_accepted")
+            .select("id_number, default_address, default_lat, default_lng, emergency_contact_phone, habeas_data_accepted")
             .eq("user_id", user.id)
             .maybeSingle(),
           supabase
@@ -131,6 +154,11 @@ function FamilyDashboard() {
         setOnboardingComplete(
           !!(fam?.id_number && fam?.default_address && fam?.emergency_contact_phone && fam?.habeas_data_accepted),
         );
+        setFamilyCoords({
+          lat: fam?.default_lat ?? null,
+          lng: fam?.default_lng ?? null,
+        });
+        setFamilyAddress(fam?.default_address ?? "");
 
         const myCity = profRes.data?.city ?? offerList[0]?.city ?? "Bogotá";
         setFamilyCity(myCity);
