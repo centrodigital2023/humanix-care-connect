@@ -130,6 +130,21 @@ type Doc = {
   ai_notes: string | null;
 };
 
+type DocAI = {
+  ai_score: number | null;
+  ai_notes: string | null;
+  ai_verified: boolean | null;
+  ai_extracted: unknown;
+};
+
+type HolisticValidation = {
+  is_publishable: boolean;
+  score: number;
+  critical_errors: Array<{ field: string; message: string }>;
+  warnings: Array<{ field: string; message: string }>;
+  ai_summary: string;
+};
+
 function EvaluatorPage() {
   const { user, loading, logout } = useAppUser({
     allow: ["superadmin", "evaluator", "hr_staff"],
