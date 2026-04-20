@@ -792,6 +792,7 @@ function ProfessionalDetailDialog({
           </DialogContent>
         </Dialog>
       )}
+    </>
   );
 }
 
