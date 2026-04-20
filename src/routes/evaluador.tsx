@@ -724,7 +724,11 @@ function ProfessionalDetailDialog({
               <p className="text-sm"><Phone className="inline h-3 w-3 mr-1" /> {pro.profile?.phone || "—"}</p>
               <p className="text-sm"><MapPin className="inline h-3 w-3 mr-1" /> {pro.home_city || "—"}</p>
               {pro.rethus_number && (
-                <p className="text-sm">RETHUS: <span className="font-mono">{pro.rethus_number}</span> {pro.rethus_verified && <Badge variant="outline" className="ml-1 text-xs">Verificado</Badge>}</p>
+                <div className="text-sm flex flex-wrap items-center gap-1">
+                  <span>RETHUS:</span>
+                  <span className="font-mono">{pro.rethus_number}</span>
+                  {pro.rethus_verified && <Badge variant="outline" className="text-xs">Verificado</Badge>}
+                </div>
               )}
             </Section>
 
