@@ -982,27 +982,28 @@ function ProfessionalDetailDialog({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="flex flex-wrap gap-2 justify-between sm:justify-between border-t pt-3">
+        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2 border-t pt-3">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setConfirmDelete(true)}
             disabled={busy}
+            className="w-full sm:w-auto"
           >
             <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Eliminar perfil
           </Button>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 w-full sm:w-auto">
             {pro.blocked ? (
-              <Button variant="outline" size="sm" onClick={unblock} disabled={busy}>
+              <Button variant="outline" size="sm" onClick={unblock} disabled={busy} className="flex-1 sm:flex-initial">
                 Desbloquear
               </Button>
             ) : (
-              <Button variant="outline" size="sm" onClick={block} disabled={busy}>
+              <Button variant="outline" size="sm" onClick={block} disabled={busy} className="flex-1 sm:flex-initial">
                 <Ban className="h-4 w-4 mr-1" /> Bloquear
               </Button>
             )}
-            <Button variant="hero" size="sm" onClick={approve} disabled={busy}>
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar y publicar
+            <Button variant="hero" size="sm" onClick={approve} disabled={busy} className="flex-1 sm:flex-initial">
+              <CheckCircle2 className="h-4 w-4 mr-1" /> <span className="truncate">Aprobar y publicar</span>
             </Button>
           </div>
         </DialogFooter>
