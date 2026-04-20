@@ -18,6 +18,7 @@ import {
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
 import { ShareButtons } from "@/components/humanix/ShareButtons";
+import { PromoCards } from "@/components/humanix/PromoCards";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
