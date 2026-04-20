@@ -359,6 +359,8 @@ function ProfessionalDetailDialog({
   const [blockReason, setBlockReason] = useState(pro.blocked_reason ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ doc: Doc; url: string; kind: "pdf" | "image" | "office" | "other" } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const loadAll = async () => {
     const [docsRes, refsRes] = await Promise.all([
@@ -497,6 +499,41 @@ function ProfessionalDetailDialog({
     window.open(d.file_url, "_blank");
   };
 
+  const getStoragePath = (fileUrl: string): string | null => {
+    const marker = "/professional-docs/";
+    const idx = fileUrl.indexOf(marker);
+    if (idx >= 0) return fileUrl.slice(idx + marker.length);
+    if (!fileUrl.includes("://")) return fileUrl;
+    return null;
+  };
+
+  const detectKind = (name: string | null): "pdf" | "image" | "office" | "other" => {
+    const ext = (name ?? "").toLowerCase().split(".").pop() ?? "";
+    if (ext === "pdf") return "pdf";
+    if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic"].includes(ext)) return "image";
+    if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "csv", "odt", "ods"].includes(ext)) return "office";
+    return "other";
+  };
+
+  const openPreview = async (d: Doc) => {
+    setPreviewLoading(true);
+    try {
+      const path = getStoragePath(d.file_url);
+      let url = d.file_url;
+      if (path) {
+        const { data } = await supabase.storage
+          .from("professional-docs")
+          .createSignedUrl(path, 600);
+        if (data?.signedUrl) url = data.signedUrl;
+      }
+      setPreviewDoc({ doc: d, url, kind: detectKind(d.file_name) });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo abrir el documento");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
@@ -614,6 +651,9 @@ function ProfessionalDetailDialog({
                       </div>
                       <Button size="sm" variant="outline" onClick={() => downloadDoc(d)}>
                         <Download className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading}>
+                        <Eye className="h-3 w-3" />
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => deleteDoc(d)}>
                         <Trash2 className="h-3 w-3 text-destructive" />
