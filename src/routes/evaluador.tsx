@@ -784,8 +784,11 @@ function ProfessionalDetailDialog({
                   <p className="text-[11px] text-muted-foreground">
                     Desliza horizontalmente para revisar los {docs.length} documentos →
                   </p>
-                  <div className="overflow-x-auto pb-2 -mx-1 snap-x snap-mandatory scroll-smooth">
-                    <div className="flex gap-3 px-1">
+                  <div
+                    className="overflow-x-auto overflow-y-hidden pb-2 -mx-1 snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
+                    style={{ WebkitOverflowScrolling: "touch" }}
+                  >
+                    <div className="flex gap-3 px-1 w-max">
                       {docs.map((d) => {
                         const extra = docExtras[d.id];
                         const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
