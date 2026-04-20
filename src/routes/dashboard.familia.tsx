@@ -308,6 +308,45 @@ function FamilyDashboard() {
   const filled = offers.filter((o) => o.status === "filled").length;
   const pendingApps = applications.filter((a) => a.status === "pending").length;
 
+  const saveLocation = async (lat: number, lng: number, address?: string) => {
+    if (!user) return;
+    setSavingLoc(true);
+    try {
+      const updates: Record<string, unknown> = { default_lat: lat, default_lng: lng };
+      if (address && !familyAddress) {
+        updates.default_address = address;
+        setFamilyAddress(address);
+      }
+      const { error } = await supabase
+        .from("family_profiles")
+        .upsert({ user_id: user.id, ...updates } as never, { onConflict: "user_id" });
+      if (error) throw error;
+      setFamilyCoords({ lat, lng });
+      // Recalcular distancias con la nueva ubicación
+      setNearbyPros((prev) =>
+        [...prev]
+          .map((p) => ({
+            ...p,
+            km:
+              p.lat != null && p.lng != null
+                ? distanceKm({ lat, lng }, { lat: p.lat, lng: p.lng })
+                : null,
+          }))
+          .sort((a, b) => {
+            if (a.km == null && b.km == null) return 0;
+            if (a.km == null) return 1;
+            if (b.km == null) return -1;
+            return a.km - b.km;
+          }),
+      );
+      toast.success("📍 Ubicación guardada — distancias actualizadas");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar la ubicación");
+    } finally {
+      setSavingLoc(false);
+    }
+  };
+
   return (
     <AppShell
       user={user}
