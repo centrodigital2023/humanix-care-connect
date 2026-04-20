@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppUser } from "@/hooks/use-app-user";
 import { Logo } from "@/components/humanix/Logo";
+import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { toast } from "sonner";
 import { z } from "zod";
 
