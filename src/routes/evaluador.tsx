@@ -774,28 +774,171 @@ function ProfessionalDetailDialog({
                 <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
               ) : (
                 <div className="space-y-2">
-                  {docs.map((d) => (
-                    <div key={d.id} className="flex items-center gap-2 p-2 rounded-md border bg-card">
-                      <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{d.file_name || "Sin nombre"}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {d.status} · {new Date(d.created_at).toLocaleDateString("es-CO")}
-                          {d.ai_score != null && ` · IA ${d.ai_score}/100`}
-                        </p>
+                  {docs.map((d) => {
+                    const extra = docExtras[d.id];
+                    const isExpanded = expandedDoc === d.id;
+                    const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
+                    return (
+                      <div key={d.id} className="rounded-md border bg-card">
+                        <div className="flex items-center gap-2 p-2">
+                          <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate">{d.file_name || "Sin nombre"}</p>
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 flex-wrap">
+                              <span>{d.status}</span>
+                              <span>·</span>
+                              <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
+                              {d.ai_score != null && (
+                                <>
+                                  <span>·</span>
+                                  <span className={d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}>
+                                    IA {d.ai_score}/100
+                                  </span>
+                                </>
+                              )}
+                              {extra?.ai_verified === true && (
+                                <Badge variant="outline" className="text-[10px] py-0 h-4">
+                                  <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" /> Veraz
+                                </Badge>
+                              )}
+                              {extra?.ai_verified === false && (
+                                <Badge variant="destructive" className="text-[10px] py-0 h-4">
+                                  <XCircle className="h-2.5 w-2.5 mr-0.5" /> Sospechoso
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                          <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} title="Descargar">
+                            <Download className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} title="Ver">
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => analyzeDoc(d)}
+                            disabled={analyzingDoc === d.id}
+                            title="Analizar veracidad con IA"
+                          >
+                            {analyzingDoc === d.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-3 w-3" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
+                            disabled={!extra?.ai_notes && !extracted}
+                            title="Ver análisis"
+                          >
+                            {isExpanded ? "−" : "+"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => deleteDoc(d)} title="Eliminar">
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                        {isExpanded && (extra?.ai_notes || extracted) && (
+                          <div className="border-t px-3 py-2 bg-muted/20 space-y-2 text-xs">
+                            {extra?.ai_notes && (
+                              <div>
+                                <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
+                                  Veredicto IA
+                                </p>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{extra.ai_notes}</p>
+                              </div>
+                            )}
+                            {extracted && Object.keys(extracted).length > 0 && (
+                              <div>
+                                <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
+                                  Datos extraídos
+                                </p>
+                                <ul className="space-y-0.5">
+                                  {Object.entries(extracted).map(([k, v]) => (
+                                    <li key={k} className="text-muted-foreground">
+                                      <span className="font-medium text-foreground">{k}:</span>{" "}
+                                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => downloadDoc(d)}>
-                        <Download className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading}>
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => deleteDoc(d)}>
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              )}
+            </Section>
+
+            {/* Deep AI holistic analysis */}
+            <Section title="Análisis profundo IA" icon={<Sparkles className="h-3 w-3" />}>
+              <div className="flex items-center gap-2 mb-2">
+                <Button
+                  size="sm"
+                  variant="hero"
+                  onClick={runHolisticAnalysis}
+                  disabled={holisticBusy || docs.length === 0}
+                >
+                  {holisticBusy ? (
+                    <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Analizando…</>
+                  ) : (
+                    <><Sparkles className="h-3 w-3 mr-1" /> Validar perfil completo</>
+                  )}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Cruza formulario, documentos y referencias.
+                </span>
+              </div>
+              {holistic && (
+                <Card className="p-3 space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    {holistic.is_publishable ? (
+                      <Badge className="bg-biosensor/20 text-biosensor">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Publicable
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive">
+                        <XCircle className="h-3 w-3 mr-1" /> No publicable
+                      </Badge>
+                    )}
+                    <span className={`font-semibold ${holistic.score >= 70 ? "text-biosensor" : "text-destructive"}`}>
+                      Score {holistic.score}/100
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">{holistic.ai_summary}</p>
+                  {holistic.critical_errors.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-destructive uppercase mb-1">
+                        Errores críticos ({holistic.critical_errors.length})
+                      </p>
+                      <ul className="space-y-0.5 text-xs">
+                        {holistic.critical_errors.map((e, i) => (
+                          <li key={i} className="text-muted-foreground">
+                            • <span className="font-medium text-foreground">{e.field}:</span> {e.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {holistic.warnings.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
+                        Advertencias ({holistic.warnings.length})
+                      </p>
+                      <ul className="space-y-0.5 text-xs">
+                        {holistic.warnings.map((w, i) => (
+                          <li key={i} className="text-muted-foreground">
+                            • <span className="font-medium text-foreground">{w.field}:</span> {w.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </Card>
               )}
             </Section>
 
