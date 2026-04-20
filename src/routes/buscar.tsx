@@ -23,7 +23,7 @@ import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 
 type SearchParams = {
-  tab: "profesionales" | "ofertas";
+  tab?: "profesionales" | "ofertas";
   q?: string;
   specialty?: string;
   city?: string;
@@ -163,7 +163,7 @@ function BuscarPage() {
     setCity(search.city ?? "");
   }, [search.q, search.specialty, search.city]);
 
-  const tab = search.tab;
+  const tab = search.tab ?? "profesionales";
 
   // Fetch professionals
   useEffect(() => {

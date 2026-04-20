@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => {
+  validateSearch: (search: Record<string, unknown>): { role?: Role; redirect?: string } => {
     const r = search.role;
     const role: Role | undefined =
       r === "professional" || r === "family" || r === "institution" ? r : undefined;
@@ -17,7 +17,10 @@ export const Route = createFileRoute("/auth")({
       typeof search.redirect === "string" && search.redirect.startsWith("/")
         ? search.redirect
         : undefined;
-    return { role, redirect };
+    const out: { role?: Role; redirect?: string } = {};
+    if (role) out.role = role;
+    if (redirect) out.redirect = redirect;
+    return out;
   },
   head: () => ({
     meta: [
