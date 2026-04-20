@@ -23,6 +23,9 @@ import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { LocationPicker } from "@/components/humanix/LocationPicker";
+import { distanceKm, formatKm } from "@/lib/geo";
+import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/familia")({
@@ -83,6 +86,19 @@ type NearbyOffer = {
   created_at: string;
 };
 
+type NearbyPro = {
+  user_id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  specialty: string | null;
+  avg_rating: number | null;
+  hourly_rate: number | null;
+  lat: number | null;
+  lng: number | null;
+  km: number | null;
+};
+
 function waLink(phone: string | null | undefined, text: string) {
   if (!phone) return null;
   const clean = phone.replace(/[^0-9]/g, "");
@@ -99,6 +115,13 @@ function FamilyDashboard() {
   const [nearby, setNearby] = useState<NearbyOffer[]>([]);
   const [familyCity, setFamilyCity] = useState<string>("Bogotá");
   const [onboardingComplete, setOnboardingComplete] = useState(true);
+  const [familyCoords, setFamilyCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
+  const [familyAddress, setFamilyAddress] = useState<string>("");
+  const [nearbyPros, setNearbyPros] = useState<NearbyPro[]>([]);
+  const [savingLoc, setSavingLoc] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -113,7 +136,7 @@ function FamilyDashboard() {
             .order("created_at", { ascending: false }),
           supabase
             .from("family_profiles")
-            .select("id_number, default_address, emergency_contact_phone, habeas_data_accepted")
+            .select("id_number, default_address, default_lat, default_lng, emergency_contact_phone, habeas_data_accepted")
             .eq("user_id", user.id)
             .maybeSingle(),
           supabase
@@ -131,6 +154,11 @@ function FamilyDashboard() {
         setOnboardingComplete(
           !!(fam?.id_number && fam?.default_address && fam?.emergency_contact_phone && fam?.habeas_data_accepted),
         );
+        setFamilyCoords({
+          lat: fam?.default_lat ?? null,
+          lng: fam?.default_lng ?? null,
+        });
+        setFamilyAddress(fam?.default_address ?? "");
 
         const myCity = profRes.data?.city ?? offerList[0]?.city ?? "Bogotá";
         setFamilyCity(myCity);
@@ -206,6 +234,53 @@ function FamilyDashboard() {
           .order("created_at", { ascending: false })
           .limit(6);
         setNearby((nearbyData ?? []) as NearbyOffer[]);
+
+        // Profesionales cercanos (con lat/lng) — calcula distancia si la familia tiene coords
+        const { data: prosData } = await supabase
+          .from("professional_profiles")
+          .select("user_id, specialty, avg_rating, hourly_rate, lat, lng, home_city, active, published")
+          .eq("active", true)
+          .eq("published", true)
+          .not("lat", "is", null)
+          .not("lng", "is", null)
+          .limit(60);
+        const proIds2 = (prosData ?? []).map((p) => p.user_id);
+        let nameMap = new Map<string, { full_name: string | null; avatar_url: string | null; city: string | null }>();
+        if (proIds2.length) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("user_id, full_name, avatar_url, city")
+            .in("user_id", proIds2);
+          nameMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
+        }
+        const fLat = fam?.default_lat ?? null;
+        const fLng = fam?.default_lng ?? null;
+        const computed: NearbyPro[] = (prosData ?? []).map((p) => {
+          const info = nameMap.get(p.user_id);
+          const km =
+            fLat != null && fLng != null && p.lat != null && p.lng != null
+              ? distanceKm({ lat: fLat, lng: fLng }, { lat: p.lat, lng: p.lng })
+              : null;
+          return {
+            user_id: p.user_id,
+            full_name: info?.full_name ?? null,
+            avatar_url: info?.avatar_url ?? null,
+            city: info?.city ?? p.home_city ?? null,
+            specialty: p.specialty,
+            avg_rating: p.avg_rating,
+            hourly_rate: p.hourly_rate,
+            lat: p.lat,
+            lng: p.lng,
+            km,
+          };
+        });
+        computed.sort((a, b) => {
+          if (a.km == null && b.km == null) return 0;
+          if (a.km == null) return 1;
+          if (b.km == null) return -1;
+          return a.km - b.km;
+        });
+        setNearbyPros(computed.slice(0, 8));
       } catch (err) {
         console.error("[familia dashboard] load failed:", err);
       } finally {
@@ -232,6 +307,45 @@ function FamilyDashboard() {
   const open = offers.filter((o) => o.status === "open").length;
   const filled = offers.filter((o) => o.status === "filled").length;
   const pendingApps = applications.filter((a) => a.status === "pending").length;
+
+  const saveLocation = async (lat: number, lng: number, address?: string) => {
+    if (!user) return;
+    setSavingLoc(true);
+    try {
+      const updates: Record<string, unknown> = { default_lat: lat, default_lng: lng };
+      if (address && !familyAddress) {
+        updates.default_address = address;
+        setFamilyAddress(address);
+      }
+      const { error } = await supabase
+        .from("family_profiles")
+        .upsert({ user_id: user.id, ...updates } as never, { onConflict: "user_id" });
+      if (error) throw error;
+      setFamilyCoords({ lat, lng });
+      // Recalcular distancias con la nueva ubicación
+      setNearbyPros((prev) =>
+        [...prev]
+          .map((p) => ({
+            ...p,
+            km:
+              p.lat != null && p.lng != null
+                ? distanceKm({ lat, lng }, { lat: p.lat, lng: p.lng })
+                : null,
+          }))
+          .sort((a, b) => {
+            if (a.km == null && b.km == null) return 0;
+            if (a.km == null) return 1;
+            if (b.km == null) return -1;
+            return a.km - b.km;
+          }),
+      );
+      toast.success("📍 Ubicación guardada — distancias actualizadas");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo guardar la ubicación");
+    } finally {
+      setSavingLoc(false);
+    }
+  };
 
   return (
     <AppShell
@@ -406,45 +520,105 @@ function FamilyDashboard() {
           )}
         </section>
 
-        {/* Ofertas cercanas en mi ciudad (otras familias / instituciones publicaron) */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+        {/* Mi ubicación + profesionales cercanos */}
+        <section className="grid lg:grid-cols-2 gap-6">
+          <div>
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2 mb-2">
               <MapPin className="h-5 w-5 text-biosensor" />
-              Cuidadores activos cerca de ti
+              Tu ubicación de servicio
             </h2>
-            <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
-              Ver todos →
-            </Link>
+            <p className="text-xs text-muted-foreground mb-3">
+              Marca dónde necesitas el servicio para que calculemos la distancia exacta a cada profesional.
+              Toca el mapa o usa GPS.
+            </p>
+            <LocationPicker
+              lat={familyCoords.lat}
+              lng={familyCoords.lng}
+              defaultCity={familyCity}
+              height={300}
+              onChange={(lat, lng, address) => void saveLocation(lat, lng, address)}
+            />
+            {savingLoc && (
+              <p className="text-[11px] text-muted-foreground mt-2">
+                <Loader2 className="h-3 w-3 animate-spin inline mr-1" /> Guardando…
+              </p>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            Otras solicitudes en {familyCity}. Útil para ver tarifas referenciales del mercado.
-          </p>
-          {nearby.length === 0 ? (
-            <Card className="p-6 text-center text-sm text-muted-foreground">
-              Sin ofertas cercanas activas en {familyCity} por ahora.
-            </Card>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Array.from(new Map(nearby.map((n) => [n.id, n])).values()).map((n) => (
-                <Card key={`nearby-${n.id}`} className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-sm leading-tight">{n.title}</p>
-                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/30 shrink-0">
-                      Activa
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> {n.city}
-                  </p>
-                  <p className="mt-2 font-display text-lg font-semibold text-copper">
-                    ${n.amount.toLocaleString("es-CO")}{" "}
-                    <span className="text-xs font-normal text-muted-foreground">COP / {n.modality}</span>
-                  </p>
-                </Card>
-              ))}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-fuchsia-neural" />
+                Profesionales cerca de ti
+              </h2>
+              <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
+                Ver todos →
+              </Link>
             </div>
-          )}
+            <p className="text-xs text-muted-foreground mb-3">
+              {familyCoords.lat != null
+                ? "Ordenados por cercanía a tu ubicación."
+                : "Marca tu ubicación para ver la distancia exacta de cada profesional."}
+            </p>
+            {nearbyPros.length === 0 ? (
+              <Card className="p-6 text-center text-sm text-muted-foreground">
+                Aún no hay profesionales con ubicación pública en tu zona.
+              </Card>
+            ) : (
+              <div className="grid gap-2">
+                {nearbyPros.map((p) => (
+                  <Card key={`np-${p.user_id}`} className="p-3 flex items-center gap-3">
+                    {p.avatar_url ? (
+                      <img
+                        src={p.avatar_url}
+                        alt={p.full_name ?? ""}
+                        className="h-10 w-10 rounded-full object-cover border border-border shrink-0"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
+                        {(p.full_name ?? "?").slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{p.full_name ?? "Profesional"}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {p.specialty ?? "Salud"} · {p.city ?? "—"}
+                        {p.avg_rating != null && p.avg_rating > 0 && (
+                          <>
+                            {" · "}
+                            <Star className="h-2.5 w-2.5 inline fill-copper text-copper" />{" "}
+                            {Number(p.avg_rating).toFixed(1)}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {p.km != null ? (
+                        <span className="text-xs font-semibold text-biosensor">
+                          {formatKm(p.km)}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">sin distancia</span>
+                      )}
+                      <Button size="sm" variant="outline" className="block mt-1 text-xs h-7" asChild>
+                        <Link to="/profesional/$proId" params={{ proId: p.user_id }}>
+                          Ver
+                        </Link>
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+            {nearby.length > 0 && (
+              <p className="text-[11px] text-muted-foreground mt-3">
+                {nearby.length} otra{nearby.length === 1 ? "" : "s"} solicitud{nearby.length === 1 ? "" : "es"}{" "}
+                activa{nearby.length === 1 ? "" : "s"} en {familyCity} —{" "}
+                <Link to="/buscar" className="underline hover:text-foreground">
+                  ver mercado
+                </Link>
+              </p>
+            )}
+          </div>
         </section>
 
         {/* Mis solicitudes */}

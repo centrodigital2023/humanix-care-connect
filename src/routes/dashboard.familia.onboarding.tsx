@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppUser } from "@/hooks/use-app-user";
 import { Logo } from "@/components/humanix/Logo";
+import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -115,6 +116,10 @@ function FamilyOnboarding() {
     patientRelation: "",
     patientAge: "",
   });
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
 
   // Pre-cargar datos existentes
   useEffect(() => {
@@ -130,7 +135,7 @@ function FamilyOnboarding() {
         supabase
           .from("family_profiles")
           .select(
-            "id_number, default_address, emergency_contact_name, emergency_contact_phone, patient_name, patient_relation, patient_age, habeas_data_accepted",
+            "id_number, default_address, default_lat, default_lng, emergency_contact_name, emergency_contact_phone, patient_name, patient_relation, patient_age, habeas_data_accepted",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -138,6 +143,10 @@ function FamilyOnboarding() {
       if (!active) return;
       setAvatarUrl(prof?.avatar_url ?? null);
       setHabeasOk(!!fam?.habeas_data_accepted);
+      setCoords({
+        lat: fam?.default_lat ?? null,
+        lng: fam?.default_lng ?? null,
+      });
       setForm((f) => ({
         ...f,
         fullName: prof?.full_name ?? user.fullName ?? "",
@@ -341,6 +350,8 @@ function FamilyOnboarding() {
           user_id: user.id,
           id_number: v.idNumber,
           default_address: v.defaultAddress,
+          default_lat: coords.lat,
+          default_lng: coords.lng,
           emergency_contact_name: v.emergencyName,
           emergency_contact_phone: v.emergencyPhone,
           patient_name: v.patientName || null,
@@ -660,6 +671,29 @@ function FamilyOnboarding() {
                     />
                   </Field>
                 </div>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-4 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      <MapPin className="h-3.5 w-3.5 text-biosensor" /> Marca tu ubicación en el mapa
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Para que veas profesionales cercanos y midamos la distancia exacta. Toca el mapa o usa GPS.
+                    </p>
+                  </div>
+                </div>
+                <LocationPicker
+                  lat={coords.lat}
+                  lng={coords.lng}
+                  defaultCity={form.city || "Bogotá"}
+                  height={280}
+                  onChange={(lat, lng, address) => {
+                    setCoords({ lat, lng });
+                    if (address && !form.defaultAddress) set("defaultAddress", address);
+                  }}
+                />
               </div>
 
               <div className="rounded-xl border border-border bg-muted/30 p-4 mt-4">
