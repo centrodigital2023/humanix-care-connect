@@ -688,6 +688,10 @@ export type Database = {
         Row: {
           address: string | null
           amount: number
+          blocked: boolean
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
           city: string
           contact_phone: string | null
           created_at: string
@@ -711,6 +715,10 @@ export type Database = {
         Insert: {
           address?: string | null
           amount: number
+          blocked?: boolean
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           city: string
           contact_phone?: string | null
           created_at?: string
@@ -734,6 +742,10 @@ export type Database = {
         Update: {
           address?: string | null
           amount?: number
+          blocked?: boolean
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           city?: string
           contact_phone?: string | null
           created_at?: string
@@ -1092,6 +1104,10 @@ export type Database = {
           avatar_url: string | null
           avg_rating: number | null
           bio: string | null
+          blocked: boolean
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
           certifications: Json | null
           created_at: string
           home_city: string | null
@@ -1133,6 +1149,10 @@ export type Database = {
           avatar_url?: string | null
           avg_rating?: number | null
           bio?: string | null
+          blocked?: boolean
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           certifications?: Json | null
           created_at?: string
           home_city?: string | null
@@ -1174,6 +1194,10 @@ export type Database = {
           avatar_url?: string | null
           avg_rating?: number | null
           bio?: string | null
+          blocked?: boolean
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
           certifications?: Json | null
           created_at?: string
           home_city?: string | null
