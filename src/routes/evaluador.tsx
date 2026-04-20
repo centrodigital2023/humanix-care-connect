@@ -773,103 +773,121 @@ function ProfessionalDetailDialog({
               {docs.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
               ) : (
-                <div className="space-y-2">
-                  {docs.map((d) => {
-                    const extra = docExtras[d.id];
-                    const isExpanded = expandedDoc === d.id;
-                    const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
-                    return (
-                      <div key={d.id} className="rounded-md border bg-card">
-                        <div className="flex items-center gap-2 p-2">
-                          <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm truncate">{d.file_name || "Sin nombre"}</p>
-                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 flex-wrap">
-                              <span>{d.status}</span>
-                              <span>·</span>
-                              <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
-                              {d.ai_score != null && (
-                                <>
-                                  <span>·</span>
-                                  <span className={d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}>
-                                    IA {d.ai_score}/100
-                                  </span>
-                                </>
-                              )}
-                              {extra?.ai_verified === true && (
-                                <Badge variant="outline" className="text-[10px] py-0 h-4">
-                                  <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" /> Veraz
-                                </Badge>
-                              )}
-                              {extra?.ai_verified === false && (
-                                <Badge variant="destructive" className="text-[10px] py-0 h-4">
-                                  <XCircle className="h-2.5 w-2.5 mr-0.5" /> Sospechoso
-                                </Badge>
-                              )}
-                            </p>
-                          </div>
-                          <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} title="Descargar">
-                            <Download className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} title="Ver">
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => analyzeDoc(d)}
-                            disabled={analyzingDoc === d.id}
-                            title="Analizar veracidad con IA"
+                <div className="space-y-3">
+                  <p className="text-[11px] text-muted-foreground">
+                    Desliza horizontalmente para revisar los {docs.length} documentos →
+                  </p>
+                  <div className="overflow-x-auto pb-2 -mx-1 snap-x snap-mandatory scroll-smooth">
+                    <div className="flex gap-3 px-1">
+                      {docs.map((d) => {
+                        const extra = docExtras[d.id];
+                        const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
+                        const isExpanded = expandedDoc === d.id;
+                        return (
+                          <div
+                            key={d.id}
+                            className="snap-start shrink-0 w-[260px] rounded-lg border bg-card flex flex-col"
                           >
-                            {analyzingDoc === d.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Sparkles className="h-3 w-3" />
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
-                            disabled={!extra?.ai_notes && !extracted}
-                            title="Ver análisis"
-                          >
-                            {isExpanded ? "−" : "+"}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => deleteDoc(d)} title="Eliminar">
-                            <Trash2 className="h-3 w-3 text-destructive" />
-                          </Button>
-                        </div>
-                        {isExpanded && (extra?.ai_notes || extracted) && (
-                          <div className="border-t px-3 py-2 bg-muted/20 space-y-2 text-xs">
-                            {extra?.ai_notes && (
-                              <div>
-                                <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
-                                  Veredicto IA
-                                </p>
-                                <p className="text-muted-foreground whitespace-pre-wrap">{extra.ai_notes}</p>
+                            <div className="p-3 border-b space-y-1.5">
+                              <div className="flex items-center justify-between gap-2">
+                                <Badge variant="secondary" className="uppercase text-[10px]">
+                                  {d.doc_type}
+                                </Badge>
+                                {extra?.ai_verified === true && (
+                                  <Badge variant="outline" className="text-[10px] py-0 h-4">
+                                    <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" /> Veraz
+                                  </Badge>
+                                )}
+                                {extra?.ai_verified === false && (
+                                  <Badge variant="destructive" className="text-[10px] py-0 h-4">
+                                    <XCircle className="h-2.5 w-2.5 mr-0.5" /> Sospechoso
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm font-medium truncate" title={d.file_name || "Sin nombre"}>
+                                {d.file_name || "Sin nombre"}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground flex items-center gap-1 flex-wrap">
+                                <span>{d.status}</span>
+                                <span>·</span>
+                                <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
+                                {d.ai_score != null && (
+                                  <>
+                                    <span>·</span>
+                                    <span className={d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}>
+                                      IA {d.ai_score}/100
+                                    </span>
+                                  </>
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-1 p-2">
+                              <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} title="Ver" className="flex-1 min-w-0">
+                                <Eye className="h-3 w-3 mr-1" /> Ver
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} title="Descargar" className="flex-1 min-w-0">
+                                <Download className="h-3 w-3 mr-1" /> Bajar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => analyzeDoc(d)}
+                                disabled={analyzingDoc === d.id}
+                                title="Analizar veracidad con IA"
+                                className="flex-1 min-w-0"
+                              >
+                                {analyzingDoc === d.id ? (
+                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                                ) : (
+                                  <Sparkles className="h-3 w-3 mr-1" />
+                                )}
+                                IA
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
+                                disabled={!extra?.ai_notes && !extracted}
+                                title="Ver análisis"
+                              >
+                                {isExpanded ? "−" : "+"}
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => deleteDoc(d)} title="Eliminar">
+                                <Trash2 className="h-3 w-3 text-destructive" />
+                              </Button>
+                            </div>
+                            {isExpanded && (extra?.ai_notes || extracted) && (
+                              <div className="border-t px-3 py-2 bg-muted/20 space-y-2 text-xs max-h-48 overflow-y-auto">
+                                {extra?.ai_notes && (
+                                  <div>
+                                    <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
+                                      Veredicto IA
+                                    </p>
+                                    <p className="text-muted-foreground whitespace-pre-wrap">{extra.ai_notes}</p>
+                                  </div>
+                                )}
+                                {extracted && Object.keys(extracted).length > 0 && (
+                                  <div>
+                                    <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
+                                      Datos extraídos
+                                    </p>
+                                    <ul className="space-y-0.5">
+                                      {Object.entries(extracted).map(([k, v]) => (
+                                        <li key={k} className="text-muted-foreground">
+                                          <span className="font-medium text-foreground">{k}:</span>{" "}
+                                          {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
                               </div>
                             )}
-                            {extracted && Object.keys(extracted).length > 0 && (
-                              <div>
-                                <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
-                                  Datos extraídos
-                                </p>
-                                <ul className="space-y-0.5">
-                                  {Object.entries(extracted).map(([k, v]) => (
-                                    <li key={k} className="text-muted-foreground">
-                                      <span className="font-medium text-foreground">{k}:</span>{" "}
-                                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </Section>
