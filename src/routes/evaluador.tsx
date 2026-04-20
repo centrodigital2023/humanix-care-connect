@@ -565,6 +565,109 @@ function ProfessionalDetailDialog({
     }
   };
 
+  const analyzeDoc = async (d: Doc) => {
+    setAnalyzingDoc(d.id);
+    try {
+      // Generate signed URL the edge function can fetch
+      const path = getStoragePath(d.file_url);
+      let signedUrl = d.file_url;
+      if (path) {
+        const { data } = await supabase.storage
+          .from("professional-docs")
+          .createSignedUrl(path, 600);
+        if (data?.signedUrl) signedUrl = data.signedUrl;
+      }
+      const ext = (d.file_name ?? "").toLowerCase().split(".").pop() ?? "";
+      const mime =
+        ext === "pdf" ? "application/pdf"
+        : ["jpg", "jpeg"].includes(ext) ? "image/jpeg"
+        : ext === "png" ? "image/png"
+        : ext === "webp" ? "image/webp"
+        : "application/pdf";
+
+      const { data, error } = await supabase.functions.invoke("document-verifier", {
+        body: { file_url: signedUrl, mime_type: mime, doc_type: d.doc_type },
+      });
+      if (error) throw error;
+      const v = data?.verification;
+      if (!v) throw new Error("Sin respuesta de la IA");
+
+      const score = Math.round(Number(v.confidence ?? 0));
+      const newStatus = v.is_valid ? "approved" : "rejected";
+      const notes = [v.reason, v.issues?.length ? `Problemas: ${v.issues.join("; ")}` : null]
+        .filter(Boolean).join(" ");
+
+      await supabase
+        .from("professional_documents")
+        .update({
+          ai_score: score,
+          ai_notes: notes,
+          ai_verified: !!v.is_valid,
+          ai_extracted: v.extracted ?? null,
+          status: newStatus,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: reviewerId,
+        })
+        .eq("id", d.id);
+
+      toast.success(`IA: ${v.is_valid ? "documento válido" : "documento rechazado"} (${score}/100)`);
+      setExpandedDoc(d.id);
+      await loadAll();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error analizando documento");
+    } finally {
+      setAnalyzingDoc(null);
+    }
+  };
+
+  const runHolisticAnalysis = async () => {
+    setHolisticBusy(true);
+    setHolistic(null);
+    try {
+      const profilePayload = {
+        full_name: pro.profile?.full_name,
+        email: pro.profile?.email,
+        phone: pro.profile?.phone,
+        city: pro.home_city,
+        specialty: pro.specialty,
+        years_experience: pro.years_experience,
+        rethus_number: pro.rethus_number,
+        bio: pro.bio,
+        certifications: pro.certifications,
+        work_experience: pro.work_experience,
+        languages: pro.languages,
+        service_cities: pro.service_cities,
+      };
+      const documentsPayload = docs.map((d) => ({
+        doc_type: d.doc_type,
+        status: d.status,
+        ai_verified: docExtras[d.id]?.ai_verified ?? null,
+        ai_score: d.ai_score,
+        ai_notes: d.ai_notes,
+        ai_extracted: docExtras[d.id]?.ai_extracted ?? null,
+      }));
+      const referencesPayload = refs.map((r) => ({
+        ref_type: r.ref_type,
+        full_name: r.full_name,
+        phone: r.phone,
+        relation: r.relation,
+      }));
+
+      const { data, error } = await supabase.functions.invoke("profile-holistic-validator", {
+        body: { profile: profilePayload, documents: documentsPayload, references: referencesPayload },
+      });
+      if (error) throw error;
+      const v = data?.validation as HolisticValidation | undefined;
+      if (!v) throw new Error("Sin respuesta");
+      setHolistic(v);
+      toast.success(`Análisis completo · score ${v.score}/100`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error en análisis");
+    } finally {
+      setHolisticBusy(false);
+    }
+  };
+
   return (
     <>
       <Dialog open onOpenChange={(o) => !o && onClose()}>
