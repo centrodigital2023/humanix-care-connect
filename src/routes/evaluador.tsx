@@ -724,6 +724,74 @@ function ProfessionalDetailDialog({
         </AlertDialog>
       </DialogContent>
     </Dialog>
+
+      {previewDoc && (
+        <Dialog open onOpenChange={(o) => !o && setPreviewDoc(null)}>
+          <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 overflow-hidden">
+            <DialogHeader className="px-4 pt-4 pb-2 border-b">
+              <DialogTitle className="text-base flex items-center gap-2 truncate">
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="truncate">{previewDoc.doc.file_name || previewDoc.doc.doc_type}</span>
+                <Badge variant="secondary" className="text-[10px] uppercase ml-1">{previewDoc.doc.doc_type}</Badge>
+              </DialogTitle>
+              <DialogDescription className="flex items-center gap-2 text-xs">
+                <span>{previewDoc.doc.status}</span>
+                <span>·</span>
+                <a
+                  href={previewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" /> Abrir en pestaña nueva
+                </a>
+                <span>·</span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                  onClick={() => downloadDoc(previewDoc.doc)}
+                >
+                  <Download className="h-3 w-3" /> Descargar
+                </button>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 bg-muted/30 overflow-auto">
+              {previewDoc.kind === "pdf" ? (
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.doc.file_name ?? "Documento"}
+                  className="w-full h-full border-0"
+                />
+              ) : previewDoc.kind === "image" ? (
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.doc.file_name ?? "Documento"}
+                    className="max-w-full max-h-full object-contain rounded"
+                  />
+                </div>
+              ) : previewDoc.kind === "office" ? (
+                <iframe
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.url)}&embedded=true`}
+                  title={previewDoc.doc.file_name ?? "Documento Office"}
+                  className="w-full h-full border-0 bg-white"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center p-6">
+                  <FileText className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Este formato no se puede previsualizar. Descárgalo para verlo.
+                  </p>
+                  <Button size="sm" onClick={() => downloadDoc(previewDoc.doc)}>
+                    <Download className="h-4 w-4 mr-1" /> Descargar
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
 
