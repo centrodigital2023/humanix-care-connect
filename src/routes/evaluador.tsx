@@ -376,12 +376,17 @@ function ProfessionalDetailDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{ doc: Doc; url: string; kind: "pdf" | "image" | "office" | "other" } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [docExtras, setDocExtras] = useState<Record<string, DocAI>>({});
+  const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
+  const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
+  const [holistic, setHolistic] = useState<HolisticValidation | null>(null);
+  const [holisticBusy, setHolisticBusy] = useState(false);
 
   const loadAll = async () => {
     const [docsRes, refsRes] = await Promise.all([
       supabase
         .from("professional_documents")
-        .select("id, doc_type, file_name, file_url, user_id, status, created_at, ai_score, ai_notes")
+        .select("id, doc_type, file_name, file_url, user_id, status, created_at, ai_score, ai_notes, ai_verified, ai_extracted")
         .eq("user_id", pro.user_id)
         .order("created_at", { ascending: false }),
       supabase
@@ -389,7 +394,18 @@ function ProfessionalDetailDialog({
         .select("id, full_name, phone, relation, ref_type, verified")
         .eq("user_id", pro.user_id),
     ]);
-    setDocs((docsRes.data ?? []) as Doc[]);
+    const rows = (docsRes.data ?? []) as Array<Doc & DocAI>;
+    setDocs(rows.map(({ ai_verified: _v, ai_extracted: _e, ...d }) => d as Doc));
+    const extras: Record<string, DocAI> = {};
+    rows.forEach((r) => {
+      extras[r.id] = {
+        ai_score: r.ai_score,
+        ai_notes: r.ai_notes,
+        ai_verified: r.ai_verified,
+        ai_extracted: r.ai_extracted,
+      };
+    });
+    setDocExtras(extras);
     setRefs((refsRes.data ?? []) as typeof refs);
   };
 
