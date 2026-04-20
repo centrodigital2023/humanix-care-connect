@@ -288,6 +288,10 @@ function PublicidadPage() {
           </Dialog>
         </div>
 
+        <Card className="p-6">
+          <PromoCards origin={origin} />
+        </Card>
+
         {carouselItems.length > 0 && (
           <Card className="p-6">
             <div className="flex items-center justify-between mb-4">
