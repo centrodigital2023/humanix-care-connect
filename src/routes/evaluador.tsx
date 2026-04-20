@@ -536,7 +536,7 @@ function ProfessionalDetailDialog({
 
   return (
     <>
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
