@@ -359,6 +359,8 @@ function ProfessionalDetailDialog({
   const [blockReason, setBlockReason] = useState(pro.blocked_reason ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ doc: Doc; url: string; kind: "pdf" | "image" | "office" | "other" } | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const loadAll = async () => {
     const [docsRes, refsRes] = await Promise.all([
@@ -497,7 +499,43 @@ function ProfessionalDetailDialog({
     window.open(d.file_url, "_blank");
   };
 
+  const getStoragePath = (fileUrl: string): string | null => {
+    const marker = "/professional-docs/";
+    const idx = fileUrl.indexOf(marker);
+    if (idx >= 0) return fileUrl.slice(idx + marker.length);
+    if (!fileUrl.includes("://")) return fileUrl;
+    return null;
+  };
+
+  const detectKind = (name: string | null): "pdf" | "image" | "office" | "other" => {
+    const ext = (name ?? "").toLowerCase().split(".").pop() ?? "";
+    if (ext === "pdf") return "pdf";
+    if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic"].includes(ext)) return "image";
+    if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "csv", "odt", "ods"].includes(ext)) return "office";
+    return "other";
+  };
+
+  const openPreview = async (d: Doc) => {
+    setPreviewLoading(true);
+    try {
+      const path = getStoragePath(d.file_url);
+      let url = d.file_url;
+      if (path) {
+        const { data } = await supabase.storage
+          .from("professional-docs")
+          .createSignedUrl(path, 600);
+        if (data?.signedUrl) url = data.signedUrl;
+      }
+      setPreviewDoc({ doc: d, url, kind: detectKind(d.file_name) });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo abrir el documento");
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
+
   return (
+    <>
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
@@ -615,6 +653,9 @@ function ProfessionalDetailDialog({
                       <Button size="sm" variant="outline" onClick={() => downloadDoc(d)}>
                         <Download className="h-3 w-3" />
                       </Button>
+                      <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading}>
+                        <Eye className="h-3 w-3" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => deleteDoc(d)}>
                         <Trash2 className="h-3 w-3 text-destructive" />
                       </Button>
@@ -684,6 +725,74 @@ function ProfessionalDetailDialog({
         </AlertDialog>
       </DialogContent>
     </Dialog>
+
+      {previewDoc && (
+        <Dialog open onOpenChange={(o) => !o && setPreviewDoc(null)}>
+          <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 overflow-hidden">
+            <DialogHeader className="px-4 pt-4 pb-2 border-b">
+              <DialogTitle className="text-base flex items-center gap-2 truncate">
+                <FileText className="h-4 w-4 shrink-0" />
+                <span className="truncate">{previewDoc.doc.file_name || previewDoc.doc.doc_type}</span>
+                <Badge variant="secondary" className="text-[10px] uppercase ml-1">{previewDoc.doc.doc_type}</Badge>
+              </DialogTitle>
+              <DialogDescription className="flex items-center gap-2 text-xs">
+                <span>{previewDoc.doc.status}</span>
+                <span>·</span>
+                <a
+                  href={previewDoc.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" /> Abrir en pestaña nueva
+                </a>
+                <span>·</span>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1 text-primary hover:underline"
+                  onClick={() => downloadDoc(previewDoc.doc)}
+                >
+                  <Download className="h-3 w-3" /> Descargar
+                </button>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex-1 bg-muted/30 overflow-auto">
+              {previewDoc.kind === "pdf" ? (
+                <iframe
+                  src={previewDoc.url}
+                  title={previewDoc.doc.file_name ?? "Documento"}
+                  className="w-full h-full border-0"
+                />
+              ) : previewDoc.kind === "image" ? (
+                <div className="w-full h-full flex items-center justify-center p-4">
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.doc.file_name ?? "Documento"}
+                    className="max-w-full max-h-full object-contain rounded"
+                  />
+                </div>
+              ) : previewDoc.kind === "office" ? (
+                <iframe
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewDoc.url)}&embedded=true`}
+                  title={previewDoc.doc.file_name ?? "Documento Office"}
+                  className="w-full h-full border-0 bg-white"
+                />
+              ) : (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center p-6">
+                  <FileText className="h-10 w-10 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Este formato no se puede previsualizar. Descárgalo para verlo.
+                  </p>
+                  <Button size="sm" onClick={() => downloadDoc(previewDoc.doc)}>
+                    <Download className="h-4 w-4 mr-1" /> Descargar
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
 
