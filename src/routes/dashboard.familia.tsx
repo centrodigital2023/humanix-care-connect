@@ -520,45 +520,105 @@ function FamilyDashboard() {
           )}
         </section>
 
-        {/* Ofertas cercanas en mi ciudad (otras familias / instituciones publicaron) */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+        {/* Mi ubicación + profesionales cercanos */}
+        <section className="grid lg:grid-cols-2 gap-6">
+          <div>
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2 mb-2">
               <MapPin className="h-5 w-5 text-biosensor" />
-              Cuidadores activos cerca de ti
+              Tu ubicación de servicio
             </h2>
-            <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
-              Ver todos →
-            </Link>
+            <p className="text-xs text-muted-foreground mb-3">
+              Marca dónde necesitas el servicio para que calculemos la distancia exacta a cada profesional.
+              Toca el mapa o usa GPS.
+            </p>
+            <LocationPicker
+              lat={familyCoords.lat}
+              lng={familyCoords.lng}
+              defaultCity={familyCity}
+              height={300}
+              onChange={(lat, lng, address) => void saveLocation(lat, lng, address)}
+            />
+            {savingLoc && (
+              <p className="text-[11px] text-muted-foreground mt-2">
+                <Loader2 className="h-3 w-3 animate-spin inline mr-1" /> Guardando…
+              </p>
+            )}
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            Otras solicitudes en {familyCity}. Útil para ver tarifas referenciales del mercado.
-          </p>
-          {nearby.length === 0 ? (
-            <Card className="p-6 text-center text-sm text-muted-foreground">
-              Sin ofertas cercanas activas en {familyCity} por ahora.
-            </Card>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {Array.from(new Map(nearby.map((n) => [n.id, n])).values()).map((n) => (
-                <Card key={`nearby-${n.id}`} className="p-4">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="font-medium text-sm leading-tight">{n.title}</p>
-                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/30 shrink-0">
-                      Activa
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> {n.city}
-                  </p>
-                  <p className="mt-2 font-display text-lg font-semibold text-copper">
-                    ${n.amount.toLocaleString("es-CO")}{" "}
-                    <span className="text-xs font-normal text-muted-foreground">COP / {n.modality}</span>
-                  </p>
-                </Card>
-              ))}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+                <Users className="h-5 w-5 text-fuchsia-neural" />
+                Profesionales cerca de ti
+              </h2>
+              <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
+                Ver todos →
+              </Link>
             </div>
-          )}
+            <p className="text-xs text-muted-foreground mb-3">
+              {familyCoords.lat != null
+                ? "Ordenados por cercanía a tu ubicación."
+                : "Marca tu ubicación para ver la distancia exacta de cada profesional."}
+            </p>
+            {nearbyPros.length === 0 ? (
+              <Card className="p-6 text-center text-sm text-muted-foreground">
+                Aún no hay profesionales con ubicación pública en tu zona.
+              </Card>
+            ) : (
+              <div className="grid gap-2">
+                {nearbyPros.map((p) => (
+                  <Card key={`np-${p.user_id}`} className="p-3 flex items-center gap-3">
+                    {p.avatar_url ? (
+                      <img
+                        src={p.avatar_url}
+                        alt={p.full_name ?? ""}
+                        className="h-10 w-10 rounded-full object-cover border border-border shrink-0"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
+                        {(p.full_name ?? "?").slice(0, 1).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate">{p.full_name ?? "Profesional"}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {p.specialty ?? "Salud"} · {p.city ?? "—"}
+                        {p.avg_rating != null && p.avg_rating > 0 && (
+                          <>
+                            {" · "}
+                            <Star className="h-2.5 w-2.5 inline fill-copper text-copper" />{" "}
+                            {Number(p.avg_rating).toFixed(1)}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      {p.km != null ? (
+                        <span className="text-xs font-semibold text-biosensor">
+                          {formatKm(p.km)}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">sin distancia</span>
+                      )}
+                      <Button size="sm" variant="outline" className="block mt-1 text-xs h-7" asChild>
+                        <Link to="/profesional/$proId" params={{ proId: p.user_id }}>
+                          Ver
+                        </Link>
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+            {nearby.length > 0 && (
+              <p className="text-[11px] text-muted-foreground mt-3">
+                {nearby.length} otra{nearby.length === 1 ? "" : "s"} solicitud{nearby.length === 1 ? "" : "es"}{" "}
+                activa{nearby.length === 1 ? "" : "s"} en {familyCity} —{" "}
+                <Link to="/buscar" className="underline hover:text-foreground">
+                  ver mercado
+                </Link>
+              </p>
+            )}
+          </div>
         </section>
 
         {/* Mis solicitudes */}
