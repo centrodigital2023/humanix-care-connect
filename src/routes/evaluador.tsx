@@ -130,6 +130,21 @@ type Doc = {
   ai_notes: string | null;
 };
 
+type DocAI = {
+  ai_score: number | null;
+  ai_notes: string | null;
+  ai_verified: boolean | null;
+  ai_extracted: unknown;
+};
+
+type HolisticValidation = {
+  is_publishable: boolean;
+  score: number;
+  critical_errors: Array<{ field: string; message: string }>;
+  warnings: Array<{ field: string; message: string }>;
+  ai_summary: string;
+};
+
 function EvaluatorPage() {
   const { user, loading, logout } = useAppUser({
     allow: ["superadmin", "evaluator", "hr_staff"],
@@ -361,12 +376,17 @@ function ProfessionalDetailDialog({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{ doc: Doc; url: string; kind: "pdf" | "image" | "office" | "other" } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [docExtras, setDocExtras] = useState<Record<string, DocAI>>({});
+  const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
+  const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
+  const [holistic, setHolistic] = useState<HolisticValidation | null>(null);
+  const [holisticBusy, setHolisticBusy] = useState(false);
 
   const loadAll = async () => {
     const [docsRes, refsRes] = await Promise.all([
       supabase
         .from("professional_documents")
-        .select("id, doc_type, file_name, file_url, user_id, status, created_at, ai_score, ai_notes")
+        .select("id, doc_type, file_name, file_url, user_id, status, created_at, ai_score, ai_notes, ai_verified, ai_extracted")
         .eq("user_id", pro.user_id)
         .order("created_at", { ascending: false }),
       supabase
@@ -374,7 +394,18 @@ function ProfessionalDetailDialog({
         .select("id, full_name, phone, relation, ref_type, verified")
         .eq("user_id", pro.user_id),
     ]);
-    setDocs((docsRes.data ?? []) as Doc[]);
+    const rows = (docsRes.data ?? []) as Array<Doc & DocAI>;
+    setDocs(rows.map(({ ai_verified: _v, ai_extracted: _e, ...d }) => d as Doc));
+    const extras: Record<string, DocAI> = {};
+    rows.forEach((r) => {
+      extras[r.id] = {
+        ai_score: r.ai_score,
+        ai_notes: r.ai_notes,
+        ai_verified: r.ai_verified,
+        ai_extracted: r.ai_extracted,
+      };
+    });
+    setDocExtras(extras);
     setRefs((refsRes.data ?? []) as typeof refs);
   };
 
@@ -534,6 +565,109 @@ function ProfessionalDetailDialog({
     }
   };
 
+  const analyzeDoc = async (d: Doc) => {
+    setAnalyzingDoc(d.id);
+    try {
+      // Generate signed URL the edge function can fetch
+      const path = getStoragePath(d.file_url);
+      let signedUrl = d.file_url;
+      if (path) {
+        const { data } = await supabase.storage
+          .from("professional-docs")
+          .createSignedUrl(path, 600);
+        if (data?.signedUrl) signedUrl = data.signedUrl;
+      }
+      const ext = (d.file_name ?? "").toLowerCase().split(".").pop() ?? "";
+      const mime =
+        ext === "pdf" ? "application/pdf"
+        : ["jpg", "jpeg"].includes(ext) ? "image/jpeg"
+        : ext === "png" ? "image/png"
+        : ext === "webp" ? "image/webp"
+        : "application/pdf";
+
+      const { data, error } = await supabase.functions.invoke("document-verifier", {
+        body: { file_url: signedUrl, mime_type: mime, doc_type: d.doc_type },
+      });
+      if (error) throw error;
+      const v = data?.verification;
+      if (!v) throw new Error("Sin respuesta de la IA");
+
+      const score = Math.round(Number(v.confidence ?? 0));
+      const newStatus = v.is_valid ? "approved" : "rejected";
+      const notes = [v.reason, v.issues?.length ? `Problemas: ${v.issues.join("; ")}` : null]
+        .filter(Boolean).join(" ");
+
+      await supabase
+        .from("professional_documents")
+        .update({
+          ai_score: score,
+          ai_notes: notes,
+          ai_verified: !!v.is_valid,
+          ai_extracted: v.extracted ?? null,
+          status: newStatus,
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: reviewerId,
+        })
+        .eq("id", d.id);
+
+      toast.success(`IA: ${v.is_valid ? "documento válido" : "documento rechazado"} (${score}/100)`);
+      setExpandedDoc(d.id);
+      await loadAll();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error analizando documento");
+    } finally {
+      setAnalyzingDoc(null);
+    }
+  };
+
+  const runHolisticAnalysis = async () => {
+    setHolisticBusy(true);
+    setHolistic(null);
+    try {
+      const profilePayload = {
+        full_name: pro.profile?.full_name,
+        email: pro.profile?.email,
+        phone: pro.profile?.phone,
+        city: pro.home_city,
+        specialty: pro.specialty,
+        years_experience: pro.years_experience,
+        rethus_number: pro.rethus_number,
+        bio: pro.bio,
+        certifications: pro.certifications,
+        work_experience: pro.work_experience,
+        languages: pro.languages,
+        service_cities: pro.service_cities,
+      };
+      const documentsPayload = docs.map((d) => ({
+        doc_type: d.doc_type,
+        status: d.status,
+        ai_verified: docExtras[d.id]?.ai_verified ?? null,
+        ai_score: d.ai_score,
+        ai_notes: d.ai_notes,
+        ai_extracted: docExtras[d.id]?.ai_extracted ?? null,
+      }));
+      const referencesPayload = refs.map((r) => ({
+        ref_type: r.ref_type,
+        full_name: r.full_name,
+        phone: r.phone,
+        relation: r.relation,
+      }));
+
+      const { data, error } = await supabase.functions.invoke("profile-holistic-validator", {
+        body: { profile: profilePayload, documents: documentsPayload, references: referencesPayload },
+      });
+      if (error) throw error;
+      const v = data?.validation as HolisticValidation | undefined;
+      if (!v) throw new Error("Sin respuesta");
+      setHolistic(v);
+      toast.success(`Análisis completo · score ${v.score}/100`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error en análisis");
+    } finally {
+      setHolisticBusy(false);
+    }
+  };
+
   return (
     <>
       <Dialog open onOpenChange={(o) => !o && onClose()}>
@@ -640,28 +774,171 @@ function ProfessionalDetailDialog({
                 <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
               ) : (
                 <div className="space-y-2">
-                  {docs.map((d) => (
-                    <div key={d.id} className="flex items-center gap-2 p-2 rounded-md border bg-card">
-                      <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{d.file_name || "Sin nombre"}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {d.status} · {new Date(d.created_at).toLocaleDateString("es-CO")}
-                          {d.ai_score != null && ` · IA ${d.ai_score}/100`}
-                        </p>
+                  {docs.map((d) => {
+                    const extra = docExtras[d.id];
+                    const isExpanded = expandedDoc === d.id;
+                    const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
+                    return (
+                      <div key={d.id} className="rounded-md border bg-card">
+                        <div className="flex items-center gap-2 p-2">
+                          <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm truncate">{d.file_name || "Sin nombre"}</p>
+                            <p className="text-[11px] text-muted-foreground flex items-center gap-1 flex-wrap">
+                              <span>{d.status}</span>
+                              <span>·</span>
+                              <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
+                              {d.ai_score != null && (
+                                <>
+                                  <span>·</span>
+                                  <span className={d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}>
+                                    IA {d.ai_score}/100
+                                  </span>
+                                </>
+                              )}
+                              {extra?.ai_verified === true && (
+                                <Badge variant="outline" className="text-[10px] py-0 h-4">
+                                  <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" /> Veraz
+                                </Badge>
+                              )}
+                              {extra?.ai_verified === false && (
+                                <Badge variant="destructive" className="text-[10px] py-0 h-4">
+                                  <XCircle className="h-2.5 w-2.5 mr-0.5" /> Sospechoso
+                                </Badge>
+                              )}
+                            </p>
+                          </div>
+                          <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} title="Descargar">
+                            <Download className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} title="Ver">
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => analyzeDoc(d)}
+                            disabled={analyzingDoc === d.id}
+                            title="Analizar veracidad con IA"
+                          >
+                            {analyzingDoc === d.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-3 w-3" />
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
+                            disabled={!extra?.ai_notes && !extracted}
+                            title="Ver análisis"
+                          >
+                            {isExpanded ? "−" : "+"}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => deleteDoc(d)} title="Eliminar">
+                            <Trash2 className="h-3 w-3 text-destructive" />
+                          </Button>
+                        </div>
+                        {isExpanded && (extra?.ai_notes || extracted) && (
+                          <div className="border-t px-3 py-2 bg-muted/20 space-y-2 text-xs">
+                            {extra?.ai_notes && (
+                              <div>
+                                <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
+                                  Veredicto IA
+                                </p>
+                                <p className="text-muted-foreground whitespace-pre-wrap">{extra.ai_notes}</p>
+                              </div>
+                            )}
+                            {extracted && Object.keys(extracted).length > 0 && (
+                              <div>
+                                <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
+                                  Datos extraídos
+                                </p>
+                                <ul className="space-y-0.5">
+                                  {Object.entries(extracted).map(([k, v]) => (
+                                    <li key={k} className="text-muted-foreground">
+                                      <span className="font-medium text-foreground">{k}:</span>{" "}
+                                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => downloadDoc(d)}>
-                        <Download className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading}>
-                        <Eye className="h-3 w-3" />
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => deleteDoc(d)}>
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              )}
+            </Section>
+
+            {/* Deep AI holistic analysis */}
+            <Section title="Análisis profundo IA" icon={<Sparkles className="h-3 w-3" />}>
+              <div className="flex items-center gap-2 mb-2">
+                <Button
+                  size="sm"
+                  variant="hero"
+                  onClick={runHolisticAnalysis}
+                  disabled={holisticBusy || docs.length === 0}
+                >
+                  {holisticBusy ? (
+                    <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Analizando…</>
+                  ) : (
+                    <><Sparkles className="h-3 w-3 mr-1" /> Validar perfil completo</>
+                  )}
+                </Button>
+                <span className="text-xs text-muted-foreground">
+                  Cruza formulario, documentos y referencias.
+                </span>
+              </div>
+              {holistic && (
+                <Card className="p-3 space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    {holistic.is_publishable ? (
+                      <Badge className="bg-biosensor/20 text-biosensor">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> Publicable
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive">
+                        <XCircle className="h-3 w-3 mr-1" /> No publicable
+                      </Badge>
+                    )}
+                    <span className={`font-semibold ${holistic.score >= 70 ? "text-biosensor" : "text-destructive"}`}>
+                      Score {holistic.score}/100
+                    </span>
+                  </div>
+                  <p className="text-muted-foreground">{holistic.ai_summary}</p>
+                  {holistic.critical_errors.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-destructive uppercase mb-1">
+                        Errores críticos ({holistic.critical_errors.length})
+                      </p>
+                      <ul className="space-y-0.5 text-xs">
+                        {holistic.critical_errors.map((e, i) => (
+                          <li key={i} className="text-muted-foreground">
+                            • <span className="font-medium text-foreground">{e.field}:</span> {e.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {holistic.warnings.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
+                        Advertencias ({holistic.warnings.length})
+                      </p>
+                      <ul className="space-y-0.5 text-xs">
+                        {holistic.warnings.map((w, i) => (
+                          <li key={i} className="text-muted-foreground">
+                            • <span className="font-medium text-foreground">{w.field}:</span> {w.message}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </Card>
               )}
             </Section>
 
