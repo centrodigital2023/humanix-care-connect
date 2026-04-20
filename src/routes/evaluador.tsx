@@ -271,26 +271,27 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center">
         <Input
-          placeholder="Buscar por nombre, email, especialidad, ciudad…"
+          placeholder="Buscar nombre, email, ciudad…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="max-w-sm"
+          className="w-full sm:max-w-sm"
         />
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto -mx-1 px-1 pb-1 sm:pb-0 sm:overflow-visible">
           {(["all", "pending", "published", "blocked"] as const).map((f) => (
             <Button
               key={f}
               size="sm"
               variant={filter === f ? "default" : "outline"}
               onClick={() => setFilter(f)}
+              className="shrink-0"
             >
               {f === "all" ? "Todos" : f === "pending" ? "Pendientes" : f === "published" ? "Publicados" : "Bloqueados"}
             </Button>
           ))}
         </div>
-        <span className="ml-auto text-sm text-muted-foreground">
+        <span className="sm:ml-auto text-xs sm:text-sm text-muted-foreground">
           {filtered.length} profesional{filtered.length === 1 ? "" : "es"}
         </span>
       </div>
@@ -306,45 +307,46 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
           {filtered.map((p) => (
             <Card
               key={p.user_id}
-              className="p-4 flex items-center gap-4 hover:bg-muted/30 cursor-pointer transition-colors"
+              className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 active:bg-muted/40 cursor-pointer transition-colors"
               onClick={() => setSelected(p)}
             >
-              <Avatar className="h-12 w-12">
+              <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
                 <AvatarImage src={p.avatar_url ?? undefined} />
                 <AvatarFallback>
                   {(p.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold truncate">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="font-semibold truncate text-sm sm:text-base">
                     {p.profile?.full_name || "Sin nombre"}
                   </p>
                   {p.blocked && (
-                    <Badge variant="destructive" className="text-xs">
-                      <Ban className="h-3 w-3 mr-1" /> Bloqueado
+                    <Badge variant="destructive" className="text-[10px] sm:text-xs px-1.5 py-0">
+                      <Ban className="h-3 w-3 mr-0.5" /> Bloqueado
                     </Badge>
                   )}
                   {p.published && !p.blocked && (
-                    <Badge className="bg-biosensor/20 text-biosensor text-xs">Publicado</Badge>
+                    <Badge className="bg-biosensor/20 text-biosensor text-[10px] sm:text-xs px-1.5 py-0">Publicado</Badge>
                   )}
                   {!p.published && !p.blocked && (
-                    <Badge variant="secondary" className="text-xs">Pendiente</Badge>
+                    <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0">Pendiente</Badge>
                   )}
                   {p.rethus_verified && (
-                    <Badge variant="outline" className="text-xs">
-                      <CheckCircle2 className="h-3 w-3 mr-1 text-biosensor" /> RETHUS
+                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0">
+                      <CheckCircle2 className="h-3 w-3 mr-0.5 text-biosensor" /> RETHUS
                     </Badge>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
                   {p.specialty || "Sin especialidad"} · {p.home_city || "Sin ciudad"}
                   {p.avg_rating ? ` · ⭐ ${Number(p.avg_rating).toFixed(1)}` : ""}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{p.profile?.email}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{p.profile?.email}</p>
               </div>
-              <Button size="sm" variant="outline">
-                <Eye className="h-4 w-4 mr-1" /> Revisar
+              <Button size="sm" variant="outline" className="shrink-0 px-2 sm:px-3">
+                <Eye className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Revisar</span>
               </Button>
             </Card>
           ))}
