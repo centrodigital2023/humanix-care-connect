@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
 import {
   Dialog,
   DialogContent,
@@ -784,10 +785,7 @@ function ProfessionalDetailDialog({
                   <p className="text-[11px] text-muted-foreground">
                     Desliza horizontalmente para revisar los {docs.length} documentos →
                   </p>
-                  <div
-                    className="overflow-x-auto overflow-y-hidden pb-2 -mx-1 snap-x snap-mandatory scroll-smooth touch-pan-x overscroll-x-contain"
-                    style={{ WebkitOverflowScrolling: "touch" }}
-                  >
+                  <HScrollCarousel step={280}>
                     <div className="flex gap-3 px-1 w-max">
                       {docs.map((d) => {
                         const extra = docExtras[d.id];
@@ -897,7 +895,7 @@ function ProfessionalDetailDialog({
                         );
                       })}
                     </div>
-                  </div>
+                  </HScrollCarousel>
                 </div>
               )}
             </Section>
