@@ -28,6 +28,7 @@ import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
+import { SITE_URL } from "@/lib/seo";
 
 type SearchParams = {
   tab?: "profesionales" | "ofertas";
@@ -79,6 +80,7 @@ export const Route = createFileRoute("/buscar")({
           "Marketplace inteligente de talento humano en salud en Colombia. Filtra por especialidad, ciudad, tarifa y rating.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/buscar` }],
   }),
   component: BuscarPage,
 });

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Briefcase } from "lucide-react";
+import { SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/carreras")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/carreras")({
           "Descubre nuestras oportunidades laborales y sé parte de la revolución de la salud digital.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/carreras` }],
   }),
   component: CarrerasPage,
 });

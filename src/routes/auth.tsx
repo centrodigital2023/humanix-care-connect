@@ -29,6 +29,7 @@ export const Route = createFileRoute("/auth")({
         name: "description",
         content: "Accede a Humanix como profesional, familia o institución de salud.",
       },
+      { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: AuthPage,

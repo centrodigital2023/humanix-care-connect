@@ -3,6 +3,7 @@ import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
+import { SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/contacto")({
   head: () => ({
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/contacto")({
           "Información de contacto y formulario para comunicarte con Humanix.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/contacto` }],
   }),
   component: ContactoPage,
 });

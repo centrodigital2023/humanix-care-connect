@@ -1,8 +1,13 @@
+import { Suspense, lazy } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
-import { FloatingWAChat } from "@/components/humanix/FloatingWAChat";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo";
 
 import appCss from "../styles.css?url";
+
+const FloatingWAChat = lazy(() =>
+  import("@/components/humanix/FloatingWAChat").then((module) => ({ default: module.FloatingWAChat })),
+);
 
 function NotFoundComponent() {
   return (
@@ -31,34 +36,40 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Humanix · Talento humano en salud para Colombia" },
-      {
-        name: "description",
-        content:
-          "Plataforma premium con IA en tiempo real que conecta profesionales de salud con familias y clínicas en Colombia.",
-      },
+      { title: `${SITE_NAME} · Talento humano en salud para Colombia` },
+      { name: "description", content: SITE_DESCRIPTION },
       { name: "author", content: "Humanix" },
+      { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" },
       { name: "theme-color", content: "#0A192F" },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:locale", content: "es_CO" },
+      { property: "og:url", content: SITE_URL },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:title", content: "Humanix · Talento humano en salud para Colombia" },
-      { name: "twitter:title", content: "Humanix · Talento humano en salud para Colombia" },
-      { name: "description", content: "Humanix Connect is a premium healthcare talent platform for Colombia, using AI for efficient hiring and real-time service management." },
-      { property: "og:description", content: "Humanix Connect is a premium healthcare talent platform for Colombia, using AI for efficient hiring and real-time service management." },
-      { name: "twitter:description", content: "Humanix Connect is a premium healthcare talent platform for Colombia, using AI for efficient hiring and real-time service management." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a3d9349f-0993-4c7c-a8e1-756062f16222/id-preview-1f2d5b0a--ea6fc079-e3d3-421b-9a3b-b62e3ddcdc44.lovable.app-1776797247133.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a3d9349f-0993-4c7c-a8e1-756062f16222/id-preview-1f2d5b0a--ea6fc079-e3d3-421b-9a3b-b62e3ddcdc44.lovable.app-1776797247133.png" },
+      { name: "twitter:site", content: "@HumanixColombia" },
+      { property: "og:title", content: `${SITE_NAME} · Talento humano en salud para Colombia` },
+      { name: "twitter:title", content: `${SITE_NAME} · Talento humano en salud para Colombia` },
+      { property: "og:description", content: SITE_DESCRIPTION },
+      { name: "twitter:description", content: SITE_DESCRIPTION },
+      { property: "og:image", content: SOCIAL_IMAGE_URL },
+      { name: "twitter:image", content: SOCIAL_IMAGE_URL },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "canonical", href: SITE_URL },
+      { rel: "alternate", hrefLang: "es-CO", href: SITE_URL },
+      { rel: "alternate", hrefLang: "x-default", href: SITE_URL },
       { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },
       { rel: "dns-prefetch", href: "https://fonts.gstatic.com" },
+      { rel: "dns-prefetch", href: "https://rwllmouomrytejtbpxvn.supabase.co" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://rwllmouomrytejtbpxvn.supabase.co" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
       },
+      { rel: "sitemap", type: "application/xml", href: "/sitemap.xml" },
     ],
   }),
   shellComponent: RootShell,
@@ -67,10 +78,28 @@ export const Route = createRootRoute({
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
+  const organizationLdJson = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/favicon.ico`,
+    sameAs: ["https://www.linkedin.com", "https://x.com/HumanixColombia"],
+    contactPoint: [
+      {
+        "@type": "ContactPoint",
+        contactType: "customer support",
+        email: "contacto@humanix.co",
+        availableLanguage: ["Spanish"],
+      },
+    ],
+  };
+
   return (
-    <html lang="en">
+    <html lang="es-CO">
       <head>
         <HeadContent />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLdJson) }} />
       </head>
       <body>
         {children}
@@ -84,7 +113,9 @@ function RootComponent() {
   return (
     <>
       <Outlet />
-      <FloatingWAChat />
+      <Suspense fallback={null}>
+        <FloatingWAChat />
+      </Suspense>
       <Toaster richColors position="top-right" />
     </>
   );

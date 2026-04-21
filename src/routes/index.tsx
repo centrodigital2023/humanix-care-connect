@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Hero } from "@/components/humanix/Hero";
@@ -10,30 +11,29 @@ import { Pricing } from "@/components/humanix/Pricing";
 import { FAQ } from "@/components/humanix/FAQ";
 import { CTA } from "@/components/humanix/CTA";
 import { Footer } from "@/components/humanix/Footer";
-import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
-import { StickyCTA } from "@/components/humanix/StickyCTA";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+
+const HumanixAssistant = lazy(() =>
+  import("@/components/humanix/HumanixAssistant").then((module) => ({ default: module.HumanixAssistant })),
+);
+const StickyCTA = lazy(() =>
+  import("@/components/humanix/StickyCTA").then((module) => ({ default: module.StickyCTA })),
+);
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Humanix · Talento humano en salud para Colombia" },
-      {
-        name: "description",
-        content:
-          "Humanix conecta enfermeros, auxiliares y cuidadores con familias y clínicas de Colombia. IA en tiempo real, verificación RETHUS y pagos inmediatos en Nequi y PSE.",
-      },
-      { property: "og:title", content: "Humanix · Talento humano en salud para Colombia" },
-      {
-        property: "og:description",
-        content:
-          "Plataforma premium de salud con IA en tiempo real. Match en menos de 150 ms, geolocalización en vivo y pagos inmediatos.",
-      },
+      { title: `${SITE_NAME} · Talento humano en salud para Colombia` },
+      { name: "description", content: SITE_DESCRIPTION },
+      { property: "og:title", content: `${SITE_NAME} · Talento humano en salud para Colombia` },
+      { property: "og:description", content: SITE_DESCRIPTION },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: SITE_URL }],
   }),
   component: Index,
 });
@@ -58,8 +58,12 @@ function Index() {
         <CTA />
       </main>
       <Footer />
-      <HumanixAssistant persona="default" />
-      <StickyCTA />
+      <Suspense fallback={null}>
+        <HumanixAssistant persona="default" />
+      </Suspense>
+      <Suspense fallback={null}>
+        <StickyCTA />
+      </Suspense>
       <HabeasDataConsent />
     </div>
   );

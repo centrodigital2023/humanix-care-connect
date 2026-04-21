@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Building2 } from "lucide-react";
+import { SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/sobre")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/sobre")({
           "Descubre nuestra misión, visión y cómo transformamos la atención médica en Colombia.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/sobre` }],
   }),
   component: SobrePage,
 });

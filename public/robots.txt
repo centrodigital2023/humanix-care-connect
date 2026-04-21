@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Helps search engines find all public URLs quickly
+Sitemap: https://humanix-care-connect.lovable.app/sitemap.xml

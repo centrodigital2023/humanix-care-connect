@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Newspaper } from "lucide-react";
+import { SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/prensa")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/prensa")({
           "Entérate de las últimas noticias y desarrollos en Humanix.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/prensa` }],
   }),
   component: PrensaPage,
 });
