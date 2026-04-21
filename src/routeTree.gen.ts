@@ -9,15 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as TecnologiaRouteImport } from './routes/tecnologia'
 import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as ProfesionalesRouteImport } from './routes/profesionales'
+import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as MensajesRouteImport } from './routes/mensajes'
+import { Route as HabeasDataRouteImport } from './routes/habeas-data'
 import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CumplimientoRouteImport } from './routes/cumplimiento'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -35,6 +39,11 @@ import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.ins
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
+const TerminosRoute = TerminosRouteImport.update({
+  id: '/terminos',
+  path: '/terminos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TecnologiaRoute = TecnologiaRouteImport.update({
   id: '/tecnologia',
   path: '/tecnologia',
@@ -55,6 +64,11 @@ const ProfesionalesRoute = ProfesionalesRouteImport.update({
   path: '/profesionales',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadRoute = PrivacidadRouteImport.update({
+  id: '/privacidad',
+  path: '/privacidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanesRoute = PlanesRouteImport.update({
   id: '/planes',
   path: '/planes',
@@ -63,6 +77,11 @@ const PlanesRoute = PlanesRouteImport.update({
 const MensajesRoute = MensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabeasDataRoute = HabeasDataRouteImport.update({
+  id: '/habeas-data',
+  path: '/habeas-data',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FamiliasRoute = FamiliasRouteImport.update({
@@ -78,6 +97,11 @@ const EvaluadorRoute = EvaluadorRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CumplimientoRoute = CumplimientoRouteImport.update({
+  id: '/cumplimiento',
+  path: '/cumplimiento',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BuscarRoute = BuscarRouteImport.update({
@@ -166,15 +190,19 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
+  '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
+  '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
+  '/terminos': typeof TerminosRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -193,14 +221,18 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
+  '/cumplimiento': typeof CumplimientoRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
+  '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
+  '/terminos': typeof TerminosRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -220,15 +252,19 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/buscar': typeof BuscarRoute
+  '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
+  '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
+  '/terminos': typeof TerminosRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -249,15 +285,19 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/buscar'
+    | '/cumplimiento'
     | '/dashboard'
     | '/evaluador'
     | '/familias'
+    | '/habeas-data'
     | '/mensajes'
     | '/planes'
+    | '/privacidad'
     | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
     | '/tecnologia'
+    | '/terminos'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -276,14 +316,18 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/buscar'
+    | '/cumplimiento'
     | '/evaluador'
     | '/familias'
+    | '/habeas-data'
     | '/mensajes'
     | '/planes'
+    | '/privacidad'
     | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
     | '/tecnologia'
+    | '/terminos'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -302,15 +346,19 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/buscar'
+    | '/cumplimiento'
     | '/dashboard'
     | '/evaluador'
     | '/familias'
+    | '/habeas-data'
     | '/mensajes'
     | '/planes'
+    | '/privacidad'
     | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
     | '/tecnologia'
+    | '/terminos'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -330,21 +378,32 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   BuscarRoute: typeof BuscarRoute
+  CumplimientoRoute: typeof CumplimientoRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EvaluadorRoute: typeof EvaluadorRoute
   FamiliasRoute: typeof FamiliasRoute
+  HabeasDataRoute: typeof HabeasDataRoute
   MensajesRoute: typeof MensajesRoute
   PlanesRoute: typeof PlanesRoute
+  PrivacidadRoute: typeof PrivacidadRoute
   ProfesionalesRoute: typeof ProfesionalesRoute
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
+  TerminosRoute: typeof TerminosRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terminos': {
+      id: '/terminos'
+      path: '/terminos'
+      fullPath: '/terminos'
+      preLoaderRoute: typeof TerminosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tecnologia': {
       id: '/tecnologia'
       path: '/tecnologia'
@@ -373,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfesionalesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidad': {
+      id: '/privacidad'
+      path: '/privacidad'
+      fullPath: '/privacidad'
+      preLoaderRoute: typeof PrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/planes': {
       id: '/planes'
       path: '/planes'
@@ -385,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/mensajes'
       fullPath: '/mensajes'
       preLoaderRoute: typeof MensajesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habeas-data': {
+      id: '/habeas-data'
+      path: '/habeas-data'
+      fullPath: '/habeas-data'
+      preLoaderRoute: typeof HabeasDataRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/familias': {
@@ -406,6 +479,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cumplimiento': {
+      id: '/cumplimiento'
+      path: '/cumplimiento'
+      fullPath: '/cumplimiento'
+      preLoaderRoute: typeof CumplimientoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/buscar': {
@@ -578,15 +658,19 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   BuscarRoute: BuscarRoute,
+  CumplimientoRoute: CumplimientoRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EvaluadorRoute: EvaluadorRoute,
   FamiliasRoute: FamiliasRoute,
+  HabeasDataRoute: HabeasDataRoute,
   MensajesRoute: MensajesRoute,
   PlanesRoute: PlanesRoute,
+  PrivacidadRoute: PrivacidadRoute,
   ProfesionalesRoute: ProfesionalesRoute,
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
+  TerminosRoute: TerminosRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
 }
