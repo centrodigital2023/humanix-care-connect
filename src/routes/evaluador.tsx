@@ -896,8 +896,7 @@ function ProfessionalDetailDialog({
                           </div>
                         );
                       })}
-                    </div>
-                  </HScrollCarousel>
+                  </div>
                 </div>
               )}
             </Section>
