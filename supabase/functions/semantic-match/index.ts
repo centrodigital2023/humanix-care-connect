@@ -36,13 +36,18 @@ Deno.serve(async (req) => {
       });
       if (error) throw error;
       const ids = (matches ?? []).map((m: { user_id: string }) => m.user_id);
-      const { data: pros } = await admin
-        .from("professional_profiles")
-        .select("user_id,specialty,sub_specialties,years_experience,avatar_url,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,bio,verified,rethus_verified")
-        .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-      const { data: profiles } = await admin
-        .from("public_profiles_safe").select("user_id,full_name,city,avatar_url")
-        .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      const fallbackIds = ids.length ? ids : ["00000000-0000-0000-0000-000000000000"];
+      // Fetch professional details and public names in parallel
+      const [{ data: pros }, { data: profiles }] = await Promise.all([
+        admin
+          .from("professional_profiles")
+          .select("user_id,specialty,sub_specialties,years_experience,avatar_url,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,bio,verified,rethus_verified")
+          .in("user_id", fallbackIds),
+        admin
+          .from("public_profiles_safe")
+          .select("user_id,full_name,city,avatar_url")
+          .in("user_id", fallbackIds),
+      ]);
       const byId = new Map((pros ?? []).map((p) => [p.user_id, p]));
       const profMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
       const result = (matches ?? []).map((m: { user_id: string; similarity: number }) => ({
@@ -76,35 +81,28 @@ Deno.serve(async (req) => {
     if (mode === "text-to-pros") {
       if (!text) throw new Error("text requerido");
       const v = await embed(text);
-      // Cast a vector y consulta directa con admin
-      const { data, error } = await admin.rpc("match_professionals_for_offer" as never, { /* fallback no aplica */ }).maybeSingle().then(() => ({ data: null, error: null })).catch(() => ({ data: null, error: null }));
-      // Hacemos consulta directa por similitud usando SQL embebido.
-      const { data: pros, error: e2 } = await admin
-        .from("profile_embeddings")
-        .select("user_id, embedding")
-        .limit(200);
-      if (e2) throw e2;
-      const scored = (pros ?? [])
-        .map((p) => {
-          const emb = p.embedding as unknown as number[];
-          if (!Array.isArray(emb)) return null;
-          // similitud coseno
-          let dot = 0, na = 0, nb = 0;
-          for (let i = 0; i < v.length; i++) { dot += v[i] * emb[i]; na += v[i]*v[i]; nb += emb[i]*emb[i]; }
-          const sim = dot / (Math.sqrt(na)*Math.sqrt(nb) || 1);
-          return { user_id: p.user_id, similarity: sim };
-        })
-        .filter((x): x is { user_id: string; similarity: number } => !!x && x.similarity >= min_similarity)
-        .sort((a, b) => b.similarity - a.similarity)
-        .slice(0, limit);
+      // Use the database RPC function to perform cosine-similarity search with
+      // pgvector's native operators and the IVF index — much faster than
+      // fetching all embeddings to JavaScript and computing in-process.
+      const { data: matches, error: matchErr } = await admin.rpc(
+        "match_professionals_for_text" as never,
+        { _embedding: JSON.stringify(v), _match_count: limit, _min_similarity: min_similarity } as never,
+      );
+      if (matchErr) throw matchErr;
+      const scored = (matches ?? []) as { user_id: string; similarity: number }[];
       const ids = scored.map((s) => s.user_id);
-      const { data: rich } = await admin
-        .from("professional_profiles")
-        .select("user_id,specialty,sub_specialties,years_experience,avatar_url,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,bio,verified,rethus_verified")
-        .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-      const { data: profiles } = await admin
-        .from("public_profiles_safe").select("user_id,full_name,city,avatar_url")
-        .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      const fallbackIds = ids.length ? ids : ["00000000-0000-0000-0000-000000000000"];
+      // Fetch profile details and public names in parallel
+      const [{ data: rich }, { data: profiles }] = await Promise.all([
+        admin
+          .from("professional_profiles")
+          .select("user_id,specialty,sub_specialties,years_experience,avatar_url,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,bio,verified,rethus_verified")
+          .in("user_id", fallbackIds),
+        admin
+          .from("public_profiles_safe")
+          .select("user_id,full_name,city,avatar_url")
+          .in("user_id", fallbackIds),
+      ]);
       const byId = new Map((rich ?? []).map((p) => [p.user_id, p]));
       const profMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
       const result = scored.map((s) => ({

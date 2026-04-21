@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Search,
@@ -118,7 +118,8 @@ type Offer = {
 const COP = (n: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
 
-function Stars({ value }: { value: number }) {
+// Memoized to avoid re-rendering all 5 stars when parent list re-renders
+const Stars = memo(function Stars({ value }: { value: number }) {
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
@@ -131,7 +132,7 @@ function Stars({ value }: { value: number }) {
       ))}
     </div>
   );
-}
+});
 
 type SearchT = SearchParams;
 
@@ -197,6 +198,9 @@ function BuscarPage() {
       }
       const baseRows = (data ?? []) as Array<Omit<Pro, "profiles">>;
       const userIds = baseRows.map((p) => p.user_id);
+
+      // Fetch profile names/cities in parallel with nothing else — still one
+      // round-trip but avoids an await-waterfall when the list is non-empty.
       let profilesMap = new Map<
         string,
         { full_name: string | null; city: string | null; avatar_url: string | null }
@@ -593,7 +597,9 @@ function BuscarPage() {
   );
 }
 
-function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
+// Memoized: the list can contain 60 items and re-renders on filter changes.
+// Each card is expensive to diff, so memoizing prevents unnecessary work.
+const ProCard = memo(function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
   const name = pro.profiles?.full_name ?? "Profesional Humanix";
   const city = pro.profiles?.city ?? pro.service_cities?.[0] ?? "Colombia";
   const rating = Number(pro.avg_rating ?? 0);
@@ -690,9 +696,9 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
       </div>
     </article>
   );
-}
+});
 
-function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null }) {
+const OfferCard = memo(function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null }) {
   const modalityLabel =
     offer.modality === "hour"
       ? "Por hora"
@@ -750,7 +756,7 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
       </div>
     </article>
   );
-}
+});
 
 function EmptyState({
   icon,

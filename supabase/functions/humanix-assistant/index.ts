@@ -46,6 +46,13 @@ Deno.serve(async (req) => {
     const system =
       SYSTEM_BY_PERSONA[persona as string] ?? SYSTEM_BY_PERSONA.default;
 
+    // Trim history to avoid unbounded context growth: keep the most recent
+    // 20 messages (10 turns). This reduces latency and AI credit consumption.
+    const MAX_HISTORY = 20;
+    const trimmedMessages = messages.length > MAX_HISTORY
+      ? messages.slice(messages.length - MAX_HISTORY)
+      : messages;
+
     const upstream = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -57,7 +64,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           stream: true,
-          messages: [{ role: "system", content: system }, ...messages],
+          messages: [{ role: "system", content: system }, ...trimmedMessages],
         }),
       },
     );
