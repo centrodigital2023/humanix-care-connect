@@ -4,15 +4,30 @@ import { Logo } from "./Logo";
 const cols = [
   {
     title: "Producto",
-    links: ["Profesionales", "Familias", "Clínicas", "Tecnología IA"],
+    links: [
+      { label: "Profesionales", to: "/profesionales" as const },
+      { label: "Familias", to: "/familias" as const },
+      { label: "Clínicas", to: "/clinicas" as const },
+      { label: "Tecnología IA", to: "/tecnologia" as const },
+    ],
   },
   {
     title: "Empresa",
-    links: ["Sobre Humanix", "Carreras", "Prensa", "Contacto"],
+    links: [
+      { label: "Sobre Humanix", to: "/sobre" as const },
+      { label: "Carreras", to: "/carreras" as const },
+      { label: "Prensa", to: "/prensa" as const },
+      { label: "Contacto", to: "/contacto" as const },
+    ],
   },
   {
     title: "Legal",
-    links: ["Términos", "Privacidad", "Habeas Data", "Cumplimiento Min. Salud"],
+    links: [
+      { label: "Términos", to: "/terminos" as const },
+      { label: "Privacidad", to: "/privacidad" as const },
+      { label: "Habeas Data", to: "/habeas-data" as const },
+      { label: "Cumplimiento Min. Salud", to: "/cumplimiento" as const },
+    ],
   },
 ];
 
@@ -24,8 +39,8 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Logo />
             <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Plataforma colombiana de talento humano en salud, con IA en
-              tiempo real, verificación RETHUS y pagos inmediatos.
+              Plataforma colombiana de talento humano en salud, con IA en tiempo real, verificación
+              RETHUS y pagos inmediatos.
             </p>
             <p className="mt-4 text-xs text-muted-foreground">
               Bogotá · Medellín · Cali · Barranquilla
@@ -36,13 +51,13 @@ export function Footer() {
               <p className="text-sm font-semibold mb-3">{c.title}</p>
               <ul className="space-y-2">
                 {c.links.map((l) => (
-                  <li key={l}>
-                    <a
-                      href="#"
+                  <li key={l.label}>
+                    <Link
+                      to={l.to}
                       className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {l}
-                    </a>
+                      {l.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -52,8 +67,7 @@ export function Footer() {
 
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Humanix Colombia · Todos los derechos
-            reservados.
+            © {new Date().getFullYear()} Humanix Colombia · Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-4">
             <p className="text-xs text-muted-foreground">
