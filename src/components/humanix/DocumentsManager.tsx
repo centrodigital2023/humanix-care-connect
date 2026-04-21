@@ -50,13 +50,14 @@ const TYPES: {
   hint: string;
   cvParse?: boolean;
   required?: boolean;
+  group?: string;
 }[] = [
   { value: "cv", label: "Hoja de vida", icon: <FileText className="h-4 w-4" />, hint: "PDF · La IA extrae tus datos.", cvParse: true, required: true },
-  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "PDF o foto del registro RETHUS.", required: true },
-  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "BLS, ACLS, diploma profesional, etc.", required: true },
+  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "Opcional si subes diploma. PDF o foto.", group: "credencial" },
+  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "Opcional si subes RETHUS. Diploma profesional, BLS, ACLS, etc.", group: "credencial" },
   { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso.", required: true },
   { value: "utility_bill", label: "Recibo de servicios públicos", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
-  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud.", required: true },
+  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud." },
 ];
 
 export function DocumentsManager({
@@ -216,17 +217,24 @@ export function DocumentsManager({
 
   const docsByType = (t: DocType) => docs.filter((d) => d.doc_type === t);
 
+  const hasDoc = (t: DocType) =>
+    docs.some((d) => d.doc_type === t && d.status !== "rejected");
   const requiredMissing = TYPES.filter(
-    (t) => t.required && !docs.some((d) => d.doc_type === t.value && d.status !== "rejected"),
+    (t) => t.required && !hasDoc(t.value),
   ).length;
+  const credencialMissing = !hasDoc("rethus") && !hasDoc("diploma");
+  const totalMissing = requiredMissing + (credencialMissing ? 1 : 0);
 
   return (
     <div className="space-y-4">
-      {requiredMissing > 0 && (
+      {totalMissing > 0 && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
           <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-amber-700 dark:text-amber-400">
-            Te faltan <strong>{requiredMissing}</strong> documento(s) obligatorio(s) para completar tu verificación.
+            Te faltan <strong>{totalMissing}</strong> documento(s) por subir.
+            {credencialMissing && (
+              <> Debes subir <strong>RETHUS</strong> o <strong>diploma</strong> (al menos uno).</>
+            )}
           </p>
         </div>
       )}

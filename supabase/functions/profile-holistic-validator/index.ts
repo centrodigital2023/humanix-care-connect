@@ -78,10 +78,11 @@ Deno.serve(async (req) => {
       return acc;
     }, {});
 
-    const REQUIRED_DOCS = ["cv", "rethus", "id_document", "utility_bill"];
-    const missingDocs = REQUIRED_DOCS.filter(
-      (t) => !docsSummary.some((d: Record<string, unknown>) => d.type === t && d.status !== "rejected"),
-    );
+    const REQUIRED_DOCS = ["cv", "id_document", "utility_bill"];
+    const has = (t: string) =>
+      docsSummary.some((d: Record<string, unknown>) => d.type === t && d.status !== "rejected");
+    const missingDocs = REQUIRED_DOCS.filter((t) => !has(t));
+    if (!has("rethus") && !has("diploma")) missingDocs.push("rethus_o_diploma");
     const workRefs = (refsByType.work ?? []).length;
     const familyRefs = (refsByType.family ?? []).length;
 
@@ -89,9 +90,10 @@ Deno.serve(async (req) => {
       "Eres un revisor estricto pero justo de perfiles profesionales de salud en Colombia. " +
       "Tu trabajo: validar que el formulario, los documentos y las referencias sean COHERENTES y SUFICIENTES para publicar el perfil. " +
       "REGLAS CRÍTICAS (bloquean publicación, is_publishable=false):\n" +
-      "- Algún documento obligatorio (cv, rethus, id_document, utility_bill) está rechazado, falso o ausente.\n" +
+      "- Algún documento obligatorio (cv, id_document, utility_bill) está rechazado, falso o ausente.\n" +
+      "- No hay NI documento RETHUS NI diploma profesional (al menos uno es obligatorio).\n" +
       "- El nombre del CV o cédula NO coincide con el nombre del perfil.\n" +
-      "- El número RETHUS declarado NO coincide con el extraído del documento RETHUS.\n" +
+      "- Si declaró número RETHUS, NO coincide con el extraído del documento RETHUS.\n" +
       "- Hay menos de 2 referencias laborales o menos de 2 familiares.\n" +
       "- Especialidad o años de experiencia están vacíos.\n" +
       "ADVERTENCIAS (NO bloquean): bio menor a 50 caracteres, certificaciones sin documento, tarifas vacías, sub-especialidades vacías.\n" +
