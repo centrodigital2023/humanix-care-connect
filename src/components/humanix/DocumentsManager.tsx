@@ -18,7 +18,6 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
 
 type DocType =
   | "cv"
@@ -238,15 +237,14 @@ export function DocumentsManager({
           </p>
         </div>
       )}
-      <HScrollCarousel step={300}>
-        <div className="flex gap-3 px-1 w-max">
-          {TYPES.map((t) => {
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        {TYPES.map((t) => {
           const items = docsByType(t.value);
           const busy = busyType === t.value || (t.cvParse && extractingCv);
           return (
             <div
               key={t.value}
-              className="rounded-xl border border-border bg-background p-4 w-[280px] sm:w-[300px] shrink-0 snap-start"
+              className="rounded-xl border border-border bg-background p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
@@ -327,9 +325,8 @@ export function DocumentsManager({
               )}
             </div>
           );
-          })}
-        </div>
-      </HScrollCarousel>
+        })}
+      </div>
     </div>
   );
 }
