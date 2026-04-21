@@ -8,6 +8,7 @@ import { useTheme } from "@/hooks/use-theme";
 const links = [
   { to: "/profesionales" as const, label: "Profesionales" },
   { to: "/familias" as const, label: "Familias" },
+  { to: "/clinicas" as const, label: "Clínicas" },
   { to: "/tecnologia" as const, label: "Tecnología IA" },
   { to: "/planes" as const, label: "Planes" },
 ];
@@ -27,9 +28,7 @@ export function Navbar() {
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-background/80 backdrop-blur-xl border-b border-border"
-          : "bg-transparent"
+        scrolled ? "bg-background/80 backdrop-blur-xl border-b border-border" : "bg-transparent"
       }`}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4">
@@ -60,7 +59,9 @@ export function Navbar() {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
-            <Link to="/buscar" preload="intent">Buscar</Link>
+            <Link to="/buscar" preload="intent">
+              Buscar
+            </Link>
           </Button>
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
             <Link to="/auth">Iniciar sesión</Link>
@@ -92,7 +93,9 @@ export function Navbar() {
               </Link>
             ))}
             <Button variant="hero" size="sm" className="mt-2 w-full" asChild>
-              <Link to="/auth" onClick={() => setOpen(false)}>Empezar gratis</Link>
+              <Link to="/auth" onClick={() => setOpen(false)}>
+                Empezar gratis
+              </Link>
             </Button>
           </div>
         </div>
