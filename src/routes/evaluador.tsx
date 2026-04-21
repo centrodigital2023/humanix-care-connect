@@ -786,18 +786,17 @@ function ProfessionalDetailDialog({
               ) : (
                 <div className="space-y-3">
                   <p className="text-[11px] text-muted-foreground">
-                    Desliza horizontalmente para revisar los {docs.length} documentos →
+                    {docs.length} documento{docs.length === 1 ? "" : "s"} · ver, validar con IA o descargar
                   </p>
-                  <HScrollCarousel step={280}>
-                    <div className="flex gap-3 px-1 w-max">
-                      {docs.map((d) => {
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {docs.map((d) => {
                         const extra = docExtras[d.id];
                         const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
                         const isExpanded = expandedDoc === d.id;
                         return (
                           <div
                             key={d.id}
-                            className="snap-start shrink-0 w-[260px] rounded-lg border bg-card flex flex-col"
+                            className="rounded-lg border bg-card flex flex-col"
                           >
                             <div className="p-3 border-b space-y-1.5">
                               <div className="flex items-center justify-between gap-2">
