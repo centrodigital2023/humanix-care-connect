@@ -478,7 +478,7 @@ function ProDashboard() {
             <p className="mt-2 text-muted-foreground text-sm">
               Construye tu perfil con ayuda de IA, sube tus documentos, recibe ofertas que encajan y mejora tu Trust Score.
             </p>
-            <div className="mt-5 grid grid-cols-3 gap-3 text-sm">
+            <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
               <Stat icon={<Briefcase className="h-4 w-4" />} label="Turnos" value={String(profile?.total_jobs ?? 0)} />
               <Stat icon={<Star className="h-4 w-4" />} label="Rating" value={(profile?.avg_rating ?? 0).toFixed(1)} />
               <Stat

@@ -319,10 +319,10 @@ export function AppShell({
           </div>
 
           {/* Page header */}
-          <div className="px-4 sm:px-6 pb-5 pt-1 flex items-end gap-4 flex-wrap">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-5 pt-1 flex items-end gap-3 sm:gap-4 flex-wrap">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="font-display text-2xl sm:text-[28px] font-bold tracking-tight truncate">
+                <h1 className="font-display text-xl sm:text-2xl lg:text-[28px] font-bold tracking-tight truncate">
                   {title}
                 </h1>
                 {badge && (
@@ -336,18 +336,18 @@ export function AppShell({
                 )}
               </div>
               {subtitle && (
-                <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{subtitle}</p>
               )}
             </div>
             {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
           </div>
         </header>
 
-        <main className="flex-1 px-4 sm:px-6 py-6">{children}</main>
+        <main className="flex-1 px-4 sm:px-6 py-4 sm:py-6 safe-x">{children}</main>
       </div>
 
       {/* Bottom nav mobile */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)]">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-border bg-background/95 backdrop-blur-xl pb-[env(safe-area-inset-bottom)] safe-x">
         <div className="grid grid-cols-5 h-16">
           {phoneNav.map((item) => {
             const Icon = item.icon;
@@ -356,18 +356,18 @@ export function AppShell({
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors touch-target ${
                   active ? "text-biosensor" : "text-muted-foreground"
                 }`}
               >
                 <div
                   className={`h-9 w-9 inline-flex items-center justify-center rounded-xl ${
-                    active ? "bg-biosensor/15" : ""
+                    active ? "bg-biosensor/15 shadow-[0_0_0_1px_color-mix(in_oklab,var(--biosensor)_30%,transparent)]" : ""
                   }`}
                 >
                   <Icon className="h-[18px] w-[18px]" />
                 </div>
-                <span className="truncate max-w-[72px]">{item.label}</span>
+                <span className="truncate max-w-[64px]">{item.label}</span>
               </Link>
             );
           })}
