@@ -50,13 +50,14 @@ const TYPES: {
   hint: string;
   cvParse?: boolean;
   required?: boolean;
+  group?: string;
 }[] = [
   { value: "cv", label: "Hoja de vida", icon: <FileText className="h-4 w-4" />, hint: "PDF · La IA extrae tus datos.", cvParse: true, required: true },
-  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "PDF o foto del registro RETHUS.", required: true },
-  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "BLS, ACLS, diploma profesional, etc.", required: true },
+  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "Opcional si subes diploma. PDF o foto.", group: "credencial" },
+  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "Opcional si subes RETHUS. Diploma profesional, BLS, ACLS, etc.", group: "credencial" },
   { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso.", required: true },
   { value: "utility_bill", label: "Recibo de servicios públicos", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
-  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud.", required: true },
+  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud." },
 ];
 
 export function DocumentsManager({
