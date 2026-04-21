@@ -555,6 +555,60 @@ export type Database = {
           },
         ]
       }
+      family_documents: {
+        Row: {
+          ai_extracted: Json | null
+          ai_notes: string | null
+          ai_score: number | null
+          ai_verified: boolean | null
+          created_at: string
+          doc_type: Database["public"]["Enums"]["family_doc_type"]
+          file_name: string | null
+          file_url: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: Database["public"]["Enums"]["doc_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_extracted?: Json | null
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
+          created_at?: string
+          doc_type: Database["public"]["Enums"]["family_doc_type"]
+          file_name?: string | null
+          file_url: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_extracted?: Json | null
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
+          created_at?: string
+          doc_type?: Database["public"]["Enums"]["family_doc_type"]
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["doc_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       family_profiles: {
         Row: {
           created_at: string
@@ -1944,6 +1998,14 @@ export type Database = {
         | "work_reference"
         | "family_reference"
         | "work_experience"
+      family_doc_type:
+        | "id_document"
+        | "utility_bill"
+        | "patient_id"
+        | "medical_history"
+        | "authorization"
+        | "insurance"
+        | "other"
       fraud_severity: "low" | "medium" | "high" | "critical"
       mp_payment_status:
         | "pending"
@@ -2104,6 +2166,15 @@ export const Constants = {
         "work_reference",
         "family_reference",
         "work_experience",
+      ],
+      family_doc_type: [
+        "id_document",
+        "utility_bill",
+        "patient_id",
+        "medical_history",
+        "authorization",
+        "insurance",
+        "other",
       ],
       fraud_severity: ["low", "medium", "high", "critical"],
       mp_payment_status: [

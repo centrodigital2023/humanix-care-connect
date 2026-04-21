@@ -32,6 +32,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAppUser } from "@/hooks/use-app-user";
 import { Logo } from "@/components/humanix/Logo";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
+import { FamilyDocumentsManager } from "@/components/humanix/FamilyDocumentsManager";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -725,6 +726,23 @@ function FamilyOnboarding() {
                     />
                   </Field>
                 </div>
+              </div>
+
+              <div className="rounded-xl border border-border bg-card p-4 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-sm font-semibold flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5 text-biosensor" /> Documentos de la familia
+                    </p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Sube tu cédula, recibo de servicios y documentos del paciente. La IA verifica al instante.
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="text-fuchsia-neural">
+                    <Sparkles className="h-3 w-3 mr-1" /> IA
+                  </Badge>
+                </div>
+                <FamilyDocumentsManager userId={user.id} />
               </div>
             </div>
           )}

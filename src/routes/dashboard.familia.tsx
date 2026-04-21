@@ -290,9 +290,64 @@ function FamilyDashboard() {
     const safety = setTimeout(() => {
       if (active) setDataLoading(false);
     }, 8000);
+
+    // Realtime: subscribe to my offers + applications + notifications
+    const channel = supabase
+      .channel(`fam-dash-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "job_offers", filter: `posted_by=eq.${user.id}` },
+        (payload) => {
+          setOffers((prev) => {
+            if (payload.eventType === "DELETE") {
+              return prev.filter((o) => o.id !== (payload.old as { id: string }).id);
+            }
+            const row = payload.new as Offer;
+            const exists = prev.some((o) => o.id === row.id);
+            return exists
+              ? prev.map((o) => (o.id === row.id ? { ...o, ...row } : o))
+              : [row, ...prev];
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "applications" },
+        (payload) => {
+          // Only react if the application is for one of my offers
+          const row = (payload.new ?? payload.old) as ApplicationRow;
+          setOffers((prevOffers) => {
+            if (!prevOffers.some((o) => o.id === row.job_offer_id)) return prevOffers;
+            setApplications((prev) => {
+              if (payload.eventType === "DELETE") {
+                return prev.filter((a) => a.id !== row.id);
+              }
+              const exists = prev.some((a) => a.id === row.id);
+              if (!exists && payload.eventType === "INSERT") {
+                toast.success("📬 Nueva postulación recibida");
+              }
+              return exists
+                ? prev.map((a) => (a.id === row.id ? (payload.new as ApplicationRow) : a))
+                : [payload.new as ApplicationRow, ...prev];
+            });
+            return prevOffers;
+          });
+        },
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const n = payload.new as { title?: string; body?: string };
+          if (n?.title) toast(n.title, { description: n.body ?? undefined });
+        },
+      )
+      .subscribe();
+
     return () => {
       active = false;
       clearTimeout(safety);
+      supabase.removeChannel(channel);
     };
   }, [user]);
 

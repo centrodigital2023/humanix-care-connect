@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Loader2, MapPin, Star, ShieldCheck, Wand2, X } from "lucide-react";
+import { Sparkles, Loader2, MapPin, Star, ShieldCheck, Wand2, X, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -155,31 +155,102 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                 {draft && (
                   <Card className="p-5 border-biosensor/40 bg-biosensor/5">
                     <p className="text-[11px] uppercase tracking-wider text-biosensor font-semibold mb-2">
-                      Borrador de oferta sugerido por IA
+                      <Sparkles className="h-3 w-3 inline mr-1" /> Borrador editable — la IA lo prellena, tú decides
                     </p>
-                    <h3 className="font-display text-xl font-semibold">{draft.title}</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {draft.specialty_required} · {draft.city} · {draft.modality}
-                    </p>
-                    <p className="mt-3 text-sm whitespace-pre-line">{draft.description}</p>
-                    {draft.requirements.length > 0 && (
-                      <ul className="mt-3 flex flex-wrap gap-1.5">
-                        {draft.requirements.map((r, i) => (
-                          <li key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-background border border-border">
-                            {r}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
-                      <p className="text-sm">
-                        Tarifa sugerida:{" "}
-                        <span className="font-semibold">{COP(draft.suggested_amount_cop)}</span>{" "}
-                        <span className="text-xs text-muted-foreground">({draft.modality})</span>
-                      </p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Título</label>
+                        <Input
+                          value={draft.title}
+                          onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+                          className="mt-1 font-display text-lg"
+                        />
+                      </div>
+                      <div className="grid sm:grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Especialidad</label>
+                          <Input
+                            value={draft.specialty_required}
+                            onChange={(e) => setDraft({ ...draft, specialty_required: e.target.value })}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Ciudad</label>
+                          <Input
+                            value={draft.city}
+                            onChange={(e) => setDraft({ ...draft, city: e.target.value })}
+                            className="mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Modalidad</label>
+                          <select
+                            value={draft.modality}
+                            onChange={(e) => setDraft({ ...draft, modality: e.target.value as OfferDraft["modality"] })}
+                            className="mt-1 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm"
+                          >
+                            <option value="hour">Por hora</option>
+                            <option value="shift">Por turno</option>
+                            <option value="month">Mensual</option>
+                            <option value="package">Paquete</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Descripción</label>
+                        <Textarea
+                          value={draft.description}
+                          onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                          rows={4}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Requisitos (separados por coma)</label>
+                        <Input
+                          value={draft.requirements.join(", ")}
+                          onChange={(e) =>
+                            setDraft({
+                              ...draft,
+                              requirements: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                            })
+                          }
+                          className="mt-1"
+                          placeholder="RETHUS, BLS, 2+ años de experiencia"
+                        />
+                        {draft.requirements.length > 0 && (
+                          <ul className="mt-2 flex flex-wrap gap-1.5">
+                            {draft.requirements.map((r, i) => (
+                              <li key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-background border border-border">
+                                {r}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Tarifa ({draft.modality}) — COP
+                        </label>
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          value={draft.suggested_amount_cop}
+                          onChange={(e) =>
+                            setDraft({ ...draft, suggested_amount_cop: Number(e.target.value) || 0 })
+                          }
+                          className="mt-1"
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Sugerencia IA: <span className="font-semibold">{COP(draft.suggested_amount_cop)}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-end gap-3 flex-wrap">
                       <Button onClick={publish} disabled={publishing} variant="copper">
                         {publishing && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                        Publicar oferta
+                        <Pencil className="h-4 w-4 mr-1.5" /> Publicar oferta
                       </Button>
                     </div>
                   </Card>
