@@ -107,13 +107,22 @@ CREATE OR REPLACE FUNCTION public.match_professionals_for_text(
 RETURNS TABLE (user_id UUID, similarity FLOAT)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
-  SELECT  pe.user_id,
-          (1 - (pe.embedding <=> _embedding::vector))::FLOAT AS similarity
-  FROM    public.profile_embeddings pe
-  JOIN    public.professional_profiles pp
-            ON  pp.user_id = pe.user_id
-            AND pp.active  = true
-  WHERE   (1 - (pe.embedding <=> _embedding::vector)) >= _min_similarity
-  ORDER BY pe.embedding <=> _embedding::vector ASC   -- ascending distance = descending similarity
-  LIMIT   _match_count;
+  -- Compute the cosine distance once per row via a lateral subquery so that
+  -- the same expression is not evaluated twice (once for SELECT, once for
+  -- WHERE).  PostgreSQL's planner will typically inline this, but being
+  -- explicit avoids any risk of redundant computation.
+  SELECT  ranked.user_id,
+          ranked.similarity
+  FROM (
+    SELECT  pe.user_id,
+            (1 - (pe.embedding <=> _embedding::vector))::FLOAT AS similarity
+    FROM    public.profile_embeddings pe
+    JOIN    public.professional_profiles pp
+              ON  pp.user_id = pe.user_id
+              AND pp.active  = true
+    ORDER BY pe.embedding <=> _embedding::vector ASC   -- ascending distance = descending similarity
+    LIMIT   _match_count * 4                           -- over-fetch before similarity filter
+  ) ranked
+  WHERE  ranked.similarity >= _min_similarity
+  LIMIT  _match_count;
 $$;
