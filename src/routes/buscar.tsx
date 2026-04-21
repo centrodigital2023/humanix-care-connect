@@ -11,11 +11,17 @@ import {
   SlidersHorizontal,
   Map as MapIcon,
   List,
+  LayoutGrid,
   Navigation,
+  ExternalLink,
+  Clock,
+  Building2,
+  X,
 } from "lucide-react";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge, deriveProStatus, deriveOfferStatus } from "@/components/humanix/StatusBadge";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
@@ -144,7 +150,7 @@ function BuscarPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [view, setView] = useState<"list" | "map">("list");
+  const [view, setView] = useState<"grid" | "list" | "map">("grid");
   const [userLoc, setUserLoc] = useState<LatLng | null>(null);
 
   // Pedir ubicación una vez (silencioso si la rechaza)
@@ -506,17 +512,26 @@ function BuscarPage() {
           </form>
 
           {/* Toggle vista */}
-          <div className="mt-6 flex items-center justify-end">
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {tab === "profesionales" ? pros.length : offers.length} resultado{(tab === "profesionales" ? pros.length : offers.length) !== 1 ? "s" : ""}
+            </p>
             <div className="inline-flex rounded-xl border border-border bg-card p-1">
               <button
+                onClick={() => setView("grid")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "grid" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                <LayoutGrid className="h-3.5 w-3.5" /> Tarjetas
+              </button>
+              <button
                 onClick={() => setView("list")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "list" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
               >
                 <List className="h-3.5 w-3.5" /> Lista
               </button>
               <button
                 onClick={() => setView("map")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "map" ? "bg-foreground text-background" : "text-muted-foreground"}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium inline-flex items-center gap-1.5 ${view === "map" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
               >
                 <MapIcon className="h-3.5 w-3.5" /> Mapa
               </button>
@@ -565,6 +580,12 @@ function BuscarPage() {
                   title="Aún no hay profesionales que coincidan"
                   desc="Cuando los profesionales completen su perfil aparecerán aquí. Prueba ampliar tus filtros o invita a tu equipo a registrarse."
                 />
+              ) : view === "list" ? (
+                <div className="flex flex-col gap-3">
+                  {Array.from(new Map(pros.map((p) => [p.user_id, p])).values()).map((p) => (
+                    <ProCardRow key={`pro-${p.user_id}`} pro={p} userLoc={userLoc} />
+                  ))}
+                </div>
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from(new Map(pros.map((p) => [p.user_id, p])).values()).map((p) => (
@@ -578,6 +599,12 @@ function BuscarPage() {
                 title="Aún no hay ofertas abiertas"
                 desc="Las familias e IPS publican aquí sus turnos. Crea tu cuenta como familia o institución para publicar la primera."
               />
+            ) : view === "list" ? (
+              <div className="flex flex-col gap-3">
+                {Array.from(new Map(offers.map((o) => [o.id, o])).values()).map((o) => (
+                  <OfferCardRow key={`offer-${o.id}`} offer={o} userLoc={userLoc} />
+                ))}
+              </div>
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from(new Map(offers.map((o) => [o.id, o])).values()).map((o) => (
@@ -678,8 +705,10 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
             fullWidth
           />
         ) : (
-          <Button variant="hero" size="sm" className="flex-1" disabled={deriveProStatus(pro) === "reserved"}>
-            {deriveProStatus(pro) === "reserved" ? "Reservado" : "Contactar"}
+          <Button variant="hero" size="sm" className="flex-1" asChild>
+            <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>
+              {deriveProStatus(pro) === "reserved" ? "Ver reserva" : "Contactar"}
+            </Link>
           </Button>
         )}
         <Button variant="glass" size="sm" asChild>
@@ -693,6 +722,7 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
 }
 
 function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null }) {
+  const [showDetail, setShowDetail] = useState(false);
   const modalityLabel =
     offer.modality === "hour"
       ? "Por hora"
@@ -741,13 +771,166 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
         </div>
       )}
       <div className="mt-4 flex gap-2">
-        <Button variant="hero" size="sm" className="flex-1">
-          Aplicar ahora
+        <Button variant="hero" size="sm" className="flex-1" asChild>
+          <Link to="/auth">
+            Aplicar ahora
+          </Link>
         </Button>
-        <Button variant="glass" size="sm">
+        <Button variant="glass" size="sm" onClick={() => setShowDetail(true)}>
           Detalles
         </Button>
       </div>
+
+      <Dialog open={showDetail} onOpenChange={setShowDetail}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {offer.poster_type === "institution" ? (
+                <Building2 className="h-5 w-5 text-fuchsia-neural" />
+              ) : (
+                <UsersIcon className="h-5 w-5 text-copper" />
+              )}
+              {offer.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
+                <MapPin className="h-4 w-4" /> {offer.city}
+              </span>
+              <span className="font-display text-xl font-bold text-biosensor">{COP(offer.amount)}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-fuchsia-neural/15 text-fuchsia-neural border border-fuchsia-neural/30">
+                {modalityLabel}
+              </span>
+              {offer.specialty_required && (
+                <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/15 text-biosensor border border-biosensor/30">
+                  {offer.specialty_required}
+                </span>
+              )}
+              <StatusBadge status={status} reservedUntil={offer.reserved_until} />
+            </div>
+            {offer.description && (
+              <p className="text-sm text-muted-foreground leading-relaxed">{offer.description}</p>
+            )}
+            {offer.requirements && offer.requirements.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Requisitos</p>
+                <ul className="space-y-1">
+                  {offer.requirements.map((r) => (
+                    <li key={r} className="flex items-start gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-biosensor shrink-0 mt-0.5" /> {r}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
+              Publicada {new Date(offer.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}
+            </div>
+            <div className="flex gap-2 pt-2">
+              <Button variant="hero" className="flex-1" asChild>
+                <Link to="/auth">
+                  Aplicar ahora <ExternalLink className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="glass" onClick={() => setShowDetail(false)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </article>
+  );
+}
+
+// ── Vista lista compacta ─────────────────────────────────────────────────────
+
+function ProCardRow({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
+  const name = pro.profiles?.full_name ?? "Profesional Humanix";
+  const city = pro.profiles?.city ?? pro.service_cities?.[0] ?? "Colombia";
+  const rating = Number(pro.avg_rating ?? 0);
+  const status = deriveProStatus(pro);
+  const km =
+    userLoc && pro.lat != null && pro.lng != null
+      ? distanceKm(userLoc, { lat: pro.lat, lng: pro.lng })
+      : null;
+  return (
+    <article className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 hover:shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-all">
+      {pro.profiles?.avatar_url ? (
+        <img src={pro.profiles.avatar_url} alt={name} loading="lazy" className="h-12 w-12 rounded-xl object-cover border border-border shrink-0" />
+      ) : (
+        <div className="h-12 w-12 rounded-xl bg-biosensor/10 text-biosensor flex items-center justify-center font-semibold shrink-0">
+          {name.charAt(0)}
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold truncate">{name}</span>
+          {pro.verified && <CheckCircle2 className="h-3.5 w-3.5 text-biosensor shrink-0" />}
+          <StatusBadge status={status} reservedUntil={pro.reserved_until} />
+        </div>
+        <p className="text-xs text-muted-foreground">{pro.specialty ?? "Profesional de salud"} · <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{city}{km !== null && <> · {formatKm(km)}</>}</span></p>
+        <div className="mt-1 flex items-center gap-2">
+          <Stars value={rating} />
+          <span className="text-xs text-muted-foreground">{rating > 0 ? rating.toFixed(1) : "Nuevo"} · {pro.total_jobs ?? 0} turnos</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {pro.hourly_rate && <span className="font-semibold text-sm">{COP(pro.hourly_rate)}<span className="text-xs font-normal text-muted-foreground">/h</span></span>}
+        <Button variant="glass" size="sm" asChild>
+          <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>Ver perfil</Link>
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+function OfferCardRow({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null }) {
+  const [showDetail, setShowDetail] = useState(false);
+  const modalityLabel = offer.modality === "hour" ? "Por hora" : offer.modality === "shift" ? "Por jornada" : offer.modality === "month" ? "Mensual" : "Paquete";
+  const status = deriveOfferStatus(offer);
+  const km = userLoc && offer.lat != null && offer.lng != null ? distanceKm(userLoc, { lat: offer.lat, lng: offer.lng }) : null;
+  return (
+    <article className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 hover:shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-all">
+      <div className="h-12 w-12 rounded-xl bg-fuchsia-neural/10 text-fuchsia-neural flex items-center justify-center shrink-0">
+        <Briefcase className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold truncate">{offer.title}</span>
+          <StatusBadge status={status} reservedUntil={offer.reserved_until} />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          <MapPin className="h-3 w-3 inline" /> {offer.city}{km !== null && <> · {formatKm(km)}</>} · {modalityLabel}{offer.specialty_required && ` · ${offer.specialty_required}`}
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="font-bold text-biosensor">{COP(offer.amount)}</span>
+        <Button variant="glass" size="sm" onClick={() => setShowDetail(true)}>Detalles</Button>
+        <Button variant="hero" size="sm" asChild><Link to="/auth">Aplicar</Link></Button>
+      </div>
+      <Dialog open={showDetail} onOpenChange={setShowDetail}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{offer.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{offer.city}</span>
+              <span className="font-display text-xl font-bold text-biosensor">{COP(offer.amount)}</span>
+            </div>
+            {offer.description && <p className="text-sm text-muted-foreground">{offer.description}</p>}
+            <div className="flex gap-2 pt-2">
+              <Button variant="hero" className="flex-1" asChild><Link to="/auth">Aplicar ahora</Link></Button>
+              <Button variant="glass" onClick={() => setShowDetail(false)}>Cerrar</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </article>
   );
 }
