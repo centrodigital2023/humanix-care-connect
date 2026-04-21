@@ -14,8 +14,10 @@ import { Route as TecnologiaRouteImport } from './routes/tecnologia'
 import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as ProfesionalesRouteImport } from './routes/profesionales'
+import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PlanesRouteImport } from './routes/planes'
 import { Route as MensajesRouteImport } from './routes/mensajes'
+import { Route as HabeasDataRouteImport } from './routes/habeas-data'
 import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -61,6 +63,11 @@ const ProfesionalesRoute = ProfesionalesRouteImport.update({
   path: '/profesionales',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacidadRoute = PrivacidadRouteImport.update({
+  id: '/privacidad',
+  path: '/privacidad',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlanesRoute = PlanesRouteImport.update({
   id: '/planes',
   path: '/planes',
@@ -69,6 +76,11 @@ const PlanesRoute = PlanesRouteImport.update({
 const MensajesRoute = MensajesRouteImport.update({
   id: '/mensajes',
   path: '/mensajes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HabeasDataRoute = HabeasDataRouteImport.update({
+  id: '/habeas-data',
+  path: '/habeas-data',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FamiliasRoute = FamiliasRouteImport.update({
@@ -175,8 +187,10 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
+  '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
@@ -202,8 +216,10 @@ export interface FileRoutesByTo {
   '/buscar': typeof BuscarRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
+  '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
@@ -231,8 +247,10 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
+  '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
   '/planes': typeof PlanesRoute
+  '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
@@ -261,8 +279,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/evaluador'
     | '/familias'
+    | '/habeas-data'
     | '/mensajes'
     | '/planes'
+    | '/privacidad'
     | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
@@ -288,8 +308,10 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/evaluador'
     | '/familias'
+    | '/habeas-data'
     | '/mensajes'
     | '/planes'
+    | '/privacidad'
     | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
@@ -316,8 +338,10 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/evaluador'
     | '/familias'
+    | '/habeas-data'
     | '/mensajes'
     | '/planes'
+    | '/privacidad'
     | '/profesionales'
     | '/superadmin'
     | '/talento-humano'
@@ -345,8 +369,10 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRouteWithChildren
   EvaluadorRoute: typeof EvaluadorRoute
   FamiliasRoute: typeof FamiliasRoute
+  HabeasDataRoute: typeof HabeasDataRoute
   MensajesRoute: typeof MensajesRoute
   PlanesRoute: typeof PlanesRoute
+  PrivacidadRoute: typeof PrivacidadRoute
   ProfesionalesRoute: typeof ProfesionalesRoute
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
@@ -393,6 +419,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfesionalesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacidad': {
+      id: '/privacidad'
+      path: '/privacidad'
+      fullPath: '/privacidad'
+      preLoaderRoute: typeof PrivacidadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/planes': {
       id: '/planes'
       path: '/planes'
@@ -405,6 +438,13 @@ declare module '@tanstack/react-router' {
       path: '/mensajes'
       fullPath: '/mensajes'
       preLoaderRoute: typeof MensajesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/habeas-data': {
+      id: '/habeas-data'
+      path: '/habeas-data'
+      fullPath: '/habeas-data'
+      preLoaderRoute: typeof HabeasDataRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/familias': {
@@ -601,8 +641,10 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRouteWithChildren,
   EvaluadorRoute: EvaluadorRoute,
   FamiliasRoute: FamiliasRoute,
+  HabeasDataRoute: HabeasDataRoute,
   MensajesRoute: MensajesRoute,
   PlanesRoute: PlanesRoute,
+  PrivacidadRoute: PrivacidadRoute,
   ProfesionalesRoute: ProfesionalesRoute,
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
