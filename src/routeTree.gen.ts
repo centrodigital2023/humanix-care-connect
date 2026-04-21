@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as TecnologiaRouteImport } from './routes/tecnologia'
 import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
@@ -35,6 +36,11 @@ import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.ins
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
+const TerminosRoute = TerminosRouteImport.update({
+  id: '/terminos',
+  path: '/terminos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TecnologiaRoute = TecnologiaRouteImport.update({
   id: '/tecnologia',
   path: '/tecnologia',
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
+  '/terminos': typeof TerminosRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
+  '/terminos': typeof TerminosRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
+  '/terminos': typeof TerminosRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/superadmin'
     | '/talento-humano'
     | '/tecnologia'
+    | '/terminos'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/superadmin'
     | '/talento-humano'
     | '/tecnologia'
+    | '/terminos'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/superadmin'
     | '/talento-humano'
     | '/tecnologia'
+    | '/terminos'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -339,12 +351,20 @@ export interface RootRouteChildren {
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
+  TerminosRoute: typeof TerminosRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terminos': {
+      id: '/terminos'
+      path: '/terminos'
+      fullPath: '/terminos'
+      preLoaderRoute: typeof TerminosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tecnologia': {
       id: '/tecnologia'
       path: '/tecnologia'
@@ -587,6 +607,7 @@ const rootRouteChildren: RootRouteChildren = {
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
+  TerminosRoute: TerminosRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
 }
