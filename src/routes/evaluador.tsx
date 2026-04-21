@@ -1592,52 +1592,98 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
   };
 
   return (
-    <div className="grid gap-4 max-w-4xl">
-      {busy && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {docs.length > 0 ? `${docs.length} documento${docs.length === 1 ? "" : "s"} pendiente${docs.length === 1 ? "" : "s"} de revisión` : ""}
+        </p>
+        <Button size="sm" variant="outline" onClick={load} disabled={busy}>
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Actualizar"}
+        </Button>
+      </div>
+
+      {busy && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-xl border bg-card animate-pulse">
+              <div className="h-10 bg-muted rounded-t-xl" />
+              <div className="p-3 space-y-2">
+                <div className="h-3 bg-muted rounded w-3/4" />
+                <div className="h-3 bg-muted rounded w-1/2" />
+                <div className="h-8 bg-muted rounded mt-3" />
+                <div className="grid grid-cols-3 gap-1.5 mt-2">
+                  <div className="h-7 bg-muted rounded" />
+                  <div className="h-7 bg-muted rounded" />
+                  <div className="h-7 bg-muted rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {!busy && docs.length === 0 && (
-        <Card className="p-10 text-center">
-          <CheckCircle2 className="h-8 w-8 text-biosensor mx-auto mb-3" />
-          <p className="font-semibold">¡Bandeja vacía!</p>
-          <p className="text-sm text-muted-foreground mt-1">No hay documentos pendientes.</p>
+        <Card className="p-14 text-center">
+          <CheckCircle2 className="h-10 w-10 text-biosensor mx-auto mb-3" />
+          <p className="font-semibold text-lg">¡Bandeja vacía!</p>
+          <p className="text-sm text-muted-foreground mt-1">No hay documentos pendientes de revisión.</p>
         </Card>
       )}
-      {docs.map((d) => (
-        <Card key={d.id} className="p-5">
-          <div className="flex items-start justify-between gap-4 flex-wrap mb-3">
-            <div>
-              <Badge variant="secondary" className="mb-2 uppercase tracking-wider">{d.doc_type}</Badge>
-              <p className="text-sm font-medium">{d.profile?.full_name || "Sin nombre"}</p>
-              <p className="text-xs text-muted-foreground">{d.file_name || "Sin nombre de archivo"}</p>
-              <p className="text-xs text-muted-foreground">
-                {new Date(d.created_at).toLocaleString("es-CO")}
-              </p>
+
+      {!busy && docs.length > 0 && (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {docs.map((d) => (
+            <div key={d.id} className={`rounded-xl border flex flex-col overflow-hidden ${d.ai_score != null && d.ai_score < 60 ? "border-destructive/30" : "border-border"}`}>
+              {/* Header */}
+              <div className={`px-3 py-2.5 flex items-center justify-between gap-2 ${d.ai_score != null && d.ai_score < 60 ? "bg-destructive/5" : "bg-muted/20"}`}>
+                <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{d.doc_type}</Badge>
+                {d.ai_score != null && (
+                  <span className={`text-[10px] font-bold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}>
+                    IA {d.ai_score}/100
+                  </span>
+                )}
+              </div>
+
+              {/* Body */}
+              <div className="px-3 py-2.5 flex-1 space-y-0.5">
+                <p className="text-sm font-semibold truncate">{d.profile?.full_name || "Sin nombre"}</p>
+                <p className="text-xs text-muted-foreground truncate" title={d.file_name || ""}>{d.file_name || "Sin nombre de archivo"}</p>
+                <p className="text-[10px] text-muted-foreground">{new Date(d.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}</p>
+                {d.ai_notes && <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-2 italic">{d.ai_notes}</p>}
+              </div>
+
+              {/* Nota */}
+              <div className="px-3 pb-1.5">
+                <Textarea
+                  placeholder="Nota para el profesional…"
+                  value={notes[d.id] || ""}
+                  onChange={(e) => setNotes((n) => ({ ...n, [d.id]: e.target.value }))}
+                  rows={2}
+                  className="text-xs resize-none"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="grid grid-cols-2 gap-1.5 px-3 pb-3">
+                <Button size="sm" variant="hero" onClick={() => review(d, "approved")} className="h-7 text-[10px]">
+                  <CheckCircle2 className="h-3 w-3 mr-0.5" /> Aprobar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => review(d, "rejected")} className="h-7 text-[10px]">
+                  <XCircle className="h-3 w-3 mr-0.5" /> Rechazar
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => aiValidate(d)} className="h-7 text-[10px] col-span-1">
+                  <Sparkles className="h-3 w-3 mr-0.5" /> Validar IA
+                </Button>
+                <Button size="sm" variant="outline" className="h-7 text-[10px]" asChild>
+                  <a href={d.file_url} target="_blank" rel="noreferrer">
+                    <ExternalLink className="h-3 w-3 mr-0.5" /> Abrir
+                  </a>
+                </Button>
+              </div>
             </div>
-            <Button size="sm" variant="outline" asChild>
-              <a href={d.file_url} target="_blank" rel="noreferrer">
-                Abrir <ExternalLink className="h-3 w-3 ml-1" />
-              </a>
-            </Button>
-          </div>
-          <Textarea
-            placeholder="Nota para el profesional (opcional)"
-            value={notes[d.id] || ""}
-            onChange={(e) => setNotes((n) => ({ ...n, [d.id]: e.target.value }))}
-            className="mb-3"
-            rows={2}
-          />
-          <div className="flex gap-2 flex-wrap">
-            <Button size="sm" variant="hero" onClick={() => review(d, "approved")}>
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => review(d, "rejected")}>
-              <XCircle className="h-4 w-4 mr-1" /> Rechazar
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => aiValidate(d)}>
-              <Sparkles className="h-4 w-4 mr-1" /> Validar IA
-            </Button>
-          </div>
-        </Card>
-      ))}
+          ))}
+        </div>
+      )}
     </div>
   );
 }
