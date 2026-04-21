@@ -31,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
 import {
   Dialog,
   DialogContent,
@@ -738,6 +737,54 @@ function ProfessionalDetailDialog({
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{pro.bio}</p>
               </Section>
             )}
+
+            {/* Tarifas */}
+            <Section title="Tarifas declaradas">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <InfoTile icon={<Star className="h-4 w-4" />} label="Por hora" value={pro.hourly_rate ? `$${pro.hourly_rate.toLocaleString("es-CO")}` : "—"} />
+                <InfoTile icon={<Briefcase className="h-4 w-4" />} label="Por turno" value={"—"} />
+                <InfoTile icon={<CheckCircle2 className="h-4 w-4" />} label="Mensual" value={"—"} />
+              </div>
+            </Section>
+
+            {/* Especialidades, idiomas, ciudades, certificaciones */}
+            <Section title="Detalles del perfil">
+              <div className="space-y-2 text-sm">
+                {pro.languages && pro.languages.length > 0 && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Idiomas</p>
+                    <div className="flex flex-wrap gap-1">
+                      {pro.languages.map((l, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs">{l}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {pro.service_cities && pro.service_cities.length > 0 && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Ciudades de servicio</p>
+                    <div className="flex flex-wrap gap-1">
+                      {pro.service_cities.map((c, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">
+                          <MapPin className="h-2.5 w-2.5 mr-0.5" /> {c}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {Array.isArray(pro.certifications) && (pro.certifications as unknown[]).length > 0 && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Certificaciones</p>
+                    <div className="flex flex-wrap gap-1">
+                      {(pro.certifications as string[]).map((c, i) => (
+                        <Badge key={i} variant="outline" className="text-xs">{c}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Section>
+
             {pro.ai_summary && (
               <Section title="Resumen IA" icon={<Sparkles className="h-3 w-3" />}>
                 <p className="text-sm text-muted-foreground">{pro.ai_summary}</p>
@@ -787,18 +834,17 @@ function ProfessionalDetailDialog({
               ) : (
                 <div className="space-y-3">
                   <p className="text-[11px] text-muted-foreground">
-                    Desliza horizontalmente para revisar los {docs.length} documentos →
+                    {docs.length} documento{docs.length === 1 ? "" : "s"} · ver, validar con IA o descargar
                   </p>
-                  <HScrollCarousel step={280}>
-                    <div className="flex gap-3 px-1 w-max">
-                      {docs.map((d) => {
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {docs.map((d) => {
                         const extra = docExtras[d.id];
                         const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
                         const isExpanded = expandedDoc === d.id;
                         return (
                           <div
                             key={d.id}
-                            className="snap-start shrink-0 w-[260px] rounded-lg border bg-card flex flex-col"
+                            className="rounded-lg border bg-card flex flex-col"
                           >
                             <div className="p-3 border-b space-y-1.5">
                               <div className="flex items-center justify-between gap-2">
@@ -898,8 +944,7 @@ function ProfessionalDetailDialog({
                           </div>
                         );
                       })}
-                    </div>
-                  </HScrollCarousel>
+                  </div>
                 </div>
               )}
             </Section>
