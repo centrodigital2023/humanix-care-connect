@@ -31,7 +31,6 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
 import {
   Dialog,
   DialogContent,
