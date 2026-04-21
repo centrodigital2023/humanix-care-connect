@@ -39,6 +39,7 @@ export const Route = createRootRoute({
       { title: `${SITE_NAME} · Talento humano en salud para Colombia` },
       { name: "description", content: SITE_DESCRIPTION },
       { name: "author", content: "Humanix" },
+      { name: "google-site-verification", content: "ohLJMuczZHl79QIbEcvqP4UgjxZd8LAhhMhWU9IN_mQ" },
       { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" },
       { name: "theme-color", content: "#0A192F" },
       { property: "og:type", content: "website" },
