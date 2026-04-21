@@ -188,6 +188,22 @@ function PublicidadPage() {
       badge={{ label: "Publicidad", tone: "copper" }}
     >
       <div className="space-y-6">
+        {/* ── KPI tiles ─────────────────────────────────────────────────── */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: "Banners", value: banners.length, sub: `${activeBanners.length} activos`, color: "text-biosensor" },
+            { label: "Impresiones", value: banners.reduce((s, b) => s + b.impressions, 0).toLocaleString("es-CO"), sub: "total acumulado", color: "text-copper" },
+            { label: "Clicks", value: banners.reduce((s, b) => s + b.clicks, 0).toLocaleString("es-CO"), sub: `CTR ${banners.reduce((s, b) => s + b.impressions, 0) > 0 ? ((banners.reduce((s, b) => s + b.clicks, 0) / banners.reduce((s, b) => s + b.impressions, 0)) * 100).toFixed(1) : "0"}%`, color: "text-fuchsia-neural" },
+            { label: "Compartidos", value: banners.reduce((s, b) => s + b.shares_count, 0).toLocaleString("es-CO"), sub: "viral total", color: "text-biosensor" },
+          ].map(({ label, value, sub, color }) => (
+            <Card key={label} className="p-4 text-center">
+              <p className={`text-2xl font-bold ${color}`}>{value}</p>
+              <p className="text-xs font-semibold mt-0.5">{label}</p>
+              <p className="text-[10px] text-muted-foreground">{sub}</p>
+            </Card>
+          ))}
+        </div>
+
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="text-xs text-muted-foreground">
             {banners.length} banner{banners.length === 1 ? "" : "s"} · {activeBanners.length} activo{activeBanners.length === 1 ? "" : "s"}
@@ -352,49 +368,81 @@ function PublicidadPage() {
           </Card>
         )}
 
-        <div className="space-y-2">
+        <div>
           {banners.length === 0 ? (
-            <Card className="p-8 text-center text-sm text-muted-foreground">Aún no hay banners.</Card>
+            <Card className="p-14 text-center text-sm text-muted-foreground">
+              <Megaphone className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="font-semibold">Sin banners todavía</p>
+              <p className="mt-1">Crea el primero con el botón "Nuevo banner".</p>
+            </Card>
           ) : (
-            banners.map((b) => (
-              <Card key={b.id} className="p-4">
-                <div className="flex items-start gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.has(b.id)}
-                    onChange={() => toggleSelect(b.id)}
-                    className="mt-1.5"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold truncate">{b.title}</h3>
-                      <Badge variant={b.active ? "default" : "secondary"} className="text-[10px]">
-                        {b.active ? "Activo" : "Inactivo"}
-                      </Badge>
-                      <Badge variant="outline" className="text-[10px]">{b.audience}</Badge>
-                      <Badge variant="outline" className="text-[10px]">{b.position}</Badge>
-                      {b.ai_score !== null && (
-                        <Badge className="bg-biosensor text-biosensor-foreground text-[10px] gap-1">
-                          <Sparkles className="h-2.5 w-2.5" /> {b.ai_score}/100
-                        </Badge>
-                      )}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {banners.map((b) => (
+                <div
+                  key={b.id}
+                  className={`rounded-xl border overflow-hidden flex flex-col transition-shadow hover:shadow-md ${!b.active ? "opacity-60" : ""} ${selectedIds.has(b.id) ? "ring-2 ring-biosensor" : ""}`}
+                >
+                  {/* Image / color header */}
+                  <div className="relative h-28 bg-gradient-to-br from-copper/20 to-biosensor/20 overflow-hidden">
+                    {b.image_url
+                      ? <img src={b.image_url} alt={b.title} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center opacity-30"><Megaphone className="h-10 w-10" /></div>
+                    }
+                    {/* Overlay badges */}
+                    <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+                      <Badge variant={b.active ? "default" : "secondary"} className="text-[10px]">{b.active ? "Activo" : "Inactivo"}</Badge>
+                      <Badge variant="outline" className="text-[10px] bg-background/80 capitalize">{b.audience}</Badge>
                     </div>
-                    {b.description && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{b.description}</p>}
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      {b.impressions} imp · {b.clicks} clk · {b.shares_count} shares
-                    </p>
+                    {b.ai_score !== null && (
+                      <div className="absolute top-2 right-2">
+                        <Badge className="bg-biosensor text-biosensor-foreground text-[10px] gap-1"><Sparkles className="h-2.5 w-2.5" />{b.ai_score}/100</Badge>
+                      </div>
+                    )}
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(b.id)}
+                      onChange={() => toggleSelect(b.id)}
+                      className="absolute bottom-2 right-2 h-4 w-4 cursor-pointer"
+                    />
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => { setEditing(b); setOpen(true); }}>
-                      <Pencil className="h-3.5 w-3.5" />
+
+                  {/* Body */}
+                  <div className="p-3 flex-1 space-y-1">
+                    <p className="font-semibold text-sm truncate">{b.title}</p>
+                    {b.description && <p className="text-xs text-muted-foreground line-clamp-2">{b.description}</p>}
+                    <div className="flex items-center gap-1 flex-wrap mt-1">
+                      <Badge variant="outline" className="text-[10px]">{b.position.replace("_", " ")}</Badge>
+                      {b.cta_label && <Badge variant="secondary" className="text-[10px]">{b.cta_label}</Badge>}
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="grid grid-cols-3 border-t text-center divide-x">
+                    {[
+                      { label: "Imp.", value: b.impressions },
+                      { label: "Clk.", value: b.clicks },
+                      { label: "Shares", value: b.shares_count },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="py-1.5">
+                        <p className="text-xs font-bold">{value}</p>
+                        <p className="text-[9px] text-muted-foreground uppercase">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="grid grid-cols-2 gap-1.5 p-2 border-t">
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEditing(b); setOpen(true); }}>
+                      <Pencil className="h-3 w-3 mr-1" /> Editar
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => remove(b.id)}>
-                      <Trash2 className="h-3.5 w-3.5 text-fuchsia-neural" />
+                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => remove(b.id)}>
+                      <Trash2 className="h-3 w-3 mr-1 text-destructive" /> Eliminar
                     </Button>
                   </div>
                 </div>
-              </Card>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
