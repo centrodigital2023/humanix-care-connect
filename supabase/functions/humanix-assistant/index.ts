@@ -3,6 +3,12 @@
 
 import { corsHeaders } from "../_shared/auth.ts";
 
+// Maximum number of conversation messages forwarded to the AI model.
+// Older messages are trimmed to limit context size, reduce latency, and
+// control AI credit consumption.  10 turns (20 messages) covers typical
+// conversations while preventing the window from growing unboundedly.
+const MAX_CHAT_HISTORY = 20;
+
 const SYSTEM_BY_PERSONA: Record<string, string> = {
   professional:
     "Eres Humanix Assistant, un coach IA para profesionales de la salud en Colombia (enfermeros, auxiliares, cuidadores). " +
@@ -47,10 +53,9 @@ Deno.serve(async (req) => {
       SYSTEM_BY_PERSONA[persona as string] ?? SYSTEM_BY_PERSONA.default;
 
     // Trim history to avoid unbounded context growth: keep the most recent
-    // 20 messages (10 turns). This reduces latency and AI credit consumption.
-    const MAX_HISTORY = 20;
-    const trimmedMessages = messages.length > MAX_HISTORY
-      ? messages.slice(messages.length - MAX_HISTORY)
+    // MAX_CHAT_HISTORY messages.  This reduces latency and AI credit consumption.
+    const trimmedMessages = messages.length > MAX_CHAT_HISTORY
+      ? messages.slice(messages.length - MAX_CHAT_HISTORY)
       : messages;
 
     const upstream = await fetch(

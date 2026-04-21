@@ -84,9 +84,11 @@ Deno.serve(async (req) => {
       // Use the database RPC function to perform cosine-similarity search with
       // pgvector's native operators and the IVF index — much faster than
       // fetching all embeddings to JavaScript and computing in-process.
+      // Pass the embedding as a plain number array; PostgreSQL casts it to
+      // double precision[] and then to vector(768) inside the function.
       const { data: matches, error: matchErr } = await admin.rpc(
         "match_professionals_for_text" as never,
-        { _embedding: JSON.stringify(v), _match_count: limit, _min_similarity: min_similarity } as never,
+        { _embedding: v, _match_count: limit, _min_similarity: min_similarity } as never,
       );
       if (matchErr) throw matchErr;
       const scored = (matches ?? []) as { user_id: string; similarity: number }[];

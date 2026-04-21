@@ -27,75 +27,93 @@ CREATE INDEX IF NOT EXISTS idx_professional_documents_user
 CREATE INDEX IF NOT EXISTS idx_professional_references_user
   ON public.professional_references(user_id);
 
--- professional_profiles: composite partial index for the main marketplace
---   search (active=true ordered by avg_rating DESC)
+-- professional_profiles: partial index for the main marketplace search:
+--   active=true rows ordered by avg_rating DESC (covers the ORDER BY + WHERE)
 CREATE INDEX IF NOT EXISTS idx_pro_active_rating
   ON public.professional_profiles(avg_rating DESC)
   WHERE active = true;
 
--- professional_profiles: verified filter used in marketplace searches
+-- professional_profiles: partial index for verified filter used in marketplace
 CREATE INDEX IF NOT EXISTS idx_pro_verified
   ON public.professional_profiles(verified)
   WHERE verified = true;
 
--- fraud_flags: user_id + resolved status — used in superadmin fraud dashboard
-CREATE INDEX IF NOT EXISTS idx_fraud_flags_user
+-- fraud_flags: composite index on (user_id, created_at) — used in superadmin
+--   fraud dashboard to list all flags for a given user ordered by recency
+CREATE INDEX IF NOT EXISTS idx_fraud_flags_user_created
   ON public.fraud_flags(user_id, created_at DESC);
 
--- fraud_flags: partial index for open (unresolved) flags
+-- fraud_flags: partial index for open (unresolved) flags — hot path for
+--   admin review queues
 CREATE INDEX IF NOT EXISTS idx_fraud_flags_open
   ON public.fraud_flags(severity, created_at DESC)
   WHERE resolved = false;
 
--- notifications: partial index for unread — the hot path is
---   "show unread count / list for user"
+-- notifications: partial index for unread notifications — the hot path is
+--   "show unread count / list for user" which always filters read_at IS NULL
 CREATE INDEX IF NOT EXISTS idx_notifications_unread
   ON public.notifications(user_id, created_at DESC)
   WHERE read_at IS NULL;
 
 -- -----------------------------------------------------------------------
--- 2. Optimise the search path for the existing avg-rating trigger.
---    The trigger already fires on every rating change; make sure the
---    underlying SELECT uses the index we just added.
+-- 2. Refresh avg-rating trigger: re-declared to ensure it uses the new
+--    idx_ratings_rated_user index added above.
+--    Fires on every INSERT/UPDATE/DELETE on public.ratings and recalculates
+--    the avg_rating field on the related professional_profiles row.
 -- -----------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.refresh_pro_avg_rating()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE v_uid UUID;
+DECLARE
+  target_user_id UUID;
 BEGIN
-  v_uid := COALESCE(NEW.rated_user_id, OLD.rated_user_id);
+  target_user_id := COALESCE(NEW.rated_user_id, OLD.rated_user_id);
   UPDATE public.professional_profiles
   SET avg_rating = COALESCE((
       SELECT ROUND(AVG(stars)::numeric, 2)
       FROM public.ratings
-      WHERE rated_user_id = v_uid   -- uses idx_ratings_rated_user
+      WHERE rated_user_id = target_user_id   -- uses idx_ratings_rated_user
     ), 0)
-  WHERE user_id = v_uid;
+  WHERE user_id = target_user_id;
   RETURN NEW;
 END;
 $$;
 
 -- -----------------------------------------------------------------------
 -- 3. RPC: match_professionals_for_text
---    Replaces the in-JavaScript cosine-similarity loop in the
---    semantic-match edge function (text-to-pros mode).
---    Input: a pre-computed 768-dimensional embedding vector.
---    Returns the top-N professionals by cosine similarity using pgvector.
+--
+--    Purpose: full server-side semantic search for the text-to-pros flow.
+--    Called by the semantic-match edge function when mode="text-to-pros".
+--
+--    Input:  _embedding      – a pre-computed text-embedding-004 vector
+--                              (768 dimensions) passed as double precision[]
+--                              and cast to pgvector internally.
+--            _match_count    – maximum number of results (default 10).
+--            _min_similarity – cosine similarity floor; 0.45 is the same
+--                              default used for offer-to-pros matching and
+--                              represents "meaningfully related" content
+--                              while excluding noise.
+--    Output: (user_id, similarity) pairs ordered by similarity DESC.
+--
+--    Performance: uses the IVF index (profile_embeddings_ivf) that was
+--    created in migration 20260417144142.  The JOIN on professional_profiles
+--    filters out inactive professionals before the KNN search result set
+--    is materialised.
 -- -----------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.match_professionals_for_text(
-  _embedding   vector(768),
-  _match_count INTEGER DEFAULT 10,
-  _min_similarity FLOAT  DEFAULT 0.45
+  _embedding      double precision[],
+  _match_count    INTEGER DEFAULT 10,
+  _min_similarity FLOAT   DEFAULT 0.45
 )
 RETURNS TABLE (user_id UUID, similarity FLOAT)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public
 AS $$
   SELECT  pe.user_id,
-          (1 - (pe.embedding <=> _embedding))::FLOAT AS similarity
+          (1 - (pe.embedding <=> _embedding::vector))::FLOAT AS similarity
   FROM    public.profile_embeddings pe
   JOIN    public.professional_profiles pp
-            ON pp.user_id = pe.user_id
-           AND pp.active  = true
-  WHERE   (1 - (pe.embedding <=> _embedding)) >= _min_similarity
-  ORDER BY pe.embedding <=> _embedding ASC   -- ascending distance = descending similarity
+            ON  pp.user_id = pe.user_id
+            AND pp.active  = true
+  WHERE   (1 - (pe.embedding <=> _embedding::vector)) >= _min_similarity
+  ORDER BY pe.embedding <=> _embedding::vector ASC   -- ascending distance = descending similarity
   LIMIT   _match_count;
 $$;
