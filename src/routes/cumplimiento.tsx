@@ -25,7 +25,11 @@ function CumplimientoPage() {
   return (
     <LegalPage
       badge="Min. Salud"
-      title={<>Cumplimiento <span className="text-gradient-bio">Min. Salud</span></>}
+      title={
+        <>
+          Cumplimiento <span className="text-gradient-bio">Min. Salud</span>
+        </>
+      }
       updatedAt="21 de abril de 2026"
       intro="Humanix opera bajo el marco normativo del Sistema General de Seguridad Social en Salud (SGSSS) de Colombia y promueve la práctica segura del talento humano en salud."
     >
@@ -65,9 +69,9 @@ function CumplimientoPage() {
       </LegalSection>
       <LegalSection title="6. Facturación electrónica">
         <p>
-          Todos los pagos generan factura electrónica conforme a la <strong>Resolución 000042 de
-          2020</strong> de la DIAN. Los profesionales independientes pueden delegar en Humanix la
-          emisión de documento equivalente.
+          Todos los pagos generan factura electrónica conforme a la{" "}
+          <strong>Resolución 000042 de 2020</strong> de la DIAN. Los profesionales independientes
+          pueden delegar en Humanix la emisión de documento equivalente.
         </p>
       </LegalSection>
       <LegalSection title="7. SST y aportes">

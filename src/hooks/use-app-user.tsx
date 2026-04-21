@@ -88,11 +88,9 @@ export function useAppUser(options: { requireAuth?: boolean; allow?: AppRole[] }
         if (!active) return;
 
         if (rolesRes.error) {
-          // eslint-disable-next-line no-console
           console.warn("[useAppUser] user_roles error:", rolesRes.error.message);
         }
         if (profileRes.error) {
-          // eslint-disable-next-line no-console
           console.warn("[useAppUser] profiles error:", profileRes.error.message);
         }
 
@@ -116,7 +114,6 @@ export function useAppUser(options: { requireAuth?: boolean; allow?: AppRole[] }
           primaryRole: primary,
         });
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error("[useAppUser] loadUser failed:", err);
         // Fail open: still let the user in with default role to avoid stuck loaders.
         if (active) {
@@ -164,7 +161,6 @@ export function useAppUser(options: { requireAuth?: boolean; allow?: AppRole[] }
         loadUser(data.session.user.id, data.session.user.email ?? "");
       })
       .catch((err) => {
-        // eslint-disable-next-line no-console
         console.error("[useAppUser] getSession failed:", err);
         if (active) setLoading(false);
       });

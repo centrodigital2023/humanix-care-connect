@@ -23,6 +23,8 @@ import {
   Briefcase,
   Phone,
   FileText,
+  Award,
+  ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -68,7 +70,7 @@ const NAV: NavItem[] = [
   { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
-  { label: "Marketplace", to: "/buscar", icon: Search },
+  { label: "Marketplace", to: "/superadmin/marketplace", icon: Briefcase },
 ];
 
 type Professional = {
@@ -176,16 +178,25 @@ function EvaluatorPage() {
     >
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="mb-4 w-full sm:w-auto grid grid-cols-3 sm:inline-flex h-auto">
-          <TabsTrigger value="profesionales" className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm">
+          <TabsTrigger
+            value="profesionales"
+            className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm"
+          >
             <Users className="h-4 w-4 sm:mr-1" />
             <span>Profesionales</span>
           </TabsTrigger>
-          <TabsTrigger value="ofertas" className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm">
+          <TabsTrigger
+            value="ofertas"
+            className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm"
+          >
             <Briefcase className="h-4 w-4 sm:mr-1" />
             <span className="sm:hidden">Ofertas</span>
             <span className="hidden sm:inline">Ofertas familias</span>
           </TabsTrigger>
-          <TabsTrigger value="documentos" className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm">
+          <TabsTrigger
+            value="documentos"
+            className="flex-col sm:flex-row gap-1 py-2 text-[11px] sm:text-sm"
+          >
             <FileCheck className="h-4 w-4 sm:mr-1" />
             <span className="sm:hidden">Docs</span>
             <span className="hidden sm:inline">Documentos pendientes</span>
@@ -225,7 +236,12 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
       .limit(500);
 
     const userIds = (rows ?? []).map((r) => r.user_id);
-    let profiles: Array<{ user_id: string; full_name: string | null; email: string | null; phone: string | null }> = [];
+    let profiles: Array<{
+      user_id: string;
+      full_name: string | null;
+      email: string | null;
+      phone: string | null;
+    }> = [];
     if (userIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
@@ -287,7 +303,13 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
               onClick={() => setFilter(f)}
               className="shrink-0"
             >
-              {f === "all" ? "Todos" : f === "pending" ? "Pendientes" : f === "published" ? "Publicados" : "Bloqueados"}
+              {f === "all"
+                ? "Todos"
+                : f === "pending"
+                  ? "Pendientes"
+                  : f === "published"
+                    ? "Publicados"
+                    : "Bloqueados"}
             </Button>
           ))}
         </div>
@@ -336,10 +358,14 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
                       </Badge>
                     )}
                     {p.published && !p.blocked && (
-                      <Badge className="bg-biosensor/20 text-biosensor border-biosensor/30 text-[10px] px-1.5 py-0 h-4">Publicado</Badge>
+                      <Badge className="bg-biosensor/20 text-biosensor border-biosensor/30 text-[10px] px-1.5 py-0 h-4">
+                        Publicado
+                      </Badge>
                     )}
                     {!p.published && !p.blocked && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Pendiente</Badge>
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                        Pendiente
+                      </Badge>
                     )}
                     {p.rethus_verified && (
                       <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
@@ -353,16 +379,26 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
               {/* Stats row */}
               <div className="grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Rating</p>
-                  <p className="text-sm font-semibold">{p.avg_rating ? Number(p.avg_rating).toFixed(1) : "—"}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Rating
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {p.avg_rating ? Number(p.avg_rating).toFixed(1) : "—"}
+                  </p>
                 </div>
                 <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Turnos</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Turnos
+                  </p>
                   <p className="text-sm font-semibold">{p.total_jobs ?? 0}</p>
                 </div>
                 <div className="rounded-lg bg-muted/40 px-2 py-1.5">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Trust</p>
-                  <p className={`text-sm font-semibold ${(p.social_trust_score ?? 0) >= 70 ? "text-biosensor" : ""}`}>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    Trust
+                  </p>
+                  <p
+                    className={`text-sm font-semibold ${(p.social_trust_score ?? 0) >= 70 ? "text-biosensor" : ""}`}
+                  >
                     {p.social_trust_score ?? 0}
                   </p>
                 </div>
@@ -371,7 +407,8 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
               {/* Footer */}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1 truncate">
-                  <MapPin className="h-3 w-3 shrink-0" />{p.home_city || "Sin ciudad"}
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  {p.home_city || "Sin ciudad"}
                 </span>
                 {p.hourly_rate && (
                   <span className="font-semibold text-foreground shrink-0">
@@ -380,7 +417,11 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
                 )}
               </div>
 
-              <Button size="sm" variant="outline" className="w-full mt-auto group-hover:bg-foreground group-hover:text-background transition-colors">
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full mt-auto group-hover:bg-foreground group-hover:text-background transition-colors"
+              >
                 <Eye className="h-3.5 w-3.5 mr-1.5" /> Revisar perfil completo
               </Button>
             </Card>
@@ -412,11 +453,24 @@ function ProfessionalDetailDialog({
   onChanged: () => void;
 }) {
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [refs, setRefs] = useState<Array<{ id: string; full_name: string; phone: string; relation: string | null; ref_type: string; verified: boolean }>>([]);
+  const [refs, setRefs] = useState<
+    Array<{
+      id: string;
+      full_name: string;
+      phone: string;
+      relation: string | null;
+      ref_type: string;
+      verified: boolean;
+    }>
+  >([]);
   const [blockReason, setBlockReason] = useState(pro.blocked_reason ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [previewDoc, setPreviewDoc] = useState<{ doc: Doc; url: string; kind: "pdf" | "image" | "office" | "other" } | null>(null);
+  const [previewDoc, setPreviewDoc] = useState<{
+    doc: Doc;
+    url: string;
+    kind: "pdf" | "image" | "office" | "other";
+  } | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [docExtras, setDocExtras] = useState<Record<string, DocAI>>({});
   const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
@@ -428,7 +482,9 @@ function ProfessionalDetailDialog({
     const [docsRes, refsRes] = await Promise.all([
       supabase
         .from("professional_documents")
-        .select("id, doc_type, file_name, file_url, user_id, status, created_at, ai_score, ai_notes, ai_verified, ai_extracted")
+        .select(
+          "id, doc_type, file_name, file_url, user_id, status, created_at, ai_score, ai_notes, ai_verified, ai_extracted",
+        )
         .eq("user_id", pro.user_id)
         .order("created_at", { ascending: false }),
       supabase
@@ -524,7 +580,11 @@ function ProfessionalDetailDialog({
     await supabase.from("professional_documents").delete().eq("user_id", pro.user_id);
     await supabase.from("professional_references").delete().eq("user_id", pro.user_id);
     // Remove professional role if present
-    await supabase.from("user_roles").delete().eq("user_id", pro.user_id).eq("role", "professional");
+    await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", pro.user_id)
+      .eq("role", "professional");
     setBusy(false);
     setConfirmDelete(false);
     if (error) return toast.error(error.message);
@@ -584,7 +644,8 @@ function ProfessionalDetailDialog({
     const ext = (name ?? "").toLowerCase().split(".").pop() ?? "";
     if (ext === "pdf") return "pdf";
     if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic"].includes(ext)) return "image";
-    if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "csv", "odt", "ods"].includes(ext)) return "office";
+    if (["doc", "docx", "xls", "xlsx", "ppt", "pptx", "csv", "odt", "ods"].includes(ext))
+      return "office";
     return "other";
   };
 
@@ -621,11 +682,15 @@ function ProfessionalDetailDialog({
       }
       const ext = (d.file_name ?? "").toLowerCase().split(".").pop() ?? "";
       const mime =
-        ext === "pdf" ? "application/pdf"
-        : ["jpg", "jpeg"].includes(ext) ? "image/jpeg"
-        : ext === "png" ? "image/png"
-        : ext === "webp" ? "image/webp"
-        : "application/pdf";
+        ext === "pdf"
+          ? "application/pdf"
+          : ["jpg", "jpeg"].includes(ext)
+            ? "image/jpeg"
+            : ext === "png"
+              ? "image/png"
+              : ext === "webp"
+                ? "image/webp"
+                : "application/pdf";
 
       const { data, error } = await supabase.functions.invoke("document-verifier", {
         body: { file_url: signedUrl, mime_type: mime, doc_type: d.doc_type },
@@ -637,7 +702,8 @@ function ProfessionalDetailDialog({
       const score = Math.round(Number(v.confidence ?? 0));
       const newStatus = v.is_valid ? "approved" : "rejected";
       const notes = [v.reason, v.issues?.length ? `Problemas: ${v.issues.join("; ")}` : null]
-        .filter(Boolean).join(" ");
+        .filter(Boolean)
+        .join(" ");
 
       await supabase
         .from("professional_documents")
@@ -652,7 +718,9 @@ function ProfessionalDetailDialog({
         })
         .eq("id", d.id);
 
-      toast.success(`IA: ${v.is_valid ? "documento válido" : "documento rechazado"} (${score}/100)`);
+      toast.success(
+        `IA: ${v.is_valid ? "documento válido" : "documento rechazado"} (${score}/100)`,
+      );
       setExpandedDoc(d.id);
       await loadAll();
     } catch (e) {
@@ -696,7 +764,11 @@ function ProfessionalDetailDialog({
       }));
 
       const { data, error } = await supabase.functions.invoke("profile-holistic-validator", {
-        body: { profile: profilePayload, documents: documentsPayload, references: referencesPayload },
+        body: {
+          profile: profilePayload,
+          documents: documentsPayload,
+          references: referencesPayload,
+        },
       });
       if (error) throw error;
       const v = data?.validation as HolisticValidation | undefined;
@@ -713,399 +785,680 @@ function ProfessionalDetailDialog({
   return (
     <>
       <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-4xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] overflow-hidden flex flex-col p-3 sm:p-6 gap-3">
-        <DialogHeader className="text-left">
-          <DialogTitle className="flex items-center gap-3">
-            <Avatar className="h-10 w-10 shrink-0 rounded-xl">
-              <AvatarImage src={pro.avatar_url ?? undefined} className="object-cover" />
-              <AvatarFallback className="rounded-xl bg-biosensor/10 text-biosensor font-semibold">
-                {(pro.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0">
-              <span className="block truncate">{pro.profile?.full_name || "Sin nombre"}</span>
-              <span className="text-sm font-normal text-muted-foreground">{pro.specialty || "—"} · {pro.home_city || "—"}</span>
-            </div>
-          </DialogTitle>
-        </DialogHeader>
-
-        <ScrollArea className="flex-1 -mx-1 px-1">
-          <div className="space-y-4 py-1">
-
-            {/* Status banner */}
-            {pro.blocked && (
-              <Card className="p-3 border-destructive/30 bg-destructive/5 flex items-start gap-2">
-                <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                <div className="text-sm">
-                  <p className="font-medium text-destructive">Perfil bloqueado</p>
-                  <p className="text-muted-foreground">{pro.blocked_reason || "Sin motivo"}</p>
-                </div>
-              </Card>
-            )}
-
-            {/* ── Fila 1: KPIs + Contacto ─────────────────────────────────── */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {/* KPIs */}
-              <Card className="p-4">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 text-copper" /> Métricas
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-muted/40 p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rating</p>
-                    <p className="text-xl font-bold">{pro.avg_rating ? Number(pro.avg_rating).toFixed(1) : "—"}</p>
-                  </div>
-                  <div className="rounded-xl bg-muted/40 p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Turnos</p>
-                    <p className="text-xl font-bold">{pro.total_jobs ?? 0}</p>
-                  </div>
-                  <div className="rounded-xl bg-muted/40 p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trust</p>
-                    <p className={`text-xl font-bold ${(pro.social_trust_score ?? 0) >= 70 ? "text-biosensor" : "text-destructive"}`}>{pro.social_trust_score ?? 0}</p>
-                  </div>
-                  <div className="rounded-xl bg-muted/40 p-3 text-center">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Exp.</p>
-                    <p className="text-xl font-bold">{pro.years_experience ?? 0}<span className="text-sm font-normal text-muted-foreground ml-0.5">a</span></p>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Contacto */}
-              <Card className="p-4 space-y-3">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <Phone className="h-3.5 w-3.5 text-biosensor" /> Contacto e identidad
-                </p>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="truncate">{pro.profile?.email || "—"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span>{pro.profile?.phone || "—"}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span>{pro.home_city || "—"}</span>
-                  </div>
-                  {pro.rethus_number && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <FileCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="font-mono text-xs">{pro.rethus_number}</span>
-                      {pro.rethus_verified
-                        ? <Badge className="bg-biosensor/15 text-biosensor text-[10px]"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Verificado</Badge>
-                        : <Badge variant="secondary" className="text-[10px]">Sin verificar</Badge>
-                      }
-                    </div>
+        <DialogContent className="max-w-4xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] overflow-hidden flex flex-col p-3 sm:p-6 gap-3">
+          <DialogHeader className="text-left">
+            <DialogTitle className="flex items-start gap-3">
+              <Avatar className="h-14 w-14 shrink-0 rounded-2xl ring-2 ring-border">
+                <AvatarImage src={pro.avatar_url ?? undefined} className="object-cover" />
+                <AvatarFallback className="rounded-2xl bg-biosensor/10 text-biosensor font-bold text-lg">
+                  {(pro.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="truncate font-display text-lg">
+                    {pro.profile?.full_name || "Sin nombre"}
+                  </span>
+                  {pro.verified && <CheckCircle2 className="h-4 w-4 text-biosensor shrink-0" />}
+                  {pro.blocked && (
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
+                      Bloqueado
+                    </Badge>
+                  )}
+                  {pro.published && !pro.blocked && (
+                    <Badge className="bg-biosensor/20 text-biosensor border-biosensor/30 text-[10px] px-1.5 py-0 h-5">
+                      Publicado
+                    </Badge>
                   )}
                 </div>
-              </Card>
-            </div>
-
-            {/* ── Fila 2: Tarifas + Especialidades ────────────────────────── */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Card className="p-4">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
-                  <Briefcase className="h-3.5 w-3.5 text-fuchsia-neural" /> Tarifas declaradas
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Por hora", value: pro.hourly_rate },
-                    { label: "Por turno", value: null },
-                    { label: "Mensual", value: null },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="rounded-xl bg-muted/40 p-2 text-center">
-                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
-                      <p className="text-xs font-semibold mt-0.5">
-                        {value ? `$${value.toLocaleString("es-CO")}` : "—"}
-                      </p>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2 flex-wrap mt-1">
+                  <span className="text-sm font-normal text-muted-foreground">
+                    {pro.specialty || "Sin especialidad"}
+                  </span>
+                  {pro.home_city && (
+                    <span className="text-xs text-muted-foreground/60">· {pro.home_city}</span>
+                  )}
+                  {pro.rethus_verified && (
+                    <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/15 text-biosensor border border-biosensor/30">
+                      <ShieldCheck className="h-3 w-3" /> RETHUS
+                      {pro.rethus_number ? ` ${pro.rethus_number}` : ""}
+                    </span>
+                  )}
                 </div>
-              </Card>
+                {pro.profile?.email && (
+                  <a
+                    href={`mailto:${pro.profile.email}`}
+                    className="text-xs text-muted-foreground hover:text-foreground truncate mt-0.5 block transition-colors"
+                  >
+                    {pro.profile.email}
+                  </a>
+                )}
+              </div>
+            </DialogTitle>
+          </DialogHeader>
 
-              <Card className="p-4 space-y-2">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-biosensor" /> Habilidades y cobertura
-                </p>
-                {pro.languages && pro.languages.length > 0 && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Idiomas</p>
-                    <div className="flex flex-wrap gap-1">{pro.languages.map((l, i) => <Badge key={i} variant="secondary" className="text-[10px]">{l}</Badge>)}</div>
+          <ScrollArea className="flex-1 -mx-1 px-1">
+            <div className="space-y-4 py-1">
+              {/* Status banner */}
+              {pro.blocked && (
+                <Card className="p-3 border-destructive/30 bg-destructive/5 flex items-start gap-2">
+                  <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-destructive">Perfil bloqueado</p>
+                    <p className="text-muted-foreground">{pro.blocked_reason || "Sin motivo"}</p>
                   </div>
-                )}
-                {pro.service_cities && pro.service_cities.length > 0 && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Ciudades de servicio</p>
-                    <div className="flex flex-wrap gap-1">{pro.service_cities.map((c, i) => <Badge key={i} variant="outline" className="text-[10px]"><MapPin className="h-2.5 w-2.5 mr-0.5" />{c}</Badge>)}</div>
-                  </div>
-                )}
-                {Array.isArray(pro.certifications) && (pro.certifications as unknown[]).length > 0 && (
-                  <div>
-                    <p className="text-[10px] text-muted-foreground mb-1">Certificaciones</p>
-                    <div className="flex flex-wrap gap-1">{(pro.certifications as string[]).map((c, i) => <Badge key={i} variant="outline" className="text-[10px]">{c}</Badge>)}</div>
-                  </div>
-                )}
-              </Card>
-            </div>
-
-            {/* ── Fila 3: Bio + Experiencia ────────────────────────────────── */}
-            <div className="grid sm:grid-cols-2 gap-4">
-              {(pro.bio || pro.ai_summary) && (
-                <Card className="p-4 space-y-2">
-                  {pro.bio && (
-                    <>
-                      <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Biografía</p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">{pro.bio}</p>
-                    </>
-                  )}
-                  {pro.ai_summary && (
-                    <>
-                      <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1"><Sparkles className="h-3 w-3 text-fuchsia-neural" /> Resumen IA</p>
-                      <p className="text-sm text-muted-foreground">{pro.ai_summary}</p>
-                      {pro.ai_strengths && pro.ai_strengths.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-1">{pro.ai_strengths.map((s, i) => <Badge key={i} variant="secondary" className="text-[10px]">{s}</Badge>)}</div>
-                      )}
-                    </>
-                  )}
                 </Card>
               )}
 
-              <Card className="p-4 space-y-2">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Referencias ({refs.length})</p>
-                {refs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin referencias cargadas.</p>
-                ) : (
+              {/* ── Fila 1: KPIs + Contacto ─────────────────────────────────── */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                {/* KPIs */}
+                <Card className="p-4">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <Star className="h-3.5 w-3.5 text-copper" /> Métricas de desempeño
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-copper/8 border border-copper/20 p-3 text-center">
+                      <Star className="h-3.5 w-3.5 text-copper mx-auto mb-1" />
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Rating
+                      </p>
+                      <p className="text-xl font-bold text-copper">
+                        {pro.avg_rating ? Number(pro.avg_rating).toFixed(1) : "—"}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-fuchsia-neural/8 border border-fuchsia-neural/20 p-3 text-center">
+                      <Briefcase className="h-3.5 w-3.5 text-fuchsia-neural mx-auto mb-1" />
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Trabajos
+                      </p>
+                      <p className="text-xl font-bold text-fuchsia-neural">{pro.total_jobs ?? 0}</p>
+                    </div>
+                    <div className="rounded-xl bg-muted/40 border border-border p-3 text-center">
+                      <Award className="h-3.5 w-3.5 text-muted-foreground mx-auto mb-1" />
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Años exp.
+                      </p>
+                      <p className="text-xl font-bold">{pro.years_experience ?? 0}</p>
+                    </div>
+                    <div
+                      className={`rounded-xl border p-3 text-center ${
+                        (pro.social_trust_score ?? 0) >= 70
+                          ? "bg-biosensor/8 border-biosensor/20"
+                          : (pro.social_trust_score ?? 0) > 0
+                            ? "bg-copper/8 border-copper/20"
+                            : "bg-muted/40 border-border"
+                      }`}
+                    >
+                      <ShieldCheck
+                        className={`h-3.5 w-3.5 mx-auto mb-1 ${
+                          (pro.social_trust_score ?? 0) >= 70
+                            ? "text-biosensor"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Trust
+                      </p>
+                      <p
+                        className={`text-xl font-bold ${
+                          (pro.social_trust_score ?? 0) >= 70
+                            ? "text-biosensor"
+                            : (pro.social_trust_score ?? 0) > 0
+                              ? "text-copper"
+                              : ""
+                        }`}
+                      >
+                        {pro.social_trust_score ?? 0}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Contacto */}
+                <Card className="p-4 space-y-3">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Phone className="h-3.5 w-3.5 text-biosensor" /> Contacto e identidad
+                  </p>
                   <div className="space-y-2">
-                    {refs.map((r) => (
-                      <div key={r.id} className="rounded-lg bg-muted/30 px-3 py-2 text-sm flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-medium truncate">{r.full_name}</p>
-                          <p className="text-xs text-muted-foreground">{r.phone} · {r.relation || r.ref_type}</p>
+                    <a
+                      href={pro.profile?.email ? `mailto:${pro.profile.email}` : undefined}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-muted/30 hover:bg-muted/60 transition-colors group"
+                    >
+                      <Mail className="h-3.5 w-3.5 text-biosensor shrink-0" />
+                      <span className="text-sm truncate group-hover:text-foreground text-muted-foreground">
+                        {pro.profile?.email || "—"}
+                      </span>
+                    </a>
+                    <a
+                      href={pro.profile?.phone ? `tel:${pro.profile.phone}` : undefined}
+                      className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-muted/30 hover:bg-muted/60 transition-colors group"
+                    >
+                      <Phone className="h-3.5 w-3.5 text-biosensor shrink-0" />
+                      <span className="text-sm group-hover:text-foreground text-muted-foreground">
+                        {pro.profile?.phone || "—"}
+                      </span>
+                    </a>
+                    <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-muted/30">
+                      <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-sm text-muted-foreground">{pro.home_city || "—"}</span>
+                    </div>
+                    {pro.rethus_number && (
+                      <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 bg-biosensor/8 border border-biosensor/20">
+                        <FileCheck className="h-3.5 w-3.5 text-biosensor shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-biosensor/70">
+                            RETHUS
+                          </p>
+                          <p className="font-mono text-sm font-semibold text-biosensor">
+                            {pro.rethus_number}
+                          </p>
                         </div>
-                        {r.verified && <Badge variant="outline" className="text-[10px] shrink-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" />Verif.</Badge>}
+                        {pro.rethus_verified ? (
+                          <Badge className="bg-biosensor/20 text-biosensor text-[10px] shrink-0">
+                            <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
+                            Verificado
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-[10px] shrink-0">
+                            Sin verificar
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+
+              {/* ── Fila 2: Tarifas + Especialidades ────────────────────────── */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Card className="p-4">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+                    <Briefcase className="h-3.5 w-3.5 text-fuchsia-neural" /> Tarifas declaradas
+                  </p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Por hora", value: pro.hourly_rate },
+                      { label: "Por turno", value: null },
+                      { label: "Mensual", value: null },
+                    ].map(({ label, value }) => (
+                      <div key={label} className="rounded-xl bg-muted/40 p-2 text-center">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                          {label}
+                        </p>
+                        <p className="text-xs font-semibold mt-0.5">
+                          {value ? `$${value.toLocaleString("es-CO")}` : "—"}
+                        </p>
                       </div>
                     ))}
                   </div>
-                )}
-              </Card>
-            </div>
+                </Card>
 
-            {/* ── Experiencia laboral ──────────────────────────────────────── */}
-            {Array.isArray(pro.work_experience) && pro.work_experience.length > 0 && (
-              <Card className="p-4">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3">Experiencia laboral</p>
-                <div className="grid sm:grid-cols-2 gap-2">
-                  {(pro.work_experience as Array<Record<string, unknown>>).map((w, i) => (
-                    <div key={i} className="rounded-lg bg-muted/30 px-3 py-2 text-sm">
-                      <p className="font-medium">{String(w.role ?? "Rol")}</p>
-                      <p className="text-xs text-muted-foreground">{String(w.company ?? "")} {w.years ? `· ${String(w.years)} años` : ""}</p>
+                <Card className="p-4 space-y-2">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-biosensor" /> Habilidades y cobertura
+                  </p>
+                  {pro.languages && pro.languages.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Idiomas</p>
+                      <div className="flex flex-wrap gap-1">
+                        {pro.languages.map((l, i) => (
+                          <Badge key={i} variant="secondary" className="text-[10px]">
+                            {l}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              </Card>
-            )}
-
-            {/* ── Documentos en grid ──────────────────────────────────────── */}
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <FileText className="h-3.5 w-3.5 text-fuchsia-neural" /> Documentos ({docs.length})
-                </p>
-                <span className="text-[10px] text-muted-foreground">Ver · IA · Descargar</span>
-              </div>
-              {docs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
-              ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {docs.map((d) => {
-                    const extra = docExtras[d.id];
-                    const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
-                    const isExpanded = expandedDoc === d.id;
-                    const aiOk = extra?.ai_verified === true;
-                    const aiBad = extra?.ai_verified === false;
-                    return (
-                      <div key={d.id} className={`rounded-xl border flex flex-col overflow-hidden ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}>
-                        {/* Doc type header */}
-                        <div className={`px-3 py-2 flex items-center justify-between gap-2 ${aiOk ? "bg-biosensor/5" : aiBad ? "bg-destructive/5" : "bg-muted/30"}`}>
-                          <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
-                          {aiOk && <Badge className="bg-biosensor/20 text-biosensor text-[10px] h-4 px-1.5"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Veraz</Badge>}
-                          {aiBad && <Badge variant="destructive" className="text-[10px] h-4 px-1.5"><XCircle className="h-2.5 w-2.5 mr-0.5" />Sospechoso</Badge>}
+                  )}
+                  {pro.service_cities && pro.service_cities.length > 0 && (
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-1">Ciudades de servicio</p>
+                      <div className="flex flex-wrap gap-1">
+                        {pro.service_cities.map((c, i) => (
+                          <Badge key={i} variant="outline" className="text-[10px]">
+                            <MapPin className="h-2.5 w-2.5 mr-0.5" />
+                            {c}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {Array.isArray(pro.certifications) &&
+                    (pro.certifications as unknown[]).length > 0 && (
+                      <div>
+                        <p className="text-[10px] text-muted-foreground mb-1">Certificaciones</p>
+                        <div className="flex flex-wrap gap-1">
+                          {(pro.certifications as string[]).map((c, i) => (
+                            <Badge key={i} variant="outline" className="text-[10px]">
+                              {c}
+                            </Badge>
+                          ))}
                         </div>
-                        {/* Doc name + score */}
-                        <div className="px-3 py-2 flex-1">
-                          <p className="text-xs font-medium truncate" title={d.file_name || "Sin nombre"}>{d.file_name || "Sin nombre"}</p>
-                          <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                            <span className="capitalize">{d.status}</span>
-                            <span>·</span>
-                            <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
-                            {d.ai_score != null && (
-                              <span className={`font-semibold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}>· IA {d.ai_score}/100</span>
-                            )}
+                      </div>
+                    )}
+                </Card>
+              </div>
+
+              {/* ── Fila 3: Bio + Experiencia ────────────────────────────────── */}
+              <div className="grid sm:grid-cols-2 gap-4">
+                {(pro.bio || pro.ai_summary) && (
+                  <Card className="p-4 space-y-3">
+                    {pro.bio && (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
+                          Biografía
+                        </p>
+                        <div className="border-l-2 border-biosensor/40 pl-3">
+                          <p className="text-sm text-muted-foreground leading-relaxed">{pro.bio}</p>
+                        </div>
+                      </div>
+                    )}
+                    {pro.ai_summary && (
+                      <div>
+                        <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-fuchsia-neural" /> Resumen IA
+                        </p>
+                        <div className="border-l-2 border-fuchsia-neural/40 pl-3">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {pro.ai_summary}
                           </p>
                         </div>
-                        {/* Actions */}
-                        <div className="grid grid-cols-3 gap-1 px-2 pb-2">
-                          <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} className="h-7 text-[10px]">
-                            <Eye className="h-3 w-3 mr-0.5" /> Ver
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} className="h-7 text-[10px]">
-                            <Download className="h-3 w-3 mr-0.5" /> Bajar
-                          </Button>
-                          <Button size="sm" variant={analyzingDoc === d.id ? "secondary" : "outline"} onClick={() => analyzeDoc(d)} disabled={analyzingDoc === d.id} className="h-7 text-[10px]">
-                            {analyzingDoc === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-0.5" />IA</>}
-                          </Button>
+                        {pro.ai_strengths && pro.ai_strengths.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {pro.ai_strengths.map((s, i) => (
+                              <Badge key={i} variant="secondary" className="text-[10px]">
+                                {s}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                )}
+
+                <Card className="p-4 space-y-2">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">
+                    Referencias ({refs.length})
+                  </p>
+                  {refs.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Sin referencias cargadas.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {refs.map((r) => (
+                        <div
+                          key={r.id}
+                          className="rounded-lg bg-muted/30 px-3 py-2 text-sm flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{r.full_name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {r.phone} · {r.relation || r.ref_type}
+                            </p>
+                          </div>
+                          {r.verified && (
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" />
+                              Verif.
+                            </Badge>
+                          )}
                         </div>
-                        {/* Expand AI results */}
-                        {(extra?.ai_notes || (extracted && Object.keys(extracted).length > 0)) && (
-                          <button
-                            onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
-                            className="text-[10px] text-muted-foreground hover:text-foreground px-3 pb-2 text-left underline underline-offset-2"
-                          >
-                            {isExpanded ? "Ocultar análisis IA" : "Ver análisis IA"}
-                          </button>
-                        )}
-                        {isExpanded && (
-                          <div className="border-t mx-2 mb-2 px-2 pt-2 bg-muted/10 rounded-b-lg space-y-1.5 text-xs max-h-36 overflow-y-auto">
-                            {extra?.ai_notes && (
-                              <div>
-                                <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">Veredicto IA</p>
-                                <p className="text-muted-foreground">{extra.ai_notes}</p>
-                              </div>
-                            )}
-                            {extracted && Object.keys(extracted).length > 0 && (
-                              <div>
-                                <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">Datos extraídos</p>
-                                {Object.entries(extracted).map(([k, v]) => (
-                                  <p key={k} className="text-muted-foreground"><span className="font-medium text-foreground">{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}</p>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </Card>
-
-            {/* ── Análisis IA holístico ────────────────────────────────────── */}
-            <Card className="p-4">
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" /> Validación integral IA
-                </p>
-                <Button size="sm" variant="hero" onClick={runHolisticAnalysis} disabled={holisticBusy || docs.length === 0}>
-                  {holisticBusy ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />Analizando…</> : <><Sparkles className="h-3.5 w-3.5 mr-1" />Validar perfil completo</>}
-                </Button>
+                      ))}
+                    </div>
+                  )}
+                </Card>
               </div>
-              {holistic && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    {holistic.is_publishable
-                      ? <Badge className="bg-biosensor/20 text-biosensor"><CheckCircle2 className="h-3.5 w-3.5 mr-1" />Publicable</Badge>
-                      : <Badge variant="destructive"><XCircle className="h-3.5 w-3.5 mr-1" />No publicable</Badge>
-                    }
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
-                        <div className={`h-full rounded-full ${holistic.score >= 70 ? "bg-biosensor" : holistic.score >= 50 ? "bg-copper" : "bg-destructive"}`} style={{ width: `${holistic.score}%` }} />
+
+              {/* ── Experiencia laboral ──────────────────────────────────────── */}
+              {Array.isArray(pro.work_experience) && pro.work_experience.length > 0 && (
+                <Card className="p-4">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3">
+                    Experiencia laboral
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    {(pro.work_experience as Array<Record<string, unknown>>).map((w, i) => (
+                      <div key={i} className="rounded-lg bg-muted/30 px-3 py-2 text-sm">
+                        <p className="font-medium">{String(w.role ?? "Rol")}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {String(w.company ?? "")} {w.years ? `· ${String(w.years)} años` : ""}
+                        </p>
                       </div>
-                      <span className={`font-semibold text-sm ${holistic.score >= 70 ? "text-biosensor" : "text-destructive"}`}>{holistic.score}/100</span>
-                    </div>
+                    ))}
                   </div>
-                  <p className="text-sm text-muted-foreground">{holistic.ai_summary}</p>
-                  {holistic.critical_errors.length > 0 && (
-                    <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
-                      <p className="text-xs font-semibold text-destructive uppercase mb-1.5">Errores críticos ({holistic.critical_errors.length})</p>
-                      <div className="grid sm:grid-cols-2 gap-1.5">
-                        {holistic.critical_errors.map((e, i) => (
-                          <div key={i} className="text-xs bg-background/60 rounded px-2 py-1.5">
-                            <span className="font-medium text-destructive">{e.field}:</span> <span className="text-muted-foreground">{e.message}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {holistic.warnings.length > 0 && (
-                    <div className="rounded-lg border border-muted bg-muted/30 p-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">Advertencias ({holistic.warnings.length})</p>
-                      <div className="grid sm:grid-cols-2 gap-1.5">
-                        {holistic.warnings.map((w, i) => (
-                          <div key={i} className="text-xs bg-background/60 rounded px-2 py-1.5">
-                            <span className="font-medium">{w.field}:</span> <span className="text-muted-foreground">{w.message}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                </Card>
               )}
-            </Card>
 
-            {/* ── Motivo de bloqueo ────────────────────────────────────────── */}
-            <Card className="p-4 space-y-2">
-              <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-                <Ban className="h-3.5 w-3.5 text-destructive" /> Motivo de bloqueo (si aplica)
-              </p>
-              <Textarea
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
-                placeholder="Ej: Tarjeta profesional vencida. Sube la tarjeta actualizada."
-                rows={2}
-              />
-              <p className="text-xs text-muted-foreground">Visible para el profesional al iniciar sesión.</p>
-            </Card>
+              {/* ── Documentos en grid ──────────────────────────────────────── */}
+              <Card className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <FileText className="h-3.5 w-3.5 text-fuchsia-neural" /> Documentos (
+                    {docs.length})
+                  </p>
+                  <span className="text-[10px] text-muted-foreground">Ver · IA · Descargar</span>
+                </div>
+                {docs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
+                ) : (
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {docs.map((d) => {
+                      const extra = docExtras[d.id];
+                      const extracted = extra?.ai_extracted as
+                        | Record<string, unknown>
+                        | null
+                        | undefined;
+                      const isExpanded = expandedDoc === d.id;
+                      const aiOk = extra?.ai_verified === true;
+                      const aiBad = extra?.ai_verified === false;
+                      return (
+                        <div
+                          key={d.id}
+                          className={`rounded-xl border flex flex-col overflow-hidden ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}
+                        >
+                          {/* Doc type header */}
+                          <div
+                            className={`px-3 py-2 flex items-center justify-between gap-2 ${aiOk ? "bg-biosensor/5" : aiBad ? "bg-destructive/5" : "bg-muted/30"}`}
+                          >
+                            <Badge variant="secondary" className="uppercase text-[10px]">
+                              {d.doc_type}
+                            </Badge>
+                            {aiOk && (
+                              <Badge className="bg-biosensor/20 text-biosensor text-[10px] h-4 px-1.5">
+                                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
+                                Veraz
+                              </Badge>
+                            )}
+                            {aiBad && (
+                              <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
+                                <XCircle className="h-2.5 w-2.5 mr-0.5" />
+                                Sospechoso
+                              </Badge>
+                            )}
+                          </div>
+                          {/* Doc name + score */}
+                          <div className="px-3 py-2 flex-1">
+                            <p
+                              className="text-xs font-medium truncate"
+                              title={d.file_name || "Sin nombre"}
+                            >
+                              {d.file_name || "Sin nombre"}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
+                              <span className="capitalize">{d.status}</span>
+                              <span>·</span>
+                              <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
+                              {d.ai_score != null && (
+                                <span
+                                  className={`font-semibold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}
+                                >
+                                  · IA {d.ai_score}/100
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          {/* Actions */}
+                          <div className="grid grid-cols-3 gap-1 px-2 pb-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openPreview(d)}
+                              disabled={previewLoading}
+                              className="h-7 text-[10px]"
+                            >
+                              <Eye className="h-3 w-3 mr-0.5" /> Ver
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => downloadDoc(d)}
+                              className="h-7 text-[10px]"
+                            >
+                              <Download className="h-3 w-3 mr-0.5" /> Bajar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={analyzingDoc === d.id ? "secondary" : "outline"}
+                              onClick={() => analyzeDoc(d)}
+                              disabled={analyzingDoc === d.id}
+                              className="h-7 text-[10px]"
+                            >
+                              {analyzingDoc === d.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <>
+                                  <Sparkles className="h-3 w-3 mr-0.5" />
+                                  IA
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          {/* Expand AI results */}
+                          {(extra?.ai_notes ||
+                            (extracted && Object.keys(extracted).length > 0)) && (
+                            <button
+                              onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
+                              className="text-[10px] text-muted-foreground hover:text-foreground px-3 pb-2 text-left underline underline-offset-2"
+                            >
+                              {isExpanded ? "Ocultar análisis IA" : "Ver análisis IA"}
+                            </button>
+                          )}
+                          {isExpanded && (
+                            <div className="border-t mx-2 mb-2 px-2 pt-2 bg-muted/10 rounded-b-lg space-y-1.5 text-xs max-h-36 overflow-y-auto">
+                              {extra?.ai_notes && (
+                                <div>
+                                  <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">
+                                    Veredicto IA
+                                  </p>
+                                  <p className="text-muted-foreground">{extra.ai_notes}</p>
+                                </div>
+                              )}
+                              {extracted && Object.keys(extracted).length > 0 && (
+                                <div>
+                                  <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">
+                                    Datos extraídos
+                                  </p>
+                                  {Object.entries(extracted).map(([k, v]) => (
+                                    <p key={k} className="text-muted-foreground">
+                                      <span className="font-medium text-foreground">{k}:</span>{" "}
+                                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </Card>
 
-          </div>
-        </ScrollArea>
+              {/* ── Análisis IA holístico ────────────────────────────────────── */}
+              <Card className="p-4">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" /> Validación integral IA
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="hero"
+                    onClick={runHolisticAnalysis}
+                    disabled={holisticBusy || docs.length === 0}
+                  >
+                    {holisticBusy ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        Analizando…
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5 mr-1" />
+                        Validar perfil completo
+                      </>
+                    )}
+                  </Button>
+                </div>
+                {holistic && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      {holistic.is_publishable ? (
+                        <Badge className="bg-biosensor/20 text-biosensor">
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                          Publicable
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">
+                          <XCircle className="h-3.5 w-3.5 mr-1" />
+                          No publicable
+                        </Badge>
+                      )}
+                      <div className="flex items-center gap-1.5">
+                        <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${holistic.score >= 70 ? "bg-biosensor" : holistic.score >= 50 ? "bg-copper" : "bg-destructive"}`}
+                            style={{ width: `${holistic.score}%` }}
+                          />
+                        </div>
+                        <span
+                          className={`font-semibold text-sm ${holistic.score >= 70 ? "text-biosensor" : "text-destructive"}`}
+                        >
+                          {holistic.score}/100
+                        </span>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{holistic.ai_summary}</p>
+                    {holistic.critical_errors.length > 0 && (
+                      <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                        <p className="text-xs font-semibold text-destructive uppercase mb-1.5">
+                          Errores críticos ({holistic.critical_errors.length})
+                        </p>
+                        <div className="grid sm:grid-cols-2 gap-1.5">
+                          {holistic.critical_errors.map((e, i) => (
+                            <div key={i} className="text-xs bg-background/60 rounded px-2 py-1.5">
+                              <span className="font-medium text-destructive">{e.field}:</span>{" "}
+                              <span className="text-muted-foreground">{e.message}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {holistic.warnings.length > 0 && (
+                      <div className="rounded-lg border border-muted bg-muted/30 p-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">
+                          Advertencias ({holistic.warnings.length})
+                        </p>
+                        <div className="grid sm:grid-cols-2 gap-1.5">
+                          {holistic.warnings.map((w, i) => (
+                            <div key={i} className="text-xs bg-background/60 rounded px-2 py-1.5">
+                              <span className="font-medium">{w.field}:</span>{" "}
+                              <span className="text-muted-foreground">{w.message}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </Card>
 
-        <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2 border-t pt-3">
-          <Button variant="outline" size="sm" onClick={() => setConfirmDelete(true)} disabled={busy} className="w-full sm:w-auto">
-            <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Eliminar perfil
-          </Button>
-          <div className="flex gap-2 w-full sm:w-auto">
-            {pro.blocked ? (
-              <Button variant="outline" size="sm" onClick={unblock} disabled={busy} className="flex-1 sm:flex-initial">Desbloquear</Button>
-            ) : (
-              <Button variant="outline" size="sm" onClick={block} disabled={busy} className="flex-1 sm:flex-initial">
-                <Ban className="h-4 w-4 mr-1" /> Bloquear
-              </Button>
-            )}
-            <Button variant="hero" size="sm" onClick={approve} disabled={busy} className="flex-1 sm:flex-initial">
-              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar y publicar
+              {/* ── Motivo de bloqueo ────────────────────────────────────────── */}
+              <Card className="p-4 space-y-2">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <Ban className="h-3.5 w-3.5 text-destructive" /> Motivo de bloqueo (si aplica)
+                </p>
+                <Textarea
+                  value={blockReason}
+                  onChange={(e) => setBlockReason(e.target.value)}
+                  placeholder="Ej: Tarjeta profesional vencida. Sube la tarjeta actualizada."
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Visible para el profesional al iniciar sesión.
+                </p>
+              </Card>
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2 border-t pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setConfirmDelete(true)}
+              disabled={busy}
+              className="w-full sm:w-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Eliminar perfil
             </Button>
-          </div>
-        </DialogFooter>
+            <div className="flex gap-2 w-full sm:w-auto">
+              {pro.blocked ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={unblock}
+                  disabled={busy}
+                  className="flex-1 sm:flex-initial"
+                >
+                  Desbloquear
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={block}
+                  disabled={busy}
+                  className="flex-1 sm:flex-initial"
+                >
+                  <Ban className="h-4 w-4 mr-1" /> Bloquear
+                </Button>
+              )}
+              <Button
+                variant="hero"
+                size="sm"
+                onClick={approve}
+                disabled={busy}
+                className="flex-1 sm:flex-initial"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar y publicar
+              </Button>
+            </div>
+          </DialogFooter>
 
-        <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Eliminar perfil profesional?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Se borrará el perfil profesional, documentos y referencias de{" "}
-                <span className="font-medium">{pro.profile?.full_name}</span>. La cuenta de
-                usuario quedará viva pero sin rol profesional. Esta acción no se puede deshacer.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={hardDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                Eliminar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </DialogContent>
-    </Dialog>
+          <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar perfil profesional?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Se borrará el perfil profesional, documentos y referencias de{" "}
+                  <span className="font-medium">{pro.profile?.full_name}</span>. La cuenta de
+                  usuario quedará viva pero sin rol profesional. Esta acción no se puede deshacer.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={hardDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Eliminar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </DialogContent>
+      </Dialog>
       {previewDoc ? (
         <Dialog open onOpenChange={(o) => !o && setPreviewDoc(null)}>
           <DialogContent className="max-w-5xl h-[85vh] flex flex-col p-0 overflow-hidden">
             <DialogHeader className="px-4 pt-4 pb-2 border-b">
               <DialogTitle className="text-base flex items-center gap-2 truncate">
                 <FileText className="h-4 w-4 shrink-0" />
-                <span className="truncate">{previewDoc.doc.file_name || previewDoc.doc.doc_type}</span>
-                <Badge variant="secondary" className="text-[10px] uppercase ml-1">{previewDoc.doc.doc_type}</Badge>
+                <span className="truncate">
+                  {previewDoc.doc.file_name || previewDoc.doc.doc_type}
+                </span>
+                <Badge variant="secondary" className="text-[10px] uppercase ml-1">
+                  {previewDoc.doc.doc_type}
+                </Badge>
               </DialogTitle>
               <DialogDescription className="flex items-center gap-2 text-xs">
                 <span>{previewDoc.doc.status}</span>
@@ -1171,13 +1524,24 @@ function ProfessionalDetailDialog({
 function InfoTile({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <Card className="p-2">
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">{icon}{label}</div>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        {icon}
+        {label}
+      </div>
       <p className="font-semibold">{value}</p>
     </Card>
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
     <div>
       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -1220,7 +1584,9 @@ function OffersTab({ reviewerId }: { reviewerId: string }) {
     const byId = new Map(posters.map((p) => [p.user_id, p]));
     const merged = (rows ?? []).map((r) => ({ ...r, poster: byId.get(r.posted_by) })) as Offer[];
     merged.sort((a, b) =>
-      (a.poster?.full_name || "").localeCompare(b.poster?.full_name || "", "es", { sensitivity: "base" }),
+      (a.poster?.full_name || "").localeCompare(b.poster?.full_name || "", "es", {
+        sensitivity: "base",
+      }),
     );
     setOffers(merged);
     setBusy(false);
@@ -1284,32 +1650,58 @@ function OffersTab({ reviewerId }: { reviewerId: string }) {
               className={`overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col ${o.blocked ? "border-destructive/30" : ""}`}
               onClick={() => setSelected(o)}
             >
-              <div className={`px-4 pt-4 pb-2 flex items-start justify-between gap-2 ${o.blocked ? "bg-destructive/5" : "bg-muted/10"}`}>
+              <div
+                className={`px-4 pt-4 pb-2 flex items-start justify-between gap-2 ${o.blocked ? "bg-destructive/5" : "bg-muted/10"}`}
+              >
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{o.title}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{o.city} · {o.modality}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    {o.city} · {o.modality}
+                  </p>
                 </div>
-                {o.blocked
-                  ? <Badge variant="destructive" className="text-[10px] shrink-0"><Ban className="h-2.5 w-2.5 mr-0.5" />Bloqueada</Badge>
-                  : <Badge variant={o.status === "open" ? "outline" : "secondary"} className="text-[10px] shrink-0 capitalize">{o.status}</Badge>
-                }
+                {o.blocked ? (
+                  <Badge variant="destructive" className="text-[10px] shrink-0">
+                    <Ban className="h-2.5 w-2.5 mr-0.5" />
+                    Bloqueada
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant={o.status === "open" ? "outline" : "secondary"}
+                    className="text-[10px] shrink-0 capitalize"
+                  >
+                    {o.status}
+                  </Badge>
+                )}
               </div>
               <div className="px-4 py-3 flex-1 space-y-1">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="rounded-lg bg-muted/40 p-2 text-center">
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Tarifa</p>
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                      Tarifa
+                    </p>
                     <p className="text-sm font-bold">${o.amount.toLocaleString("es-CO")}</p>
                   </div>
                   <div className="rounded-lg bg-muted/40 p-2 text-center">
-                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Tipo</p>
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                      Tipo
+                    </p>
                     <p className="text-sm font-bold capitalize">{o.poster_type}</p>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{o.description || "Sin descripción."}</p>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
+                  {o.description || "Sin descripción."}
+                </p>
               </div>
               <div className="px-3 pb-3">
-                <p className="text-[10px] text-muted-foreground mb-2 truncate">Familia: <span className="font-medium text-foreground">{o.poster?.full_name || "—"}</span></p>
-                <Button size="sm" variant="outline" className="w-full h-7 text-xs hover:bg-primary hover:text-primary-foreground transition-colors">
+                <p className="text-[10px] text-muted-foreground mb-2 truncate">
+                  Familia:{" "}
+                  <span className="font-medium text-foreground">{o.poster?.full_name || "—"}</span>
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-7 text-xs hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
                   <Eye className="h-3.5 w-3.5 mr-1" /> Revisar oferta
                 </Button>
               </div>
@@ -1391,7 +1783,13 @@ function OfferDetailDialog({
     setBusy(true);
     const { error } = await supabase
       .from("job_offers")
-      .update({ blocked: false, blocked_reason: null, blocked_at: null, blocked_by: null, status: "open" })
+      .update({
+        blocked: false,
+        blocked_reason: null,
+        blocked_at: null,
+        blocked_by: null,
+        status: "open",
+      })
       .eq("id", offer.id);
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -1428,20 +1826,36 @@ function OfferDetailDialog({
                 <p className="font-medium text-destructive flex items-center gap-1 text-sm">
                   <Ban className="h-4 w-4" /> Oferta bloqueada
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">{offer.blocked_reason || "Sin motivo"}</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {offer.blocked_reason || "Sin motivo"}
+                </p>
               </Card>
             )}
 
             <div className="grid grid-cols-2 gap-2 text-sm">
               <InfoTile icon={<MapPin className="h-4 w-4" />} label="Ciudad" value={offer.city} />
-              <InfoTile icon={<Briefcase className="h-4 w-4" />} label="Modalidad" value={offer.modality} />
-              <InfoTile icon={<Star className="h-4 w-4" />} label="Monto" value={`$${offer.amount.toLocaleString("es-CO")}`} />
-              <InfoTile icon={<CheckCircle2 className="h-4 w-4" />} label="Estado" value={offer.status} />
+              <InfoTile
+                icon={<Briefcase className="h-4 w-4" />}
+                label="Modalidad"
+                value={offer.modality}
+              />
+              <InfoTile
+                icon={<Star className="h-4 w-4" />}
+                label="Monto"
+                value={`$${offer.amount.toLocaleString("es-CO")}`}
+              />
+              <InfoTile
+                icon={<CheckCircle2 className="h-4 w-4" />}
+                label="Estado"
+                value={offer.status}
+              />
             </div>
 
             {offer.description && (
               <Section title="Descripción">
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{offer.description}</p>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {offer.description}
+                </p>
               </Section>
             )}
 
@@ -1449,7 +1863,9 @@ function OfferDetailDialog({
               <Section title="Requisitos">
                 <div className="flex flex-wrap gap-1">
                   {offer.requirements.map((r, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs">{r}</Badge>
+                    <Badge key={i} variant="secondary" className="text-xs">
+                      {r}
+                    </Badge>
                   ))}
                 </div>
               </Section>
@@ -1467,7 +1883,10 @@ function OfferDetailDialog({
 
             {offer.contact_phone && (
               <Section title="Teléfono contacto">
-                <p className="text-sm"><Phone className="inline h-3 w-3 mr-1" />{offer.contact_phone}</p>
+                <p className="text-sm">
+                  <Phone className="inline h-3 w-3 mr-1" />
+                  {offer.contact_phone}
+                </p>
               </Section>
             )}
 
@@ -1483,7 +1902,12 @@ function OfferDetailDialog({
         </ScrollArea>
 
         <DialogFooter className="flex flex-wrap gap-2 justify-between border-t pt-3">
-          <Button variant="outline" size="sm" onClick={() => setConfirmDelete(true)} disabled={busy}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConfirmDelete(true)}
+            disabled={busy}
+          >
             <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Eliminar oferta
           </Button>
           <div className="flex gap-2">
@@ -1529,7 +1953,9 @@ function OfferDetailDialog({
 /* ----------------------------- DOCUMENTOS ----------------------------- */
 
 function DocsTab({ reviewerId }: { reviewerId: string }) {
-  const [docs, setDocs] = useState<(Doc & { profile?: { full_name: string | null; email: string | null } })[]>([]);
+  const [docs, setDocs] = useState<
+    (Doc & { profile?: { full_name: string | null; email: string | null } })[]
+  >([]);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
 
@@ -1557,6 +1983,7 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const review = async (doc: Doc, status: "approved" | "rejected") => {
@@ -1595,7 +2022,9 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          {docs.length > 0 ? `${docs.length} documento${docs.length === 1 ? "" : "s"} pendiente${docs.length === 1 ? "" : "s"} de revisión` : ""}
+          {docs.length > 0
+            ? `${docs.length} documento${docs.length === 1 ? "" : "s"} pendiente${docs.length === 1 ? "" : "s"} de revisión`
+            : ""}
         </p>
         <Button size="sm" variant="outline" onClick={load} disabled={busy}>
           {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Actualizar"}
@@ -1626,19 +2055,30 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
         <Card className="p-14 text-center">
           <CheckCircle2 className="h-10 w-10 text-biosensor mx-auto mb-3" />
           <p className="font-semibold text-lg">¡Bandeja vacía!</p>
-          <p className="text-sm text-muted-foreground mt-1">No hay documentos pendientes de revisión.</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            No hay documentos pendientes de revisión.
+          </p>
         </Card>
       )}
 
       {!busy && docs.length > 0 && (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {docs.map((d) => (
-            <div key={d.id} className={`rounded-xl border flex flex-col overflow-hidden ${d.ai_score != null && d.ai_score < 60 ? "border-destructive/30" : "border-border"}`}>
+            <div
+              key={d.id}
+              className={`rounded-xl border flex flex-col overflow-hidden ${d.ai_score != null && d.ai_score < 60 ? "border-destructive/30" : "border-border"}`}
+            >
               {/* Header */}
-              <div className={`px-3 py-2.5 flex items-center justify-between gap-2 ${d.ai_score != null && d.ai_score < 60 ? "bg-destructive/5" : "bg-muted/20"}`}>
-                <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{d.doc_type}</Badge>
+              <div
+                className={`px-3 py-2.5 flex items-center justify-between gap-2 ${d.ai_score != null && d.ai_score < 60 ? "bg-destructive/5" : "bg-muted/20"}`}
+              >
+                <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">
+                  {d.doc_type}
+                </Badge>
                 {d.ai_score != null && (
-                  <span className={`text-[10px] font-bold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}>
+                  <span
+                    className={`text-[10px] font-bold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}
+                  >
                     IA {d.ai_score}/100
                   </span>
                 )}
@@ -1646,10 +2086,23 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
 
               {/* Body */}
               <div className="px-3 py-2.5 flex-1 space-y-0.5">
-                <p className="text-sm font-semibold truncate">{d.profile?.full_name || "Sin nombre"}</p>
-                <p className="text-xs text-muted-foreground truncate" title={d.file_name || ""}>{d.file_name || "Sin nombre de archivo"}</p>
-                <p className="text-[10px] text-muted-foreground">{new Date(d.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}</p>
-                {d.ai_notes && <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-2 italic">{d.ai_notes}</p>}
+                <p className="text-sm font-semibold truncate">
+                  {d.profile?.full_name || "Sin nombre"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate" title={d.file_name || ""}>
+                  {d.file_name || "Sin nombre de archivo"}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {new Date(d.created_at).toLocaleString("es-CO", {
+                    dateStyle: "short",
+                    timeStyle: "short",
+                  })}
+                </p>
+                {d.ai_notes && (
+                  <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-2 italic">
+                    {d.ai_notes}
+                  </p>
+                )}
               </div>
 
               {/* Nota */}
@@ -1665,13 +2118,28 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
 
               {/* Actions */}
               <div className="grid grid-cols-2 gap-1.5 px-3 pb-3">
-                <Button size="sm" variant="hero" onClick={() => review(d, "approved")} className="h-7 text-[10px]">
+                <Button
+                  size="sm"
+                  variant="hero"
+                  onClick={() => review(d, "approved")}
+                  className="h-7 text-[10px]"
+                >
                   <CheckCircle2 className="h-3 w-3 mr-0.5" /> Aprobar
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => review(d, "rejected")} className="h-7 text-[10px]">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => review(d, "rejected")}
+                  className="h-7 text-[10px]"
+                >
                   <XCircle className="h-3 w-3 mr-0.5" /> Rechazar
                 </Button>
-                <Button size="sm" variant="secondary" onClick={() => aiValidate(d)} className="h-7 text-[10px] col-span-1">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => aiValidate(d)}
+                  className="h-7 text-[10px] col-span-1"
+                >
                   <Sparkles className="h-3 w-3 mr-0.5" /> Validar IA
                 </Button>
                 <Button size="sm" variant="outline" className="h-7 text-[10px]" asChild>

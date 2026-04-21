@@ -75,9 +75,21 @@ const features = [
 ];
 
 const compliance = [
-  { icon: ShieldCheck, title: "Habeas Data Ley 1581/2012", desc: "Consentimiento explícito y registro auditable de cada uso de datos." },
-  { icon: Cpu, title: "RETHUS verificado", desc: "Cruce automático con el Registro Único Nacional del Talento Humano en Salud." },
-  { icon: Sparkles, title: "IA con propósito", desc: "Modelos auditables, sin discriminación y con explicabilidad para superadmins." },
+  {
+    icon: ShieldCheck,
+    title: "Habeas Data Ley 1581/2012",
+    desc: "Consentimiento explícito y registro auditable de cada uso de datos.",
+  },
+  {
+    icon: Cpu,
+    title: "RETHUS verificado",
+    desc: "Cruce automático con el Registro Único Nacional del Talento Humano en Salud.",
+  },
+  {
+    icon: Sparkles,
+    title: "IA con propósito",
+    desc: "Modelos auditables, sin discriminación y con explicabilidad para superadmins.",
+  },
 ];
 
 function TecnologiaPage() {
@@ -95,8 +107,7 @@ function TecnologiaPage() {
               Tecnología
             </span>
             <h1 className="mt-4 font-display text-4xl sm:text-6xl font-bold leading-[1.05] text-cyber-foreground">
-              IA en tiempo real,{" "}
-              <span className="text-gradient-bio">arquitectura de élite</span>.
+              IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
             </h1>
             <p className="mt-5 max-w-3xl text-lg text-cyber-foreground/70 leading-relaxed">
               Construido sobre Lovable Cloud (Postgres + Realtime + pgvector + Edge Functions) y
@@ -113,7 +124,9 @@ function TecnologiaPage() {
                 key={f.title}
                 className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-card)] hover:-translate-y-1 transition-all duration-300"
               >
-                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-foreground/5 ${f.color}`}>
+                <div
+                  className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-foreground/5 ${f.color}`}
+                >
                   <f.icon className="h-6 w-6" />
                 </div>
                 <h3 className="mt-5 font-display text-lg font-semibold">{f.title}</h3>
@@ -129,7 +142,10 @@ function TecnologiaPage() {
             </p>
             <div className="mt-6 grid sm:grid-cols-3 gap-4">
               {compliance.map((c) => (
-                <div key={c.title} className="rounded-2xl border border-biosensor/20 bg-biosensor/5 p-5">
+                <div
+                  key={c.title}
+                  className="rounded-2xl border border-biosensor/20 bg-biosensor/5 p-5"
+                >
                   <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-biosensor/15 text-biosensor">
                     <c.icon className="h-5 w-5" />
                   </div>
@@ -149,7 +165,9 @@ function TecnologiaPage() {
             ].map((k) => (
               <div key={k.l} className="bg-card p-6 text-center">
                 <div className="font-display text-3xl font-bold text-biosensor">{k.v}</div>
-                <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">{k.l}</div>
+                <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+                  {k.l}
+                </div>
               </div>
             ))}
           </div>

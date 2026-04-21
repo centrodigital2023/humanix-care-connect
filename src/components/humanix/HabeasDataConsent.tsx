@@ -53,8 +53,8 @@ export function HabeasDataConsent() {
             <p className="text-foreground font-semibold text-sm">Tu privacidad importa</p>
             <p className="mt-1">
               Humanix trata tus datos según la <strong>Ley 1581 de 2012</strong> (Habeas Data) y el
-              Decreto 1377 de 2013. Usamos cookies esenciales y, con tu permiso explícito, geolocalización
-              durante servicios activos.
+              Decreto 1377 de 2013. Usamos cookies esenciales y, con tu permiso explícito,
+              geolocalización durante servicios activos.
             </p>
             <Button onClick={accept} variant="hero" size="sm" className="mt-3">
               Aceptar y continuar

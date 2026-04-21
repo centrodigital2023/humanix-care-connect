@@ -26,18 +26,13 @@ export function Hero() {
             </h1>
 
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              Humanix es la plataforma premium que conecta enfermeros, auxiliares
-              y cuidadores con las familias, clínicas y agencias de Colombia —
-              con verificación por IA, geolocalización en vivo y pago directo
-              al profesional.
+              Humanix es la plataforma premium que conecta enfermeros, auxiliares y cuidadores con
+              las familias, clínicas y agencias de Colombia — con verificación por IA,
+              geolocalización en vivo y pago directo al profesional.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="hero"
-                size="xl"
-                onClick={() => setGateOpen(true)}
-              >
+              <Button variant="hero" size="xl" onClick={() => setGateOpen(true)}>
                 Buscar cuidador <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
               <Button variant="glass" size="xl" asChild>

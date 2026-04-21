@@ -88,7 +88,10 @@ export function MatchingOffers({
         if (!o) return null;
         const applied = appliedIds.has(o.id);
         return (
-          <article key={m.offer_id} className="rounded-xl border border-biosensor/30 bg-biosensor/5 p-4">
+          <article
+            key={m.offer_id}
+            className="rounded-xl border border-biosensor/30 bg-biosensor/5 p-4"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -107,7 +110,13 @@ export function MatchingOffers({
                 <p className="font-semibold">{COP(o.amount)}</p>
                 <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1 justify-end">
                   <Briefcase className="h-3 w-3" />
-                  {o.modality === "hour" ? "Hora" : o.modality === "shift" ? "Turno" : o.modality === "month" ? "Mes" : "Paquete"}
+                  {o.modality === "hour"
+                    ? "Hora"
+                    : o.modality === "shift"
+                      ? "Turno"
+                      : o.modality === "month"
+                        ? "Mes"
+                        : "Paquete"}
                 </p>
                 <Button
                   size="sm"

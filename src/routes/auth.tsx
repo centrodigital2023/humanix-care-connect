@@ -36,7 +36,10 @@ export const Route = createFileRoute("/auth")({
 
 type Role = "professional" | "family" | "institution";
 
-const roleConfig: Record<Role, { label: string; desc: string; icon: typeof Stethoscope; accent: string }> = {
+const roleConfig: Record<
+  Role,
+  { label: string; desc: string; icon: typeof Stethoscope; accent: string }
+> = {
   professional: {
     label: "Profesional",
     desc: "Enfermero, auxiliar o cuidador",
@@ -142,8 +145,8 @@ function AuthPage() {
               <span className="text-gradient-bio">en minutos</span>.
             </h1>
             <p className="mt-4 text-muted-foreground leading-relaxed max-w-md">
-              Verificación RETHUS, asistente de IA para tu perfil, ofertas en
-              tiempo real y pagos inmediatos. Todo en un solo lugar.
+              Verificación RETHUS, asistente de IA para tu perfil, ofertas en tiempo real y pagos
+              inmediatos. Todo en un solo lugar.
             </p>
 
             <ul className="mt-8 space-y-3 text-sm text-muted-foreground">
@@ -189,7 +192,9 @@ function AuthPage() {
             {mode === "signup" && (
               <div className="mb-5">
                 <Label className="mb-2 block">¿Cómo te identificas?</Label>
-                <div className={`grid gap-2 ${visibleRoles.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                <div
+                  className={`grid gap-2 ${visibleRoles.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
+                >
                   {visibleRoles.map((r) => {
                     const c = roleConfig[r];
                     const Icon = c.icon;
@@ -217,7 +222,8 @@ function AuthPage() {
                     ¿Eres profesional de la salud?{" "}
                     <Link to="/profesionales" className="underline hover:text-foreground">
                       Empieza por aquí
-                    </Link>.
+                    </Link>
+                    .
                   </p>
                 )}
               </div>
@@ -321,8 +327,8 @@ function AuthPage() {
             </form>
 
             <p className="mt-5 text-xs text-muted-foreground text-center">
-              Al continuar aceptas los términos, política de privacidad y
-              tratamiento de datos personales (Habeas Data) de Humanix.
+              Al continuar aceptas los términos, política de privacidad y tratamiento de datos
+              personales (Habeas Data) de Humanix.
             </p>
           </div>
         </div>

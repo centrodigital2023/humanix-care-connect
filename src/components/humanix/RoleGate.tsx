@@ -37,9 +37,7 @@ export function RoleGate({ open, onOpenChange, redirectTo = "/buscar" }: Props) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl">
-            ¿Quién está buscando cuidado?
-          </DialogTitle>
+          <DialogTitle className="font-display text-2xl">¿Quién está buscando cuidado?</DialogTitle>
           <DialogDescription>
             Para personalizar tu experiencia, cuéntanos cómo te identificas. Solo toma un segundo.
           </DialogDescription>

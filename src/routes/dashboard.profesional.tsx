@@ -119,7 +119,11 @@ const COP = (n: number | null | undefined) =>
     : "—";
 
 function ProDashboard() {
-  const { user, loading: authLoading, logout: appLogout } = useAppUser({
+  const {
+    user,
+    loading: authLoading,
+    logout: appLogout,
+  } = useAppUser({
     allow: ["professional", "superadmin"],
   });
   const [loading, setLoading] = useState(true);
@@ -150,10 +154,7 @@ function ProDashboard() {
   const [workExp, setWorkExp] = useState<WorkExp[]>([]);
 
   const trust = profile?.trust_score ?? 0;
-  const greetingName = useMemo(
-    () => fullName.split(" ")[0] || "profesional",
-    [fullName],
-  );
+  const greetingName = useMemo(() => fullName.split(" ")[0] || "profesional", [fullName]);
 
   const loadAll = async (uid: string) => {
     try {
@@ -187,9 +188,7 @@ function ProDashboard() {
         setCities((pp.service_cities ?? []).join(", "));
         setSubs((pp.sub_specialties ?? []).join(", "));
         setCerts(
-          Array.isArray(pp.certifications)
-            ? (pp.certifications as string[]).join(", ")
-            : "",
+          Array.isArray(pp.certifications) ? (pp.certifications as string[]).join(", ") : "",
         );
         setBio(pp.bio ?? "");
         setWorkExp(Array.isArray(pp.work_experience) ? pp.work_experience : []);
@@ -197,12 +196,10 @@ function ProDashboard() {
         // Best-effort create. Don't block the UI if RLS rejects it.
         const ins = await supabase.from("professional_profiles").insert({ user_id: uid });
         if (ins.error) {
-          // eslint-disable-next-line no-console
           console.warn("[pro dashboard] could not create empty profile:", ins.error.message);
         }
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error("[pro dashboard] loadAll failed:", err);
       toast.error("No pudimos cargar todos tus datos. Intenta refrescar.");
     }
@@ -243,11 +240,21 @@ function ProDashboard() {
   useRealtimeRefresh(
     `pro-dash-realtime-${userId ?? "anon"}`,
     [
-      { table: "professional_profiles", event: "UPDATE", filter: userId ? `user_id=eq.${userId}` : undefined },
-      { table: "applications", event: "*", filter: userId ? `professional_id=eq.${userId}` : undefined },
+      {
+        table: "professional_profiles",
+        event: "UPDATE",
+        filter: userId ? `user_id=eq.${userId}` : undefined,
+      },
+      {
+        table: "applications",
+        event: "*",
+        filter: userId ? `professional_id=eq.${userId}` : undefined,
+      },
       { table: "job_offers", event: "*" },
     ],
-    () => { if (userId) void loadAll(userId); },
+    () => {
+      if (userId) void loadAll(userId);
+    },
     !!userId,
   );
 
@@ -305,9 +312,18 @@ function ProDashboard() {
     hourly_rate: hourly === "" ? null : Number(hourly),
     shift_rate: shift === "" ? null : Number(shift),
     monthly_rate: monthly === "" ? null : Number(monthly),
-    service_cities: cities.split(",").map((s) => s.trim()).filter(Boolean),
-    sub_specialties: subs.split(",").map((s) => s.trim()).filter(Boolean),
-    certifications: certs.split(",").map((s) => s.trim()).filter(Boolean),
+    service_cities: cities
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    sub_specialties: subs
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+    certifications: certs
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
     bio: bio || null,
     work_experience: workExp,
   });
@@ -430,8 +446,7 @@ function ProDashboard() {
     setWorkExp((prev) => [...prev, { role: "", employer: "", city: "", start: "", end: "" }]);
   const updateExp = (i: number, k: keyof WorkExp, v: string) =>
     setWorkExp((prev) => prev.map((e, idx) => (idx === i ? { ...e, [k]: v } : e)));
-  const removeExp = (i: number) =>
-    setWorkExp((prev) => prev.filter((_, idx) => idx !== i));
+  const removeExp = (i: number) => setWorkExp((prev) => prev.filter((_, idx) => idx !== i));
 
   if (authLoading || loading || !user) {
     return (
@@ -462,13 +477,22 @@ function ProDashboard() {
           </div>
           <div className="flex items-center gap-2">
             {userId && <NotificationsBell userId={userId} />}
-            <Link to="/mensajes" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
+            <Link
+              to="/mensajes"
+              className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline"
+            >
               Mensajes
             </Link>
-            <Link to="/planes" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
+            <Link
+              to="/planes"
+              className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline"
+            >
               Planes
             </Link>
-            <Link to="/buscar" className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline">
+            <Link
+              to="/buscar"
+              className="text-sm text-muted-foreground hover:text-foreground px-3 hidden sm:inline"
+            >
               Marketplace
             </Link>
             <Button variant="ghost" size="sm" onClick={logout}>
@@ -489,16 +513,29 @@ function ProDashboard() {
               Tu carrera en salud, sin fricción.
             </h1>
             <p className="mt-2 text-muted-foreground text-sm">
-              Construye tu perfil con ayuda de IA, sube tus documentos, recibe ofertas que encajan y mejora tu Trust Score.
+              Construye tu perfil con ayuda de IA, sube tus documentos, recibe ofertas que encajan y
+              mejora tu Trust Score.
             </p>
             <div className="mt-5 grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
-              <Stat icon={<Briefcase className="h-4 w-4" />} label="Turnos" value={String(profile?.total_jobs ?? 0)} />
-              <Stat icon={<Star className="h-4 w-4" />} label="Rating" value={(profile?.avg_rating ?? 0).toFixed(1)} />
+              <Stat
+                icon={<Briefcase className="h-4 w-4" />}
+                label="Turnos"
+                value={String(profile?.total_jobs ?? 0)}
+              />
+              <Stat
+                icon={<Star className="h-4 w-4" />}
+                label="Rating"
+                value={(profile?.avg_rating ?? 0).toFixed(1)}
+              />
               <Stat
                 icon={<ShieldCheck className="h-4 w-4" />}
                 label="Estado"
                 value={
-                  profile?.verified ? "Verificado" : profile?.ai_preapproved ? "Pre-aprobado" : "En revisión"
+                  profile?.verified
+                    ? "Verificado"
+                    : profile?.ai_preapproved
+                      ? "Pre-aprobado"
+                      : "En revisión"
                 }
               />
             </div>
@@ -546,9 +583,7 @@ function ProDashboard() {
             <AvatarUploader
               userId={userId}
               initialUrl={profile?.avatar_url ?? null}
-              onChange={(url) =>
-                setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev))
-              }
+              onChange={(url) => setProfile((prev) => (prev ? { ...prev, avatar_url: url } : prev))}
             />
           </section>
         )}
@@ -560,7 +595,8 @@ function ProDashboard() {
             <h2 className="font-semibold">Llena tu perfil con IA</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">
-            Cuéntame en una frase tu experiencia y completo los campos por ti. O sube tu hoja de vida abajo y la leo automáticamente.
+            Cuéntame en una frase tu experiencia y completo los campos por ti. O sube tu hoja de
+            vida abajo y la leo automáticamente.
           </p>
           <div className="mt-3 flex flex-col sm:flex-row gap-2">
             <Textarea
@@ -586,7 +622,8 @@ function ProDashboard() {
           <section className="rounded-2xl border border-border bg-card/95 p-6">
             <h2 className="font-semibold mb-1">Documentos</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Sube tu hoja de vida (PDF) y la IA extrae tus datos. La IA también verifica cada documento.
+              Sube tu hoja de vida (PDF) y la IA extrae tus datos. La IA también verifica cada
+              documento.
             </p>
             <DocumentsManager userId={userId} onCvExtracted={applyExtraction} />
           </section>
@@ -619,7 +656,9 @@ function ProDashboard() {
                   .from("professional_profiles")
                   .update({ lat, lng, home_city: address ?? profile?.home_city ?? null } as never)
                   .eq("user_id", userId);
-                setProfile((prev) => (prev ? { ...prev, lat, lng, home_city: address ?? prev.home_city } : prev));
+                setProfile((prev) =>
+                  prev ? { ...prev, lat, lng, home_city: address ?? prev.home_city } : prev,
+                );
                 toast.success("Ubicación guardada");
               }}
             />
@@ -651,7 +690,11 @@ function ProDashboard() {
 
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Especialidad principal">
-              <Input value={specialty} onChange={(e) => setSpecialty(e.target.value)} placeholder="Cuidado adulto mayor" />
+              <Input
+                value={specialty}
+                onChange={(e) => setSpecialty(e.target.value)}
+                placeholder="Cuidado adulto mayor"
+              />
             </Field>
             <Field label="Años de experiencia">
               <Input
@@ -664,13 +707,25 @@ function ProDashboard() {
               <Input value={rethus} onChange={(e) => setRethus(e.target.value)} />
             </Field>
             <Field label="Ciudades de servicio (separadas por coma)">
-              <Input value={cities} onChange={(e) => setCities(e.target.value)} placeholder="Bogotá, Soacha" />
+              <Input
+                value={cities}
+                onChange={(e) => setCities(e.target.value)}
+                placeholder="Bogotá, Soacha"
+              />
             </Field>
             <Field label="Sub-especialidades">
-              <Input value={subs} onChange={(e) => setSubs(e.target.value)} placeholder="Heridas, EPOC" />
+              <Input
+                value={subs}
+                onChange={(e) => setSubs(e.target.value)}
+                placeholder="Heridas, EPOC"
+              />
             </Field>
             <Field label="Certificaciones">
-              <Input value={certs} onChange={(e) => setCerts(e.target.value)} placeholder="BLS, ACLS" />
+              <Input
+                value={certs}
+                onChange={(e) => setCerts(e.target.value)}
+                placeholder="BLS, ACLS"
+              />
             </Field>
             <Field label="Tarifa por hora (COP)">
               <Input
@@ -775,7 +830,11 @@ function ProDashboard() {
             <div className="mt-6">
               <PublishGate
                 userId={userId}
-                profilePayload={{ ...buildPayload(), full_name: fullName, rethus_verified: profile?.rethus_verified ?? false }}
+                profilePayload={{
+                  ...buildPayload(),
+                  full_name: fullName,
+                  rethus_verified: profile?.rethus_verified ?? false,
+                }}
                 published={profile?.published ?? false}
                 onSaved={saveProfile}
                 onPublished={async () => {
@@ -833,13 +892,15 @@ function ProDashboard() {
               <Sparkles className="h-4 w-4 text-fuchsia-neural" />
               <h2 className="font-semibold">Matches semánticos (huella IA)</h2>
             </div>
-            <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
+            <Link
+              to="/buscar"
+              search={{ tab: "ofertas" }}
+              className="text-sm text-biosensor hover:underline"
+            >
               Ver todas →
             </Link>
           </div>
-          {userId && (
-            <SemanticOffers userId={userId} appliedIds={appliedIds} onApply={apply} />
-          )}
+          {userId && <SemanticOffers userId={userId} appliedIds={appliedIds} onApply={apply} />}
         </section>
 
         {/* Agenda virtual */}
@@ -849,7 +910,8 @@ function ProDashboard() {
               <div>
                 <h2 className="font-semibold">Tu agenda virtual</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Marca las horas en que estás disponible. Las familias e instituciones lo verán al buscarte.
+                  Marca las horas en que estás disponible. Las familias e instituciones lo verán al
+                  buscarte.
                 </p>
               </div>
             </div>
@@ -864,7 +926,11 @@ function ProDashboard() {
               <Sparkles className="h-4 w-4 text-biosensor" />
               <h2 className="font-semibold">Ofertas que encajan contigo</h2>
             </div>
-            <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
+            <Link
+              to="/buscar"
+              search={{ tab: "ofertas" }}
+              className="text-sm text-biosensor hover:underline"
+            >
               Ver todas →
             </Link>
           </div>
@@ -880,7 +946,11 @@ function ProDashboard() {
         <section className="rounded-2xl border border-border bg-card/95 p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Todas las ofertas activas</h2>
-            <Link to="/buscar" search={{ tab: "ofertas" }} className="text-sm text-biosensor hover:underline">
+            <Link
+              to="/buscar"
+              search={{ tab: "ofertas" }}
+              className="text-sm text-biosensor hover:underline"
+            >
               Ver todas →
             </Link>
           </div>
@@ -905,7 +975,9 @@ function ProDashboard() {
                       </span>
                     </div>
                     {o.description && (
-                      <p className="mt-2 text-sm text-muted-foreground line-clamp-2">{o.description}</p>
+                      <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                        {o.description}
+                      </p>
                     )}
                     <div className="mt-3 flex items-center justify-between">
                       <p className="text-sm font-semibold">{COP(o.amount)}</p>
@@ -955,5 +1027,11 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
 }
 
 function labelModality(m: Offer["modality"]) {
-  return m === "hour" ? "Por hora" : m === "shift" ? "Por turno" : m === "month" ? "Mensual" : "Paquete";
+  return m === "hour"
+    ? "Por hora"
+    : m === "shift"
+      ? "Por turno"
+      : m === "month"
+        ? "Mensual"
+        : "Paquete";
 }

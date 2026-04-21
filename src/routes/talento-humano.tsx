@@ -39,7 +39,7 @@ const NAV: NavItem[] = [
   { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
-  { label: "Marketplace", to: "/buscar", icon: Search },
+  { label: "Marketplace", to: "/superadmin/marketplace", icon: Briefcase },
 ];
 
 type Pro = {
@@ -110,11 +110,11 @@ function HRPage() {
   }
 
   const filtered = pros
+    .filter((p) => (tab === "verified" ? p.verified : tab === "pending" ? !p.verified : true))
     .filter((p) =>
-      tab === "verified" ? p.verified : tab === "pending" ? !p.verified : true,
-    )
-    .filter((p) =>
-      filter ? `${p.specialty ?? ""} ${p.bio ?? ""}`.toLowerCase().includes(filter.toLowerCase()) : true,
+      filter
+        ? `${p.specialty ?? ""} ${p.bio ?? ""}`.toLowerCase().includes(filter.toLowerCase())
+        : true,
     );
 
   return (
@@ -124,7 +124,11 @@ function HRPage() {
       nav={NAV}
       title="Talento Humano"
       subtitle="Verifica, activa y monitorea el roster de profesionales registrados."
-      crumbs={[{ label: "Inicio", to: "/" }, { label: "Staff", to: "/superadmin" }, { label: "Talento Humano" }]}
+      crumbs={[
+        { label: "Inicio", to: "/" },
+        { label: "Staff", to: "/superadmin" },
+        { label: "Talento Humano" },
+      ]}
       badge={{ label: "Staff", tone: "bio" }}
     >
       <div className="space-y-5">
@@ -133,7 +137,10 @@ function HRPage() {
           <Stat label="Verificados" value={pros.filter((p) => p.verified).length} />
           <Stat label="Pre-aprobados IA" value={pros.filter((p) => p.ai_preapproved).length} />
           <Stat label="RETHUS" value={pros.filter((p) => p.rethus_verified).length} />
-          <Stat label="Trust ≥ 80" value={pros.filter((p) => (p.social_trust_score ?? 0) >= 80).length} />
+          <Stat
+            label="Trust ≥ 80"
+            value={pros.filter((p) => (p.social_trust_score ?? 0) >= 80).length}
+          />
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -143,7 +150,9 @@ function HRPage() {
                 key={k}
                 onClick={() => setTab(k)}
                 className={`px-3 py-1.5 rounded-lg font-medium transition ${
-                  tab === k ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                  tab === k
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {k === "all" ? "Todos" : k === "pending" ? "Pendientes" : "Verificados"}
@@ -181,7 +190,9 @@ function HRPage() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{p.bio || "Sin bio"}</p>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {p.bio || "Sin bio"}
+                  </p>
                   <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground flex-wrap">
                     <span className="inline-flex items-center gap-1">
                       <Shield className="h-3 w-3" /> Social Trust {p.social_trust_score ?? 0}/100

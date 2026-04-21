@@ -150,10 +150,7 @@ export function BookNowButton({
                 />
               </Field>
 
-              <Field
-                icon={<Clock className="h-4 w-4 text-biosensor" />}
-                label="Duración (horas)"
-              >
+              <Field icon={<Clock className="h-4 w-4 text-biosensor" />} label="Duración (horas)">
                 <input
                   type="number"
                   min={1}

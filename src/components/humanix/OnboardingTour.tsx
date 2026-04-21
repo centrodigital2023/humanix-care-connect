@@ -63,16 +63,10 @@ export function OnboardingTour({ onClose }: { onClose: () => void }) {
         </div>
         <p className="mt-4 text-sm text-muted-foreground">{cur.body}</p>
         <div className="mt-6 flex items-center justify-between">
-          <button
-            onClick={onClose}
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
+          <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">
             Saltar tour
           </button>
-          <Button
-            variant="hero"
-            onClick={() => (last ? onClose() : setStep((s) => s + 1))}
-          >
+          <Button variant="hero" onClick={() => (last ? onClose() : setStep((s) => s + 1))}>
             {last ? "Empezar" : "Siguiente"}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>

@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Loader2, Sparkles, ShieldCheck, AlertTriangle, AlertCircle, Save, Send } from "lucide-react";
+import {
+  Loader2,
+  Sparkles,
+  ShieldCheck,
+  AlertTriangle,
+  AlertCircle,
+  Save,
+  Send,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -43,8 +51,14 @@ export function PublishGate({
         };
       };
       const [docsR, refsR] = await Promise.all([
-        client.from("professional_documents").select("doc_type, status, ai_verified, ai_score, ai_notes, ai_extracted").eq("user_id", userId),
-        client.from("professional_references").select("ref_type, full_name, phone, relation").eq("user_id", userId),
+        client
+          .from("professional_documents")
+          .select("doc_type, status, ai_verified, ai_score, ai_notes, ai_extracted")
+          .eq("user_id", userId),
+        client
+          .from("professional_references")
+          .select("ref_type, full_name, phone, relation")
+          .eq("user_id", userId),
       ]);
 
       const { data, error } = await supabase.functions.invoke("profile-holistic-validator", {
@@ -123,8 +137,8 @@ export function PublishGate({
         )}
       </div>
       <p className="text-sm text-muted-foreground mb-4">
-        La IA cruza tus datos del formulario con todos los documentos subidos y las referencias para detectar incoherencias.
-        Solo te dejamos publicar si no hay errores graves.
+        La IA cruza tus datos del formulario con todos los documentos subidos y las referencias para
+        detectar incoherencias. Solo te dejamos publicar si no hay errores graves.
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -132,11 +146,19 @@ export function PublishGate({
           <Save className="h-4 w-4 mr-1.5" /> Guardar
         </Button>
         <Button onClick={() => validateAndPublish(false)} variant="glass" disabled={busy}>
-          {validating && !publishing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+          {validating && !publishing ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-1.5" />
+          )}
           Validar con IA
         </Button>
         <Button onClick={() => validateAndPublish(true)} variant="hero" disabled={busy}>
-          {publishing ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Send className="h-4 w-4 mr-1.5" />}
+          {publishing ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Send className="h-4 w-4 mr-1.5" />
+          )}
           {published ? "Re-publicar" : "Publicar perfil"}
         </Button>
       </div>
@@ -144,7 +166,9 @@ export function PublishGate({
       {validation && (
         <div className="mt-5 space-y-3">
           <div className="flex items-center gap-3">
-            <span className={`text-3xl font-bold ${validation.is_publishable ? "text-emerald-600" : "text-rose-600"}`}>
+            <span
+              className={`text-3xl font-bold ${validation.is_publishable ? "text-emerald-600" : "text-rose-600"}`}
+            >
               {Math.round(validation.score)}
             </span>
             <span className="text-sm text-muted-foreground">/ 100</span>

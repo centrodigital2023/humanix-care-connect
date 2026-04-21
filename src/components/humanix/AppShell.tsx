@@ -142,10 +142,16 @@ export function AppShell({
         </nav>
 
         <div className="border-t border-border p-3 space-y-2">
-          <div className={`flex items-center gap-2.5 rounded-xl p-2 ${collapsed ? "justify-center" : ""}`}>
+          <div
+            className={`flex items-center gap-2.5 rounded-xl p-2 ${collapsed ? "justify-center" : ""}`}
+          >
             <div className="h-9 w-9 rounded-full bg-gradient-to-br from-biosensor to-fuchsia-neural flex items-center justify-center text-xs font-bold text-white shrink-0">
               {user.avatarUrl ? (
-                <img src={user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  className="h-full w-full rounded-full object-cover"
+                />
               ) : (
                 initials || "U"
               )}
@@ -179,7 +185,9 @@ export function AppShell({
               className="flex-1 h-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5"
               title={collapsed ? "Expandir" : "Colapsar"}
             >
-              <ChevronRight className={`h-4 w-4 transition-transform ${collapsed ? "" : "rotate-180"}`} />
+              <ChevronRight
+                className={`h-4 w-4 transition-transform ${collapsed ? "" : "rotate-180"}`}
+              />
             </button>
           </div>
         </div>
@@ -224,10 +232,19 @@ export function AppShell({
             </nav>
             <div className="border-t border-border p-3 flex items-center gap-2">
               <Button variant="ghost" size="sm" className="flex-1" onClick={toggleTheme}>
-                {theme === "dark" ? <Sun className="h-4 w-4 mr-1.5" /> : <Moon className="h-4 w-4 mr-1.5" />}
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 mr-1.5" />
+                ) : (
+                  <Moon className="h-4 w-4 mr-1.5" />
+                )}
                 Tema
               </Button>
-              <Button variant="ghost" size="sm" className="flex-1 text-destructive" onClick={onLogout}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-1 text-destructive"
+                onClick={onLogout}
+              >
                 <LogOut className="h-4 w-4 mr-1.5" /> Salir
               </Button>
             </div>
@@ -310,7 +327,11 @@ export function AppShell({
               </div>
               <div className="h-9 w-9 rounded-full bg-gradient-to-br from-biosensor to-fuchsia-neural flex items-center justify-center text-xs font-bold text-white">
                 {user.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="" className="h-full w-full rounded-full object-cover" />
+                  <img
+                    src={user.avatarUrl}
+                    alt=""
+                    className="h-full w-full rounded-full object-cover"
+                  />
                 ) : (
                   initials || "U"
                 )}
@@ -336,7 +357,9 @@ export function AppShell({
                 )}
               </div>
               {subtitle && (
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{subtitle}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
+                  {subtitle}
+                </p>
               )}
             </div>
             {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
@@ -362,7 +385,9 @@ export function AppShell({
               >
                 <div
                   className={`h-9 w-9 inline-flex items-center justify-center rounded-xl ${
-                    active ? "bg-biosensor/15 shadow-[0_0_0_1px_color-mix(in_oklab,var(--biosensor)_30%,transparent)]" : ""
+                    active
+                      ? "bg-biosensor/15 shadow-[0_0_0_1px_color-mix(in_oklab,var(--biosensor)_30%,transparent)]"
+                      : ""
                   }`}
                 >
                   <Icon className="h-[18px] w-[18px]" />

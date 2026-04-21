@@ -39,7 +39,6 @@ function DashboardRouter() {
 
     const safety = setTimeout(() => {
       if (!done) {
-        // eslint-disable-next-line no-console
         console.warn("[dashboard] safety timeout fired → /auth");
         go("/auth");
       }
@@ -49,7 +48,6 @@ function DashboardRouter() {
       try {
         const { data, error } = await supabase.auth.getSession();
         if (error) {
-          // eslint-disable-next-line no-console
           console.warn("[dashboard] getSession error:", error.message);
         }
         if (!data?.session) {
@@ -59,10 +57,7 @@ function DashboardRouter() {
         setMsg("Redirigiendo a tu panel...");
         const uid = data.session.user.id;
 
-        const rolesPromise = supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", uid);
+        const rolesPromise = supabase.from("user_roles").select("role").eq("user_id", uid);
         const timeout = new Promise<{ data: null }>((resolve) =>
           setTimeout(() => resolve({ data: null }), 2500),
         );
@@ -74,7 +69,6 @@ function DashboardRouter() {
         const primary = PRIORITY.find((p) => list.includes(p)) ?? "family";
         go(pathForRole(primary));
       } catch (err) {
-        // eslint-disable-next-line no-console
         console.error("[dashboard] router error:", err);
         go("/auth");
       }

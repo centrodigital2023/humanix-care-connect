@@ -1,11 +1,7 @@
 import { useEffect, useState } from "react";
 import { Bell, CheckCheck, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link } from "@tanstack/react-router";
 
 type Notification = {
@@ -27,8 +23,14 @@ export function NotificationsBell({ userId }: { userId: string }) {
     const client = supabase as unknown as {
       from: (t: string) => {
         select: (c: string) => {
-          eq: (k: string, v: string) => {
-            order: (c: string, o: { ascending: boolean }) => {
+          eq: (
+            k: string,
+            v: string,
+          ) => {
+            order: (
+              c: string,
+              o: { ascending: boolean },
+            ) => {
               limit: (n: number) => Promise<{ data: Notification[] | null }>;
             };
           };
@@ -90,7 +92,10 @@ export function NotificationsBell({ userId }: { userId: string }) {
 
   return (
     <Popover>
-      <PopoverTrigger className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors" aria-label="Notificaciones">
+      <PopoverTrigger
+        className="relative p-2 rounded-lg hover:bg-muted/50 transition-colors"
+        aria-label="Notificaciones"
+      >
         <Bell className="h-4 w-4" />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-fuchsia-neural text-white text-[10px] font-semibold flex items-center justify-center">
@@ -122,12 +127,19 @@ export function NotificationsBell({ userId }: { userId: string }) {
               {items.map((n) => {
                 const inner = (
                   <>
-                    <p className={`text-sm font-medium ${!n.read_at ? "text-foreground" : "text-muted-foreground"}`}>
+                    <p
+                      className={`text-sm font-medium ${!n.read_at ? "text-foreground" : "text-muted-foreground"}`}
+                    >
                       {n.title}
                     </p>
-                    {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
+                    {n.body && (
+                      <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>
+                    )}
                     <p className="text-[10px] text-muted-foreground mt-1">
-                      {new Date(n.created_at).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })}
+                      {new Date(n.created_at).toLocaleString("es-CO", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
                     </p>
                   </>
                 );

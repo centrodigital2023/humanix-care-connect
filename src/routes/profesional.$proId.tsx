@@ -69,7 +69,11 @@ type Doc = {
 };
 
 const COP = (n: number) =>
-  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 const DOC_LABEL: Record<Doc["doc_type"], string> = {
   cv: "Hoja de vida",
@@ -161,8 +165,12 @@ function ProfessionalPublicPage() {
   const rating = Number(pro.avg_rating ?? 0);
   const reserved = pro.reserved_until && new Date(pro.reserved_until) > new Date();
 
-  const work = Array.isArray(pro.work_experience) ? (pro.work_experience as Array<Record<string, unknown>>) : [];
-  const certs = Array.isArray(pro.certifications) ? (pro.certifications as Array<Record<string, unknown>>) : [];
+  const work = Array.isArray(pro.work_experience)
+    ? (pro.work_experience as Array<Record<string, unknown>>)
+    : [];
+  const certs = Array.isArray(pro.certifications)
+    ? (pro.certifications as Array<Record<string, unknown>>)
+    : [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -200,7 +208,9 @@ function ProfessionalPublicPage() {
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-muted-foreground">{pro.specialty ?? "Profesional de salud"}</p>
+              <p className="mt-1 text-muted-foreground">
+                {pro.specialty ?? "Profesional de salud"}
+              </p>
               <div className="mt-3 flex items-center gap-4 flex-wrap text-sm">
                 <span className="inline-flex items-center gap-1 text-muted-foreground">
                   <MapPin className="h-3.5 w-3.5" /> {city}
@@ -217,7 +227,8 @@ function ProfessionalPublicPage() {
               <div className="mt-3 flex items-center gap-2 flex-wrap">
                 {pro.rethus_verified && (
                   <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-biosensor/15 text-biosensor border border-biosensor/30 inline-flex items-center gap-1">
-                    <ShieldCheck className="h-3 w-3" /> RETHUS{pro.rethus_number ? ` · ${pro.rethus_number}` : ""}
+                    <ShieldCheck className="h-3 w-3" /> RETHUS
+                    {pro.rethus_number ? ` · ${pro.rethus_number}` : ""}
                   </span>
                 )}
                 {(pro.trust_score ?? 0) > 0 && (
@@ -238,8 +249,12 @@ function ProfessionalPublicPage() {
             <div className="lg:text-right">
               {pro.hourly_rate ? (
                 <>
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Tarifa</p>
-                  <p className="font-display text-3xl font-bold text-biosensor">{COP(pro.hourly_rate)}</p>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                    Tarifa
+                  </p>
+                  <p className="font-display text-3xl font-bold text-biosensor">
+                    {COP(pro.hourly_rate)}
+                  </p>
                   <p className="text-xs text-muted-foreground">por hora</p>
                 </>
               ) : (
@@ -275,7 +290,9 @@ function ProfessionalPublicPage() {
                     <Sparkles className="h-4 w-4 text-fuchsia-neural" /> Acerca de
                   </h2>
                   {pro.ai_summary && (
-                    <p className="mt-3 text-sm leading-relaxed text-foreground/90">{pro.ai_summary}</p>
+                    <p className="mt-3 text-sm leading-relaxed text-foreground/90">
+                      {pro.ai_summary}
+                    </p>
                   )}
                   {(profile?.bio || pro.bio) && (
                     <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -313,13 +330,21 @@ function ProfessionalPublicPage() {
                   <ol className="mt-4 space-y-3">
                     {work.map((w, i) => (
                       <li key={i} className="rounded-xl border border-border p-4">
-                        <p className="font-semibold">{(w.role as string) ?? (w.title as string) ?? "Cargo"}</p>
+                        <p className="font-semibold">
+                          {(w.role as string) ?? (w.title as string) ?? "Cargo"}
+                        </p>
                         <p className="text-xs text-muted-foreground">
                           {(w.company as string) ?? "Institución"}
-                          {w.years ? ` · ${w.years} años` : w.period ? ` · ${w.period as string}` : ""}
+                          {w.years
+                            ? ` · ${w.years} años`
+                            : w.period
+                              ? ` · ${w.period as string}`
+                              : ""}
                         </p>
                         {w.description ? (
-                          <p className="mt-2 text-sm text-muted-foreground">{w.description as string}</p>
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {w.description as string}
+                          </p>
                         ) : null}
                       </li>
                     ))}
@@ -339,8 +364,12 @@ function ProfessionalPublicPage() {
                         <CheckCircle2 className="h-4 w-4 text-biosensor mt-0.5 shrink-0" />
                         <span>
                           <strong>{(c.name as string) ?? "Certificación"}</strong>
-                          {c.issuer ? <span className="text-muted-foreground"> · {c.issuer as string}</span> : null}
-                          {c.year ? <span className="text-muted-foreground"> · {c.year as string}</span> : null}
+                          {c.issuer ? (
+                            <span className="text-muted-foreground"> · {c.issuer as string}</span>
+                          ) : null}
+                          {c.year ? (
+                            <span className="text-muted-foreground"> · {c.year as string}</span>
+                          ) : null}
                         </span>
                       </li>
                     ))}
@@ -357,8 +386,8 @@ function ProfessionalPublicPage() {
                 </h2>
                 {docs.length === 0 ? (
                   <p className="mt-3 text-xs text-muted-foreground">
-                    No hay documentos públicos aprobados todavía. La verificación RETHUS es una validación
-                    automática del Ministerio de Salud de Colombia.
+                    No hay documentos públicos aprobados todavía. La verificación RETHUS es una
+                    validación automática del Ministerio de Salud de Colombia.
                   </p>
                 ) : (
                   <ul className="mt-3 space-y-2">
@@ -377,8 +406,8 @@ function ProfessionalPublicPage() {
                   </ul>
                 )}
                 <p className="mt-3 text-[11px] text-muted-foreground leading-relaxed">
-                  Por privacidad y seguridad, los archivos no son descargables públicamente. Humanix los
-                  audita y certifica.
+                  Por privacidad y seguridad, los archivos no son descargables públicamente. Humanix
+                  los audita y certifica.
                 </p>
               </Card>
 
@@ -389,8 +418,8 @@ function ProfessionalPublicPage() {
                 </h2>
                 <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
                   Humanix cobra solo el <strong className="text-copper">3%</strong> sobre cada
-                  contratación. El profesional recibe el <strong>97%</strong>. Sin tarifas ocultas, sin
-                  permanencia.
+                  contratación. El profesional recibe el <strong>97%</strong>. Sin tarifas ocultas,
+                  sin permanencia.
                 </p>
               </Card>
             </aside>

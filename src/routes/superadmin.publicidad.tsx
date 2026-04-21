@@ -1,8 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Loader2, Megaphone, LayoutDashboard, ShieldAlert, ScrollText, MessageSquare,
-  Users, FileCheck, Briefcase, Plus, Sparkles, Eye, Trash2, Pencil, ChevronLeft, ChevronRight,
+  Loader2,
+  Megaphone,
+  LayoutDashboard,
+  ShieldAlert,
+  ScrollText,
+  MessageSquare,
+  Users,
+  FileCheck,
+  Briefcase,
+  Plus,
+  Sparkles,
+  Eye,
+  Trash2,
+  Pencil,
+  ChevronLeft,
+  ChevronRight,
+  Play,
+  Pause,
+  BarChart2,
+  ExternalLink,
+  CheckCircle2,
+  CircleDot,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +31,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
@@ -39,16 +71,34 @@ const NAV: NavItem[] = [
 ];
 
 type Banner = {
-  id: string; title: string; description: string | null; cta_label: string | null;
-  link_url: string | null; image_url: string | null; audience: string; position: string;
-  active: boolean; ai_recommendation: string | null; ai_score: number | null;
-  impressions: number; clicks: number; shares_count: number;
-  starts_at: string | null; ends_at: string | null; created_at: string;
+  id: string;
+  title: string;
+  description: string | null;
+  cta_label: string | null;
+  link_url: string | null;
+  image_url: string | null;
+  audience: string;
+  position: string;
+  active: boolean;
+  ai_recommendation: string | null;
+  ai_score: number | null;
+  impressions: number;
+  clicks: number;
+  shares_count: number;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
 };
 
 const EMPTY: Partial<Banner> = {
-  title: "", description: "", cta_label: "Ver más", link_url: "",
-  image_url: "", audience: "all", position: "home_hero", active: true,
+  title: "",
+  description: "",
+  cta_label: "Ver más",
+  link_url: "",
+  image_url: "",
+  audience: "all",
+  position: "home_hero",
+  active: true,
 };
 
 function PublicidadPage() {
@@ -58,7 +108,9 @@ function PublicidadPage() {
   const [open, setOpen] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [carouselIdx, setCarouselIdx] = useState(0);
+  const [carouselPlaying, setCarouselPlaying] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.co";
 
   useEffect(() => {
@@ -66,14 +118,22 @@ function PublicidadPage() {
     void load();
     const ch = supabase
       .channel("ads-realtime")
-      .on("postgres_changes", { event: "*", schema: "public", table: "ad_banners" }, () => void load())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "ad_banners" },
+        () => void load(),
+      )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [user]);
 
   const load = async () => {
-    const { data } = await supabase.from("ad_banners")
-      .select("*").order("created_at", { ascending: false });
+    const { data } = await supabase
+      .from("ad_banners")
+      .select("*")
+      .order("created_at", { ascending: false });
     setBanners((data ?? []) as Banner[]);
   };
 
@@ -120,7 +180,10 @@ function PublicidadPage() {
     if (!confirm("¿Eliminar banner?")) return;
     await supabase.from("ad_banners").delete().eq("id", id);
     await supabase.rpc("log_audit", {
-      _action: "ad.delete", _resource_type: "ad_banners", _resource_id: id, _severity: "warn",
+      _action: "ad.delete",
+      _resource_type: "ad_banners",
+      _resource_id: id,
+      _severity: "warn",
     });
     toast.success("Eliminado");
     await load();
@@ -132,14 +195,20 @@ function PublicidadPage() {
     try {
       const { data, error } = await supabase.functions.invoke("ad-recommender", {
         body: {
-          title: editing.title, description: editing.description,
-          cta_label: editing.cta_label, target_intent: editing.audience,
+          title: editing.title,
+          description: editing.description,
+          cta_label: editing.cta_label,
+          target_intent: editing.audience,
         },
       });
       if (error) throw error;
       const rec = data as {
-        title_suggestion: string; description_suggestion: string; cta_suggestion: string;
-        audience: string; ai_score: number; recommendation: string;
+        title_suggestion: string;
+        description_suggestion: string;
+        cta_suggestion: string;
+        audience: string;
+        ai_score: number;
+        recommendation: string;
       };
       setEditing({
         ...editing,
@@ -161,13 +230,34 @@ function PublicidadPage() {
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const n = new Set(prev);
-      n.has(id) ? n.delete(id) : n.add(id);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
       return n;
     });
   };
 
   const activeBanners = banners.filter((b) => b.active);
-  const carouselItems = selectedIds.size > 0 ? banners.filter((b) => selectedIds.has(b.id)) : activeBanners;
+  const carouselItems =
+    selectedIds.size > 0 ? banners.filter((b) => selectedIds.has(b.id)) : activeBanners;
+
+  // Autoplay
+  const startTimer = useCallback(() => {
+    if (carouselTimer.current) clearInterval(carouselTimer.current);
+    carouselTimer.current = setInterval(() => {
+      setCarouselIdx((i) => (i + 1) % Math.max(1, carouselItems.length));
+    }, 4000);
+  }, [carouselItems.length]);
+
+  useEffect(() => {
+    if (carouselPlaying && carouselItems.length > 1) {
+      startTimer();
+    } else if (carouselTimer.current) {
+      clearInterval(carouselTimer.current);
+    }
+    return () => {
+      if (carouselTimer.current) clearInterval(carouselTimer.current);
+    };
+  }, [carouselPlaying, carouselItems.length, startTimer]);
 
   if (loading || !user) {
     return (
@@ -178,10 +268,13 @@ function PublicidadPage() {
   }
 
   const current = carouselItems[carouselIdx % Math.max(1, carouselItems.length)];
+  void current; // consumed inline inside JSX
 
   return (
     <AppShell
-      user={user} onLogout={logout} nav={NAV}
+      user={user}
+      onLogout={logout}
+      nav={NAV}
       title="Publicidad"
       subtitle="CRUD de banners con IA de copy, carrusel y publicación a redes."
       crumbs={[{ label: "Superadmin", to: "/superadmin" }, { label: "Publicidad" }]}
@@ -191,10 +284,30 @@ function PublicidadPage() {
         {/* ── KPI tiles ─────────────────────────────────────────────────── */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Banners", value: banners.length, sub: `${activeBanners.length} activos`, color: "text-biosensor" },
-            { label: "Impresiones", value: banners.reduce((s, b) => s + b.impressions, 0).toLocaleString("es-CO"), sub: "total acumulado", color: "text-copper" },
-            { label: "Clicks", value: banners.reduce((s, b) => s + b.clicks, 0).toLocaleString("es-CO"), sub: `CTR ${banners.reduce((s, b) => s + b.impressions, 0) > 0 ? ((banners.reduce((s, b) => s + b.clicks, 0) / banners.reduce((s, b) => s + b.impressions, 0)) * 100).toFixed(1) : "0"}%`, color: "text-fuchsia-neural" },
-            { label: "Compartidos", value: banners.reduce((s, b) => s + b.shares_count, 0).toLocaleString("es-CO"), sub: "viral total", color: "text-biosensor" },
+            {
+              label: "Banners",
+              value: banners.length,
+              sub: `${activeBanners.length} activos`,
+              color: "text-biosensor",
+            },
+            {
+              label: "Impresiones",
+              value: banners.reduce((s, b) => s + b.impressions, 0).toLocaleString("es-CO"),
+              sub: "total acumulado",
+              color: "text-copper",
+            },
+            {
+              label: "Clicks",
+              value: banners.reduce((s, b) => s + b.clicks, 0).toLocaleString("es-CO"),
+              sub: `CTR ${banners.reduce((s, b) => s + b.impressions, 0) > 0 ? ((banners.reduce((s, b) => s + b.clicks, 0) / banners.reduce((s, b) => s + b.impressions, 0)) * 100).toFixed(1) : "0"}%`,
+              color: "text-fuchsia-neural",
+            },
+            {
+              label: "Compartidos",
+              value: banners.reduce((s, b) => s + b.shares_count, 0).toLocaleString("es-CO"),
+              sub: "viral total",
+              color: "text-biosensor",
+            },
           ].map(({ label, value, sub, color }) => (
             <Card key={label} className="p-4 text-center">
               <p className={`text-2xl font-bold ${color}`}>{value}</p>
@@ -206,10 +319,17 @@ function PublicidadPage() {
 
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="text-xs text-muted-foreground">
-            {banners.length} banner{banners.length === 1 ? "" : "s"} · {activeBanners.length} activo{activeBanners.length === 1 ? "" : "s"}
+            {banners.length} banner{banners.length === 1 ? "" : "s"} · {activeBanners.length} activo
+            {activeBanners.length === 1 ? "" : "s"}
             {selectedIds.size > 0 && ` · ${selectedIds.size} seleccionado(s)`}
           </div>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+          <Dialog
+            open={open}
+            onOpenChange={(v) => {
+              setOpen(v);
+              if (!v) setEditing(null);
+            }}
+          >
             <DialogTrigger asChild>
               <Button variant="hero" onClick={() => setEditing(EMPTY)} className="gap-1.5">
                 <Plus className="h-4 w-4" /> Nuevo banner
@@ -225,8 +345,13 @@ function PublicidadPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>Audiencia</Label>
-                      <Select value={editing.audience ?? "all"} onValueChange={(v) => setEditing({ ...editing, audience: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={editing.audience ?? "all"}
+                        onValueChange={(v) => setEditing({ ...editing, audience: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Todos</SelectItem>
                           <SelectItem value="family">Familias</SelectItem>
@@ -237,8 +362,13 @@ function PublicidadPage() {
                     </div>
                     <div>
                       <Label>Posición</Label>
-                      <Select value={editing.position ?? "home_hero"} onValueChange={(v) => setEditing({ ...editing, position: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                      <Select
+                        value={editing.position ?? "home_hero"}
+                        onValueChange={(v) => setEditing({ ...editing, position: v })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="home_hero">Home · Hero</SelectItem>
                           <SelectItem value="home_carousel">Home · Carrusel</SelectItem>
@@ -250,33 +380,64 @@ function PublicidadPage() {
                   </div>
                   <div>
                     <Label>Título</Label>
-                    <Input value={editing.title ?? ""} onChange={(e) => setEditing({ ...editing, title: e.target.value })} />
+                    <Input
+                      value={editing.title ?? ""}
+                      onChange={(e) => setEditing({ ...editing, title: e.target.value })}
+                    />
                   </div>
                   <div>
                     <Label>Descripción</Label>
-                    <Textarea rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+                    <Textarea
+                      rows={3}
+                      value={editing.description ?? ""}
+                      onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label>CTA</Label>
-                      <Input value={editing.cta_label ?? ""} onChange={(e) => setEditing({ ...editing, cta_label: e.target.value })} />
+                      <Input
+                        value={editing.cta_label ?? ""}
+                        onChange={(e) => setEditing({ ...editing, cta_label: e.target.value })}
+                      />
                     </div>
                     <div>
                       <Label>URL destino</Label>
-                      <Input value={editing.link_url ?? ""} onChange={(e) => setEditing({ ...editing, link_url: e.target.value })} placeholder="https://…" />
+                      <Input
+                        value={editing.link_url ?? ""}
+                        onChange={(e) => setEditing({ ...editing, link_url: e.target.value })}
+                        placeholder="https://…"
+                      />
                     </div>
                   </div>
                   <div>
                     <Label>URL imagen</Label>
-                    <Input value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://…" />
+                    <Input
+                      value={editing.image_url ?? ""}
+                      onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+                      placeholder="https://…"
+                    />
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Switch checked={editing.active ?? true} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
+                      <Switch
+                        checked={editing.active ?? true}
+                        onCheckedChange={(v) => setEditing({ ...editing, active: v })}
+                      />
                       <Label>Activo</Label>
                     </div>
-                    <Button type="button" variant="outline" onClick={recommend} disabled={aiLoading} className="gap-1.5">
-                      {aiLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 text-biosensor" />}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={recommend}
+                      disabled={aiLoading}
+                      className="gap-1.5"
+                    >
+                      {aiLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5 text-biosensor" />
+                      )}
                       Optimizar con IA
                     </Button>
                   </div>
@@ -291,14 +452,22 @@ function PublicidadPage() {
                   )}
                   {editing.image_url && (
                     <div className="rounded-lg overflow-hidden border border-border">
-                      <img src={editing.image_url} alt="Preview" className="w-full h-32 object-cover" />
+                      <img
+                        src={editing.image_url}
+                        alt="Preview"
+                        className="w-full h-32 object-cover"
+                      />
                     </div>
                   )}
                 </div>
               )}
               <DialogFooter>
-                <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-                <Button variant="hero" onClick={save}>Guardar</Button>
+                <Button variant="ghost" onClick={() => setOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="hero" onClick={save}>
+                  Guardar
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -312,57 +481,266 @@ function PublicidadPage() {
               </div>
               <div>
                 <h2 className="font-display font-bold text-base">Marketing en redes sociales</h2>
-                <p className="text-xs text-muted-foreground">8 plantillas listas para promocionar Humanix en Facebook, WhatsApp, LinkedIn y X.</p>
+                <p className="text-xs text-muted-foreground">
+                  8 plantillas listas para promocionar Humanix en Facebook, WhatsApp, LinkedIn y X.
+                </p>
               </div>
             </div>
-            <Badge className="bg-fuchsia-neural text-fuchsia-neural-foreground text-[10px]">NUEVO</Badge>
+            <Badge className="bg-fuchsia-neural text-fuchsia-neural-foreground text-[10px]">
+              NUEVO
+            </Badge>
           </div>
           <PromoCards origin={origin} />
         </Card>
 
         {carouselItems.length > 0 && (
-          <Card className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display font-semibold flex items-center gap-2">
-                <Eye className="h-4 w-4 text-copper" /> Vista previa carrusel
-              </h2>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="ghost" onClick={() => setCarouselIdx((i) => (i - 1 + carouselItems.length) % carouselItems.length)}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {(carouselIdx % carouselItems.length) + 1}/{carouselItems.length}
-                </span>
-                <Button size="sm" variant="ghost" onClick={() => setCarouselIdx((i) => (i + 1) % carouselItems.length)}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            {current && (
-              <div className="rounded-xl overflow-hidden border border-border bg-gradient-to-br from-copper/10 to-biosensor/10 p-6">
-                {current.image_url && (
-                  <img src={current.image_url} alt={current.title} className="w-full h-40 object-cover rounded-lg mb-4" />
-                )}
-                <h3 className="font-display text-xl font-bold">{current.title}</h3>
-                {current.description && <p className="text-sm text-foreground/80 mt-2">{current.description}</p>}
-                {current.cta_label && (
-                  <Button variant="hero" size="sm" className="mt-4" asChild>
-                    <a href={current.link_url ?? "#"} target="_blank" rel="noreferrer">{current.cta_label}</a>
-                  </Button>
-                )}
-                <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-between flex-wrap gap-2">
-                  <div className="text-[11px] text-muted-foreground">
-                    {current.impressions} impresiones · {current.clicks} clicks · {current.shares_count} shares
-                  </div>
-                  <ShareButtons
-                    url={current.link_url ?? `${origin}/?banner=${current.id}`}
-                    title={current.title}
-                    description={current.description ?? ""}
-                    onShare={async () => {
-                      await supabase.from("ad_banners").update({ shares_count: current.shares_count + 1 }).eq("id", current.id);
-                    }}
+          <Card className="overflow-hidden border-border">
+            {/* Progress bars */}
+            <div className="flex gap-0.5 p-2 pb-0">
+              {carouselItems.map((_, i) => (
+                <div key={i} className="h-0.5 flex-1 rounded-full overflow-hidden bg-muted">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${i < carouselIdx % carouselItems.length ? "bg-biosensor w-full" : i === carouselIdx % carouselItems.length ? "bg-biosensor" : "w-0"}`}
+                    style={
+                      i === carouselIdx % carouselItems.length && carouselPlaying
+                        ? { width: "100%", transition: "width 4s linear" }
+                        : {}
+                    }
                   />
                 </div>
+              ))}
+            </div>
+
+            <div className="p-4 flex items-center justify-between gap-3">
+              <h2 className="font-display font-semibold flex items-center gap-2 text-sm">
+                <Eye className="h-4 w-4 text-copper" /> Vista previa carrusel
+                {selectedIds.size > 0 && (
+                  <Badge variant="outline" className="text-[10px]">
+                    {selectedIds.size} seleccionados
+                  </Badge>
+                )}
+              </h2>
+              <div className="flex items-center gap-1">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0"
+                  onClick={() => {
+                    setCarouselIdx((i) => (i - 1 + carouselItems.length) % carouselItems.length);
+                    setCarouselPlaying(false);
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setCarouselPlaying((p) => !p)}
+                >
+                  {carouselPlaying ? (
+                    <Pause className="h-3.5 w-3.5" />
+                  ) : (
+                    <Play className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0"
+                  onClick={() => {
+                    setCarouselIdx((i) => (i + 1) % carouselItems.length);
+                    setCarouselPlaying(false);
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+                <span className="text-xs text-muted-foreground ml-1 tabular-nums">
+                  {(carouselIdx % carouselItems.length) + 1}/{carouselItems.length}
+                </span>
+              </div>
+            </div>
+
+            {(() => {
+              const current = carouselItems[carouselIdx % carouselItems.length];
+              if (!current) return null;
+              const ctr =
+                current.impressions > 0
+                  ? ((current.clicks / current.impressions) * 100).toFixed(1)
+                  : "0.0";
+              return (
+                <div className="grid md:grid-cols-[1fr_280px] min-h-[220px]">
+                  {/* Banner visual */}
+                  <div className="relative overflow-hidden bg-gradient-to-br from-copper/20 via-background to-biosensor/20 min-h-[200px] flex flex-col">
+                    {current.image_url && (
+                      <img
+                        src={current.image_url}
+                        alt={current.title}
+                        className="absolute inset-0 w-full h-full object-cover opacity-40"
+                      />
+                    )}
+                    <div className="relative flex-1 flex flex-col justify-end p-6">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge
+                          variant={current.active ? "default" : "secondary"}
+                          className="text-[10px]"
+                        >
+                          {current.active ? (
+                            <>
+                              <CircleDot className="h-2.5 w-2.5 mr-1 animate-pulse" />
+                              Activo
+                            </>
+                          ) : (
+                            "Inactivo"
+                          )}
+                        </Badge>
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] capitalize bg-background/70"
+                        >
+                          {current.audience}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] bg-background/70">
+                          {current.position.replace("_", " ")}
+                        </Badge>
+                        {current.ai_score !== null && (
+                          <Badge className="bg-biosensor text-biosensor-foreground text-[10px] gap-1">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            {current.ai_score}/100 IA
+                          </Badge>
+                        )}
+                      </div>
+                      <h3 className="font-display text-2xl font-bold leading-tight drop-shadow-sm">
+                        {current.title}
+                      </h3>
+                      {current.description && (
+                        <p className="mt-1.5 text-sm text-foreground/80 line-clamp-2 leading-relaxed">
+                          {current.description}
+                        </p>
+                      )}
+                      {current.ai_recommendation && (
+                        <p className="mt-2 text-xs text-biosensor/90 italic border-l-2 border-biosensor/40 pl-2 line-clamp-2">
+                          <Sparkles className="h-2.5 w-2.5 inline mr-1" />
+                          {current.ai_recommendation}
+                        </p>
+                      )}
+                      {current.cta_label && (
+                        <div className="mt-3">
+                          <a
+                            href={current.link_url ?? "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-biosensor text-biosensor-foreground px-4 py-2 text-sm font-semibold hover:bg-biosensor/90 transition-colors"
+                          >
+                            {current.cta_label} <ExternalLink className="h-3.5 w-3.5" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right panel: stats + share */}
+                  <div className="border-l border-border p-4 space-y-4 bg-muted/20">
+                    {/* KPI mini */}
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                        <BarChart2 className="h-3 w-3" /> Rendimiento
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          {
+                            label: "Impresiones",
+                            value: current.impressions.toLocaleString("es-CO"),
+                            color: "text-biosensor",
+                          },
+                          {
+                            label: "Clicks",
+                            value: current.clicks.toLocaleString("es-CO"),
+                            color: "text-copper",
+                          },
+                          {
+                            label: "Shares",
+                            value: current.shares_count.toLocaleString("es-CO"),
+                            color: "text-fuchsia-neural",
+                          },
+                          {
+                            label: "CTR",
+                            value: `${ctr}%`,
+                            color: ctr > "2" ? "text-biosensor" : "text-muted-foreground",
+                          },
+                        ].map(({ label, value, color }) => (
+                          <div
+                            key={label}
+                            className="rounded-lg bg-background/80 border border-border/50 px-2 py-2 text-center"
+                          >
+                            <p className={`text-sm font-bold ${color}`}>{value}</p>
+                            <p className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                              {label}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Share */}
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2">
+                        Compartir
+                      </p>
+                      <ShareButtons
+                        url={current.link_url ?? `${origin}/?banner=${current.id}`}
+                        title={current.title}
+                        description={current.description ?? ""}
+                        onShare={async () => {
+                          await supabase
+                            .from("ad_banners")
+                            .update({ shares_count: current.shares_count + 1 })
+                            .eq("id", current.id);
+                          await load();
+                        }}
+                      />
+                    </div>
+
+                    {/* Actions */}
+                    <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() => {
+                          setEditing(current);
+                          setOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3 mr-1" /> Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() => remove(current.id)}
+                      >
+                        <Trash2 className="h-3 w-3 mr-1 text-destructive" /> Eliminar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Dots */}
+            {carouselItems.length > 1 && (
+              <div className="flex items-center justify-center gap-1.5 py-3 border-t border-border">
+                {carouselItems.map((b, i) => (
+                  <button
+                    key={b.id}
+                    onClick={() => {
+                      setCarouselIdx(i);
+                      setCarouselPlaying(false);
+                    }}
+                    className={`rounded-full transition-all ${i === carouselIdx % carouselItems.length ? "w-4 h-2 bg-biosensor" : "w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60"}`}
+                  />
+                ))}
               </div>
             )}
           </Card>
@@ -384,18 +762,28 @@ function PublicidadPage() {
                 >
                   {/* Image / color header */}
                   <div className="relative h-28 bg-gradient-to-br from-copper/20 to-biosensor/20 overflow-hidden">
-                    {b.image_url
-                      ? <img src={b.image_url} alt={b.title} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center opacity-30"><Megaphone className="h-10 w-10" /></div>
-                    }
+                    {b.image_url ? (
+                      <img src={b.image_url} alt={b.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center opacity-30">
+                        <Megaphone className="h-10 w-10" />
+                      </div>
+                    )}
                     {/* Overlay badges */}
                     <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
-                      <Badge variant={b.active ? "default" : "secondary"} className="text-[10px]">{b.active ? "Activo" : "Inactivo"}</Badge>
-                      <Badge variant="outline" className="text-[10px] bg-background/80 capitalize">{b.audience}</Badge>
+                      <Badge variant={b.active ? "default" : "secondary"} className="text-[10px]">
+                        {b.active ? "Activo" : "Inactivo"}
+                      </Badge>
+                      <Badge variant="outline" className="text-[10px] bg-background/80 capitalize">
+                        {b.audience}
+                      </Badge>
                     </div>
                     {b.ai_score !== null && (
                       <div className="absolute top-2 right-2">
-                        <Badge className="bg-biosensor text-biosensor-foreground text-[10px] gap-1"><Sparkles className="h-2.5 w-2.5" />{b.ai_score}/100</Badge>
+                        <Badge className="bg-biosensor text-biosensor-foreground text-[10px] gap-1">
+                          <Sparkles className="h-2.5 w-2.5" />
+                          {b.ai_score}/100
+                        </Badge>
                       </div>
                     )}
                     {/* Checkbox */}
@@ -410,10 +798,18 @@ function PublicidadPage() {
                   {/* Body */}
                   <div className="p-3 flex-1 space-y-1">
                     <p className="font-semibold text-sm truncate">{b.title}</p>
-                    {b.description && <p className="text-xs text-muted-foreground line-clamp-2">{b.description}</p>}
+                    {b.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">{b.description}</p>
+                    )}
                     <div className="flex items-center gap-1 flex-wrap mt-1">
-                      <Badge variant="outline" className="text-[10px]">{b.position.replace("_", " ")}</Badge>
-                      {b.cta_label && <Badge variant="secondary" className="text-[10px]">{b.cta_label}</Badge>}
+                      <Badge variant="outline" className="text-[10px]">
+                        {b.position.replace("_", " ")}
+                      </Badge>
+                      {b.cta_label && (
+                        <Badge variant="secondary" className="text-[10px]">
+                          {b.cta_label}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 
@@ -433,10 +829,23 @@ function PublicidadPage() {
 
                   {/* Actions */}
                   <div className="grid grid-cols-2 gap-1.5 p-2 border-t">
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setEditing(b); setOpen(true); }}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => {
+                        setEditing(b);
+                        setOpen(true);
+                      }}
+                    >
                       <Pencil className="h-3 w-3 mr-1" /> Editar
                     </Button>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => remove(b.id)}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={() => remove(b.id)}
+                    >
                       <Trash2 className="h-3 w-3 mr-1 text-destructive" /> Eliminar
                     </Button>
                   </div>

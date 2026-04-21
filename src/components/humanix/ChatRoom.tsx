@@ -41,7 +41,12 @@ export function ChatRoom({
       .channel(`messages:${conversationId}`)
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `conversation_id=eq.${conversationId}`,
+        },
         (payload) => setMsgs((prev) => [...prev, payload.new as Msg]),
       )
       .subscribe();
@@ -97,10 +102,15 @@ export function ChatRoom({
           </p>
         )}
         {msgs.map((m) => (
-          <div key={m.id} className={`flex ${m.sender_id === currentUserId ? "justify-end" : "justify-start"}`}>
+          <div
+            key={m.id}
+            className={`flex ${m.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
+          >
             <div
               className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm ${
-                m.sender_id === currentUserId ? "bg-foreground text-background" : "bg-muted text-foreground"
+                m.sender_id === currentUserId
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-foreground"
               }`}
             >
               {m.content}
@@ -131,7 +141,11 @@ export function ChatRoom({
         className="border-t border-border p-2 flex gap-2"
       >
         <Button type="button" variant="glass" size="sm" onClick={askCopilot} disabled={loadingSug}>
-          {loadingSug ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+          {loadingSug ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-3.5 w-3.5" />
+          )}
           IA
         </Button>
         <input

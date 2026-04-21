@@ -123,7 +123,11 @@ type Offer = {
 };
 
 const COP = (n: number) =>
-  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 function Stars({ value }: { value: number }) {
   return (
@@ -179,7 +183,7 @@ function BuscarPage() {
     let query = supabase
       .from("professional_profiles")
       .select(
-        "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, available, reserved_until, active, lat, lng"
+        "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, available, reserved_until, active, lat, lng",
       )
       .eq("active", true)
       .order("avg_rating", { ascending: false })
@@ -193,25 +197,57 @@ function BuscarPage() {
     if (search.rating) query = query.gte("avg_rating", search.rating);
 
     const { data, error } = await query;
-    if (error) { console.error(error); setPros([]); setLoading(false); return; }
+    if (error) {
+      console.error(error);
+      setPros([]);
+      setLoading(false);
+      return;
+    }
 
     const baseRows = (data ?? []) as Array<Omit<Pro, "profiles">>;
     const userIds = baseRows.map((p) => p.user_id);
-    let profilesMap = new Map<string, { full_name: string | null; city: string | null; avatar_url: string | null }>();
+    let profilesMap = new Map<
+      string,
+      { full_name: string | null; city: string | null; avatar_url: string | null }
+    >();
     if (userIds.length) {
-      const { data: profs } = await supabase.from("profiles").select("user_id, full_name, city, avatar_url").in("user_id", userIds);
-      profilesMap = new Map((profs ?? []).map((p) => [p.user_id, { full_name: p.full_name, city: p.city, avatar_url: p.avatar_url }]));
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, city, avatar_url")
+        .in("user_id", userIds);
+      profilesMap = new Map(
+        (profs ?? []).map((p) => [
+          p.user_id,
+          { full_name: p.full_name, city: p.city, avatar_url: p.avatar_url },
+        ]),
+      );
     }
     let rows: Pro[] = baseRows.map((p) => ({ ...p, profiles: profilesMap.get(p.user_id) ?? null }));
     if (search.q) {
       const needle = search.q.toLowerCase();
-      rows = rows.filter((p) => p.profiles?.full_name?.toLowerCase().includes(needle) || p.specialty?.toLowerCase().includes(needle) || p.ai_summary?.toLowerCase().includes(needle));
+      rows = rows.filter(
+        (p) =>
+          p.profiles?.full_name?.toLowerCase().includes(needle) ||
+          p.specialty?.toLowerCase().includes(needle) ||
+          p.ai_summary?.toLowerCase().includes(needle),
+      );
     }
     setPros(rows);
     setLoading(false);
-  }, [tab, search.q, search.specialty, search.city, search.verified, search.minRate, search.maxRate, search.rating]);
+  }, [
+    tab,
+    search.q,
+    search.specialty,
+    search.city,
+    search.verified,
+    search.minRate,
+    search.maxRate,
+    search.rating,
+  ]);
 
-  useEffect(() => { void loadPros(); }, [loadPros]);
+  useEffect(() => {
+    void loadPros();
+  }, [loadPros]);
 
   // ── Fetch offers ───────────────────────────────────────────────────────────
   const loadOffers = useCallback(async () => {
@@ -219,7 +255,9 @@ function BuscarPage() {
     setLoading(true);
     let query = supabase
       .from("job_offers")
-      .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, status, reserved_until, lat, lng, created_at")
+      .select(
+        "id, title, description, modality, amount, city, specialty_required, requirements, poster_type, status, reserved_until, lat, lng, created_at",
+      )
       .in("status", ["open", "filled"])
       .order("created_at", { ascending: false })
       .limit(60);
@@ -231,19 +269,43 @@ function BuscarPage() {
     if (search.maxRate) query = query.lte("amount", search.maxRate);
 
     const { data, error } = await query;
-    if (error) { console.error(error); setOffers([]); setLoading(false); return; }
+    if (error) {
+      console.error(error);
+      setOffers([]);
+      setLoading(false);
+      return;
+    }
 
     let rows = (data ?? []) as Offer[];
-    rows = rows.filter((o) => { if (o.status !== "filled") return true; if (!o.reserved_until) return false; return new Date(o.reserved_until) > new Date(); });
+    rows = rows.filter((o) => {
+      if (o.status !== "filled") return true;
+      if (!o.reserved_until) return false;
+      return new Date(o.reserved_until) > new Date();
+    });
     if (search.q) {
       const needle = search.q.toLowerCase();
-      rows = rows.filter((o) => o.title.toLowerCase().includes(needle) || o.description?.toLowerCase().includes(needle) || o.specialty_required?.toLowerCase().includes(needle));
+      rows = rows.filter(
+        (o) =>
+          o.title.toLowerCase().includes(needle) ||
+          o.description?.toLowerCase().includes(needle) ||
+          o.specialty_required?.toLowerCase().includes(needle),
+      );
     }
     setOffers(rows);
     setLoading(false);
-  }, [tab, search.q, search.specialty, search.city, search.modality, search.minRate, search.maxRate]);
+  }, [
+    tab,
+    search.q,
+    search.specialty,
+    search.city,
+    search.modality,
+    search.minRate,
+    search.maxRate,
+  ]);
 
-  useEffect(() => { void loadOffers(); }, [loadOffers]);
+  useEffect(() => {
+    void loadOffers();
+  }, [loadOffers]);
 
   // ── Realtime: auto-refresh cuando cambian profesionales u ofertas ──────────
   useRealtimeRefresh(
@@ -253,13 +315,16 @@ function BuscarPage() {
       { table: "job_offers", event: "*" },
       { table: "profiles", event: "UPDATE" },
     ],
-    () => { void loadPros(); void loadOffers(); },
+    () => {
+      void loadPros();
+      void loadOffers();
+    },
   );
 
   const totalActive = useMemo(
     () =>
       Object.entries(search).filter(([k, v]) => k !== "tab" && v !== undefined && v !== "").length,
-    [search]
+    [search],
   );
 
   const applySearch = (e: React.FormEvent) => {
@@ -291,7 +356,9 @@ function BuscarPage() {
             </div>
             <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-1">
               <button
-                onClick={() => navigate({ search: (p: SearchT) => ({ ...p, tab: "profesionales" }) })}
+                onClick={() =>
+                  navigate({ search: (p: SearchT) => ({ ...p, tab: "profesionales" }) })
+                }
                 className={`px-4 py-2 rounded-lg text-sm font-medium inline-flex items-center gap-2 transition ${
                   tab === "profesionales"
                     ? "bg-foreground text-background"
@@ -479,7 +546,8 @@ function BuscarPage() {
           {/* Toggle vista */}
           <div className="mt-6 flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {tab === "profesionales" ? pros.length : offers.length} resultado{(tab === "profesionales" ? pros.length : offers.length) !== 1 ? "s" : ""}
+              {tab === "profesionales" ? pros.length : offers.length} resultado
+              {(tab === "profesionales" ? pros.length : offers.length) !== 1 ? "s" : ""}
             </p>
             <div className="inline-flex rounded-xl border border-border bg-card p-1">
               <button
@@ -508,7 +576,10 @@ function BuscarPage() {
             {loading ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-56 rounded-2xl border border-border bg-card animate-pulse" />
+                  <div
+                    key={i}
+                    className="h-56 rounded-2xl border border-border bg-card animate-pulse"
+                  />
                 ))}
               </div>
             ) : view === "map" ? (
@@ -635,7 +706,8 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
         </span>
         {pro.hourly_rate ? (
           <span className="font-semibold text-foreground">
-            {COP(pro.hourly_rate)} <span className="text-xs font-normal text-muted-foreground">/ h</span>
+            {COP(pro.hourly_rate)}{" "}
+            <span className="text-xs font-normal text-muted-foreground">/ h</span>
           </span>
         ) : (
           <span className="text-xs text-muted-foreground">Tarifa a convenir</span>
@@ -692,10 +764,10 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
     offer.modality === "hour"
       ? "Por hora"
       : offer.modality === "shift"
-      ? "Por jornada"
-      : offer.modality === "month"
-      ? "Mensual"
-      : "Paquete";
+        ? "Por jornada"
+        : offer.modality === "month"
+          ? "Mensual"
+          : "Paquete";
   const status = deriveOfferStatus(offer);
   const km =
     userLoc && offer.lat != null && offer.lng != null
@@ -737,9 +809,7 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
       )}
       <div className="mt-4 flex gap-2">
         <Button variant="hero" size="sm" className="flex-1" asChild>
-          <Link to="/auth">
-            Aplicar ahora
-          </Link>
+          <Link to="/auth">Aplicar ahora</Link>
         </Button>
         <Button variant="glass" size="sm" onClick={() => setShowDetail(true)}>
           Detalles
@@ -763,7 +833,9 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
               <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
                 <MapPin className="h-4 w-4" /> {offer.city}
               </span>
-              <span className="font-display text-xl font-bold text-biosensor">{COP(offer.amount)}</span>
+              <span className="font-display text-xl font-bold text-biosensor">
+                {COP(offer.amount)}
+              </span>
             </div>
             <div className="flex flex-wrap gap-2">
               <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-fuchsia-neural/15 text-fuchsia-neural border border-fuchsia-neural/30">
@@ -781,7 +853,9 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
             )}
             {offer.requirements && offer.requirements.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Requisitos</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  Requisitos
+                </p>
                 <ul className="space-y-1">
                   {offer.requirements.map((r) => (
                     <li key={r} className="flex items-start gap-2 text-sm">
@@ -793,7 +867,12 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
             )}
             <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
-              Publicada {new Date(offer.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}
+              Publicada{" "}
+              {new Date(offer.created_at).toLocaleDateString("es-CO", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
             </div>
             <div className="flex gap-2 pt-2">
               <Button variant="hero" className="flex-1" asChild>
@@ -826,7 +905,12 @@ function ProCardRow({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
   return (
     <article className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 hover:shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-all">
       {pro.profiles?.avatar_url ? (
-        <img src={pro.profiles.avatar_url} alt={name} loading="lazy" className="h-12 w-12 rounded-xl object-cover border border-border shrink-0" />
+        <img
+          src={pro.profiles.avatar_url}
+          alt={name}
+          loading="lazy"
+          className="h-12 w-12 rounded-xl object-cover border border-border shrink-0"
+        />
       ) : (
         <div className="h-12 w-12 rounded-xl bg-biosensor/10 text-biosensor flex items-center justify-center font-semibold shrink-0">
           {name.charAt(0)}
@@ -838,16 +922,32 @@ function ProCardRow({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
           {pro.verified && <CheckCircle2 className="h-3.5 w-3.5 text-biosensor shrink-0" />}
           <StatusBadge status={status} reservedUntil={pro.reserved_until} />
         </div>
-        <p className="text-xs text-muted-foreground">{pro.specialty ?? "Profesional de salud"} · <span className="inline-flex items-center gap-0.5"><MapPin className="h-3 w-3" />{city}{km !== null && <> · {formatKm(km)}</>}</span></p>
+        <p className="text-xs text-muted-foreground">
+          {pro.specialty ?? "Profesional de salud"} ·{" "}
+          <span className="inline-flex items-center gap-0.5">
+            <MapPin className="h-3 w-3" />
+            {city}
+            {km !== null && <> · {formatKm(km)}</>}
+          </span>
+        </p>
         <div className="mt-1 flex items-center gap-2">
           <Stars value={rating} />
-          <span className="text-xs text-muted-foreground">{rating > 0 ? rating.toFixed(1) : "Nuevo"} · {pro.total_jobs ?? 0} turnos</span>
+          <span className="text-xs text-muted-foreground">
+            {rating > 0 ? rating.toFixed(1) : "Nuevo"} · {pro.total_jobs ?? 0} turnos
+          </span>
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        {pro.hourly_rate && <span className="font-semibold text-sm">{COP(pro.hourly_rate)}<span className="text-xs font-normal text-muted-foreground">/h</span></span>}
+        {pro.hourly_rate && (
+          <span className="font-semibold text-sm">
+            {COP(pro.hourly_rate)}
+            <span className="text-xs font-normal text-muted-foreground">/h</span>
+          </span>
+        )}
         <Button variant="glass" size="sm" asChild>
-          <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>Ver perfil</Link>
+          <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>
+            Ver perfil
+          </Link>
         </Button>
       </div>
     </article>
@@ -856,9 +956,19 @@ function ProCardRow({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
 
 function OfferCardRow({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null }) {
   const [showDetail, setShowDetail] = useState(false);
-  const modalityLabel = offer.modality === "hour" ? "Por hora" : offer.modality === "shift" ? "Por jornada" : offer.modality === "month" ? "Mensual" : "Paquete";
+  const modalityLabel =
+    offer.modality === "hour"
+      ? "Por hora"
+      : offer.modality === "shift"
+        ? "Por jornada"
+        : offer.modality === "month"
+          ? "Mensual"
+          : "Paquete";
   const status = deriveOfferStatus(offer);
-  const km = userLoc && offer.lat != null && offer.lng != null ? distanceKm(userLoc, { lat: offer.lat, lng: offer.lng }) : null;
+  const km =
+    userLoc && offer.lat != null && offer.lng != null
+      ? distanceKm(userLoc, { lat: offer.lat, lng: offer.lng })
+      : null;
   return (
     <article className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3 hover:shadow-[var(--shadow-card)] hover:-translate-y-0.5 transition-all">
       <div className="h-12 w-12 rounded-xl bg-fuchsia-neural/10 text-fuchsia-neural flex items-center justify-center shrink-0">
@@ -870,13 +980,19 @@ function OfferCardRow({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null
           <StatusBadge status={status} reservedUntil={offer.reserved_until} />
         </div>
         <p className="text-xs text-muted-foreground">
-          <MapPin className="h-3 w-3 inline" /> {offer.city}{km !== null && <> · {formatKm(km)}</>} · {modalityLabel}{offer.specialty_required && ` · ${offer.specialty_required}`}
+          <MapPin className="h-3 w-3 inline" /> {offer.city}
+          {km !== null && <> · {formatKm(km)}</>} · {modalityLabel}
+          {offer.specialty_required && ` · ${offer.specialty_required}`}
         </p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <span className="font-bold text-biosensor">{COP(offer.amount)}</span>
-        <Button variant="glass" size="sm" onClick={() => setShowDetail(true)}>Detalles</Button>
-        <Button variant="hero" size="sm" asChild><Link to="/auth">Aplicar</Link></Button>
+        <Button variant="glass" size="sm" onClick={() => setShowDetail(true)}>
+          Detalles
+        </Button>
+        <Button variant="hero" size="sm" asChild>
+          <Link to="/auth">Aplicar</Link>
+        </Button>
       </div>
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
         <DialogContent className="max-w-lg">
@@ -885,13 +1001,24 @@ function OfferCardRow({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null
           </DialogHeader>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground inline-flex items-center gap-1"><MapPin className="h-4 w-4" />{offer.city}</span>
-              <span className="font-display text-xl font-bold text-biosensor">{COP(offer.amount)}</span>
+              <span className="text-sm text-muted-foreground inline-flex items-center gap-1">
+                <MapPin className="h-4 w-4" />
+                {offer.city}
+              </span>
+              <span className="font-display text-xl font-bold text-biosensor">
+                {COP(offer.amount)}
+              </span>
             </div>
-            {offer.description && <p className="text-sm text-muted-foreground">{offer.description}</p>}
+            {offer.description && (
+              <p className="text-sm text-muted-foreground">{offer.description}</p>
+            )}
             <div className="flex gap-2 pt-2">
-              <Button variant="hero" className="flex-1" asChild><Link to="/auth">Aplicar ahora</Link></Button>
-              <Button variant="glass" onClick={() => setShowDetail(false)}>Cerrar</Button>
+              <Button variant="hero" className="flex-1" asChild>
+                <Link to="/auth">Aplicar ahora</Link>
+              </Button>
+              <Button variant="glass" onClick={() => setShowDetail(false)}>
+                Cerrar
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -900,15 +1027,7 @@ function OfferCardRow({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null
   );
 }
 
-function EmptyState({
-  icon,
-  title,
-  desc,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  desc: string;
-}) {
+function EmptyState({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
   return (
     <div className="rounded-3xl border border-dashed border-border p-12 text-center bg-card">
       <div className="mx-auto h-14 w-14 rounded-2xl bg-biosensor/10 text-biosensor flex items-center justify-center">

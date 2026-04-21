@@ -88,12 +88,12 @@ function ProfesionalesPage() {
               Para profesionales de salud
             </span>
             <h1 className="mt-4 font-display text-4xl sm:text-5xl font-bold leading-[1.05]">
-              Tu carrera en salud,{" "}
-              <span className="text-gradient-bio">sin fricción</span>.
+              Tu carrera en salud, <span className="text-gradient-bio">sin fricción</span>.
             </h1>
             <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-              Humanix conecta enfermeros, auxiliares y cuidadores con familias, clínicas y agencias de toda
-              Colombia. Trabaja cuando quieras, cobra al instante y construye reputación verificable.
+              Humanix conecta enfermeros, auxiliares y cuidadores con familias, clínicas y agencias
+              de toda Colombia. Trabaja cuando quieras, cobra al instante y construye reputación
+              verificable.
             </p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <Button variant="hero" size="xl" asChild>
@@ -102,7 +102,9 @@ function ProfesionalesPage() {
                 </Link>
               </Button>
               <Button variant="glass" size="xl" asChild>
-                <Link to="/buscar" search={{ tab: "ofertas" }}>Ver ofertas abiertas</Link>
+                <Link to="/buscar" search={{ tab: "ofertas" }}>
+                  Ver ofertas abiertas
+                </Link>
               </Button>
             </div>
           </div>
@@ -136,7 +138,9 @@ function ProfesionalesPage() {
             </ol>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <Button variant="hero" size="lg" asChild>
-                <Link to="/auth" search={{ role: "professional" }}>Empezar ahora</Link>
+                <Link to="/auth" search={{ role: "professional" }}>
+                  Empezar ahora
+                </Link>
               </Button>
               <Button variant="ghost" size="lg" asChild>
                 <Link to="/planes">

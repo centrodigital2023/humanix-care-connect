@@ -20,7 +20,8 @@ export const Route = createFileRoute("/planes")({
       { property: "og:title", content: "Planes y precios · Humanix" },
       {
         property: "og:description",
-        content: "Plan Esencial $9.000 COP/mes. Pagos Mercado Pago. El profesional cobra directo al cliente.",
+        content:
+          "Plan Esencial $9.000 COP/mes. Pagos Mercado Pago. El profesional cobra directo al cliente.",
       },
     ],
   }),
@@ -138,8 +139,16 @@ function PlansPage() {
         return;
       }
       const [subRes, mpRes] = await Promise.all([
-        supabase.from("subscriptions").select("plan").eq("user_id", sess.session.user.id).maybeSingle(),
-        supabase.from("mp_subscriptions").select("plan,status").eq("user_id", sess.session.user.id).maybeSingle(),
+        supabase
+          .from("subscriptions")
+          .select("plan")
+          .eq("user_id", sess.session.user.id)
+          .maybeSingle(),
+        supabase
+          .from("mp_subscriptions")
+          .select("plan,status")
+          .eq("user_id", sess.session.user.id)
+          .maybeSingle(),
       ]);
       if (mpRes.data?.status === "active" || mpRes.data?.status === "approved") {
         setCurrentPlan(mpRes.data.plan);
@@ -177,7 +186,8 @@ function PlansPage() {
       });
       if (error) throw error;
 
-      const url = (data as { init_point?: string; sandbox_init_point?: string })?.init_point ??
+      const url =
+        (data as { init_point?: string; sandbox_init_point?: string })?.init_point ??
         (data as { sandbox_init_point?: string })?.sandbox_init_point;
       if (!url) throw new Error("No se pudo iniciar el checkout de Mercado Pago.");
       window.location.href = url;
@@ -201,7 +211,8 @@ function PlansPage() {
           </h1>
           <p className="mt-3 text-muted-foreground">
             Plan Esencial desde <span className="font-semibold text-copper">$9.000 COP/mes</span>.
-            Sin comisiones por servicio: el profesional cobra directo al cliente en efectivo, Nequi o transferencia.
+            Sin comisiones por servicio: el profesional cobra directo al cliente en efectivo, Nequi
+            o transferencia.
           </p>
         </header>
 
@@ -216,7 +227,9 @@ function PlansPage() {
               <Card
                 key={p.key}
                 className={`p-6 flex flex-col ${
-                  p.highlight ? "border-copper/50 shadow-[var(--shadow-elegant)] ring-1 ring-copper/20" : ""
+                  p.highlight
+                    ? "border-copper/50 shadow-[var(--shadow-elegant)] ring-1 ring-copper/20"
+                    : ""
                 }`}
               >
                 {p.highlight && (
@@ -224,7 +237,9 @@ function PlansPage() {
                     Más recomendado
                   </span>
                 )}
-                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border ${TONE[p.tone]}`}>
+                <div
+                  className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border ${TONE[p.tone]}`}
+                >
                   <Icon className="h-5 w-5" />
                 </div>
                 <h2 className="mt-3 font-display text-xl font-semibold">{p.name}</h2>
@@ -258,9 +273,15 @@ function PlansPage() {
         <section className="mt-14 rounded-2xl border border-border bg-card/95 p-6 text-center">
           <p className="text-sm text-muted-foreground">
             ¿Necesitas algo a medida? Escríbenos a{" "}
-            <a href="mailto:hola@humanix.co" className="text-biosensor underline">hola@humanix.co</a> y armamos un plan para tu IPS.
+            <a href="mailto:hola@humanix.co" className="text-biosensor underline">
+              hola@humanix.co
+            </a>{" "}
+            y armamos un plan para tu IPS.
           </p>
-          <Link to="/" className="text-xs text-muted-foreground hover:text-foreground mt-2 inline-block">
+          <Link
+            to="/"
+            className="text-xs text-muted-foreground hover:text-foreground mt-2 inline-block"
+          >
             ← Volver al inicio
           </Link>
         </section>

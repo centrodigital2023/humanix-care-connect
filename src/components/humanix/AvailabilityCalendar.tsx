@@ -70,7 +70,9 @@ export function AvailabilityCalendar({
       }
       setLoading(false);
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [userId, weekStart, weekEnd]);
 
   const slotAt = (day: Date, hour: number): Slot | undefined =>
@@ -98,13 +100,9 @@ export function AvailabilityCalendar({
           .update({ status: "busy" })
           .eq("id", existing.id);
         if (error) toast.error(error.message);
-        else
-          setSlots((s) => s.map((x) => (x.id === existing.id ? { ...x, status: "busy" } : x)));
+        else setSlots((s) => s.map((x) => (x.id === existing.id ? { ...x, status: "busy" } : x)));
       } else {
-        const { error } = await supabase
-          .from("availability_slots")
-          .delete()
-          .eq("id", existing.id);
+        const { error } = await supabase.from("availability_slots").delete().eq("id", existing.id);
         if (error) toast.error(error.message);
         else setSlots((s) => s.filter((x) => x.id !== existing.id));
       }
@@ -144,7 +142,8 @@ export function AvailabilityCalendar({
         if (p === "evening") return h >= 18 && h <= 19;
         return true; // weekdays / all
       };
-      const toInsert: { user_id: string; starts_at: string; ends_at: string; status: "free" }[] = [];
+      const toInsert: { user_id: string; starts_at: string; ends_at: string; status: "free" }[] =
+        [];
       days.forEach((d, i) => {
         if (!dayMatcher(i)) return;
         HOURS.forEach((h) => {
@@ -163,10 +162,7 @@ export function AvailabilityCalendar({
         });
       });
       if (toInsert.length) {
-        const { data } = await supabase
-          .from("availability_slots")
-          .insert(toInsert)
-          .select();
+        const { data } = await supabase.from("availability_slots").insert(toInsert).select();
         if (data) setSlots((s) => [...s, ...((data as Slot[]) ?? [])]);
       }
       toast.success(`${toInsert.length} horas marcadas como disponibles`);
@@ -222,7 +218,11 @@ export function AvailabilityCalendar({
           <PresetBtn label="Tardes" onClick={() => applyPreset("afternoon")} disabled={bulkBusy} />
           <PresetBtn label="Noches" onClick={() => applyPreset("evening")} disabled={bulkBusy} />
           <PresetBtn label="Lun–Vie" onClick={() => applyPreset("weekdays")} disabled={bulkBusy} />
-          <PresetBtn label="Toda la semana" onClick={() => applyPreset("all")} disabled={bulkBusy} />
+          <PresetBtn
+            label="Toda la semana"
+            onClick={() => applyPreset("all")}
+            disabled={bulkBusy}
+          />
           <button
             type="button"
             disabled={bulkBusy}
@@ -255,7 +255,9 @@ export function AvailabilityCalendar({
                       }`}
                     >
                       <div>{DAY_LABEL[(d.getDay() + 6) % 7]}</div>
-                      <div className={`text-[10px] ${isToday ? "font-bold" : ""}`}>{d.getDate()}</div>
+                      <div className={`text-[10px] ${isToday ? "font-bold" : ""}`}>
+                        {d.getDate()}
+                      </div>
                     </th>
                   );
                 })}
@@ -271,8 +273,8 @@ export function AvailabilityCalendar({
                       ? slot.status === "free"
                         ? "bg-biosensor/30 hover:bg-biosensor/50 border-biosensor/50"
                         : slot.status === "reserved"
-                        ? "bg-cyber/30 border-cyber/50 cursor-not-allowed"
-                        : "bg-muted hover:bg-muted/70 border-border"
+                          ? "bg-cyber/30 border-cyber/50 cursor-not-allowed"
+                          : "bg-muted hover:bg-muted/70 border-border"
                       : "hover:bg-foreground/5 border-transparent";
                     return (
                       <td key={d.toISOString() + h} className="p-0.5">
@@ -286,8 +288,8 @@ export function AvailabilityCalendar({
                               ? slot.status === "free"
                                 ? "Disponible"
                                 : slot.status === "reserved"
-                                ? "Reservado"
-                                : "Ocupado"
+                                  ? "Reservado"
+                                  : "Ocupado"
                               : "Vacío — toca para marcar disponible"
                           }
                         />

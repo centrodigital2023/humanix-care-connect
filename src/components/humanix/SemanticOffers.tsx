@@ -105,7 +105,8 @@ export function SemanticOffers({
   if (!hasFingerprint) {
     return (
       <p className="text-sm text-muted-foreground">
-        Genera tu <span className="font-semibold text-foreground">Huella IA</span> arriba para ver ofertas que encajan contigo por significado, no solo por palabras clave.
+        Genera tu <span className="font-semibold text-foreground">Huella IA</span> arriba para ver
+        ofertas que encajan contigo por significado, no solo por palabras clave.
       </p>
     );
   }
@@ -124,7 +125,10 @@ export function SemanticOffers({
         const applied = appliedIds.has(o.id);
         const score = Math.round(similarity * 100);
         return (
-          <article key={o.id} className="rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-4">
+          <article
+            key={o.id}
+            className="rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-4"
+          >
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -149,7 +153,12 @@ export function SemanticOffers({
                   <Briefcase className="h-3 w-3" /> {labelModality(o.modality)}
                 </span>
               </p>
-              <Button size="sm" variant={applied ? "glass" : "hero"} disabled={applied} onClick={() => onApply(o.id)}>
+              <Button
+                size="sm"
+                variant={applied ? "glass" : "hero"}
+                disabled={applied}
+                onClick={() => onApply(o.id)}
+              >
                 {applied ? "Aplicada" : "Aplicar"}
               </Button>
             </div>

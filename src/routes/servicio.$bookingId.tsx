@@ -178,14 +178,13 @@ function ServicePage() {
   }, [bookingId]);
 
   const updateStatus = async (
-    patch: Partial<Pick<Booking, "status" | "started_at" | "arrived_at" | "completed_at" | "cancelled_at">> & {
+    patch: Partial<
+      Pick<Booking, "status" | "started_at" | "arrived_at" | "completed_at" | "cancelled_at">
+    > & {
       cancel_reason?: string | null;
     },
   ) => {
-    const { error } = await supabase
-      .from("service_bookings")
-      .update(patch)
-      .eq("id", bookingId);
+    const { error } = await supabase.from("service_bookings").update(patch).eq("id", bookingId);
     if (error) toast.error(error.message);
   };
 
@@ -346,9 +345,7 @@ function ServicePage() {
               {hasRating ? (
                 <div className="rounded-2xl border border-biosensor/30 bg-biosensor/5 p-8 text-center">
                   <CheckCircle2 className="h-10 w-10 text-biosensor mx-auto" />
-                  <h2 className="mt-3 font-display text-xl font-bold">
-                    Valoración registrada
-                  </h2>
+                  <h2 className="mt-3 font-display text-xl font-bold">Valoración registrada</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     Gracias por contribuir a la calidad de Humanix.
                   </p>
@@ -361,9 +358,7 @@ function ServicePage() {
                 </div>
               ) : isClient ? (
                 <>
-                  <h2 className="font-display text-2xl font-bold mb-4">
-                    Cuéntanos cómo te fue
-                  </h2>
+                  <h2 className="font-display text-2xl font-bold mb-4">Cuéntanos cómo te fue</h2>
                   <VoiceRating
                     bookingId={booking.id}
                     ratedUserId={booking.professional_id}
@@ -372,9 +367,7 @@ function ServicePage() {
                 </>
               ) : (
                 <>
-                  <h2 className="font-display text-2xl font-bold mb-4">
-                    Tu impresión del cliente
-                  </h2>
+                  <h2 className="font-display text-2xl font-bold mb-4">Tu impresión del cliente</h2>
                   <VoiceRating
                     bookingId={booking.id}
                     ratedUserId={booking.client_id}

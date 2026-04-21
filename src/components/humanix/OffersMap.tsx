@@ -22,9 +22,7 @@ export type OffersMapProps = {
   zoom?: number;
 };
 
-const LazyMap = lazy(() =>
-  import("./OffersMap.client").then((m) => ({ default: m.OffersMap })),
-);
+const LazyMap = lazy(() => import("./OffersMap.client").then((m) => ({ default: m.OffersMap })));
 
 export function OffersMap(props: OffersMapProps) {
   const height = props.height ?? 420;

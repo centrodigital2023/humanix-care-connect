@@ -70,9 +70,7 @@ export function OffersMap({
       />
     );
   }
-  const valid = points.filter(
-    (p) => Number.isFinite(p.lat) && Number.isFinite(p.lng)
-  );
+  const valid = points.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
   return (
     <div
       className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)]"
@@ -97,14 +95,9 @@ export function OffersMap({
             <Popup>
               <div className="text-sm">
                 <p className="font-semibold">{p.title}</p>
-                {p.subtitle && (
-                  <p className="text-muted-foreground text-xs mt-0.5">{p.subtitle}</p>
-                )}
+                {p.subtitle && <p className="text-muted-foreground text-xs mt-0.5">{p.subtitle}</p>}
                 {p.href && (
-                  <a
-                    href={p.href}
-                    className="text-biosensor text-xs font-medium mt-2 inline-block"
-                  >
+                  <a href={p.href} className="text-biosensor text-xs font-medium mt-2 inline-block">
                     Ver detalles →
                   </a>
                 )}

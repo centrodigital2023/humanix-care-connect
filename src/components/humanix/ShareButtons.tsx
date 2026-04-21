@@ -30,16 +30,26 @@ const LABELS: Record<ShareTarget, string> = {
   copy: "Copiar",
 };
 
-function buildShareUrl(target: ShareTarget, url: string, title: string, description?: string): string {
+function buildShareUrl(
+  target: ShareTarget,
+  url: string,
+  title: string,
+  description?: string,
+): string {
   const u = encodeURIComponent(url);
   const t = encodeURIComponent(title);
   const d = encodeURIComponent(description || title);
   switch (target) {
-    case "linkedin": return `https://www.linkedin.com/sharing/share-offsite/?url=${u}`;
-    case "facebook": return `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${t}`;
-    case "twitter": return `https://twitter.com/intent/tweet?url=${u}&text=${t}`;
-    case "whatsapp": return `https://wa.me/?text=${t}%20${u}`;
-    case "copy": return url;
+    case "linkedin":
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${u}`;
+    case "facebook":
+      return `https://www.facebook.com/sharer/sharer.php?u=${u}&quote=${t}`;
+    case "twitter":
+      return `https://twitter.com/intent/tweet?url=${u}&text=${t}`;
+    case "whatsapp":
+      return `https://wa.me/?text=${t}%20${u}`;
+    case "copy":
+      return url;
   }
 }
 
@@ -64,7 +74,11 @@ export function ShareButtons({
         toast.error("No se pudo copiar");
       }
     } else {
-      window.open(buildShareUrl(target, url, title, description), "_blank", "noopener,noreferrer,width=640,height=560");
+      window.open(
+        buildShareUrl(target, url, title, description),
+        "_blank",
+        "noopener,noreferrer,width=640,height=560",
+      );
     }
     onShare?.(target);
   };

@@ -29,7 +29,10 @@ export function MercadoPagoSubscription({ userId }: { userId: string }) {
       const client = supabase as unknown as {
         from: (t: string) => {
           select: (c: string) => {
-            eq: (k: string, v: string) => {
+            eq: (
+              k: string,
+              v: string,
+            ) => {
               maybeSingle: () => Promise<{ data: Sub | null }>;
             };
           };
@@ -100,9 +103,18 @@ export function MercadoPagoSubscription({ userId }: { userId: string }) {
             </p>
           )}
           <ul className="mt-4 space-y-2 text-sm">
-            <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Perfil destacado en búsquedas</li>
-            <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Sin comisión por servicio</li>
-            <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Match semántico con IA</li>
+            <li className="flex gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+              Perfil destacado en búsquedas
+            </li>
+            <li className="flex gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+              Sin comisión por servicio
+            </li>
+            <li className="flex gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+              Match semántico con IA
+            </li>
           </ul>
         </>
       ) : (
@@ -112,16 +124,30 @@ export function MercadoPagoSubscription({ userId }: { userId: string }) {
           </p>
           <div className="mt-4 rounded-xl bg-gradient-to-br from-fuchsia-neural/10 to-biosensor/10 border border-fuchsia-neural/20 p-4">
             <p className="text-2xl font-bold">
-              {COP(49900)}<span className="text-sm font-normal text-muted-foreground">/mes</span>
+              {COP(49900)}
+              <span className="text-sm font-normal text-muted-foreground">/mes</span>
             </p>
             <ul className="mt-3 space-y-1.5 text-sm">
-              <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Perfil destacado en búsquedas</li>
-              <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Notificaciones WhatsApp inmediatas</li>
-              <li className="flex gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />Sin comisiones por servicio</li>
+              <li className="flex gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                Perfil destacado en búsquedas
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                Notificaciones WhatsApp inmediatas
+              </li>
+              <li className="flex gap-2">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                Sin comisiones por servicio
+              </li>
             </ul>
           </div>
           <Button onClick={subscribe} disabled={busy} variant="hero" className="mt-4 w-full">
-            {busy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <CreditCard className="h-4 w-4 mr-1.5" />}
+            {busy ? (
+              <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+            ) : (
+              <CreditCard className="h-4 w-4 mr-1.5" />
+            )}
             Pagar con Mercado Pago
             <ExternalLink className="h-3 w-3 ml-1.5" />
           </Button>

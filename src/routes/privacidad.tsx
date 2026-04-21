@@ -25,7 +25,11 @@ function PrivacidadPage() {
   return (
     <LegalPage
       badge="Privacidad"
-      title={<>Política de <span className="text-gradient-bio">Privacidad</span></>}
+      title={
+        <>
+          Política de <span className="text-gradient-bio">Privacidad</span>
+        </>
+      }
       updatedAt="21 de abril de 2026"
       intro="Humanix Colombia S.A.S. respeta tu privacidad y trata tus datos personales conforme a la Ley 1581 de 2012, el Decreto 1377 de 2013 y la Circular 002 de 2015 de la SIC."
     >
@@ -65,9 +69,13 @@ function PrivacidadPage() {
       </LegalSection>
       <LegalSection title="6. Derechos del titular">
         <p>
-          Puedes ejercer tus derechos de <strong>acceso, rectificación, actualización, supresión y
-          revocatoria</strong> escribiendo a{" "}
-          <a href="mailto:datos@humanix.co" className="text-foreground underline underline-offset-4">
+          Puedes ejercer tus derechos de{" "}
+          <strong>acceso, rectificación, actualización, supresión y revocatoria</strong> escribiendo
+          a{" "}
+          <a
+            href="mailto:datos@humanix.co"
+            className="text-foreground underline underline-offset-4"
+          >
             datos@humanix.co
           </a>
           . Responderemos en los términos del artículo 14 de la Ley 1581.

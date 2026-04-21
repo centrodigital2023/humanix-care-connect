@@ -47,12 +47,7 @@ export function StatusBadge({
   const cfg = MAP[status];
   const days =
     reservedUntil && (status === "reserved" || status === "filled")
-      ? Math.max(
-          0,
-          Math.ceil(
-            (new Date(reservedUntil).getTime() - Date.now()) / 86_400_000
-          )
-        )
+      ? Math.max(0, Math.ceil((new Date(reservedUntil).getTime() - Date.now()) / 86_400_000))
       : null;
 
   const padding = size === "md" ? "px-2.5 py-1 text-xs" : "px-2 py-0.5 text-[10px]";
@@ -63,19 +58,16 @@ export function StatusBadge({
     >
       <span className={`relative inline-flex h-1.5 w-1.5 rounded-full ${cfg.dot}`}>
         {(status === "available" || status === "open") && (
-          <span
-            className={`absolute inset-0 rounded-full ${cfg.dot} animate-ping opacity-60`}
-          />
+          <span className={`absolute inset-0 rounded-full ${cfg.dot} animate-ping opacity-60`} />
         )}
       </span>
       {cfg.label}
-      {days !== null && (
-        <span className="font-normal opacity-80">· {days}d</span>
-      )}
+      {days !== null && <span className="font-normal opacity-80">· {days}d</span>}
     </span>
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function deriveProStatus(p: {
   available?: boolean | null;
   reserved_until?: string | null;
@@ -86,10 +78,8 @@ export function deriveProStatus(p: {
   return "available";
 }
 
-export function deriveOfferStatus(o: {
-  status: string;
-  reserved_until?: string | null;
-}): Status {
+// eslint-disable-next-line react-refresh/only-export-components
+export function deriveOfferStatus(o: { status: string; reserved_until?: string | null }): Status {
   if (o.status === "filled") return "filled";
   if (o.status === "closed") return "closed";
   return "open";

@@ -24,7 +24,9 @@ export function ReferencesManager({ userId }: { userId: string }) {
   const [refs, setRefs] = useState<Reference[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [draft, setDraft] = useState<Record<RefType, { full_name: string; phone: string; relation: string }>>({
+  const [draft, setDraft] = useState<
+    Record<RefType, { full_name: string; phone: string; relation: string }>
+  >({
     work: { full_name: "", phone: "", relation: "" },
     family: { full_name: "", phone: "", relation: "" },
   });
@@ -35,8 +37,14 @@ export function ReferencesManager({ userId }: { userId: string }) {
       const client = supabase as unknown as {
         from: (t: string) => {
           select: (cols: string) => {
-            eq: (c: string, v: string) => {
-              order: (c: string, o: { ascending: boolean }) => Promise<{ data: Reference[] | null }>;
+            eq: (
+              c: string,
+              v: string,
+            ) => {
+              order: (
+                c: string,
+                o: { ascending: boolean },
+              ) => Promise<{ data: Reference[] | null }>;
             };
           };
         };
@@ -51,7 +59,9 @@ export function ReferencesManager({ userId }: { userId: string }) {
         setLoading(false);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [userId]);
 
   const byType = (t: RefType) => refs.filter((r) => r.ref_type === t);
@@ -72,7 +82,9 @@ export function ReferencesManager({ userId }: { userId: string }) {
     const client = supabase as unknown as {
       from: (t: string) => {
         insert: (row: Record<string, unknown>) => {
-          select: () => { single: () => Promise<{ data: Reference | null; error: { message: string } | null }> };
+          select: () => {
+            single: () => Promise<{ data: Reference | null; error: { message: string } | null }>;
+          };
         };
       };
     };
@@ -100,7 +112,11 @@ export function ReferencesManager({ userId }: { userId: string }) {
   async function removeRef(id: string) {
     if (!confirm("¿Eliminar esta referencia?")) return;
     const client = supabase as unknown as {
-      from: (t: string) => { delete: () => { eq: (c: string, v: string) => Promise<{ error: { message: string } | null }> } };
+      from: (t: string) => {
+        delete: () => {
+          eq: (c: string, v: string) => Promise<{ error: { message: string } | null }>;
+        };
+      };
     };
     const { error } = await client.from("professional_references").delete().eq("id", id);
     if (error) {
@@ -185,9 +201,7 @@ function RefSection({
         </div>
         <span
           className={`text-[11px] px-2 py-0.5 rounded-full ${
-            ok
-              ? "bg-emerald-500/10 text-emerald-600"
-              : "bg-amber-500/10 text-amber-600"
+            ok ? "bg-emerald-500/10 text-emerald-600" : "bg-amber-500/10 text-amber-600"
           }`}
         >
           {items.length}/{MIN_PER_TYPE} {ok ? "✓" : "requerido"}
@@ -245,7 +259,9 @@ function RefSection({
               />
             </div>
             <div>
-              <Label className="text-[11px]">{type === "work" ? "Cargo / Empresa" : "Parentesco"}</Label>
+              <Label className="text-[11px]">
+                {type === "work" ? "Cargo / Empresa" : "Parentesco"}
+              </Label>
               <Input
                 value={draft.relation}
                 onChange={(e) => onDraftChange({ ...draft, relation: e.target.value })}

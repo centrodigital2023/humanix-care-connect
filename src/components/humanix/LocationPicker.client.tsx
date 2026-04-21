@@ -54,7 +54,9 @@ export function LocationPicker({
     if (navigator.geolocation && lat == null && lng == null) {
       navigator.geolocation.getCurrentPosition(
         (pos) => onChange(pos.coords.latitude, pos.coords.longitude),
-        () => {/* silent fail */},
+        () => {
+          /* silent fail */
+        },
         { enableHighAccuracy: true, timeout: 8_000, maximumAge: 30_000 },
       );
     }
@@ -87,12 +89,17 @@ export function LocationPicker({
       setWatching(false);
       toast.info("Seguimiento en tiempo real desactivado");
     } else {
-      if (!navigator.geolocation) { toast.error("Sin soporte de geolocalización"); return; }
+      if (!navigator.geolocation) {
+        toast.error("Sin soporte de geolocalización");
+        return;
+      }
       setWatching(true);
       toast.success("Rastreando tu ubicación en tiempo real");
       watchIdRef.current = navigator.geolocation.watchPosition(
         (pos) => onChange(pos.coords.latitude, pos.coords.longitude),
-        () => { setWatching(false); },
+        () => {
+          setWatching(false);
+        },
         { enableHighAccuracy: true, maximumAge: 5_000 },
       );
     }
@@ -100,21 +107,39 @@ export function LocationPicker({
 
   // Cleanup watcher on unmount
   useEffect(() => {
-    return () => { if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current); };
+    return () => {
+      if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
+    };
   }, []);
 
   const center = { lat: lat ?? 4.6097, lng: lng ?? -74.0817 };
 
   if (!mounted) {
-    return <div className="rounded-xl border border-border bg-muted/30 animate-pulse" style={{ height }} />;
+    return (
+      <div
+        className="rounded-xl border border-border bg-muted/30 animate-pulse"
+        style={{ height }}
+      />
+    );
   }
 
   return (
     <div className="space-y-1.5">
       {/* Controles compactos */}
       <div className="flex gap-2">
-        <Button type="button" onClick={useGps} variant="glass" size="sm" disabled={busy || watching} className="text-xs h-8">
-          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Crosshair className="h-3.5 w-3.5" />}
+        <Button
+          type="button"
+          onClick={useGps}
+          variant="glass"
+          size="sm"
+          disabled={busy || watching}
+          className="text-xs h-8"
+        >
+          {busy ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Crosshair className="h-3.5 w-3.5" />
+          )}
           <span className="ml-1">Mi ubicación</span>
         </Button>
         <Button
@@ -143,7 +168,7 @@ export function LocationPicker({
           style={{ height: "100%", width: "100%" }}
         >
           <TileLayer
-            attribution='&copy; OpenStreetMap'
+            attribution="&copy; OpenStreetMap"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           {lat != null && lng != null && (

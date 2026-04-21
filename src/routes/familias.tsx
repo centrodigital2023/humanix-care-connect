@@ -1,13 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Heart,
-  Search,
-  ShieldCheck,
-  Activity,
-  PhoneCall,
-  Star,
-  ArrowRight,
-} from "lucide-react";
+import { Heart, Search, ShieldCheck, Activity, PhoneCall, Star, ArrowRight } from "lucide-react";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
@@ -73,12 +65,11 @@ function FamiliasPage() {
                 Para familias
               </span>
               <h1 className="mt-4 font-display text-4xl sm:text-5xl font-bold leading-[1.05]">
-                Cuidado humano de confianza,{" "}
-                <span className="text-copper">a un toque</span>.
+                Cuidado humano de confianza, <span className="text-copper">a un toque</span>.
               </h1>
               <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
-                Encuentra enfermeros y cuidadores certificados para adultos mayores, postoperatorios o
-                cuidado pediátrico. Verificación RETHUS, ETA en vivo y pago protegido.
+                Encuentra enfermeros y cuidadores certificados para adultos mayores, postoperatorios
+                o cuidado pediátrico. Verificación RETHUS, ETA en vivo y pago protegido.
               </p>
               <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
                 <div className="flex">

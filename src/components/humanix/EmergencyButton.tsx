@@ -80,7 +80,8 @@ export function EmergencyButton({
             </div>
             <h3 className="mt-3 font-display text-xl font-bold">Confirmar emergencia</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Reportaremos la incidencia al superadmin de Humanix con tu ubicación y te conectaremos con la
+              Reportaremos la incidencia al superadmin de Humanix con tu ubicación y te conectaremos
+              con la
               <strong> línea única de emergencias 123</strong>.
             </p>
             <div className="mt-5 flex gap-2">
@@ -96,7 +97,11 @@ export function EmergencyButton({
                 disabled={busy}
                 className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-fuchsia-neural text-fuchsia-neural-foreground py-2.5 text-sm font-semibold disabled:opacity-60"
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
+                {busy ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Phone className="h-4 w-4" />
+                )}
                 Reportar y llamar 123
               </button>
             </div>

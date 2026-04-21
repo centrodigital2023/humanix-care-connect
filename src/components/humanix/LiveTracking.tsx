@@ -162,7 +162,12 @@ export function LiveTracking({
         <EmergencyButton bookingId={booking.id} />
       </header>
 
-      <OffersMap points={points} height={360} center={{ lat: center.lat, lng: center.lng }} zoom={13} />
+      <OffersMap
+        points={points}
+        height={360}
+        center={{ lat: center.lat, lng: center.lng }}
+        zoom={13}
+      />
 
       <div className="px-4 py-3 border-t border-border flex items-center justify-between gap-3">
         {isProfessional ? (
@@ -196,9 +201,7 @@ export function LiveTracking({
             )}
           </p>
         )}
-        <p className="text-[10px] text-muted-foreground">
-          Habeas Data · Ley 1581/2012
-        </p>
+        <p className="text-[10px] text-muted-foreground">Habeas Data · Ley 1581/2012</p>
       </div>
     </div>
   );

@@ -104,7 +104,9 @@ function InstitutionDashboard() {
         if (offerIds.length > 0) {
           const { data: appsData } = await supabase
             .from("applications")
-            .select("id, status, created_at, proposed_amount, message, professional_id, job_offer_id")
+            .select(
+              "id, status, created_at, proposed_amount, message, professional_id, job_offer_id",
+            )
             .in("job_offer_id", offerIds)
             .order("created_at", { ascending: false })
             .limit(80);
@@ -262,7 +264,9 @@ function InstitutionDashboard() {
                       )}
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold truncate">{pro?.full_name ?? "Profesional"}</p>
+                          <p className="font-semibold truncate">
+                            {pro?.full_name ?? "Profesional"}
+                          </p>
                           {stars > 0 && (
                             <span className="inline-flex items-center gap-0.5 text-xs text-copper">
                               <Star className="h-3 w-3 fill-copper" />
@@ -273,16 +277,23 @@ function InstitutionDashboard() {
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {pro?.specialty ?? "Profesional de la salud"} · {pro?.city ?? "—"}
-                          {pro?.hourly_rate ? ` · $${pro.hourly_rate.toLocaleString("es-CO")}/h` : ""}
+                          {pro?.hourly_rate
+                            ? ` · $${pro.hourly_rate.toLocaleString("es-CO")}/h`
+                            : ""}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Para: <span className="font-medium text-foreground">{offer?.title ?? "Oferta"}</span>
+                          Para:{" "}
+                          <span className="font-medium text-foreground">
+                            {offer?.title ?? "Oferta"}
+                          </span>
                           {a.proposed_amount
                             ? ` · Propone $${a.proposed_amount.toLocaleString("es-CO")} COP`
                             : ""}
                         </p>
                         {a.message && (
-                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">"{a.message}"</p>
+                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
+                            "{a.message}"
+                          </p>
                         )}
                       </div>
                     </div>

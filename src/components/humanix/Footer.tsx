@@ -41,8 +41,8 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Logo />
             <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
-              Plataforma colombiana de talento humano en salud, con IA en
-              tiempo real, verificación RETHUS y pagos inmediatos.
+              Plataforma colombiana de talento humano en salud, con IA en tiempo real, verificación
+              RETHUS y pagos inmediatos.
             </p>
             <p className="mt-4 text-xs text-muted-foreground">
               Bogotá · Medellín · Cali · Barranquilla
@@ -78,8 +78,7 @@ export function Footer() {
 
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Humanix Colombia · Todos los derechos
-            reservados.
+            © {new Date().getFullYear()} Humanix Colombia · Todos los derechos reservados.
           </p>
           <div className="flex items-center gap-4">
             <p className="text-xs text-muted-foreground">

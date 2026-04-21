@@ -25,29 +25,34 @@ function TerminosPage() {
   return (
     <LegalPage
       badge="Legal"
-      title={<>Términos y <span className="text-gradient-bio">Condiciones</span></>}
+      title={
+        <>
+          Términos y <span className="text-gradient-bio">Condiciones</span>
+        </>
+      }
       updatedAt="21 de abril de 2026"
       intro="Estos Términos regulan el acceso y uso de la plataforma Humanix Colombia S.A.S. por parte de profesionales de la salud, familias y entidades de salud."
     >
       <LegalSection title="1. Aceptación">
         <p>
           Al registrarte en Humanix aceptas estos Términos, nuestra Política de Privacidad y la
-          Autorización de Tratamiento de Datos (Habeas Data) bajo la <strong>Ley 1581 de 2012</strong> y
-          el Decreto 1377 de 2013.
+          Autorización de Tratamiento de Datos (Habeas Data) bajo la{" "}
+          <strong>Ley 1581 de 2012</strong> y el Decreto 1377 de 2013.
         </p>
       </LegalSection>
       <LegalSection title="2. Naturaleza del servicio">
         <p>
           Humanix es una plataforma tecnológica que conecta profesionales de salud verificados con
-          familias y clínicas. <strong>No prestamos servicios médicos directamente</strong>; actuamos
-          como intermediarios tecnológicos.
+          familias y clínicas. <strong>No prestamos servicios médicos directamente</strong>;
+          actuamos como intermediarios tecnológicos.
         </p>
       </LegalSection>
       <LegalSection title="3. Verificación RETHUS">
         <p>
           Todo profesional debe acreditar su inscripción vigente en el{" "}
-          <strong>Registro Único Nacional del Talento Humano en Salud (RETHUS)</strong> del Ministerio
-          de Salud y Protección Social, salvo excepciones válidas (cuidadores no regulados).
+          <strong>Registro Único Nacional del Talento Humano en Salud (RETHUS)</strong> del
+          Ministerio de Salud y Protección Social, salvo excepciones válidas (cuidadores no
+          regulados).
         </p>
       </LegalSection>
       <LegalSection title="4. Pagos y comisiones">
@@ -87,7 +92,10 @@ function TerminosPage() {
       <LegalSection title="9. Contacto">
         <p>
           Humanix Colombia S.A.S. · NIT pendiente · Bogotá D.C. ·{" "}
-          <a href="mailto:legal@humanix.co" className="text-foreground underline underline-offset-4">
+          <a
+            href="mailto:legal@humanix.co"
+            className="text-foreground underline underline-offset-4"
+          >
             legal@humanix.co
           </a>
         </p>

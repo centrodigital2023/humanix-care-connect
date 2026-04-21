@@ -38,8 +38,7 @@ export function FAQ() {
             Preguntas frecuentes
           </span>
           <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold leading-tight">
-            Todo lo que necesitas saber{" "}
-            <span className="text-gradient-bio">antes de empezar</span>.
+            Todo lo que necesitas saber <span className="text-gradient-bio">antes de empezar</span>.
           </h2>
         </div>
 

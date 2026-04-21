@@ -25,7 +25,11 @@ function HabeasDataPage() {
   return (
     <LegalPage
       badge="Habeas Data"
-      title={<>Autorización <span className="text-gradient-bio">Habeas Data</span></>}
+      title={
+        <>
+          Autorización <span className="text-gradient-bio">Habeas Data</span>
+        </>
+      }
       updatedAt="21 de abril de 2026"
       intro="En cumplimiento de la Ley Estatutaria 1581 de 2012, su Decreto Reglamentario 1377 de 2013 y la Circular 002 de 2015 de la Superintendencia de Industria y Comercio."
     >
@@ -65,7 +69,10 @@ function HabeasDataPage() {
       <LegalSection title="5. Canales para ejercer tus derechos">
         <p>
           Correo:{" "}
-          <a href="mailto:datos@humanix.co" className="text-foreground underline underline-offset-4">
+          <a
+            href="mailto:datos@humanix.co"
+            className="text-foreground underline underline-offset-4"
+          >
             datos@humanix.co
           </a>{" "}
           · WhatsApp Business: +57 300 000 0000 · Tiempo de respuesta: hasta 15 días hábiles

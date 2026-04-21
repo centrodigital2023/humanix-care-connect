@@ -85,8 +85,8 @@ export function Testimonials() {
             <span className="text-gradient-bio">todos los días</span>.
           </h2>
           <p className="mt-4 text-muted-foreground leading-relaxed">
-            Profesionales y familias que ya transformaron su forma de cuidar y
-            de trabajar con Humanix.
+            Profesionales y familias que ya transformaron su forma de cuidar y de trabajar con
+            Humanix.
           </p>
         </div>
 
@@ -109,9 +109,7 @@ export function Testimonials() {
                 />
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-display font-semibold text-lg leading-tight">
-                      {t.name}
-                    </h3>
+                    <h3 className="font-display font-semibold text-lg leading-tight">{t.name}</h3>
                     {t.badge && (
                       <span className="inline-flex items-center text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-biosensor/15 text-biosensor border border-biosensor/30">
                         {t.badge}
@@ -121,9 +119,7 @@ export function Testimonials() {
                   <p className="text-xs text-muted-foreground mt-0.5">{t.role}</p>
                   <div className="mt-2 flex items-center gap-3">
                     <Stars value={t.rating} />
-                    <span className="text-xs text-muted-foreground">
-                      · {t.city}
-                    </span>
+                    <span className="text-xs text-muted-foreground">· {t.city}</span>
                   </div>
                 </div>
               </div>

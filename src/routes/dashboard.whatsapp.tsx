@@ -86,18 +86,16 @@ function WhatsAppCRM() {
     if (!user) return;
     const ch = supabase
       .channel("wa-contacts")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "whatsapp_contacts" },
-        () => {
-          supabase
-            .from("whatsapp_contacts")
-            .select("id, phone, display_name, last_message_at, last_message_preview, unread_count, tag")
-            .order("last_message_at", { ascending: false, nullsFirst: false })
-            .limit(200)
-            .then(({ data }) => setContacts((data ?? []) as Contact[]));
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "whatsapp_contacts" }, () => {
+        supabase
+          .from("whatsapp_contacts")
+          .select(
+            "id, phone, display_name, last_message_at, last_message_preview, unread_count, tag",
+          )
+          .order("last_message_at", { ascending: false, nullsFirst: false })
+          .limit(200)
+          .then(({ data }) => setContacts((data ?? []) as Contact[]));
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -120,10 +118,7 @@ function WhatsAppCRM() {
       setMessages((data ?? []) as Msg[]);
       setLoadingMsgs(false);
       // marcar leído
-      await supabase
-        .from("whatsapp_contacts")
-        .update({ unread_count: 0 })
-        .eq("id", activeId);
+      await supabase.from("whatsapp_contacts").update({ unread_count: 0 }).eq("id", activeId);
     })();
     const ch = supabase
       .channel(`wa-msgs-${activeId}`)
@@ -137,7 +132,7 @@ function WhatsAppCRM() {
         },
         (payload) => {
           setMessages((m) => [...m, payload.new as Msg]);
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -155,7 +150,7 @@ function WhatsAppCRM() {
     (c) =>
       !search ||
       c.phone.includes(search) ||
-      (c.display_name ?? "").toLowerCase().includes(search.toLowerCase())
+      (c.display_name ?? "").toLowerCase().includes(search.toLowerCase()),
   );
   const active = contacts.find((c) => c.id === activeId);
 
@@ -227,9 +222,7 @@ function WhatsAppCRM() {
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <p className="font-semibold text-sm truncate">
-                        {c.display_name ?? c.phone}
-                      </p>
+                      <p className="font-semibold text-sm truncate">{c.display_name ?? c.phone}</p>
                       {c.unread_count > 0 && (
                         <span className="text-[10px] font-bold bg-biosensor text-biosensor-foreground rounded-full px-1.5 py-0.5">
                           {c.unread_count}

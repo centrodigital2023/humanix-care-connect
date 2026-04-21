@@ -47,15 +47,10 @@ export function FloatingWAChat() {
           </div>
           <div className="p-4 space-y-3">
             <p className="text-sm text-foreground/90">
-              Hola 👋 Estamos disponibles por WhatsApp para resolver dudas, ayudarte a
-              encontrar profesional o reportar cualquier incidente.
+              Hola 👋 Estamos disponibles por WhatsApp para resolver dudas, ayudarte a encontrar
+              profesional o reportar cualquier incidente.
             </p>
-            <a
-              href={WA_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
-            >
+            <a href={WA_URL} target="_blank" rel="noopener noreferrer" className="block">
               <Button variant="hero" className="w-full" size="lg">
                 <Phone className="h-4 w-4" />
                 Abrir WhatsApp

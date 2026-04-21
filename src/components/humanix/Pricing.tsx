@@ -58,8 +58,7 @@ export function Pricing() {
             Planes
           </span>
           <h2 className="mt-3 font-display text-3xl sm:text-5xl font-bold leading-tight">
-            Un plan para cada{" "}
-            <span className="text-gradient-bio">historia humana</span>.
+            Un plan para cada <span className="text-gradient-bio">historia humana</span>.
           </h2>
           <p className="mt-4 text-lg text-muted-foreground">
             Pagos en pesos colombianos. Sin permanencia. Cancela cuando quieras.

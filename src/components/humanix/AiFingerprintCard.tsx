@@ -15,7 +15,11 @@ export function AiFingerprintCard({ userId }: { userId: string }) {
   const refresh = async () => {
     const [{ data: emb }, { data: prof }] = await Promise.all([
       supabase.from("profile_embeddings").select("updated_at").eq("user_id", userId).maybeSingle(),
-      supabase.from("professional_profiles").select("updated_at").eq("user_id", userId).maybeSingle(),
+      supabase
+        .from("professional_profiles")
+        .select("updated_at")
+        .eq("user_id", userId)
+        .maybeSingle(),
     ]);
     if (!emb) {
       setStatus("missing");
@@ -79,7 +83,8 @@ export function AiFingerprintCard({ userId }: { userId: string }) {
               )}
             </h3>
             <p className="mt-1 text-sm text-muted-foreground max-w-md">
-              Convertimos tu perfil en un vector que la IA usa para encontrar las ofertas más afines, incluso cuando las palabras no coinciden exactamente.
+              Convertimos tu perfil en un vector que la IA usa para encontrar las ofertas más
+              afines, incluso cuando las palabras no coinciden exactamente.
             </p>
             {updatedAt && (
               <p className="mt-1 text-[11px] text-muted-foreground">
@@ -89,7 +94,11 @@ export function AiFingerprintCard({ userId }: { userId: string }) {
           </div>
         </div>
         <Button onClick={generate} disabled={busy || loading} variant="hero" size="sm">
-          {busy ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+          {busy ? (
+            <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4 mr-1.5" />
+          )}
           {status === "missing" ? "Generar huella IA" : "Regenerar"}
         </Button>
       </div>

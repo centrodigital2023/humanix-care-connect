@@ -51,12 +51,48 @@ const TYPES: {
   required?: boolean;
   group?: string;
 }[] = [
-  { value: "cv", label: "Hoja de vida", icon: <FileText className="h-4 w-4" />, hint: "PDF · La IA extrae tus datos.", cvParse: true, required: true },
-  { value: "rethus", label: "Documento RETHUS", icon: <ShieldCheck className="h-4 w-4" />, hint: "Opcional si subes diploma. PDF o foto.", group: "credencial" },
-  { value: "diploma", label: "Diploma / Certificación", icon: <GraduationCap className="h-4 w-4" />, hint: "Opcional si subes RETHUS. Diploma profesional, BLS, ACLS, etc.", group: "credencial" },
-  { value: "id_document", label: "Cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso.", required: true },
-  { value: "utility_bill", label: "Recibo de servicios públicos", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
-  { value: "work_experience", label: "Certificado de experiencia laboral", icon: <Briefcase className="h-4 w-4" />, hint: "Constancia de empleos previos en salud." },
+  {
+    value: "cv",
+    label: "Hoja de vida",
+    icon: <FileText className="h-4 w-4" />,
+    hint: "PDF · La IA extrae tus datos.",
+    cvParse: true,
+    required: true,
+  },
+  {
+    value: "rethus",
+    label: "Documento RETHUS",
+    icon: <ShieldCheck className="h-4 w-4" />,
+    hint: "Opcional si subes diploma. PDF o foto.",
+    group: "credencial",
+  },
+  {
+    value: "diploma",
+    label: "Diploma / Certificación",
+    icon: <GraduationCap className="h-4 w-4" />,
+    hint: "Opcional si subes RETHUS. Diploma profesional, BLS, ACLS, etc.",
+    group: "credencial",
+  },
+  {
+    value: "id_document",
+    label: "Cédula",
+    icon: <IdCard className="h-4 w-4" />,
+    hint: "Frente y reverso.",
+    required: true,
+  },
+  {
+    value: "utility_bill",
+    label: "Recibo de servicios públicos",
+    icon: <Receipt className="h-4 w-4" />,
+    hint: "Reciente (últimos 60 días). Verifica tu dirección.",
+    required: true,
+  },
+  {
+    value: "work_experience",
+    label: "Certificado de experiencia laboral",
+    icon: <Briefcase className="h-4 w-4" />,
+    hint: "Constancia de empleos previos en salud.",
+  },
 ];
 
 export function DocumentsManager({
@@ -71,8 +107,13 @@ export function DocumentsManager({
   const [extractingCv, setExtractingCv] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const inputRefs = useRef<Record<DocType, HTMLInputElement | null>>({
-    cv: null, rethus: null, diploma: null, id_document: null,
-    utility_bill: null, work_experience: null, other: null,
+    cv: null,
+    rethus: null,
+    diploma: null,
+    id_document: null,
+    utility_bill: null,
+    work_experience: null,
+    other: null,
   });
 
   useEffect(() => {
@@ -85,7 +126,9 @@ export function DocumentsManager({
         .order("created_at", { ascending: false });
       if (active && data) setDocs(data as unknown as Doc[]);
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [userId]);
 
   const upload = async (type: DocType, file: File) => {
@@ -156,7 +199,7 @@ export function DocumentsManager({
           ai_score: typeof v.confidence === "number" ? v.confidence : null,
           ai_notes: v.reason ?? null,
           ai_extracted: v.extracted ?? null,
-          reviewer_note: !isValid ? v.reason ?? "Documento rechazado por IA" : null,
+          reviewer_note: !isValid ? (v.reason ?? "Documento rechazado por IA") : null,
           status: newStatus,
         };
         const { data: upd } = await supabase
@@ -176,7 +219,9 @@ export function DocumentsManager({
       } catch (e) {
         // No bloqueamos si IA falla, queda pendiente para staff
         console.warn("[verify]", e);
-        toast.warning("Documento subido. La verificación IA no estuvo disponible; quedó pendiente.");
+        toast.warning(
+          "Documento subido. La verificación IA no estuvo disponible; quedó pendiente.",
+        );
       } finally {
         setVerifyingId(null);
       }
@@ -216,11 +261,8 @@ export function DocumentsManager({
 
   const docsByType = (t: DocType) => docs.filter((d) => d.doc_type === t);
 
-  const hasDoc = (t: DocType) =>
-    docs.some((d) => d.doc_type === t && d.status !== "rejected");
-  const requiredMissing = TYPES.filter(
-    (t) => t.required && !hasDoc(t.value),
-  ).length;
+  const hasDoc = (t: DocType) => docs.some((d) => d.doc_type === t && d.status !== "rejected");
+  const requiredMissing = TYPES.filter((t) => t.required && !hasDoc(t.value)).length;
   const credencialMissing = !hasDoc("rethus") && !hasDoc("diploma");
   const totalMissing = requiredMissing + (credencialMissing ? 1 : 0);
 
@@ -232,7 +274,10 @@ export function DocumentsManager({
           <p className="text-amber-700 dark:text-amber-400">
             Te faltan <strong>{totalMissing}</strong> documento(s) por subir.
             {credencialMissing && (
-              <> Debes subir <strong>RETHUS</strong> o <strong>diploma</strong> (al menos uno).</>
+              <>
+                {" "}
+                Debes subir <strong>RETHUS</strong> o <strong>diploma</strong> (al menos uno).
+              </>
             )}
           </p>
         </div>
@@ -242,10 +287,7 @@ export function DocumentsManager({
           const items = docsByType(t.value);
           const busy = busyType === t.value || (t.cvParse && extractingCv);
           return (
-            <div
-              key={t.value}
-              className="rounded-xl border border-border bg-background p-4"
-            >
+            <div key={t.value} className="rounded-xl border border-border bg-background p-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-foreground">
@@ -265,11 +307,17 @@ export function DocumentsManager({
                   disabled={busy}
                   onClick={() => inputRefs.current[t.value]?.click()}
                 >
-                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+                  {busy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <UploadCloud className="h-3.5 w-3.5" />
+                  )}
                   <span className="ml-1.5 text-xs">Subir</span>
                 </Button>
                 <input
-                  ref={(el) => { inputRefs.current[t.value] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[t.value] = el;
+                  }}
                   type="file"
                   accept=".pdf,image/*"
                   className="hidden"
@@ -338,12 +386,22 @@ function StatusBadge({ status, aiVerified }: { status: DocStatus; aiVerified: bo
       label: aiVerified ? "IA ✓ pendiente staff" : "Pendiente",
       cls: aiVerified ? "bg-biosensor/10 text-biosensor" : "bg-amber-500/10 text-amber-600",
     },
-    approved: { icon: <CheckCircle2 className="h-3 w-3" />, label: "Aprobado", cls: "bg-emerald-500/10 text-emerald-600" },
-    rejected: { icon: <XCircle className="h-3 w-3" />, label: "Rechazado", cls: "bg-rose-500/10 text-rose-600" },
+    approved: {
+      icon: <CheckCircle2 className="h-3 w-3" />,
+      label: "Aprobado",
+      cls: "bg-emerald-500/10 text-emerald-600",
+    },
+    rejected: {
+      icon: <XCircle className="h-3 w-3" />,
+      label: "Rechazado",
+      cls: "bg-rose-500/10 text-rose-600",
+    },
   } as const;
   const s = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls} whitespace-nowrap`}>
+    <span
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls} whitespace-nowrap`}
+    >
       {s.icon}
       {s.label}
     </span>

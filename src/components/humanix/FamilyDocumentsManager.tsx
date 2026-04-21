@@ -49,12 +49,44 @@ const TYPES: {
   hint: string;
   required?: boolean;
 }[] = [
-  { value: "id_document", label: "Tu cédula", icon: <IdCard className="h-4 w-4" />, hint: "Frente y reverso. La IA valida que sea real.", required: true },
-  { value: "utility_bill", label: "Recibo de servicios", icon: <Receipt className="h-4 w-4" />, hint: "Reciente (últimos 60 días). Verifica tu dirección.", required: true },
-  { value: "patient_id", label: "Cédula del paciente", icon: <Baby className="h-4 w-4" />, hint: "Si el cuidado es para otra persona." },
-  { value: "medical_history", label: "Historia clínica / receta", icon: <HeartPulse className="h-4 w-4" />, hint: "Diagnóstico, alergias o medicamentos." },
-  { value: "authorization", label: "Autorización / poder", icon: <FileSignature className="h-4 w-4" />, hint: "Si actúas en representación del paciente." },
-  { value: "insurance", label: "Carnet EPS / seguro", icon: <ShieldCheck className="h-4 w-4" />, hint: "Para coordinar coberturas." },
+  {
+    value: "id_document",
+    label: "Tu cédula",
+    icon: <IdCard className="h-4 w-4" />,
+    hint: "Frente y reverso. La IA valida que sea real.",
+    required: true,
+  },
+  {
+    value: "utility_bill",
+    label: "Recibo de servicios",
+    icon: <Receipt className="h-4 w-4" />,
+    hint: "Reciente (últimos 60 días). Verifica tu dirección.",
+    required: true,
+  },
+  {
+    value: "patient_id",
+    label: "Cédula del paciente",
+    icon: <Baby className="h-4 w-4" />,
+    hint: "Si el cuidado es para otra persona.",
+  },
+  {
+    value: "medical_history",
+    label: "Historia clínica / receta",
+    icon: <HeartPulse className="h-4 w-4" />,
+    hint: "Diagnóstico, alergias o medicamentos.",
+  },
+  {
+    value: "authorization",
+    label: "Autorización / poder",
+    icon: <FileSignature className="h-4 w-4" />,
+    hint: "Si actúas en representación del paciente.",
+  },
+  {
+    value: "insurance",
+    label: "Carnet EPS / seguro",
+    icon: <ShieldCheck className="h-4 w-4" />,
+    hint: "Para coordinar coberturas.",
+  },
 ];
 
 export function FamilyDocumentsManager({ userId }: { userId: string }) {
@@ -62,8 +94,13 @@ export function FamilyDocumentsManager({ userId }: { userId: string }) {
   const [busyType, setBusyType] = useState<DocType | null>(null);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const inputRefs = useRef<Record<DocType, HTMLInputElement | null>>({
-    id_document: null, utility_bill: null, patient_id: null,
-    medical_history: null, authorization: null, insurance: null, other: null,
+    id_document: null,
+    utility_bill: null,
+    patient_id: null,
+    medical_history: null,
+    authorization: null,
+    insurance: null,
+    other: null,
   });
 
   useEffect(() => {
@@ -148,7 +185,7 @@ export function FamilyDocumentsManager({ userId }: { userId: string }) {
           ai_score: typeof v.confidence === "number" ? v.confidence : null,
           ai_notes: v.reason ?? null,
           ai_extracted: v.extracted ?? null,
-          reviewer_note: !isValid ? v.reason ?? "Documento rechazado por IA" : null,
+          reviewer_note: !isValid ? (v.reason ?? "Documento rechazado por IA") : null,
           status: newStatus,
         };
         await supabase
@@ -177,9 +214,7 @@ export function FamilyDocumentsManager({ userId }: { userId: string }) {
     try {
       const path = extractPath(doc.file_url);
       if (!path) throw new Error("Ruta no válida");
-      const { data, error } = await supabase.storage
-        .from("family-docs")
-        .createSignedUrl(path, 60);
+      const { data, error } = await supabase.storage.from("family-docs").createSignedUrl(path, 60);
       if (error || !data?.signedUrl) throw error ?? new Error("No se pudo abrir");
       window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     } catch (e) {
@@ -192,7 +227,10 @@ export function FamilyDocumentsManager({ userId }: { userId: string }) {
     try {
       const path = extractPath(doc.file_url);
       if (path) await supabase.storage.from("family-docs").remove([path]);
-      await supabase.from("family_documents" as never).delete().eq("id", doc.id);
+      await supabase
+        .from("family_documents" as never)
+        .delete()
+        .eq("id", doc.id);
       toast.success("Eliminado");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al eliminar");
@@ -209,7 +247,8 @@ export function FamilyDocumentsManager({ userId }: { userId: string }) {
         <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
           <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-amber-700 dark:text-amber-400">
-            Te faltan <strong>{requiredMissing}</strong> documento(s) obligatorio(s) para mayor confianza.
+            Te faltan <strong>{requiredMissing}</strong> documento(s) obligatorio(s) para mayor
+            confianza.
           </p>
         </div>
       )}
@@ -238,11 +277,17 @@ export function FamilyDocumentsManager({ userId }: { userId: string }) {
                   disabled={busy}
                   onClick={() => inputRefs.current[t.value]?.click()}
                 >
-                  {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+                  {busy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <UploadCloud className="h-3.5 w-3.5" />
+                  )}
                   <span className="ml-1.5 text-xs">Subir</span>
                 </Button>
                 <input
-                  ref={(el) => { inputRefs.current[t.value] = el; }}
+                  ref={(el) => {
+                    inputRefs.current[t.value] = el;
+                  }}
                   type="file"
                   accept=".pdf,image/*"
                   className="hidden"
@@ -309,12 +354,22 @@ function StatusBadge({ status, aiVerified }: { status: DocStatus; aiVerified: bo
       label: aiVerified ? "IA ✓" : "Pendiente",
       cls: aiVerified ? "bg-biosensor/10 text-biosensor" : "bg-amber-500/10 text-amber-600",
     },
-    approved: { icon: <CheckCircle2 className="h-3 w-3" />, label: "Aprobado", cls: "bg-emerald-500/10 text-emerald-600" },
-    rejected: { icon: <XCircle className="h-3 w-3" />, label: "Rechazado", cls: "bg-rose-500/10 text-rose-600" },
+    approved: {
+      icon: <CheckCircle2 className="h-3 w-3" />,
+      label: "Aprobado",
+      cls: "bg-emerald-500/10 text-emerald-600",
+    },
+    rejected: {
+      icon: <XCircle className="h-3 w-3" />,
+      label: "Rechazado",
+      cls: "bg-rose-500/10 text-rose-600",
+    },
   } as const;
   const s = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls} whitespace-nowrap`}>
+    <span
+      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls} whitespace-nowrap`}
+    >
       {s.icon}
       {s.label}
     </span>

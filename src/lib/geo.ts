@@ -10,9 +10,7 @@ export function distanceKm(a: LatLng, b: LatLng): number {
   const dLng = toRad(b.lng - a.lng);
   const lat1 = toRad(a.lat);
   const lat2 = toRad(b.lat);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
   return 2 * R_KM * Math.asin(Math.sqrt(h));
 }
 
@@ -32,7 +30,7 @@ export async function geocodeCity(query: string): Promise<LatLng | null> {
   if (geoCache.has(key)) return geoCache.get(key) ?? null;
   try {
     const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=co&q=${encodeURIComponent(
-      query
+      query,
     )}`;
     const res = await fetch(url, {
       headers: { "Accept-Language": "es" },
@@ -64,7 +62,7 @@ export function getBrowserLocation(): Promise<LatLng | null> {
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => resolve(null),
-      { timeout: 5000, maximumAge: 5 * 60 * 1000 }
+      { timeout: 5000, maximumAge: 5 * 60 * 1000 },
     );
   });
 }

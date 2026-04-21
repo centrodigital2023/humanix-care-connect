@@ -16,8 +16,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        hero:
-          "bg-biosensor text-biosensor-foreground font-semibold shadow-[var(--shadow-glow-bio)] hover:bg-biosensor/90 hover:shadow-[0_0_0_1px_var(--biosensor),0_18px_50px_-12px_color-mix(in_oklab,var(--biosensor)_70%,transparent)] hover:-translate-y-0.5 transition-all duration-300",
+        hero: "bg-biosensor text-biosensor-foreground font-semibold shadow-[var(--shadow-glow-bio)] hover:bg-biosensor/90 hover:shadow-[0_0_0_1px_var(--biosensor),0_18px_50px_-12px_color-mix(in_oklab,var(--biosensor)_70%,transparent)] hover:-translate-y-0.5 transition-all duration-300",
         copper:
           "bg-copper text-copper-foreground font-semibold hover:bg-copper/90 hover:-translate-y-0.5 transition-all duration-300 shadow-md",
         fuchsia:
@@ -55,4 +54,5 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = "Button";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { Button, buttonVariants };

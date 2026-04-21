@@ -52,13 +52,11 @@ export function TechSection() {
             Tecnología
           </span>
           <h2 className="mt-3 font-display text-3xl sm:text-5xl font-bold leading-tight text-cyber-foreground">
-            IA en tiempo real,{" "}
-            <span className="text-gradient-bio">arquitectura de élite</span>.
+            IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
           </h2>
           <p className="mt-5 text-lg text-cyber-foreground/70 leading-relaxed">
-            Construido sobre Kafka, Redis y SageMaker en AWS São Paulo —
-            con smart contracts que liberan pagos al confirmar la
-            geolocalización de llegada.
+            Construido sobre Kafka, Redis y SageMaker en AWS São Paulo — con smart contracts que
+            liberan pagos al confirmar la geolocalización de llegada.
           </p>
         </div>
 
@@ -68,15 +66,15 @@ export function TechSection() {
               key={f.title}
               className="group relative rounded-2xl border border-cyber-foreground/10 bg-cyber-foreground/[0.03] backdrop-blur-md p-6 hover:bg-cyber-foreground/[0.06] hover:border-cyber-foreground/20 transition-all duration-300"
             >
-              <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-cyber-foreground/5 ${f.color}`}>
+              <div
+                className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-cyber-foreground/5 ${f.color}`}
+              >
                 <f.icon className="h-6 w-6" />
               </div>
               <h3 className="mt-5 font-display text-lg font-semibold text-cyber-foreground">
                 {f.title}
               </h3>
-              <p className="mt-2 text-sm text-cyber-foreground/65 leading-relaxed">
-                {f.desc}
-              </p>
+              <p className="mt-2 text-sm text-cyber-foreground/65 leading-relaxed">{f.desc}</p>
             </div>
           ))}
         </div>

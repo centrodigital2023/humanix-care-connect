@@ -1,12 +1,4 @@
-const items = [
-  "Min. Salud",
-  "RETHUS",
-  "Nequi",
-  "PSE",
-  "Sura",
-  "Colsanitas",
-  "WhatsApp Business",
-];
+const items = ["Min. Salud", "RETHUS", "Nequi", "PSE", "Sura", "Colsanitas", "WhatsApp Business"];
 
 export function TrustBar() {
   return (

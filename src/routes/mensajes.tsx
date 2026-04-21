@@ -137,6 +137,7 @@ function MensajesPage() {
     return () => {
       supabase.removeChannel(channel);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, convs.length]);
 
   const NAV: NavItem[] = useMemo(() => {
@@ -175,7 +176,8 @@ function MensajesPage() {
           <Inbox className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
           <p className="font-semibold">Aún no tienes conversaciones</p>
           <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-            Cuando aceptes una aplicación o tu aplicación sea aceptada, abriremos un chat aquí con copiloto IA para sugerirte respuestas.
+            Cuando aceptes una aplicación o tu aplicación sea aceptada, abriremos un chat aquí con
+            copiloto IA para sugerirte respuestas.
           </p>
         </Card>
       ) : (
@@ -199,7 +201,11 @@ function MensajesPage() {
                     >
                       <div className="h-10 w-10 rounded-full bg-muted overflow-hidden shrink-0">
                         {other?.avatar_url && (
-                          <img src={other.avatar_url} alt={other.full_name ?? ""} className="h-full w-full object-cover" />
+                          <img
+                            src={other.avatar_url}
+                            alt={other.full_name ?? ""}
+                            className="h-full w-full object-cover"
+                          />
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -232,7 +238,8 @@ function MensajesPage() {
               <>
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" />
-                  Pulsa <span className="font-semibold text-foreground">IA</span> para que el copiloto sugiera respuestas adaptadas a la conversación.
+                  Pulsa <span className="font-semibold text-foreground">IA</span> para que el
+                  copiloto sugiera respuestas adaptadas a la conversación.
                 </div>
                 <ChatRoom conversationId={activeId} currentUserId={user.id} />
               </>

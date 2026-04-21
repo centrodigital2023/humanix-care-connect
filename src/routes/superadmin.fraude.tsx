@@ -10,6 +10,9 @@ import {
   FileCheck,
   LayoutDashboard,
   AlertTriangle,
+  ScrollText,
+  Megaphone,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -27,9 +30,12 @@ export const Route = createFileRoute("/superadmin/fraude")({
 const NAV: NavItem[] = [
   { label: "Overview", to: "/superadmin", icon: LayoutDashboard },
   { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
+  { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
+  { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "CRM", to: "/superadmin/crm", icon: MessageSquare },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
-  { label: "Marketplace", to: "/buscar", icon: Briefcase },
+  { label: "Marketplace", to: "/superadmin/marketplace", icon: Briefcase },
 ];
 
 type Severity = "low" | "medium" | "high" | "critical";

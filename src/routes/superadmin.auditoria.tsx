@@ -48,7 +48,7 @@ const NAV: NavItem[] = [
   { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
-  { label: "Marketplace", to: "/buscar", icon: Briefcase },
+  { label: "Marketplace", to: "/superadmin/marketplace", icon: Briefcase },
 ];
 
 type AuditRow = {

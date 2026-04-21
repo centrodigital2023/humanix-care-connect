@@ -3,7 +3,18 @@
 // Guarda los criterios en URL y navega a /buscar?tab=profesionales con preselección.
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Stethoscope, Calendar as CalendarIcon, Clock, Hourglass, Search, Heart, Baby, Activity, Bandage, ShieldCheck } from "lucide-react";
+import {
+  Stethoscope,
+  Calendar as CalendarIcon,
+  Clock,
+  Hourglass,
+  Search,
+  Heart,
+  Baby,
+  Activity,
+  Bandage,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { RoleGate } from "./RoleGate";
@@ -162,11 +173,7 @@ export function QuickCareWizard() {
         </p>
       </div>
 
-      <RoleGate
-        open={gateOpen}
-        onOpenChange={setGateOpen}
-        redirectTo={pendingRedirect}
-      />
+      <RoleGate open={gateOpen} onOpenChange={setGateOpen} redirectTo={pendingRedirect} />
     </form>
   );
 }

@@ -35,7 +35,11 @@ type OfferDraft = {
 };
 
 const COP = (n: number) =>
-  new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
   const [open, setOpen] = useState(false);
@@ -62,7 +66,9 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
       setDraft(data?.offer_draft ?? null);
       setCandidates((data?.candidates ?? []) as Candidate[]);
       if (!data?.candidates?.length) {
-        toast("Aún no hay profesionales con embedding suficiente. Publica la oferta y los notificaremos.");
+        toast(
+          "Aún no hay profesionales con embedding suficiente. Publica la oferta y los notificaremos.",
+        );
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error del copiloto IA");
@@ -77,7 +83,10 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) throw new Error("Sesión expirada");
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", u.user.id);
       const isInst = (roles ?? []).some((r) => r.role === "institution");
       const { data: offer, error } = await supabase
         .from("job_offers")
@@ -123,9 +132,14 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
               <header className="flex items-center justify-between gap-3 px-6 py-4 border-b border-border">
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-biosensor" />
-                  <h2 className="font-display text-lg font-semibold">Copiloto IA de contratación</h2>
+                  <h2 className="font-display text-lg font-semibold">
+                    Copiloto IA de contratación
+                  </h2>
                 </div>
-                <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+                <button
+                  onClick={() => setOpen(false)}
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   <X className="h-5 w-5" />
                 </button>
               </header>
@@ -147,7 +161,11 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                     placeholder="Ciudad (opcional)"
                   />
                   <Button variant="hero" onClick={run} disabled={loading} className="w-full">
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-2" />
+                    )}
                     Generar oferta y candidatos
                   </Button>
                 </div>
@@ -155,11 +173,14 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                 {draft && (
                   <Card className="p-5 border-biosensor/40 bg-biosensor/5">
                     <p className="text-[11px] uppercase tracking-wider text-biosensor font-semibold mb-2">
-                      <Sparkles className="h-3 w-3 inline mr-1" /> Borrador editable — la IA lo prellena, tú decides
+                      <Sparkles className="h-3 w-3 inline mr-1" /> Borrador editable — la IA lo
+                      prellena, tú decides
                     </p>
                     <div className="space-y-3">
                       <div>
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Título</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Título
+                        </label>
                         <Input
                           value={draft.title}
                           onChange={(e) => setDraft({ ...draft, title: e.target.value })}
@@ -168,15 +189,21 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                       </div>
                       <div className="grid sm:grid-cols-3 gap-2">
                         <div>
-                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Especialidad</label>
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Especialidad
+                          </label>
                           <Input
                             value={draft.specialty_required}
-                            onChange={(e) => setDraft({ ...draft, specialty_required: e.target.value })}
+                            onChange={(e) =>
+                              setDraft({ ...draft, specialty_required: e.target.value })
+                            }
                             className="mt-1"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Ciudad</label>
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Ciudad
+                          </label>
                           <Input
                             value={draft.city}
                             onChange={(e) => setDraft({ ...draft, city: e.target.value })}
@@ -184,10 +211,17 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Modalidad</label>
+                          <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                            Modalidad
+                          </label>
                           <select
                             value={draft.modality}
-                            onChange={(e) => setDraft({ ...draft, modality: e.target.value as OfferDraft["modality"] })}
+                            onChange={(e) =>
+                              setDraft({
+                                ...draft,
+                                modality: e.target.value as OfferDraft["modality"],
+                              })
+                            }
                             className="mt-1 w-full h-9 rounded-md border border-input bg-transparent px-3 text-sm"
                           >
                             <option value="hour">Por hora</option>
@@ -198,7 +232,9 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                         </div>
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Descripción</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Descripción
+                        </label>
                         <Textarea
                           value={draft.description}
                           onChange={(e) => setDraft({ ...draft, description: e.target.value })}
@@ -207,13 +243,18 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Requisitos (separados por coma)</label>
+                        <label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                          Requisitos (separados por coma)
+                        </label>
                         <Input
                           value={draft.requirements.join(", ")}
                           onChange={(e) =>
                             setDraft({
                               ...draft,
-                              requirements: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                              requirements: e.target.value
+                                .split(",")
+                                .map((s) => s.trim())
+                                .filter(Boolean),
                             })
                           }
                           className="mt-1"
@@ -222,7 +263,10 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                         {draft.requirements.length > 0 && (
                           <ul className="mt-2 flex flex-wrap gap-1.5">
                             {draft.requirements.map((r, i) => (
-                              <li key={i} className="text-[11px] px-2 py-0.5 rounded-full bg-background border border-border">
+                              <li
+                                key={i}
+                                className="text-[11px] px-2 py-0.5 rounded-full bg-background border border-border"
+                              >
                                 {r}
                               </li>
                             ))}
@@ -238,12 +282,16 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                           inputMode="numeric"
                           value={draft.suggested_amount_cop}
                           onChange={(e) =>
-                            setDraft({ ...draft, suggested_amount_cop: Number(e.target.value) || 0 })
+                            setDraft({
+                              ...draft,
+                              suggested_amount_cop: Number(e.target.value) || 0,
+                            })
                           }
                           className="mt-1"
                         />
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          Sugerencia IA: <span className="font-semibold">{COP(draft.suggested_amount_cop)}</span>
+                          Sugerencia IA:{" "}
+                          <span className="font-semibold">{COP(draft.suggested_amount_cop)}</span>
                         </p>
                       </div>
                     </div>
@@ -267,12 +315,18 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                           <div className="flex items-start gap-3">
                             <div className="h-12 w-12 rounded-full bg-muted overflow-hidden shrink-0">
                               {c.avatar_url && (
-                                <img src={c.avatar_url} alt={c.full_name ?? "Profesional"} className="h-full w-full object-cover" />
+                                <img
+                                  src={c.avatar_url}
+                                  alt={c.full_name ?? "Profesional"}
+                                  className="h-full w-full object-cover"
+                                />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-semibold truncate">{c.full_name ?? "Profesional"}</p>
+                                <p className="font-semibold truncate">
+                                  {c.full_name ?? "Profesional"}
+                                </p>
                                 <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/30">
                                   <Sparkles className="h-3 w-3" /> Match {Math.round(c.score)}%
                                 </span>
@@ -293,7 +347,8 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                                 {c.avg_rating ? (
                                   <>
                                     {" · "}
-                                    <Star className="inline h-3 w-3 fill-copper text-copper" /> {Number(c.avg_rating).toFixed(1)}
+                                    <Star className="inline h-3 w-3 fill-copper text-copper" />{" "}
+                                    {Number(c.avg_rating).toFixed(1)}
                                   </>
                                 ) : null}
                               </p>

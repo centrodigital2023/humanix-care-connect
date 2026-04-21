@@ -15,12 +15,11 @@ export function CTA() {
 
           <div className="relative max-w-2xl mx-auto">
             <h2 className="font-display text-3xl sm:text-5xl font-bold text-cyber-foreground leading-tight">
-              El cuidado humano,{" "}
-              <span className="text-gradient-bio">amplificado por IA</span>.
+              El cuidado humano, <span className="text-gradient-bio">amplificado por IA</span>.
             </h2>
             <p className="mt-5 text-lg text-cyber-foreground/70">
-              Únete a Humanix y sé parte de la red de salud más conectada de
-              Colombia. Plan Esencial desde $9.000 COP/mes.
+              Únete a Humanix y sé parte de la red de salud más conectada de Colombia. Plan Esencial
+              desde $9.000 COP/mes.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
               <Button variant="hero" size="xl" onClick={() => setGateOpen(true)}>

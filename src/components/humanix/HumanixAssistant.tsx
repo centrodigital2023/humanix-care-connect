@@ -12,9 +12,7 @@ export function HumanixAssistant({
   greeting?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([
-    { role: "assistant", content: greeting },
-  ]);
+  const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: greeting }]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -41,9 +39,7 @@ export function HumanixAssistant({
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         if (last?.role === "assistant" && last.content !== greeting) {
-          return prev.map((m, i) =>
-            i === prev.length - 1 ? { ...m, content: accum } : m,
-          );
+          return prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: accum } : m));
         }
         return [...prev, { role: "assistant", content: accum }];
       });

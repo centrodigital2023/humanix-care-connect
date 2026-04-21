@@ -167,8 +167,7 @@ function FamilyOnboarding() {
     };
   }, [user]);
 
-  const set = <K extends keyof typeof form>(k: K, v: string) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  const set = <K extends keyof typeof form>(k: K, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   // Progreso global (0-100)
   const progress = useMemo(() => {
@@ -215,7 +214,7 @@ function FamilyOnboarding() {
     r.lang = "es-CO";
     r.interimResults = true;
     r.continuous = true;
-    let finalText = aiText;
+    const finalText = aiText;
     r.onresult = (e) => {
       let interim = "";
       for (let i = 0; i < e.results.length; i++) {
@@ -416,8 +415,8 @@ function FamilyOnboarding() {
             Completa tu perfil familiar
           </h1>
           <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-            Cuéntale a nuestra IA tu situación en una frase y completaremos el formulario por ti.
-            En menos de 2 minutos estarás conectada con cuidadores verificados.
+            Cuéntale a nuestra IA tu situación en una frase y completaremos el formulario por ti. En
+            menos de 2 minutos estarás conectada con cuidadores verificados.
           </p>
         </div>
 
@@ -448,11 +447,7 @@ function FamilyOnboarding() {
                 }`}
                 onClick={() => i <= step + 1 && setStep(i)}
               >
-                {done ? (
-                  <CheckCircle2 className="h-4 w-4" />
-                ) : (
-                  <Icon className="h-4 w-4" />
-                )}
+                {done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                 <span className="hidden sm:inline">{s.label}</span>
               </li>
             );
@@ -555,12 +550,7 @@ function FamilyOnboarding() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button
-                  variant="hero"
-                  onClick={runAI}
-                  disabled={aiLoading}
-                  className="flex-1"
-                >
+                <Button variant="hero" onClick={runAI} disabled={aiLoading} className="flex-1">
                   {aiLoading ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
@@ -583,9 +573,7 @@ function FamilyOnboarding() {
                       <span className="text-xs text-muted-foreground">Especialidad ideal:</span>
                       <Badge className="bg-fuchsia-neural text-white">{aiSpecialty}</Badge>
                       {aiRate && (
-                        <Badge variant="outline">
-                          ~${aiRate.toLocaleString("es-CO")}/h COP
-                        </Badge>
+                        <Badge variant="outline">~${aiRate.toLocaleString("es-CO")}/h COP</Badge>
                       )}
                     </div>
                   )}
@@ -599,9 +587,7 @@ function FamilyOnboarding() {
                       ))}
                     </ul>
                   )}
-                  {aiNext && (
-                    <p className="text-xs text-muted-foreground italic">→ {aiNext}</p>
-                  )}
+                  {aiNext && <p className="text-xs text-muted-foreground italic">→ {aiNext}</p>}
                 </div>
               )}
             </div>
@@ -645,8 +631,8 @@ function FamilyOnboarding() {
                 </Field>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                Tus datos viajan cifrados y nunca se comparten con el cuidador hasta que
-                aceptes una contratación.
+                Tus datos viajan cifrados y nunca se comparten con el cuidador hasta que aceptes una
+                contratación.
               </p>
             </div>
           )}
@@ -678,10 +664,12 @@ function FamilyOnboarding() {
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5 text-biosensor" /> Marca tu ubicación en el mapa
+                      <MapPin className="h-3.5 w-3.5 text-biosensor" /> Marca tu ubicación en el
+                      mapa
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Para que veas profesionales cercanos y midamos la distancia exacta. Toca el mapa o usa GPS.
+                      Para que veas profesionales cercanos y midamos la distancia exacta. Toca el
+                      mapa o usa GPS.
                     </p>
                   </div>
                 </div>
@@ -732,10 +720,12 @@ function FamilyOnboarding() {
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <p className="text-sm font-semibold flex items-center gap-1.5">
-                      <ShieldCheck className="h-3.5 w-3.5 text-biosensor" /> Documentos de la familia
+                      <ShieldCheck className="h-3.5 w-3.5 text-biosensor" /> Documentos de la
+                      familia
                     </p>
                     <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Sube tu cédula, recibo de servicios y documentos del paciente. La IA verifica al instante.
+                      Sube tu cédula, recibo de servicios y documentos del paciente. La IA verifica
+                      al instante.
                     </p>
                   </div>
                   <Badge variant="outline" className="text-fuchsia-neural">

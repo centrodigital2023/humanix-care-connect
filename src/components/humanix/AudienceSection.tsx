@@ -1,28 +1,51 @@
-import {
-  Calendar,
-  Wallet,
-  Award,
-  Bot,
-  Search,
-  ShieldCheck,
-  Heart,
-  PhoneCall,
-} from "lucide-react";
+import { Calendar, Wallet, Award, Bot, Search, ShieldCheck, Heart, PhoneCall } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@tanstack/react-router";
 
 const pro = [
-  { icon: Calendar, title: "Turnos a tu medida", desc: "Por hora, jornada o paquetes prepago. Acepta desde WhatsApp." },
-  { icon: Wallet, title: "Pago inmediato", desc: "Cobra en Nequi, PSE o RappiPay al terminar el turno." },
-  { icon: Award, title: "Reputación digital", desc: "Insignias, Trust Score y verificación RETHUS visibles." },
-  { icon: Bot, title: "Humanix Assistant", desc: "IA que prepara tu entrevista y resume historiales clínicos." },
+  {
+    icon: Calendar,
+    title: "Turnos a tu medida",
+    desc: "Por hora, jornada o paquetes prepago. Acepta desde WhatsApp.",
+  },
+  {
+    icon: Wallet,
+    title: "Pago inmediato",
+    desc: "Cobra en Nequi, PSE o RappiPay al terminar el turno.",
+  },
+  {
+    icon: Award,
+    title: "Reputación digital",
+    desc: "Insignias, Trust Score y verificación RETHUS visibles.",
+  },
+  {
+    icon: Bot,
+    title: "Humanix Assistant",
+    desc: "IA que prepara tu entrevista y resume historiales clínicos.",
+  },
 ];
 
 const fam = [
-  { icon: Search, title: "Encuentra en minutos", desc: "Selecciona fecha, hora y zona. Te mostramos los mejores match." },
-  { icon: ShieldCheck, title: "100% verificados", desc: "Cédula, RETHUS y biometría facial validados con IA." },
-  { icon: Heart, title: "Monitoreo en vivo", desc: "ETA del cuidador, signos vitales y botón de emergencia." },
-  { icon: PhoneCall, title: "Soporte 24/7", desc: "WhatsApp directo y respaldo de pólizas Sura y Colsanitas." },
+  {
+    icon: Search,
+    title: "Encuentra en minutos",
+    desc: "Selecciona fecha, hora y zona. Te mostramos los mejores match.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "100% verificados",
+    desc: "Cédula, RETHUS y biometría facial validados con IA.",
+  },
+  {
+    icon: Heart,
+    title: "Monitoreo en vivo",
+    desc: "ETA del cuidador, signos vitales y botón de emergencia.",
+  },
+  {
+    icon: PhoneCall,
+    title: "Soporte 24/7",
+    desc: "WhatsApp directo y respaldo de pólizas Sura y Colsanitas.",
+  },
 ];
 
 function Card({
@@ -42,7 +65,9 @@ function Card({
       : "bg-copper/10 text-copper border-copper/20";
   return (
     <div className="group rounded-2xl border border-border bg-card p-6 hover:border-foreground/20 hover:-translate-y-1 transition-all duration-300 shadow-[var(--shadow-card)]">
-      <div className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${colors}`}>
+      <div
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-xl border ${colors}`}
+      >
         <Icon className="h-5 w-5" />
       </div>
       <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
@@ -62,12 +87,11 @@ export function AudienceSection() {
               Para profesionales
             </span>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold leading-tight">
-              Tu carrera en salud,{" "}
-              <span className="text-gradient-bio">sin fricción</span>.
+              Tu carrera en salud, <span className="text-gradient-bio">sin fricción</span>.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              Trabaja cuando quieras, donde quieras. Construye reputación
-              verificable y cobra al instante por cada turno completado.
+              Trabaja cuando quieras, donde quieras. Construye reputación verificable y cobra al
+              instante por cada turno completado.
             </p>
             <Button variant="hero" size="lg" className="mt-6">
               Crear perfil profesional
@@ -87,12 +111,11 @@ export function AudienceSection() {
               Para familias
             </span>
             <h2 className="mt-3 font-display text-3xl sm:text-4xl font-bold leading-tight">
-              Cuidado de confianza,{" "}
-              <span className="text-copper">a un toque</span>.
+              Cuidado de confianza, <span className="text-copper">a un toque</span>.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              Contrata cuidadores certificados en minutos, con monitoreo en
-              tiempo real y respaldo de pólizas médicas reconocidas.
+              Contrata cuidadores certificados en minutos, con monitoreo en tiempo real y respaldo
+              de pólizas médicas reconocidas.
             </p>
             <Button variant="copper" size="lg" className="mt-6" asChild>
               <Link to="/buscar">Buscar cuidador ahora</Link>
