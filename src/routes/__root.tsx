@@ -41,6 +41,13 @@ export const Route = createRootRoute({
       { name: "theme-color", content: "#0A192F" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:title", content: "Humanix · Talento humano en salud para Colombia" },
+      { name: "twitter:title", content: "Humanix · Talento humano en salud para Colombia" },
+      { name: "description", content: "Humanix Connect is a premium healthcare talent platform for Colombia, using AI for efficient hiring and real-time service management." },
+      { property: "og:description", content: "Humanix Connect is a premium healthcare talent platform for Colombia, using AI for efficient hiring and real-time service management." },
+      { name: "twitter:description", content: "Humanix Connect is a premium healthcare talent platform for Colombia, using AI for efficient hiring and real-time service management." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a3d9349f-0993-4c7c-a8e1-756062f16222/id-preview-1f2d5b0a--ea6fc079-e3d3-421b-9a3b-b62e3ddcdc44.lovable.app-1776797247133.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a3d9349f-0993-4c7c-a8e1-756062f16222/id-preview-1f2d5b0a--ea6fc079-e3d3-421b-9a3b-b62e3ddcdc44.lovable.app-1776797247133.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
