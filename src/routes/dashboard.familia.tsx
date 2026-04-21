@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useCallback, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
@@ -27,6 +27,7 @@ import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 
 export const Route = createFileRoute("/dashboard/familia")({
   head: () => ({ meta: [{ title: "Familia · Humanix" }] }),
@@ -122,6 +123,41 @@ function FamilyDashboard() {
   const [familyAddress, setFamilyAddress] = useState<string>("");
   const [nearbyPros, setNearbyPros] = useState<NearbyPro[]>([]);
   const [savingLoc, setSavingLoc] = useState(false);
+
+  // Carga de profesionales cercanos (extraída para poder llamarla desde realtime)
+  const refreshNearbyPros = useCallback(async (fLat: number | null, fLng: number | null, myCity: string) => {
+    const { data: prosData } = await supabase
+      .from("professional_profiles")
+      .select("user_id, specialty, avg_rating, hourly_rate, lat, lng, home_city, active, published")
+      .eq("active", true)
+      .eq("published", true)
+      .not("lat", "is", null)
+      .not("lng", "is", null)
+      .limit(60);
+    const proIds2 = (prosData ?? []).map((p) => p.user_id);
+    let nameMap = new Map<string, { full_name: string | null; avatar_url: string | null; city: string | null }>();
+    if (proIds2.length) {
+      const { data: profs } = await supabase.from("profiles").select("user_id, full_name, avatar_url, city").in("user_id", proIds2);
+      nameMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
+    }
+    const computed: NearbyPro[] = (prosData ?? []).map((p) => {
+      const info = nameMap.get(p.user_id);
+      const km = fLat != null && fLng != null && p.lat != null && p.lng != null
+        ? distanceKm({ lat: fLat, lng: fLng }, { lat: p.lat, lng: p.lng })
+        : null;
+      return { user_id: p.user_id, full_name: info?.full_name ?? null, avatar_url: info?.avatar_url ?? null, city: info?.city ?? p.home_city ?? null, specialty: p.specialty, avg_rating: p.avg_rating, hourly_rate: p.hourly_rate, lat: p.lat, lng: p.lng, km };
+    });
+    computed.sort((a, b) => { if (a.km == null && b.km == null) return 0; if (a.km == null) return 1; if (b.km == null) return -1; return a.km - b.km; });
+    setNearbyPros(computed.slice(0, 8));
+  }, []);
+
+  // Realtime adicional: actualiza profesionales cercanos cuando admin cambia professional_profiles
+  useRealtimeRefresh(
+    `fam-pros-realtime-${user?.id ?? "anon"}`,
+    [{ table: "professional_profiles", event: "*" }],
+    () => void refreshNearbyPros(familyCoords.lat, familyCoords.lng, familyCity),
+    !!user,
+  );
 
   useEffect(() => {
     if (!user) return;

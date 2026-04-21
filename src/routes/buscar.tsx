@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useCallback, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Search,
@@ -27,6 +27,7 @@ import { StatusBadge, deriveProStatus, deriveOfferStatus } from "@/components/hu
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 
 type SearchParams = {
   tab?: "profesionales" | "ofertas";
@@ -171,125 +172,89 @@ function BuscarPage() {
 
   const tab = search.tab ?? "profesionales";
 
-  // Fetch professionals
-  useEffect(() => {
+  // ── Fetch professionals ────────────────────────────────────────────────────
+  const loadPros = useCallback(async () => {
     if (tab !== "profesionales") return;
-    let cancelled = false;
     setLoading(true);
-    (async () => {
-      let query = supabase
-        .from("professional_profiles")
-        .select(
-          "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, available, reserved_until, active, lat, lng"
-        )
-        .eq("active", true)
-        .order("avg_rating", { ascending: false })
-        .limit(60);
+    let query = supabase
+      .from("professional_profiles")
+      .select(
+        "user_id, specialty, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, total_jobs, ai_summary, available, reserved_until, active, lat, lng"
+      )
+      .eq("active", true)
+      .order("avg_rating", { ascending: false })
+      .limit(60);
 
-      if (search.specialty) query = query.ilike("specialty", `%${search.specialty}%`);
-      if (search.city) query = query.contains("service_cities", [search.city]);
-      if (search.verified) query = query.eq("verified", true);
-      if (search.minRate) query = query.gte("hourly_rate", search.minRate);
-      if (search.maxRate) query = query.lte("hourly_rate", search.maxRate);
-      if (search.rating) query = query.gte("avg_rating", search.rating);
+    if (search.specialty) query = query.ilike("specialty", `%${search.specialty}%`);
+    if (search.city) query = query.contains("service_cities", [search.city]);
+    if (search.verified) query = query.eq("verified", true);
+    if (search.minRate) query = query.gte("hourly_rate", search.minRate);
+    if (search.maxRate) query = query.lte("hourly_rate", search.maxRate);
+    if (search.rating) query = query.gte("avg_rating", search.rating);
 
-      const { data, error } = await query;
-      if (cancelled) return;
-      if (error) {
-        console.error(error);
-        setPros([]);
-        setLoading(false);
-        return;
-      }
-      const baseRows = (data ?? []) as Array<Omit<Pro, "profiles">>;
-      const userIds = baseRows.map((p) => p.user_id);
-      let profilesMap = new Map<
-        string,
-        { full_name: string | null; city: string | null; avatar_url: string | null }
-      >();
-      if (userIds.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("user_id, full_name, city, avatar_url")
-          .in("user_id", userIds);
-        profilesMap = new Map(
-          (profs ?? []).map((p) => [
-            p.user_id,
-            { full_name: p.full_name, city: p.city, avatar_url: p.avatar_url },
-          ])
-        );
-      }
-      let rows: Pro[] = baseRows.map((p) => ({
-        ...p,
-        profiles: profilesMap.get(p.user_id) ?? null,
-      }));
-      if (search.q) {
-        const needle = search.q.toLowerCase();
-        rows = rows.filter(
-          (p) =>
-            p.profiles?.full_name?.toLowerCase().includes(needle) ||
-            p.specialty?.toLowerCase().includes(needle) ||
-            p.ai_summary?.toLowerCase().includes(needle)
-        );
-      }
-      if (cancelled) return;
-      setPros(rows);
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
+    const { data, error } = await query;
+    if (error) { console.error(error); setPros([]); setLoading(false); return; }
+
+    const baseRows = (data ?? []) as Array<Omit<Pro, "profiles">>;
+    const userIds = baseRows.map((p) => p.user_id);
+    let profilesMap = new Map<string, { full_name: string | null; city: string | null; avatar_url: string | null }>();
+    if (userIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("user_id, full_name, city, avatar_url").in("user_id", userIds);
+      profilesMap = new Map((profs ?? []).map((p) => [p.user_id, { full_name: p.full_name, city: p.city, avatar_url: p.avatar_url }]));
+    }
+    let rows: Pro[] = baseRows.map((p) => ({ ...p, profiles: profilesMap.get(p.user_id) ?? null }));
+    if (search.q) {
+      const needle = search.q.toLowerCase();
+      rows = rows.filter((p) => p.profiles?.full_name?.toLowerCase().includes(needle) || p.specialty?.toLowerCase().includes(needle) || p.ai_summary?.toLowerCase().includes(needle));
+    }
+    setPros(rows);
+    setLoading(false);
   }, [tab, search.q, search.specialty, search.city, search.verified, search.minRate, search.maxRate, search.rating]);
 
-  // Fetch offers
-  useEffect(() => {
+  useEffect(() => { void loadPros(); }, [loadPros]);
+
+  // ── Fetch offers ───────────────────────────────────────────────────────────
+  const loadOffers = useCallback(async () => {
     if (tab !== "ofertas") return;
-    let cancelled = false;
     setLoading(true);
-    (async () => {
-      let query = supabase
-        .from("job_offers")
-        .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, status, reserved_until, lat, lng, created_at")
-        .in("status", ["open", "filled"])
-        .order("created_at", { ascending: false })
-        .limit(60);
+    let query = supabase
+      .from("job_offers")
+      .select("id, title, description, modality, amount, city, specialty_required, requirements, poster_type, status, reserved_until, lat, lng, created_at")
+      .in("status", ["open", "filled"])
+      .order("created_at", { ascending: false })
+      .limit(60);
 
-      if (search.city) query = query.ilike("city", `%${search.city}%`);
-      if (search.specialty) query = query.ilike("specialty_required", `%${search.specialty}%`);
-      if (search.modality) query = query.eq("modality", search.modality);
-      if (search.minRate) query = query.gte("amount", search.minRate);
-      if (search.maxRate) query = query.lte("amount", search.maxRate);
+    if (search.city) query = query.ilike("city", `%${search.city}%`);
+    if (search.specialty) query = query.ilike("specialty_required", `%${search.specialty}%`);
+    if (search.modality) query = query.eq("modality", search.modality);
+    if (search.minRate) query = query.gte("amount", search.minRate);
+    if (search.maxRate) query = query.lte("amount", search.maxRate);
 
-      const { data, error } = await query;
-      if (cancelled) return;
-      if (error) {
-        console.error(error);
-        setOffers([]);
-      } else {
-        let rows = (data ?? []) as Offer[];
-        // Ocultar 'filled' cuya reserva de 15 días ya expiró
-        rows = rows.filter((o) => {
-          if (o.status !== "filled") return true;
-          if (!o.reserved_until) return false;
-          return new Date(o.reserved_until) > new Date();
-        });
-        if (search.q) {
-          const needle = search.q.toLowerCase();
-          rows = rows.filter(
-            (o) =>
-              o.title.toLowerCase().includes(needle) ||
-              o.description?.toLowerCase().includes(needle) ||
-              o.specialty_required?.toLowerCase().includes(needle)
-          );
-        }
-        setOffers(rows);
-      }
-      setLoading(false);
-    })();
-    return () => {
-      cancelled = true;
-    };
+    const { data, error } = await query;
+    if (error) { console.error(error); setOffers([]); setLoading(false); return; }
+
+    let rows = (data ?? []) as Offer[];
+    rows = rows.filter((o) => { if (o.status !== "filled") return true; if (!o.reserved_until) return false; return new Date(o.reserved_until) > new Date(); });
+    if (search.q) {
+      const needle = search.q.toLowerCase();
+      rows = rows.filter((o) => o.title.toLowerCase().includes(needle) || o.description?.toLowerCase().includes(needle) || o.specialty_required?.toLowerCase().includes(needle));
+    }
+    setOffers(rows);
+    setLoading(false);
   }, [tab, search.q, search.specialty, search.city, search.modality, search.minRate, search.maxRate]);
+
+  useEffect(() => { void loadOffers(); }, [loadOffers]);
+
+  // ── Realtime: auto-refresh cuando cambian profesionales u ofertas ──────────
+  useRealtimeRefresh(
+    "buscar-realtime",
+    [
+      { table: "professional_profiles", event: "*" },
+      { table: "job_offers", event: "*" },
+      { table: "profiles", event: "UPDATE" },
+    ],
+    () => { void loadPros(); void loadOffers(); },
+  );
 
   const totalActive = useMemo(
     () =>

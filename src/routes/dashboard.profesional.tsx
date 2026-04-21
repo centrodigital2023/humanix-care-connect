@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useCallback, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAppUser } from "@/hooks/use-app-user";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import {
   Loader2,
   Sparkles,
@@ -237,6 +238,18 @@ function ProDashboard() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, user?.id]);
+
+  // Realtime: cuando admin modifica el perfil del profesional o llega una nueva aplicación
+  useRealtimeRefresh(
+    `pro-dash-realtime-${userId ?? "anon"}`,
+    [
+      { table: "professional_profiles", event: "UPDATE", filter: userId ? `user_id=eq.${userId}` : undefined },
+      { table: "applications", event: "*", filter: userId ? `professional_id=eq.${userId}` : undefined },
+      { table: "job_offers", event: "*" },
+    ],
+    () => { if (userId) void loadAll(userId); },
+    !!userId,
+  );
 
   const closeTour = () => {
     setShowTour(false);
