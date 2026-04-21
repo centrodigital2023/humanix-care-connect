@@ -217,17 +217,24 @@ export function DocumentsManager({
 
   const docsByType = (t: DocType) => docs.filter((d) => d.doc_type === t);
 
+  const hasDoc = (t: DocType) =>
+    docs.some((d) => d.doc_type === t && d.status !== "rejected");
   const requiredMissing = TYPES.filter(
-    (t) => t.required && !docs.some((d) => d.doc_type === t.value && d.status !== "rejected"),
+    (t) => t.required && !hasDoc(t.value),
   ).length;
+  const credencialMissing = !hasDoc("rethus") && !hasDoc("diploma");
+  const totalMissing = requiredMissing + (credencialMissing ? 1 : 0);
 
   return (
     <div className="space-y-4">
-      {requiredMissing > 0 && (
+      {totalMissing > 0 && (
         <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
           <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-amber-700 dark:text-amber-400">
-            Te faltan <strong>{requiredMissing}</strong> documento(s) obligatorio(s) para completar tu verificación.
+            Te faltan <strong>{totalMissing}</strong> documento(s) por subir.
+            {credencialMissing && (
+              <> Debes subir <strong>RETHUS</strong> o <strong>diploma</strong> (al menos uno).</>
+            )}
           </p>
         </div>
       )}
