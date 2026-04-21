@@ -297,56 +297,91 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
       </div>
 
       {busy ? (
-        <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-52 rounded-2xl border border-border bg-card animate-pulse" />
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
         <Card className="p-10 text-center text-muted-foreground">
           No hay profesionales que coincidan.
         </Card>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => (
             <Card
               key={p.user_id}
-              className="p-3 sm:p-4 flex items-center gap-3 sm:gap-4 hover:bg-muted/30 active:bg-muted/40 cursor-pointer transition-colors"
+              className="group p-4 flex flex-col gap-3 hover:shadow-[var(--shadow-elegant)] hover:-translate-y-0.5 cursor-pointer transition-all border-border"
               onClick={() => setSelected(p)}
             >
-              <Avatar className="h-10 w-10 sm:h-12 sm:w-12 shrink-0">
-                <AvatarImage src={p.avatar_url ?? undefined} />
-                <AvatarFallback>
-                  {(p.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className="font-semibold truncate text-sm sm:text-base">
+              {/* Header */}
+              <div className="flex items-start gap-3">
+                <Avatar className="h-12 w-12 shrink-0 rounded-xl">
+                  <AvatarImage src={p.avatar_url ?? undefined} className="object-cover" />
+                  <AvatarFallback className="rounded-xl bg-biosensor/10 text-biosensor font-semibold">
+                    {(p.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold truncate text-sm leading-tight">
                     {p.profile?.full_name || "Sin nombre"}
                   </p>
-                  {p.blocked && (
-                    <Badge variant="destructive" className="text-[10px] sm:text-xs px-1.5 py-0">
-                      <Ban className="h-3 w-3 mr-0.5" /> Bloqueado
-                    </Badge>
-                  )}
-                  {p.published && !p.blocked && (
-                    <Badge className="bg-biosensor/20 text-biosensor text-[10px] sm:text-xs px-1.5 py-0">Publicado</Badge>
-                  )}
-                  {!p.published && !p.blocked && (
-                    <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0">Pendiente</Badge>
-                  )}
-                  {p.rethus_verified && (
-                    <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0">
-                      <CheckCircle2 className="h-3 w-3 mr-0.5 text-biosensor" /> RETHUS
-                    </Badge>
-                  )}
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">
+                    {p.specialty || "Sin especialidad"}
+                  </p>
+                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                    {p.blocked && (
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">
+                        <Ban className="h-2.5 w-2.5 mr-0.5" /> Bloqueado
+                      </Badge>
+                    )}
+                    {p.published && !p.blocked && (
+                      <Badge className="bg-biosensor/20 text-biosensor border-biosensor/30 text-[10px] px-1.5 py-0 h-4">Publicado</Badge>
+                    )}
+                    {!p.published && !p.blocked && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">Pendiente</Badge>
+                    )}
+                    {p.rethus_verified && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4">
+                        <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" /> RETHUS
+                      </Badge>
+                    )}
+                  </div>
                 </div>
-                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
-                  {p.specialty || "Sin especialidad"} · {p.home_city || "Sin ciudad"}
-                  {p.avg_rating ? ` · ⭐ ${Number(p.avg_rating).toFixed(1)}` : ""}
-                </p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{p.profile?.email}</p>
               </div>
-              <Button size="sm" variant="outline" className="shrink-0 px-2 sm:px-3">
-                <Eye className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Revisar</span>
+
+              {/* Stats row */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Rating</p>
+                  <p className="text-sm font-semibold">{p.avg_rating ? Number(p.avg_rating).toFixed(1) : "—"}</p>
+                </div>
+                <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Turnos</p>
+                  <p className="text-sm font-semibold">{p.total_jobs ?? 0}</p>
+                </div>
+                <div className="rounded-lg bg-muted/40 px-2 py-1.5">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Trust</p>
+                  <p className={`text-sm font-semibold ${(p.social_trust_score ?? 0) >= 70 ? "text-biosensor" : ""}`}>
+                    {p.social_trust_score ?? 0}
+                  </p>
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1 truncate">
+                  <MapPin className="h-3 w-3 shrink-0" />{p.home_city || "Sin ciudad"}
+                </span>
+                {p.hourly_rate && (
+                  <span className="font-semibold text-foreground shrink-0">
+                    ${p.hourly_rate.toLocaleString("es-CO")}/h
+                  </span>
+                )}
+              </div>
+
+              <Button size="sm" variant="outline" className="w-full mt-auto group-hover:bg-foreground group-hover:text-background transition-colors">
+                <Eye className="h-3.5 w-3.5 mr-1.5" /> Revisar perfil completo
               </Button>
             </Card>
           ))}
@@ -678,382 +713,367 @@ function ProfessionalDetailDialog({
   return (
     <>
       <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col p-3 sm:p-6 gap-3">
+      <DialogContent className="max-w-4xl w-[calc(100vw-1rem)] sm:w-full max-h-[95vh] overflow-hidden flex flex-col p-3 sm:p-6 gap-3">
         <DialogHeader className="text-left">
-          <DialogTitle className="flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
-            <Avatar className="h-9 w-9 sm:h-10 sm:w-10 shrink-0">
-              <AvatarImage src={pro.avatar_url ?? undefined} />
-              <AvatarFallback>
+          <DialogTitle className="flex items-center gap-3">
+            <Avatar className="h-10 w-10 shrink-0 rounded-xl">
+              <AvatarImage src={pro.avatar_url ?? undefined} className="object-cover" />
+              <AvatarFallback className="rounded-xl bg-biosensor/10 text-biosensor font-semibold">
                 {(pro.profile?.full_name ?? "?").slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <span className="truncate min-w-0">{pro.profile?.full_name || "Sin nombre"}</span>
+            <div className="min-w-0">
+              <span className="block truncate">{pro.profile?.full_name || "Sin nombre"}</span>
+              <span className="text-sm font-normal text-muted-foreground">{pro.specialty || "—"} · {pro.home_city || "—"}</span>
+            </div>
           </DialogTitle>
-          <DialogDescription className="text-xs sm:text-sm break-words">
-            {pro.specialty || "—"} · {pro.home_city || "—"} · {pro.profile?.email}
-          </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 pr-2 sm:pr-3 -mx-1 px-1">
-          <div className="space-y-4 py-2">
+        <ScrollArea className="flex-1 -mx-1 px-1">
+          <div className="space-y-4 py-1">
+
             {/* Status banner */}
             {pro.blocked && (
-              <Card className="p-3 border-destructive/30 bg-destructive/5">
-                <div className="flex items-start gap-2">
-                  <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
-                  <div className="text-sm">
-                    <p className="font-medium text-destructive">Perfil bloqueado</p>
-                    <p className="text-muted-foreground">{pro.blocked_reason || "Sin motivo"}</p>
-                  </div>
+              <Card className="p-3 border-destructive/30 bg-destructive/5 flex items-start gap-2">
+                <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-destructive">Perfil bloqueado</p>
+                  <p className="text-muted-foreground">{pro.blocked_reason || "Sin motivo"}</p>
                 </div>
               </Card>
             )}
 
-            {/* Quick stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-              <InfoTile icon={<Star className="h-4 w-4" />} label="Rating" value={pro.avg_rating ? Number(pro.avg_rating).toFixed(1) : "—"} />
-              <InfoTile icon={<Briefcase className="h-4 w-4" />} label="Trabajos" value={String(pro.total_jobs ?? 0)} />
-              <InfoTile icon={<CheckCircle2 className="h-4 w-4" />} label="Años exp." value={String(pro.years_experience ?? 0)} />
-              <InfoTile icon={<FileCheck className="h-4 w-4" />} label="Trust" value={String(pro.social_trust_score ?? 0)} />
+            {/* ── Fila 1: KPIs + Contacto ─────────────────────────────────── */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {/* KPIs */}
+              <Card className="p-4">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+                  <Star className="h-3.5 w-3.5 text-copper" /> Métricas
+                </p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-muted/40 p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Rating</p>
+                    <p className="text-xl font-bold">{pro.avg_rating ? Number(pro.avg_rating).toFixed(1) : "—"}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Turnos</p>
+                    <p className="text-xl font-bold">{pro.total_jobs ?? 0}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trust</p>
+                    <p className={`text-xl font-bold ${(pro.social_trust_score ?? 0) >= 70 ? "text-biosensor" : "text-destructive"}`}>{pro.social_trust_score ?? 0}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 p-3 text-center">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Exp.</p>
+                    <p className="text-xl font-bold">{pro.years_experience ?? 0}<span className="text-sm font-normal text-muted-foreground ml-0.5">a</span></p>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Contacto */}
+              <Card className="p-4 space-y-3">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <Phone className="h-3.5 w-3.5 text-biosensor" /> Contacto e identidad
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span className="truncate">{pro.profile?.email || "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span>{pro.profile?.phone || "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    <span>{pro.home_city || "—"}</span>
+                  </div>
+                  {pro.rethus_number && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <FileCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="font-mono text-xs">{pro.rethus_number}</span>
+                      {pro.rethus_verified
+                        ? <Badge className="bg-biosensor/15 text-biosensor text-[10px]"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Verificado</Badge>
+                        : <Badge variant="secondary" className="text-[10px]">Sin verificar</Badge>
+                      }
+                    </div>
+                  )}
+                </div>
+              </Card>
             </div>
 
-            {/* Contact */}
-            <Section title="Contacto">
-              <p className="text-sm"><Mail className="inline h-3 w-3 mr-1" /> {pro.profile?.email || "—"}</p>
-              <p className="text-sm"><Phone className="inline h-3 w-3 mr-1" /> {pro.profile?.phone || "—"}</p>
-              <p className="text-sm"><MapPin className="inline h-3 w-3 mr-1" /> {pro.home_city || "—"}</p>
-              {pro.rethus_number && (
-                <div className="text-sm flex flex-wrap items-center gap-1">
-                  <span>RETHUS:</span>
-                  <span className="font-mono">{pro.rethus_number}</span>
-                  {pro.rethus_verified && <Badge variant="outline" className="text-xs">Verificado</Badge>}
+            {/* ── Fila 2: Tarifas + Especialidades ────────────────────────── */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              <Card className="p-4">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3 flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5 text-fuchsia-neural" /> Tarifas declaradas
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { label: "Por hora", value: pro.hourly_rate },
+                    { label: "Por turno", value: null },
+                    { label: "Mensual", value: null },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="rounded-xl bg-muted/40 p-2 text-center">
+                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</p>
+                      <p className="text-xs font-semibold mt-0.5">
+                        {value ? `$${value.toLocaleString("es-CO")}` : "—"}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              )}
-            </Section>
+              </Card>
 
-            {/* Bio + AI */}
-            {pro.bio && (
-              <Section title="Biografía">
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{pro.bio}</p>
-              </Section>
-            )}
-
-            {/* Tarifas */}
-            <Section title="Tarifas declaradas">
-              <div className="grid grid-cols-3 gap-2 text-sm">
-                <InfoTile icon={<Star className="h-4 w-4" />} label="Por hora" value={pro.hourly_rate ? `$${pro.hourly_rate.toLocaleString("es-CO")}` : "—"} />
-                <InfoTile icon={<Briefcase className="h-4 w-4" />} label="Por turno" value={"—"} />
-                <InfoTile icon={<CheckCircle2 className="h-4 w-4" />} label="Mensual" value={"—"} />
-              </div>
-            </Section>
-
-            {/* Especialidades, idiomas, ciudades, certificaciones */}
-            <Section title="Detalles del perfil">
-              <div className="space-y-2 text-sm">
+              <Card className="p-4 space-y-2">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-biosensor" /> Habilidades y cobertura
+                </p>
                 {pro.languages && pro.languages.length > 0 && (
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Idiomas</p>
-                    <div className="flex flex-wrap gap-1">
-                      {pro.languages.map((l, i) => (
-                        <Badge key={i} variant="secondary" className="text-xs">{l}</Badge>
-                      ))}
-                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-1">Idiomas</p>
+                    <div className="flex flex-wrap gap-1">{pro.languages.map((l, i) => <Badge key={i} variant="secondary" className="text-[10px]">{l}</Badge>)}</div>
                   </div>
                 )}
                 {pro.service_cities && pro.service_cities.length > 0 && (
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Ciudades de servicio</p>
-                    <div className="flex flex-wrap gap-1">
-                      {pro.service_cities.map((c, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">
-                          <MapPin className="h-2.5 w-2.5 mr-0.5" /> {c}
-                        </Badge>
-                      ))}
-                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-1">Ciudades de servicio</p>
+                    <div className="flex flex-wrap gap-1">{pro.service_cities.map((c, i) => <Badge key={i} variant="outline" className="text-[10px]"><MapPin className="h-2.5 w-2.5 mr-0.5" />{c}</Badge>)}</div>
                   </div>
                 )}
                 {Array.isArray(pro.certifications) && (pro.certifications as unknown[]).length > 0 && (
                   <div>
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Certificaciones</p>
-                    <div className="flex flex-wrap gap-1">
-                      {(pro.certifications as string[]).map((c, i) => (
-                        <Badge key={i} variant="outline" className="text-xs">{c}</Badge>
-                      ))}
-                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-1">Certificaciones</p>
+                    <div className="flex flex-wrap gap-1">{(pro.certifications as string[]).map((c, i) => <Badge key={i} variant="outline" className="text-[10px]">{c}</Badge>)}</div>
                   </div>
                 )}
-              </div>
-            </Section>
+              </Card>
+            </div>
 
-            {pro.ai_summary && (
-              <Section title="Resumen IA" icon={<Sparkles className="h-3 w-3" />}>
-                <p className="text-sm text-muted-foreground">{pro.ai_summary}</p>
-                {pro.ai_strengths && pro.ai_strengths.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {pro.ai_strengths.map((s, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">{s}</Badge>
-                    ))}
-                  </div>
-                )}
-              </Section>
-            )}
-
-            {/* Experience */}
-            {Array.isArray(pro.work_experience) && pro.work_experience.length > 0 && (
-              <Section title="Experiencia laboral">
-                <ul className="space-y-1 text-sm">
-                  {(pro.work_experience as Array<Record<string, unknown>>).map((w, i) => (
-                    <li key={i} className="text-muted-foreground">
-                      • {String(w.role ?? "Rol")} — {String(w.company ?? "")} {w.years ? `(${String(w.years)})` : ""}
-                    </li>
-                  ))}
-                </ul>
-              </Section>
-            )}
-
-            {/* References */}
-            <Section title={`Referencias (${refs.length})`}>
-              {refs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin referencias cargadas.</p>
-              ) : (
-                <ul className="space-y-1 text-sm">
-                  {refs.map((r) => (
-                    <li key={r.id} className="text-muted-foreground">
-                      <span className="font-medium text-foreground">{r.full_name}</span> · {r.phone} · {r.relation || r.ref_type}
-                      {r.verified && <Badge variant="outline" className="ml-1 text-xs">Verificada</Badge>}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Section>
-
-            {/* Documents */}
-            <Section title={`Documentos (${docs.length})`} icon={<FileText className="h-3 w-3" />}>
-              {docs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-[11px] text-muted-foreground">
-                    {docs.length} documento{docs.length === 1 ? "" : "s"} · ver, validar con IA o descargar
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {docs.map((d) => {
-                        const extra = docExtras[d.id];
-                        const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
-                        const isExpanded = expandedDoc === d.id;
-                        return (
-                          <div
-                            key={d.id}
-                            className="rounded-lg border bg-card flex flex-col"
-                          >
-                            <div className="p-3 border-b space-y-1.5">
-                              <div className="flex items-center justify-between gap-2">
-                                <Badge variant="secondary" className="uppercase text-[10px]">
-                                  {d.doc_type}
-                                </Badge>
-                                {extra?.ai_verified === true && (
-                                  <Badge variant="outline" className="text-[10px] py-0 h-4">
-                                    <CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" /> Veraz
-                                  </Badge>
-                                )}
-                                {extra?.ai_verified === false && (
-                                  <Badge variant="destructive" className="text-[10px] py-0 h-4">
-                                    <XCircle className="h-2.5 w-2.5 mr-0.5" /> Sospechoso
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-sm font-medium truncate" title={d.file_name || "Sin nombre"}>
-                                {d.file_name || "Sin nombre"}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground flex items-center gap-1 flex-wrap">
-                                <span>{d.status}</span>
-                                <span>·</span>
-                                <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
-                                {d.ai_score != null && (
-                                  <>
-                                    <span>·</span>
-                                    <span className={d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}>
-                                      IA {d.ai_score}/100
-                                    </span>
-                                  </>
-                                )}
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap gap-1 p-2">
-                              <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} title="Ver" className="flex-1 min-w-0">
-                                <Eye className="h-3 w-3 mr-1" /> Ver
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} title="Descargar" className="flex-1 min-w-0">
-                                <Download className="h-3 w-3 mr-1" /> Bajar
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => analyzeDoc(d)}
-                                disabled={analyzingDoc === d.id}
-                                title="Analizar veracidad con IA"
-                                className="flex-1 min-w-0"
-                              >
-                                {analyzingDoc === d.id ? (
-                                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                ) : (
-                                  <Sparkles className="h-3 w-3 mr-1" />
-                                )}
-                                IA
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
-                                disabled={!extra?.ai_notes && !extracted}
-                                title="Ver análisis"
-                              >
-                                {isExpanded ? "−" : "+"}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={() => deleteDoc(d)} title="Eliminar">
-                                <Trash2 className="h-3 w-3 text-destructive" />
-                              </Button>
-                            </div>
-                            {isExpanded && (extra?.ai_notes || extracted) && (
-                              <div className="border-t px-3 py-2 bg-muted/20 space-y-2 text-xs max-h-48 overflow-y-auto">
-                                {extra?.ai_notes && (
-                                  <div>
-                                    <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
-                                      Veredicto IA
-                                    </p>
-                                    <p className="text-muted-foreground whitespace-pre-wrap">{extra.ai_notes}</p>
-                                  </div>
-                                )}
-                                {extracted && Object.keys(extracted).length > 0 && (
-                                  <div>
-                                    <p className="font-semibold uppercase tracking-wider text-[10px] text-muted-foreground mb-1">
-                                      Datos extraídos
-                                    </p>
-                                    <ul className="space-y-0.5">
-                                      {Object.entries(extracted).map(([k, v]) => (
-                                        <li key={k} className="text-muted-foreground">
-                                          <span className="font-medium text-foreground">{k}:</span>{" "}
-                                          {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              )}
-            </Section>
-
-            {/* Deep AI holistic analysis */}
-            <Section title="Análisis profundo IA" icon={<Sparkles className="h-3 w-3" />}>
-              <div className="flex items-center gap-2 mb-2">
-                <Button
-                  size="sm"
-                  variant="hero"
-                  onClick={runHolisticAnalysis}
-                  disabled={holisticBusy || docs.length === 0}
-                >
-                  {holisticBusy ? (
-                    <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Analizando…</>
-                  ) : (
-                    <><Sparkles className="h-3 w-3 mr-1" /> Validar perfil completo</>
+            {/* ── Fila 3: Bio + Experiencia ────────────────────────────────── */}
+            <div className="grid sm:grid-cols-2 gap-4">
+              {(pro.bio || pro.ai_summary) && (
+                <Card className="p-4 space-y-2">
+                  {pro.bio && (
+                    <>
+                      <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Biografía</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{pro.bio}</p>
+                    </>
                   )}
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  Cruza formulario, documentos y referencias.
-                </span>
-              </div>
-              {holistic && (
-                <Card className="p-3 space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    {holistic.is_publishable ? (
-                      <Badge className="bg-biosensor/20 text-biosensor">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Publicable
-                      </Badge>
-                    ) : (
-                      <Badge variant="destructive">
-                        <XCircle className="h-3 w-3 mr-1" /> No publicable
-                      </Badge>
-                    )}
-                    <span className={`font-semibold ${holistic.score >= 70 ? "text-biosensor" : "text-destructive"}`}>
-                      Score {holistic.score}/100
-                    </span>
-                  </div>
-                  <p className="text-muted-foreground">{holistic.ai_summary}</p>
-                  {holistic.critical_errors.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-destructive uppercase mb-1">
-                        Errores críticos ({holistic.critical_errors.length})
-                      </p>
-                      <ul className="space-y-0.5 text-xs">
-                        {holistic.critical_errors.map((e, i) => (
-                          <li key={i} className="text-muted-foreground">
-                            • <span className="font-medium text-foreground">{e.field}:</span> {e.message}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  {holistic.warnings.length > 0 && (
-                    <div>
-                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1">
-                        Advertencias ({holistic.warnings.length})
-                      </p>
-                      <ul className="space-y-0.5 text-xs">
-                        {holistic.warnings.map((w, i) => (
-                          <li key={i} className="text-muted-foreground">
-                            • <span className="font-medium text-foreground">{w.field}:</span> {w.message}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  {pro.ai_summary && (
+                    <>
+                      <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1"><Sparkles className="h-3 w-3 text-fuchsia-neural" /> Resumen IA</p>
+                      <p className="text-sm text-muted-foreground">{pro.ai_summary}</p>
+                      {pro.ai_strengths && pro.ai_strengths.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1">{pro.ai_strengths.map((s, i) => <Badge key={i} variant="secondary" className="text-[10px]">{s}</Badge>)}</div>
+                      )}
+                    </>
                   )}
                 </Card>
               )}
-            </Section>
 
-            {/* Block reason editor */}
-            <Section title="Motivo de bloqueo (si aplica)">
+              <Card className="p-4 space-y-2">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">Referencias ({refs.length})</p>
+                {refs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin referencias cargadas.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {refs.map((r) => (
+                      <div key={r.id} className="rounded-lg bg-muted/30 px-3 py-2 text-sm flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{r.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{r.phone} · {r.relation || r.ref_type}</p>
+                        </div>
+                        {r.verified && <Badge variant="outline" className="text-[10px] shrink-0"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5 text-biosensor" />Verif.</Badge>}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* ── Experiencia laboral ──────────────────────────────────────── */}
+            {Array.isArray(pro.work_experience) && pro.work_experience.length > 0 && (
+              <Card className="p-4">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground mb-3">Experiencia laboral</p>
+                <div className="grid sm:grid-cols-2 gap-2">
+                  {(pro.work_experience as Array<Record<string, unknown>>).map((w, i) => (
+                    <div key={i} className="rounded-lg bg-muted/30 px-3 py-2 text-sm">
+                      <p className="font-medium">{String(w.role ?? "Rol")}</p>
+                      <p className="text-xs text-muted-foreground">{String(w.company ?? "")} {w.years ? `· ${String(w.years)} años` : ""}</p>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
+
+            {/* ── Documentos en grid ──────────────────────────────────────── */}
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-fuchsia-neural" /> Documentos ({docs.length})
+                </p>
+                <span className="text-[10px] text-muted-foreground">Ver · IA · Descargar</span>
+              </div>
+              {docs.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {docs.map((d) => {
+                    const extra = docExtras[d.id];
+                    const extracted = extra?.ai_extracted as Record<string, unknown> | null | undefined;
+                    const isExpanded = expandedDoc === d.id;
+                    const aiOk = extra?.ai_verified === true;
+                    const aiBad = extra?.ai_verified === false;
+                    return (
+                      <div key={d.id} className={`rounded-xl border flex flex-col overflow-hidden ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}>
+                        {/* Doc type header */}
+                        <div className={`px-3 py-2 flex items-center justify-between gap-2 ${aiOk ? "bg-biosensor/5" : aiBad ? "bg-destructive/5" : "bg-muted/30"}`}>
+                          <Badge variant="secondary" className="uppercase text-[10px]">{d.doc_type}</Badge>
+                          {aiOk && <Badge className="bg-biosensor/20 text-biosensor text-[10px] h-4 px-1.5"><CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Veraz</Badge>}
+                          {aiBad && <Badge variant="destructive" className="text-[10px] h-4 px-1.5"><XCircle className="h-2.5 w-2.5 mr-0.5" />Sospechoso</Badge>}
+                        </div>
+                        {/* Doc name + score */}
+                        <div className="px-3 py-2 flex-1">
+                          <p className="text-xs font-medium truncate" title={d.file_name || "Sin nombre"}>{d.file_name || "Sin nombre"}</p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
+                            <span className="capitalize">{d.status}</span>
+                            <span>·</span>
+                            <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
+                            {d.ai_score != null && (
+                              <span className={`font-semibold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}>· IA {d.ai_score}/100</span>
+                            )}
+                          </p>
+                        </div>
+                        {/* Actions */}
+                        <div className="grid grid-cols-3 gap-1 px-2 pb-2">
+                          <Button size="sm" variant="outline" onClick={() => openPreview(d)} disabled={previewLoading} className="h-7 text-[10px]">
+                            <Eye className="h-3 w-3 mr-0.5" /> Ver
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => downloadDoc(d)} className="h-7 text-[10px]">
+                            <Download className="h-3 w-3 mr-0.5" /> Bajar
+                          </Button>
+                          <Button size="sm" variant={analyzingDoc === d.id ? "secondary" : "outline"} onClick={() => analyzeDoc(d)} disabled={analyzingDoc === d.id} className="h-7 text-[10px]">
+                            {analyzingDoc === d.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Sparkles className="h-3 w-3 mr-0.5" />IA</>}
+                          </Button>
+                        </div>
+                        {/* Expand AI results */}
+                        {(extra?.ai_notes || (extracted && Object.keys(extracted).length > 0)) && (
+                          <button
+                            onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
+                            className="text-[10px] text-muted-foreground hover:text-foreground px-3 pb-2 text-left underline underline-offset-2"
+                          >
+                            {isExpanded ? "Ocultar análisis IA" : "Ver análisis IA"}
+                          </button>
+                        )}
+                        {isExpanded && (
+                          <div className="border-t mx-2 mb-2 px-2 pt-2 bg-muted/10 rounded-b-lg space-y-1.5 text-xs max-h-36 overflow-y-auto">
+                            {extra?.ai_notes && (
+                              <div>
+                                <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">Veredicto IA</p>
+                                <p className="text-muted-foreground">{extra.ai_notes}</p>
+                              </div>
+                            )}
+                            {extracted && Object.keys(extracted).length > 0 && (
+                              <div>
+                                <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">Datos extraídos</p>
+                                {Object.entries(extracted).map(([k, v]) => (
+                                  <p key={k} className="text-muted-foreground"><span className="font-medium text-foreground">{k}:</span> {typeof v === "object" ? JSON.stringify(v) : String(v)}</p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Card>
+
+            {/* ── Análisis IA holístico ────────────────────────────────────── */}
+            <Card className="p-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" /> Validación integral IA
+                </p>
+                <Button size="sm" variant="hero" onClick={runHolisticAnalysis} disabled={holisticBusy || docs.length === 0}>
+                  {holisticBusy ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />Analizando…</> : <><Sparkles className="h-3.5 w-3.5 mr-1" />Validar perfil completo</>}
+                </Button>
+              </div>
+              {holistic && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {holistic.is_publishable
+                      ? <Badge className="bg-biosensor/20 text-biosensor"><CheckCircle2 className="h-3.5 w-3.5 mr-1" />Publicable</Badge>
+                      : <Badge variant="destructive"><XCircle className="h-3.5 w-3.5 mr-1" />No publicable</Badge>
+                    }
+                    <div className="flex items-center gap-1.5">
+                      <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                        <div className={`h-full rounded-full ${holistic.score >= 70 ? "bg-biosensor" : holistic.score >= 50 ? "bg-copper" : "bg-destructive"}`} style={{ width: `${holistic.score}%` }} />
+                      </div>
+                      <span className={`font-semibold text-sm ${holistic.score >= 70 ? "text-biosensor" : "text-destructive"}`}>{holistic.score}/100</span>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{holistic.ai_summary}</p>
+                  {holistic.critical_errors.length > 0 && (
+                    <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+                      <p className="text-xs font-semibold text-destructive uppercase mb-1.5">Errores críticos ({holistic.critical_errors.length})</p>
+                      <div className="grid sm:grid-cols-2 gap-1.5">
+                        {holistic.critical_errors.map((e, i) => (
+                          <div key={i} className="text-xs bg-background/60 rounded px-2 py-1.5">
+                            <span className="font-medium text-destructive">{e.field}:</span> <span className="text-muted-foreground">{e.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {holistic.warnings.length > 0 && (
+                    <div className="rounded-lg border border-muted bg-muted/30 p-3">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-1.5">Advertencias ({holistic.warnings.length})</p>
+                      <div className="grid sm:grid-cols-2 gap-1.5">
+                        {holistic.warnings.map((w, i) => (
+                          <div key={i} className="text-xs bg-background/60 rounded px-2 py-1.5">
+                            <span className="font-medium">{w.field}:</span> <span className="text-muted-foreground">{w.message}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </Card>
+
+            {/* ── Motivo de bloqueo ────────────────────────────────────────── */}
+            <Card className="p-4 space-y-2">
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                <Ban className="h-3.5 w-3.5 text-destructive" /> Motivo de bloqueo (si aplica)
+              </p>
               <Textarea
                 value={blockReason}
                 onChange={(e) => setBlockReason(e.target.value)}
                 placeholder="Ej: Tarjeta profesional vencida. Sube la tarjeta actualizada."
-                rows={3}
+                rows={2}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Visible para el profesional. Lo usará para corregir y reenviar.
-              </p>
-            </Section>
+              <p className="text-xs text-muted-foreground">Visible para el profesional al iniciar sesión.</p>
+            </Card>
+
           </div>
         </ScrollArea>
 
         <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-2 border-t pt-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setConfirmDelete(true)}
-            disabled={busy}
-            className="w-full sm:w-auto"
-          >
+          <Button variant="outline" size="sm" onClick={() => setConfirmDelete(true)} disabled={busy} className="w-full sm:w-auto">
             <Trash2 className="h-4 w-4 mr-1 text-destructive" /> Eliminar perfil
           </Button>
           <div className="flex gap-2 w-full sm:w-auto">
             {pro.blocked ? (
-              <Button variant="outline" size="sm" onClick={unblock} disabled={busy} className="flex-1 sm:flex-initial">
-                Desbloquear
-              </Button>
+              <Button variant="outline" size="sm" onClick={unblock} disabled={busy} className="flex-1 sm:flex-initial">Desbloquear</Button>
             ) : (
               <Button variant="outline" size="sm" onClick={block} disabled={busy} className="flex-1 sm:flex-initial">
                 <Ban className="h-4 w-4 mr-1" /> Bloquear
               </Button>
             )}
             <Button variant="hero" size="sm" onClick={approve} disabled={busy} className="flex-1 sm:flex-initial">
-              <CheckCircle2 className="h-4 w-4 mr-1" /> <span className="truncate">Aprobar y publicar</span>
+              <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar y publicar
             </Button>
           </div>
         </DialogFooter>
@@ -1257,31 +1277,42 @@ function OffersTab({ reviewerId }: { reviewerId: string }) {
           No hay ofertas que coincidan.
         </Card>
       ) : (
-        <div className="grid gap-2">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((o) => (
             <Card
               key={o.id}
-              className="p-4 flex items-center gap-3 hover:bg-muted/30 cursor-pointer"
+              className={`overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col ${o.blocked ? "border-destructive/30" : ""}`}
               onClick={() => setSelected(o)}
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold truncate">{o.title}</p>
-                  {o.blocked && (
-                    <Badge variant="destructive" className="text-xs">
-                      <Ban className="h-3 w-3 mr-1" /> Bloqueada
-                    </Badge>
-                  )}
-                  <Badge variant="outline" className="text-xs">{o.status}</Badge>
-                  <Badge variant="secondary" className="text-xs">{o.modality}</Badge>
+              <div className={`px-4 pt-4 pb-2 flex items-start justify-between gap-2 ${o.blocked ? "bg-destructive/5" : "bg-muted/10"}`}>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{o.title}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{o.city} · {o.modality}</p>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
-                  Publicada por <span className="font-medium text-foreground">{o.poster?.full_name || "—"}</span> · {o.city} · ${o.amount.toLocaleString("es-CO")}
-                </p>
+                {o.blocked
+                  ? <Badge variant="destructive" className="text-[10px] shrink-0"><Ban className="h-2.5 w-2.5 mr-0.5" />Bloqueada</Badge>
+                  : <Badge variant={o.status === "open" ? "outline" : "secondary"} className="text-[10px] shrink-0 capitalize">{o.status}</Badge>
+                }
               </div>
-              <Button size="sm" variant="outline">
-                <Eye className="h-4 w-4 mr-1" /> Revisar
-              </Button>
+              <div className="px-4 py-3 flex-1 space-y-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-lg bg-muted/40 p-2 text-center">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Tarifa</p>
+                    <p className="text-sm font-bold">${o.amount.toLocaleString("es-CO")}</p>
+                  </div>
+                  <div className="rounded-lg bg-muted/40 p-2 text-center">
+                    <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Tipo</p>
+                    <p className="text-sm font-bold capitalize">{o.poster_type}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{o.description || "Sin descripción."}</p>
+              </div>
+              <div className="px-3 pb-3">
+                <p className="text-[10px] text-muted-foreground mb-2 truncate">Familia: <span className="font-medium text-foreground">{o.poster?.full_name || "—"}</span></p>
+                <Button size="sm" variant="outline" className="w-full h-7 text-xs hover:bg-primary hover:text-primary-foreground transition-colors">
+                  <Eye className="h-3.5 w-3.5 mr-1" /> Revisar oferta
+                </Button>
+              </div>
             </Card>
           ))}
         </div>
