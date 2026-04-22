@@ -3,45 +3,64 @@ import { Button } from "@/components/ui/button";
 
 const plans = [
   {
-    name: "Profesional",
-    price: "Gratis",
-    sub: "o $9.900 COP/mes Pro",
-    desc: "Para enfermeros, auxiliares y cuidadores independientes.",
+    name: "Free",
+    price: "COP 0",
+    sub: "siempre",
+    desc: "Para conocer Humanix sin compromiso.",
     features: [
-      "Perfil verificado RETHUS",
-      "Postulación a turnos ilimitada",
-      "Calendario y notificaciones",
-      "Pagos en Nequi y PSE",
+      "Crear perfil profesional o familiar",
+      "Buscar y aplicar a ofertas abiertas",
+      "Asistente IA básico (preguntas generales)",
+      "Mensajería 1:1 cuando se acepta una aplicación",
     ],
-    cta: "Crear perfil",
+    cta: "Tu plan actual",
     variant: "glass" as const,
     highlight: false,
   },
   {
-    name: "Familia",
-    price: "5%",
-    sub: "por turno contratado",
-    desc: "Encuentra cuidador certificado para tu ser querido.",
+    name: "Esencial",
+    price: "COP 9.000",
+    sub: "/mes",
+    desc: "Familias y profesionales que quieren todo activo.",
     features: [
-      "Búsqueda y match en minutos",
-      "Geolocalización en vivo",
-      "Botón de emergencia 24/7",
-      "Seguro Sura incluido",
+      "Match IA en menos de 150 ms",
+      "Buzón de postulaciones ilimitado",
+      "Contacto directo por WhatsApp con la otra parte",
+      "Geolocalización en vivo y ETA",
+      "Verificación RETHUS y anti-fraude IA incluida",
+      "Sin comisión: el profesional cobra directo al cliente",
     ],
-    cta: "Contratar ahora",
+    cta: "Suscribirme por $9.000",
     variant: "hero" as const,
     highlight: true,
   },
   {
-    name: "Enterprise",
-    price: "Desde",
-    sub: "$990.000 COP/mes",
-    desc: "Para IPS, clínicas y agencias con +10 profesionales.",
+    name: "Pro Profesional",
+    price: "COP 29.900",
+    sub: "/mes",
+    desc: "Profesionales que quieren visibilidad máxima.",
     features: [
-      "Dashboard superadmin con IA",
-      "Predicción de ausentismo",
-      "API y webhooks",
-      "Auditoría Min. Salud",
+      "Todo lo del Esencial",
+      "Boost de visibilidad en búsquedas",
+      "Coach de carrera 24/7 (mejorar perfil y Trust Score)",
+      "Sugerencias IA en cada mensaje",
+      "Validación anti-fraude IA prioritaria",
+    ],
+    cta: "Activar Pro",
+    variant: "glass" as const,
+    highlight: false,
+  },
+  {
+    name: "Institución (IPS)",
+    price: "Desde COP 99.000",
+    sub: "/mes",
+    desc: "Clínicas, hospitales y agencias de cuidado.",
+    features: [
+      "Bolsa de créditos IA mensual",
+      "Multi-usuario con roles (HR, evaluador, admin)",
+      "Pipeline de candidatos con scoring IA",
+      "Detección de inconsistencias en CVs y RETHUS",
+      "Soporte prioritario y onboarding asistido",
     ],
     cta: "Hablar con ventas",
     variant: "copper" as const,
@@ -65,7 +84,7 @@ export function Pricing() {
           </p>
         </div>
 
-        <div className="mt-14 grid md:grid-cols-3 gap-6">
+        <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {plans.map((p) => (
             <div
               key={p.name}
