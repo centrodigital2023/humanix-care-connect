@@ -1,5 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
+import { SocialIcons } from "./SocialIcons";
+import { CONTACT } from "@/lib/social";
 
 type FooterLink = { label: string; to?: string; href?: string };
 
@@ -16,10 +18,10 @@ const cols: { title: string; links: FooterLink[] }[] = [
   {
     title: "Empresa",
     links: [
-      { label: "Sobre Humanix", href: "#" },
-      { label: "Carreras", href: "#" },
-      { label: "Prensa", href: "#" },
-      { label: "Contacto", href: "mailto:hola@humanix.co" },
+      { label: "Sobre Humanix", to: "/sobre" },
+      { label: "Carreras", to: "/carreras" },
+      { label: "Prensa", to: "/prensa" },
+      { label: "Contacto", to: "/contacto" },
     ],
   },
   {
@@ -47,6 +49,30 @@ export function Footer() {
             <p className="mt-4 text-xs text-muted-foreground">
               Bogotá · Medellín · Cali · Barranquilla
             </p>
+            <div className="mt-4 space-y-1 text-xs text-muted-foreground">
+              <p>
+                <a
+                  href={CONTACT.whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors"
+                >
+                  WhatsApp {CONTACT.phoneDisplay}
+                </a>
+              </p>
+              <p>
+                <a
+                  href={CONTACT.emailUrl}
+                  className="hover:text-foreground transition-colors"
+                >
+                  {CONTACT.email}
+                </a>
+              </p>
+            </div>
+            <div className="mt-5">
+              <p className="text-xs font-semibold text-foreground mb-2">Síguenos</p>
+              <SocialIcons size="sm" />
+            </div>
           </div>
           {cols.map((c) => (
             <div key={c.title}>

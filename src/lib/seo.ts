@@ -128,12 +128,19 @@ export function organizationLd() {
     name: SITE_NAME,
     url: SITE_URL,
     logo: `${SITE_URL}/favicon.ico`,
-    sameAs: ["https://www.linkedin.com/company/humanix-co", "https://x.com/HumanixColombia"],
+    sameAs: [
+      "https://www.facebook.com/feskawsay",
+      "https://www.instagram.com/feskawsay/",
+      "https://www.youtube.com/@fundacionesperanzakawsay3637",
+      "https://www.tiktok.com/@feskawsay",
+      "https://x.com/profeia2050",
+    ],
     contactPoint: [
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "contacto@humanix.co",
+        email: "docente2050@gmail.com",
+        telephone: "+573147444715",
         availableLanguage: ["Spanish"],
         areaServed: "CO",
       },

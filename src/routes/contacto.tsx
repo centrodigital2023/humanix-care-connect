@@ -4,6 +4,8 @@ import { Footer } from "@/components/humanix/Footer";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
 import { buildSeo } from "@/lib/seo";
+import { CONTACT } from "@/lib/social";
+import { SocialIcons } from "@/components/humanix/SocialIcons";
 
 export const Route = createFileRoute("/contacto")({
   head: () =>
@@ -84,10 +86,10 @@ function ContactoPage() {
                   <h3 className="font-bold text-foreground mb-1">Email</h3>
                   <p className="text-muted-foreground text-sm">
                     <a
-                      href="mailto:contacto@humanix.co"
+                      href={CONTACT.emailUrl}
                       className="hover:text-biosensor transition-colors"
                     >
-                      contacto@humanix.co
+                      {CONTACT.email}
                     </a>
                   </p>
                   <p className="text-muted-foreground text-xs mt-1">Respuesta en 24 horas</p>
@@ -101,13 +103,18 @@ function ContactoPage() {
                   </div>
                 </div>
                 <div>
-                  <h3 className="font-bold text-foreground mb-1">Teléfono</h3>
+                  <h3 className="font-bold text-foreground mb-1">WhatsApp / Teléfono</h3>
                   <p className="text-muted-foreground text-sm">
-                    <a href="tel:+5716007400" className="hover:text-biosensor transition-colors">
-                      +57 1 600 7400
+                    <a
+                      href={CONTACT.whatsappUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-biosensor transition-colors"
+                    >
+                      {CONTACT.phoneDisplay}
                     </a>
                   </p>
-                  <p className="text-muted-foreground text-xs mt-1">Lun - Vie, 8 AM - 6 PM</p>
+                  <p className="text-muted-foreground text-xs mt-1">Atención por WhatsApp 24/7</p>
                 </div>
               </div>
 
@@ -139,6 +146,11 @@ function ContactoPage() {
                   </p>
                   <p className="text-muted-foreground text-xs mt-1">Hora Colombia (UTC-5)</p>
                 </div>
+              </div>
+
+              <div className="pt-6 border-t border-border">
+                <h3 className="font-bold text-foreground mb-3">Síguenos en redes</h3>
+                <SocialIcons size="md" />
               </div>
 
               <div className="pt-6 border-t border-border">

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { MessageCircle, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CONTACT } from "@/lib/social";
 
-const WA_NUMBER = "573114123000";
-const WA_URL = `https://wa.me/${WA_NUMBER}`;
+const WA_NUMBER = CONTACT.whatsappNumber;
+const WA_URL = CONTACT.whatsappUrl;
 
 /**
  * Botón flotante global de WhatsApp.
