@@ -13,6 +13,38 @@ const VERIFY_TOKEN = Deno.env.get("WHATSAPP_VERIFY_TOKEN") ?? "";
 const ACCESS_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN") ?? "";
 const PHONE_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") ?? "";
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
+const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") ?? "";
+
+// Valida la firma HMAC-SHA256 que Meta envía en X-Hub-Signature-256.
+// Si WHATSAPP_APP_SECRET no está configurado, omite la validación (modo dev).
+async function verifyMetaSignature(req: Request, rawBody: string): Promise<boolean> {
+  if (!APP_SECRET) return true;
+  const header = req.headers.get("x-hub-signature-256");
+  if (!header || !header.startsWith("sha256=")) return false;
+  const expected = header.slice("sha256=".length);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(APP_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(rawBody),
+  );
+  const got = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  // Comparación constant-time
+  if (got.length !== expected.length) return false;
+  let diff = 0;
+  for (let i = 0; i < got.length; i++) {
+    diff |= got.charCodeAt(i) ^ expected.charCodeAt(i);
+  }
+  return diff === 0;
+}
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -99,7 +131,13 @@ Deno.serve(async (req) => {
   // Mensaje entrante
   if (req.method === "POST") {
     try {
-      const body = await req.json();
+      const rawBody = await req.text();
+      const ok = await verifyMetaSignature(req, rawBody);
+      if (!ok) {
+        console.warn("[wa] firma inválida, rechazando");
+        return new Response("invalid signature", { status: 401, headers: corsHeaders });
+      }
+      const body = JSON.parse(rawBody);
       const entries = body?.entry ?? [];
       for (const entry of entries) {
         const changes = entry.changes ?? [];
