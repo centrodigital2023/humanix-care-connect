@@ -4,16 +4,16 @@ project_id = "rwllmouomrytejtbpxvn"
 verify_jwt = false
 
 [functions.onboarding-extractor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.profile-validator]
-verify_jwt = false
+verify_jwt = true
 
 [functions.cv-extractor]
-verify_jwt = false
+verify_jwt = true
 
 [functions.rate-suggester]
-verify_jwt = false
+verify_jwt = true
 
 [functions.match-offers]
 verify_jwt = false
@@ -37,7 +37,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.fraud-detector]
-verify_jwt = false
+verify_jwt = true
 
 [functions.whatsapp-webhook]
 verify_jwt = false
@@ -49,22 +49,22 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.document-verifier]
-verify_jwt = false
+verify_jwt = true
 
 [functions.bio-summary]
-verify_jwt = false
+verify_jwt = true
 
 [functions.profile-holistic-validator]
-verify_jwt = false
+verify_jwt = true
 
 [functions.mp-create-subscription]
-verify_jwt = false
+verify_jwt = true
 
 [functions.mp-webhook]
 verify_jwt = false
 
 [functions.family-onboarding-ai]
-verify_jwt = false
+verify_jwt = true
 
 [functions.pqrs-classifier]
 verify_jwt = true
@@ -76,7 +76,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.social-trust-score]
-verify_jwt = false
+verify_jwt = true
 
 [functions.trust-verdict]
 verify_jwt = true
