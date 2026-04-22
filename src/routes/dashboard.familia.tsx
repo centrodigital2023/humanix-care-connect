@@ -28,6 +28,8 @@ import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscri
 import { SmartProfileCard } from "@/components/humanix/SmartProfileCard";
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
+import { FamilyNeedsCalendar } from "@/components/humanix/FamilyNeedsCalendar";
+import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
@@ -807,6 +809,14 @@ function FamilyDashboard() {
           </div>
           {user?.id && <MercadoPagoSubscription userId={user.id} defaultPlan="essential_monthly" />}
         </section>
+
+        {/* Agenda de necesidades (azul) + bandeja de propuestas */}
+        {user?.id && (
+          <section className="space-y-4">
+            <FamilyNeedsCalendar userId={user.id} serviceAddress={familyAddress ?? null} />
+            <ProposalsInbox userId={user.id} role="family" />
+          </section>
+        )}
 
         {/* Valoraciones pendientes (bidireccional) */}
         {user?.id && <PendingRatingsCard userId={user.id} role="family" />}

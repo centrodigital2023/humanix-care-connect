@@ -20,6 +20,8 @@ import { Footer } from "@/components/humanix/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookNowButton } from "@/components/humanix/BookNowButton";
+import { AgendaViewer } from "@/components/humanix/AgendaViewer";
+import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/profesional/$proId")({
   head: ({ params }) => ({
@@ -92,6 +94,7 @@ const DOC_LABEL: Record<Doc["doc_type"], string> = {
 
 function ProfessionalPublicPage() {
   const { proId } = useParams({ from: "/profesional/$proId" });
+  const { user } = useAppUser();
   const [loading, setLoading] = useState(true);
   const [pro, setPro] = useState<Pro | null>(null);
   const [profile, setProfile] = useState<{
@@ -286,6 +289,23 @@ function ProfessionalPublicPage() {
               </div>
             </div>
           </header>
+
+          {/* Agenda pública: familia puede contratar slots verdes */}
+          <div className="mt-6">
+            <AgendaViewer
+              targetUserId={pro.user_id}
+              targetRole="professional"
+              currentUserId={user?.id ?? null}
+              currentRole={
+                user?.roles?.includes("family")
+                  ? "family"
+                  : user?.roles?.includes("professional")
+                    ? "professional"
+                    : null
+              }
+              targetHourlyRate={pro.hourly_rate ?? null}
+            />
+          </div>
 
           {/* Body */}
           <div className="mt-6 grid lg:grid-cols-3 gap-6">

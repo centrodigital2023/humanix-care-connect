@@ -39,6 +39,8 @@ import { NotificationsBell } from "@/components/humanix/NotificationsBell";
 import { PublishGate } from "@/components/humanix/PublishGate";
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
+import { OpenFamilyNeedsList } from "@/components/humanix/OpenFamilyNeedsList";
+import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -998,6 +1000,14 @@ function ProDashboard() {
             </div>
           )}
         </section>
+
+        {/* Bandeja de propuestas + familias buscando ayuda */}
+        {userId && (
+          <section className="mx-auto max-w-7xl px-4 sm:px-6 py-4 space-y-4">
+            <ProposalsInbox userId={userId} role="professional" />
+            <OpenFamilyNeedsList professionalId={userId} />
+          </section>
+        )}
 
         {/* Valoraciones pendientes del profesional hacia sus clientes */}
         {userId && (
