@@ -191,10 +191,26 @@ function AuthPage() {
           </div>
 
           <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elegant)] p-6 sm:p-8">
-            <div className="flex items-center gap-1 rounded-xl bg-muted p-1 mb-6">
+            <div className="mb-6 text-center">
+              <h2 className="font-display text-2xl font-bold">
+                {mode === "signup" ? "Crea tu cuenta" : "Bienvenido de nuevo"}
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                {mode === "signup"
+                  ? "Regístrate gratis en menos de 1 minuto"
+                  : "Ingresa con tu correo y contraseña"}
+              </p>
+            </div>
+            <div
+              role="tablist"
+              aria-label="Elige entre crear cuenta o iniciar sesión"
+              className="flex items-center gap-1 rounded-xl bg-muted p-1 mb-6"
+            >
               <button
+                role="tab"
+                aria-selected={mode === "signup"}
                 onClick={() => setMode("signup")}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition ${
                   mode === "signup"
                     ? "bg-foreground text-background shadow"
                     : "text-muted-foreground hover:text-foreground"
@@ -203,8 +219,10 @@ function AuthPage() {
                 Crear cuenta
               </button>
               <button
+                role="tab"
+                aria-selected={mode === "signin"}
                 onClick={() => setMode("signin")}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition ${
                   mode === "signin"
                     ? "bg-foreground text-background shadow"
                     : "text-muted-foreground hover:text-foreground"
@@ -378,7 +396,33 @@ function AuthPage() {
               </Button>
             </form>
 
-            <p className="mt-5 text-xs text-muted-foreground text-center">
+            <div className="mt-5 pt-5 border-t border-border/60 text-center">
+              {mode === "signup" ? (
+                <p className="text-sm text-muted-foreground">
+                  ¿Ya tienes cuenta?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMode("signin")}
+                    className="font-semibold text-foreground hover:text-biosensor underline underline-offset-2"
+                  >
+                    Inicia sesión
+                  </button>
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  ¿Aún no tienes cuenta?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setMode("signup")}
+                    className="font-semibold text-foreground hover:text-biosensor underline underline-offset-2"
+                  >
+                    Créala gratis
+                  </button>
+                </p>
+              )}
+            </div>
+
+            <p className="mt-4 text-xs text-muted-foreground text-center">
               Al continuar aceptas los términos, política de privacidad y tratamiento de datos
               personales (Habeas Data) de Humanix.
             </p>
