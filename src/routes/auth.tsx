@@ -1,10 +1,20 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Loader2, Mail, Lock, User, Building2, HeartHandshake, Stethoscope } from "lucide-react";
+import {
+  Loader2,
+  Mail,
+  Lock,
+  User,
+  Building2,
+  HeartHandshake,
+  Stethoscope,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/humanix/Logo";
+import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -79,6 +89,11 @@ function AuthPage() {
   const [city, setCity] = useState("");
   const [institutionName, setInstitutionName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
+  const [address, setAddress] = useState("");
 
   // Redirect if already logged in
   useEffect(() => {
@@ -108,6 +123,9 @@ function AuthPage() {
               city,
               role,
               institution_name: institutionName,
+              lat: coords.lat ?? undefined,
+              lng: coords.lng ?? undefined,
+              address: address || undefined,
             },
           },
         });
@@ -282,6 +300,33 @@ function AuthPage() {
                         placeholder="Bogotá"
                       />
                     </div>
+                  </div>
+
+                  {/* Ubicación principal de servicio — tarjeta interactiva pequeña
+                      que se marca automáticamente con el GPS del dispositivo. */}
+                  <div className="rounded-xl border border-border bg-card/60 p-3 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <p className="text-sm font-semibold flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-biosensor" />
+                          Ubicación principal de servicio
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Se marca automáticamente con tu dispositivo. Puedes ajustar tocando el
+                          mapa o activar seguimiento en tiempo real.
+                        </p>
+                      </div>
+                    </div>
+                    <LocationPicker
+                      lat={coords.lat}
+                      lng={coords.lng}
+                      defaultCity={city || "Bogotá"}
+                      height={160}
+                      onChange={(lat, lng, addr) => {
+                        setCoords({ lat, lng });
+                        if (addr && !address) setAddress(addr);
+                      }}
+                    />
                   </div>
                 </>
               )}
