@@ -15,7 +15,7 @@ export const Route = createFileRoute("/planes")({
       {
         name: "description",
         content:
-          "Un plan para cada historia humana. Desde gratis para profesionales hasta $990.000 COP/mes para empresas. Sin permanencia. Cancela cuando quieras.",
+          "Un plan para cada historia humana. Desde gratis para profesionales hasta $99.000 COP/mes para empresas. Sin permanencia. Cancela cuando quieras.",
       },
       { property: "og:title", content: "Planes y precios · Humanix" },
       {
@@ -86,7 +86,7 @@ const PLANS: {
     audience: "Para IPS, clínicas y agencias con +10 profesionales.",
     icon: Building2,
     tone: "fuchsia",
-    amount: 990000,
+    amount: 99000,
     features: [
       "Panel de superadministrador con IA",
       "Predicción de ausentismo",
