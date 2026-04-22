@@ -158,26 +158,26 @@ function ContactoPage() {
                 <div className="space-y-2 text-sm">
                   <p className="text-muted-foreground">
                     <strong>Soporte Técnico:</strong>{" "}
-                    <a href="mailto:support@humanix.co" className="text-biosensor hover:underline">
-                      support@humanix.co
+                    <a href="mailto:support@humanix.lat" className="text-biosensor hover:underline">
+                      support@humanix.lat
                     </a>
                   </p>
                   <p className="text-muted-foreground">
                     <strong>Prensa:</strong>{" "}
-                    <a href="mailto:press@humanix.co" className="text-biosensor hover:underline">
-                      press@humanix.co
+                    <a href="mailto:press@humanix.lat" className="text-biosensor hover:underline">
+                      press@humanix.lat
                     </a>
                   </p>
                   <p className="text-muted-foreground">
                     <strong>Empleos:</strong>{" "}
-                    <a href="mailto:jobs@humanix.co" className="text-biosensor hover:underline">
-                      jobs@humanix.co
+                    <a href="mailto:jobs@humanix.lat" className="text-biosensor hover:underline">
+                      jobs@humanix.lat
                     </a>
                   </p>
                   <p className="text-muted-foreground">
                     <strong>Legal:</strong>{" "}
-                    <a href="mailto:legal@humanix.co" className="text-biosensor hover:underline">
-                      legal@humanix.co
+                    <a href="mailto:legal@humanix.lat" className="text-biosensor hover:underline">
+                      legal@humanix.lat
                     </a>
                   </p>
                 </div>

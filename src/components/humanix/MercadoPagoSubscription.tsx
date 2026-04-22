@@ -40,7 +40,7 @@ export function MercadoPagoSubscription({
 
   const subscribe = async (key: PlanKey) => {
     if (key === "institution_monthly") {
-      window.location.href = "mailto:hola@humanix.co?subject=Plan Institución Humanix (IPS)";
+      window.location.href = "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
       return;
     }
     setBusy(key);

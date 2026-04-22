@@ -100,7 +100,7 @@ function MarketplacePage() {
   const [matchResults, setMatchResults] = useState<
     Record<string, { user_id: string; similarity: number }[]>
   >({});
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.co";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.lat";
 
   useEffect(() => {
     if (!user) return;

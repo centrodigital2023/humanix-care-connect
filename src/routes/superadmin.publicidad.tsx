@@ -192,7 +192,7 @@ function PublicidadPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seeding, setSeeding] = useState(false);
   const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.co";
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.lat";
 
   useEffect(() => {
     if (!user) return;

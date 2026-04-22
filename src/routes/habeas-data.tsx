@@ -70,10 +70,10 @@ function HabeasDataPage() {
           <p>
             Correo:{" "}
             <a
-              href="mailto:datos@humanix.co"
+              href="mailto:datos@humanix.lat"
               className="text-foreground underline underline-offset-4"
             >
-              datos@humanix.co
+              datos@humanix.lat
             </a>{" "}
             · WhatsApp Business: +57 300 000 0000 · Tiempo de respuesta: hasta 15 días hábiles
             (consultas) o 15 días hábiles prorrogables 8 días más (reclamos).

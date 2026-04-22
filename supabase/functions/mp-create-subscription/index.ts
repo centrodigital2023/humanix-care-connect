@@ -26,9 +26,9 @@ Deno.serve(async (req) => {
     const plan = requestedPlan in PRICE_BY_PLAN ? requestedPlan : "pro_monthly";
     const amount = PRICE_BY_PLAN[plan];
     const userId = auth.userId;
-    const email = body.email ?? "comprador@humanix.com";
+    const email = body.email ?? "comprador@humanix.lat";
 
-    const origin = req.headers.get("origin") ?? "https://humanix.com";
+    const origin = req.headers.get("origin") ?? "https://humanix.lat";
 
     const title =
       plan === "essential_monthly"

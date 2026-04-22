@@ -47,10 +47,10 @@ export function LegalPage({ badge, title, updatedAt, intro, children }: LegalPag
           <p className="mt-6 text-xs text-muted-foreground text-center">
             Para solicitudes formales de Habeas Data o PQRS, escribe a{" "}
             <a
-              href="mailto:legal@humanix.co"
+              href="mailto:legal@humanix.lat"
               className="text-foreground underline underline-offset-4"
             >
-              legal@humanix.co
+              legal@humanix.lat
             </a>
             .
           </p>

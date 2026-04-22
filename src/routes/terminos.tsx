@@ -94,10 +94,10 @@ function TerminosPage() {
           <p>
             Humanix Colombia S.A.S. · NIT pendiente · Bogotá D.C. ·{" "}
             <a
-              href="mailto:legal@humanix.co"
+              href="mailto:legal@humanix.lat"
               className="text-foreground underline underline-offset-4"
             >
-              legal@humanix.co
+              legal@humanix.lat
             </a>
           </p>
         </LegalSection>

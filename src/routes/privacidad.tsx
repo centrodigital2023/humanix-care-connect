@@ -73,10 +73,10 @@ function PrivacidadPage() {
             <strong>acceso, rectificación, actualización, supresión y revocatoria</strong>{" "}
             escribiendo a{" "}
             <a
-              href="mailto:datos@humanix.co"
+              href="mailto:datos@humanix.lat"
               className="text-foreground underline underline-offset-4"
             >
-              datos@humanix.co
+              datos@humanix.lat
             </a>
             . Responderemos en los términos del artículo 14 de la Ley 1581.
           </p>

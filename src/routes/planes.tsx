@@ -62,7 +62,7 @@ function PlansPage() {
       return;
     }
     if (key === "institution_monthly") {
-      window.location.href = "mailto:hola@humanix.co?subject=Plan Institución Humanix (IPS)";
+      window.location.href = "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
       return;
     }
     if (!user) {
@@ -166,8 +166,8 @@ function PlansPage() {
         <section className="mt-14 rounded-2xl border border-border bg-card/95 p-6 text-center">
           <p className="text-sm text-muted-foreground">
             ¿Necesitas algo a medida? Escríbenos a{" "}
-            <a href="mailto:hola@humanix.co" className="text-biosensor underline">
-              hola@humanix.co
+            <a href="mailto:hola@humanix.lat" className="text-biosensor underline">
+              hola@humanix.lat
             </a>{" "}
             y armamos un plan para tu IPS o clínica.
           </p>

@@ -15,7 +15,7 @@ El token de verificación ya está embebido en `src/routes/__root.tsx` como meta
 Pasos para activar:
 
 1. Ingresa a <https://search.google.com/search-console>.
-2. Agrega la propiedad tipo **Prefijo de URL**: `https://humanix-care-connect.lovable.app`.
+2. Agrega la propiedad tipo **Prefijo de URL**: `https://humanix.lat`.
 3. Selecciona el método **Etiqueta HTML**, confirma el token ya incluido y presiona **Verificar**.
 
 ### 1.2 Envío del sitemap dinámico
@@ -23,7 +23,7 @@ Pasos para activar:
 El sitemap ahora se genera en servidor con ofertas de empleo indexables y perfiles verificados (ver `src/routes/sitemap[.]xml.ts`).
 
 1. En GSC → **Sitemaps**.
-2. Ingresa `sitemap.xml` (la URL completa queda `https://humanix-care-connect.lovable.app/sitemap.xml`).
+2. Ingresa `sitemap.xml` (la URL completa queda `https://humanix.lat/sitemap.xml`).
 3. Presiona **Enviar**. Google revisa cada 24-48 h.
 
 Cobertura esperada:
@@ -54,7 +54,7 @@ Prueba manualmente cada schema en <https://search.google.com/test/rich-results>:
 
 1. <https://www.bing.com/webmasters>.
 2. Importa la propiedad desde Google Search Console (verificación automática).
-3. Envía el mismo sitemap `https://humanix-care-connect.lovable.app/sitemap.xml`.
+3. Envía el mismo sitemap `https://humanix.lat/sitemap.xml`.
 
 ## 3. OG images por sección
 

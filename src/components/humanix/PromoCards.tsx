@@ -542,7 +542,7 @@ function CardContent({
           <Icon className={large ? "h-6 w-6" : "h-4 w-4"} />
         </div>
         <div className={cn("font-mono px-2 py-1 rounded-full border text-[10px]", styles.chip)}>
-          humanix.co
+          humanix.lat
         </div>
       </div>
       {/* Content */}

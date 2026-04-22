@@ -35,7 +35,7 @@ async function aiReply(userText: string): Promise<string> {
           {
             role: "system",
             content:
-              "Eres el asistente WhatsApp de Humanix, plataforma colombiana de talento humano en salud. Responde breve, cálido, profesional, en español. Si preguntan por contratar, sugiere que entren a humanix.app. Máximo 2 frases.",
+              "Eres el asistente WhatsApp de Humanix, plataforma colombiana de talento humano en salud. Responde breve, cálido, profesional, en español. Si preguntan por contratar, sugiere que entren a humanix.lat. Máximo 2 frases.",
           },
           { role: "user", content: userText },
         ],

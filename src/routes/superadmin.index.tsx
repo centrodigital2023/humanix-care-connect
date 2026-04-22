@@ -315,7 +315,7 @@ function SuperadminPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="staff@humanix.co"
+                  placeholder="staff@humanix.lat"
                 />
               </div>
               <div>

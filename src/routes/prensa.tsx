@@ -155,8 +155,8 @@ function PrensaPage() {
             <div className="space-y-2">
               <p className="text-foreground">
                 <strong>Email:</strong>{" "}
-                <a href="mailto:press@humanix.co" className="text-biosensor hover:underline">
-                  press@humanix.co
+                <a href="mailto:press@humanix.lat" className="text-biosensor hover:underline">
+                  press@humanix.lat
                 </a>
               </p>
               <p className="text-foreground">

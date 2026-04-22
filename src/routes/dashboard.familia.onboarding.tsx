@@ -791,7 +791,7 @@ function FamilyOnboarding() {
                 </ul>
                 <p className="mt-2">
                   Puedes ejercer tus derechos de conocer, actualizar, rectificar y suprimir tus
-                  datos en cualquier momento escribiendo a <strong>privacidad@humanix.co</strong>.
+                  datos en cualquier momento escribiendo a <strong>privacidad@humanix.lat</strong>.
                 </p>
               </div>
 

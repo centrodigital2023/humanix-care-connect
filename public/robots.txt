@@ -11,4 +11,4 @@ Disallow: /evaluador
 Disallow: /talento-humano
 
 # Helps search engines find all public URLs quickly
-Sitemap: https://humanix-care-connect.lovable.app/sitemap.xml
+Sitemap: https://humanix.lat/sitemap.xml

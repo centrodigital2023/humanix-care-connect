@@ -1,5 +1,5 @@
 export const SITE_NAME = "Humanix";
-export const SITE_URL = "https://humanix-care-connect.lovable.app";
+export const SITE_URL = "https://humanix.lat";
 export const SITE_DESCRIPTION =
   "Plataforma premium con IA en tiempo real que conecta profesionales de salud con familias y clínicas en Colombia.";
 export const SOCIAL_IMAGE_URL =
