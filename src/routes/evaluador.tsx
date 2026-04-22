@@ -100,6 +100,17 @@ type Professional = {
   social_trust_score: number | null;
   created_at: string;
   profile?: { full_name: string | null; email: string | null; phone: string | null };
+  docs?: ProDocLite[];
+};
+
+type ProDocLite = {
+  id: string;
+  doc_type: string;
+  file_name: string | null;
+  status: string;
+  ai_score: number | null;
+  ai_verified: boolean | null;
+  ai_extracted: unknown;
 };
 
 type Offer = {
@@ -148,6 +159,192 @@ type HolisticValidation = {
   warnings: Array<{ field: string; message: string }>;
   ai_summary: string;
 };
+
+/* ---------------------- Helpers para verificación IA ---------------------- */
+
+/** Normaliza texto: minúsculas, sin acentos, sin puntuación, espacios colapsados. */
+function normalizeName(s: string | null | undefined): string {
+  if (!s) return "";
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Extrae posibles nombres desde el JSON que la IA devuelve al procesar un documento. */
+function extractDocName(ai: unknown, fileName: string | null): string {
+  if (ai && typeof ai === "object") {
+    const o = ai as Record<string, unknown>;
+    const candidates = [
+      o.name,
+      o.full_name,
+      o.holder_name,
+      o.titular,
+      o.nombre,
+      o.nombres,
+      o.nombre_completo,
+      o.first_name && o.last_name ? `${o.first_name} ${o.last_name}` : null,
+    ];
+    for (const c of candidates) {
+      if (typeof c === "string" && c.trim().length > 2) return c;
+    }
+  }
+  return fileName ?? "";
+}
+
+type NameMatch = "match" | "mismatch" | "unknown";
+
+/** Compara el nombre registrado del profesional con el extraído por IA del documento. */
+function docNameMatch(registered: string | null, doc: ProDocLite): NameMatch {
+  const reg = normalizeName(registered);
+  const inDoc = normalizeName(extractDocName(doc.ai_extracted, doc.file_name));
+  if (!reg || !inDoc) return "unknown";
+  const regTokens = reg.split(" ").filter((t) => t.length >= 3);
+  if (regTokens.length === 0) return "unknown";
+  const hits = regTokens.filter((t) => inDoc.includes(t)).length;
+  // Al menos 2 tokens (nombre y apellido) deben aparecer. Si solo hay 1 token, exigirlo.
+  const need = regTokens.length === 1 ? 1 : 2;
+  return hits >= need ? "match" : "mismatch";
+}
+
+const DOC_TYPE_LABEL: Record<string, string> = {
+  cedula: "Cédula",
+  cedula_front: "Cédula frontal",
+  cedula_back: "Cédula reverso",
+  rethus: "RETHUS",
+  diploma: "Diploma",
+  certificate: "Certificado",
+  certification: "Certificación",
+  cv: "Hoja de vida",
+  experience: "Experiencia",
+  reference: "Referencia",
+  insurance: "Póliza",
+  other: "Documento",
+};
+
+function labelForDocType(t: string): string {
+  return DOC_TYPE_LABEL[t] ?? t.replace(/_/g, " ");
+}
+
+/** Cinta horizontal deslizable con mini-tarjetas por documento, verificación IA y match de nombre. */
+function DocStrip({
+  docs,
+  registeredName,
+}: {
+  docs: ProDocLite[];
+  registeredName: string | null;
+}) {
+  if (!docs.length) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2 text-center">
+        <p className="text-[11px] text-muted-foreground">Sin documentos anexados</p>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="-mx-4 px-4"
+      onClick={(e) => e.stopPropagation()}
+      role="region"
+      aria-label="Documentos del profesional"
+    >
+      <div className="flex items-center justify-between mb-1.5">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+          Documentos ({docs.length})
+        </p>
+        <span className="text-[10px] text-muted-foreground">← desliza →</span>
+      </div>
+      <div
+        className="flex gap-2 overflow-x-auto pb-1.5 scroll-smooth snap-x snap-mandatory [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full"
+      >
+        {docs.map((d) => {
+          const match = docNameMatch(registeredName, d);
+          const aiVerified = d.ai_verified === true;
+          const score = d.ai_score ?? null;
+          const statusTone =
+            d.status === "approved" || aiVerified
+              ? "border-biosensor/40 bg-biosensor/5"
+              : d.status === "rejected"
+                ? "border-destructive/40 bg-destructive/5"
+                : "border-border bg-muted/30";
+          return (
+            <div
+              key={d.id}
+              className={`shrink-0 snap-start w-[148px] rounded-lg border ${statusTone} p-2 flex flex-col gap-1.5`}
+              title={d.file_name ?? d.doc_type}
+            >
+              <div className="flex items-start justify-between gap-1">
+                <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                <div className="flex items-center gap-0.5 shrink-0">
+                  {aiVerified ? (
+                    <Badge
+                      className="h-4 px-1 text-[9px] bg-biosensor/20 text-biosensor border-biosensor/30"
+                      title="Verificado por IA"
+                    >
+                      <Sparkles className="h-2.5 w-2.5 mr-0.5" /> IA
+                    </Badge>
+                  ) : d.status === "pending" ? (
+                    <Badge
+                      variant="secondary"
+                      className="h-4 px-1 text-[9px]"
+                      title="Pendiente de revisión"
+                    >
+                      Pend.
+                    </Badge>
+                  ) : null}
+                </div>
+              </div>
+              <p className="text-[11px] font-semibold leading-tight capitalize line-clamp-2">
+                {labelForDocType(d.doc_type)}
+              </p>
+              <p className="text-[9.5px] text-muted-foreground truncate">
+                {d.file_name ?? "—"}
+              </p>
+              <div className="flex items-center justify-between gap-1 mt-auto">
+                {score != null ? (
+                  <span
+                    className={`text-[9.5px] font-semibold ${score >= 70 ? "text-biosensor" : score >= 40 ? "text-copper" : "text-muted-foreground"}`}
+                  >
+                    {score}/100
+                  </span>
+                ) : (
+                  <span className="text-[9.5px] text-muted-foreground">sin IA</span>
+                )}
+                {match === "match" ? (
+                  <Badge
+                    className="h-4 px-1 text-[9px] bg-biosensor/20 text-biosensor border-biosensor/30"
+                    title="El nombre del documento coincide con el del registro"
+                  >
+                    <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> Nombre ✓
+                  </Badge>
+                ) : match === "mismatch" ? (
+                  <Badge
+                    variant="destructive"
+                    className="h-4 px-1 text-[9px]"
+                    title="El nombre del documento NO coincide con el del registro"
+                  >
+                    <XCircle className="h-2.5 w-2.5 mr-0.5" /> ≠ nombre
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant="outline"
+                    className="h-4 px-1 text-[9px]"
+                    title="No se pudo verificar el nombre"
+                  >
+                    ? nombre
+                  </Badge>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function EvaluatorPage() {
   const { user, loading, logout } = useAppUser({
@@ -252,9 +449,30 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
       profiles = profs ?? [];
     }
     const byId = new Map(profiles.map((p) => [p.user_id, p]));
+
+    // Fetch all documents for these professionals in a single query so we can
+    // render an AI-verified documents strip inside each card.
+    let docsByUser = new Map<string, ProDocLite[]>();
+    if (userIds.length) {
+      const { data: docRows } = await supabase
+        .from("professional_documents")
+        .select(
+          "id, doc_type, file_name, user_id, status, ai_score, ai_verified, ai_extracted",
+        )
+        .in("user_id", userIds)
+        .order("created_at", { ascending: false });
+      docsByUser = new Map();
+      for (const d of (docRows ?? []) as Array<ProDocLite & { user_id: string }>) {
+        const arr = docsByUser.get(d.user_id) ?? [];
+        arr.push(d);
+        docsByUser.set(d.user_id, arr);
+      }
+    }
+
     const merged = (rows ?? []).map((r) => ({
       ...r,
       profile: byId.get(r.user_id),
+      docs: docsByUser.get(r.user_id) ?? [],
     })) as Professional[];
 
     // Sort by full name
@@ -405,6 +623,9 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
                   </p>
                 </div>
               </div>
+
+              {/* Documentos (cinta deslizable con verificación IA + match nombre) */}
+              <DocStrip docs={p.docs ?? []} registeredName={p.profile?.full_name ?? null} />
 
               {/* Footer */}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
