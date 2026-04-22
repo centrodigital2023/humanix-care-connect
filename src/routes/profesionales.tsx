@@ -16,7 +16,8 @@ import { Button } from "@/components/ui/button";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
-import { buildSeo, jsonLdString, SITE_URL, SITE_NAME } from "@/lib/seo";
+import * as seo from "@/lib/seo";
+const { buildSeo, SITE_URL, SITE_NAME } = seo;
 
 const profesionalesServiceLd = {
   "@context": "https://schema.org",
@@ -103,7 +104,7 @@ function ProfesionalesPage() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdString(profesionalesServiceLd) }}
+        dangerouslySetInnerHTML={{ __html: seo.jsonLdString(profesionalesServiceLd) }}
       />
       <Navbar />
       <main className="pt-28 pb-20">
