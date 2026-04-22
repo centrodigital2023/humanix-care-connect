@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/humanix/Logo";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
+import { SocialIcons } from "@/components/humanix/SocialIcons";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -564,6 +565,15 @@ function AuthPage() {
               Al continuar aceptas los términos, política de privacidad y tratamiento de datos
               personales (Habeas Data) de Humanix.
             </p>
+
+            <div className="mt-6 pt-4 border-t border-border">
+              <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/70 text-center mb-3">
+                Conéctate con Humanix
+              </p>
+              <div className="flex justify-center">
+                <SocialIcons size="sm" />
+              </div>
+            </div>
               </>
             )}
           </div>

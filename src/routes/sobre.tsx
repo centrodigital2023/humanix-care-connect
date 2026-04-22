@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Building2 } from "lucide-react";
 import { buildSeo } from "@/lib/seo";
+import { SocialIcons } from "@/components/humanix/SocialIcons";
 
 export const Route = createFileRoute("/sobre")({
   head: () =>
@@ -141,6 +142,16 @@ function SobrePage() {
             </a>
             .
           </p>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-border text-center">
+          <h2 className="text-2xl font-bold text-foreground mb-3">Síguenos en redes</h2>
+          <p className="text-muted-foreground text-sm mb-4">
+            Historias reales, casos de impacto y novedades del ecosistema Humanix.
+          </p>
+          <div className="flex justify-center">
+            <SocialIcons size="md" />
+          </div>
         </div>
       </div>
     </ContentPage>

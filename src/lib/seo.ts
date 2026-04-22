@@ -7,7 +7,7 @@ export const SOCIAL_IMAGE_URL =
 export const SOCIAL_IMAGE_ALT = "Humanix · Talento humano en salud verificado con IA para Colombia";
 export const SOCIAL_IMAGE_WIDTH = "1200";
 export const SOCIAL_IMAGE_HEIGHT = "630";
-export const TWITTER_HANDLE = "@HumanixColombia";
+export const TWITTER_HANDLE = "@profeia2050";
 export const DEFAULT_LOCALE = "es_CO";
 
 type Meta = {
