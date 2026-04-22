@@ -1,14 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Check,
-  Stethoscope,
-  Building2,
-  Crown,
-  Loader2,
-  Heart,
-  Sparkles,
-} from "lucide-react";
+import { Check, Stethoscope, Building2, Crown, Loader2, Heart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -70,8 +62,7 @@ function PlansPage() {
       return;
     }
     if (key === "institution_monthly") {
-      window.location.href =
-        "mailto:hola@humanix.co?subject=Plan Institución Humanix (IPS)";
+      window.location.href = "mailto:hola@humanix.co?subject=Plan Institución Humanix (IPS)";
       return;
     }
     if (!user) {
@@ -160,13 +151,7 @@ function PlansPage() {
                 </ul>
                 <Button
                   className="mt-6 w-full"
-                  variant={
-                    def.highlight
-                      ? "copper"
-                      : d.tone === "fuchsia"
-                        ? "hero"
-                        : "outline"
-                  }
+                  variant={def.highlight ? "copper" : d.tone === "fuchsia" ? "hero" : "outline"}
                   disabled={loading || acting === d.key || current}
                   onClick={() => choose(d.key)}
                 >

@@ -11,13 +11,20 @@ Deno.serve(async (req) => {
 
   try {
     const { campaign_id, from_email, segment } = await req.json();
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
-    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", auth.userId);
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId);
     const isStaff = (roles ?? []).some((r) => ["superadmin", "hr_staff"].includes(r.role));
     if (!isStaff) {
       return new Response(JSON.stringify({ error: "No autorizado" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -25,14 +32,20 @@ Deno.serve(async (req) => {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!LOVABLE_API_KEY || !RESEND_API_KEY) {
       return new Response(JSON.stringify({ error: "Resend no configurado" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: campaign } = await admin.from("crm_campaigns").select("*").eq("id", campaign_id).maybeSingle();
+    const { data: campaign } = await admin
+      .from("crm_campaigns")
+      .select("*")
+      .eq("id", campaign_id)
+      .maybeSingle();
     if (!campaign) {
       return new Response(JSON.stringify({ error: "Campaña no encontrada" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -43,7 +56,8 @@ Deno.serve(async (req) => {
 
     if (recipients.length === 0) {
       return new Response(JSON.stringify({ error: "Sin destinatarios" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -92,12 +106,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    await admin.from("crm_campaigns").update({
-      status: "sent",
-      sent_at: new Date().toISOString(),
-      recipients_count: recipients.length,
-      delivered_count: delivered,
-    }).eq("id", campaign_id);
+    await admin
+      .from("crm_campaigns")
+      .update({
+        status: "sent",
+        sent_at: new Date().toISOString(),
+        recipients_count: recipients.length,
+        delivered_count: delivered,
+      })
+      .eq("id", campaign_id);
 
     await admin.rpc("log_audit", {
       _action: "crm.campaign.sent",
@@ -107,13 +124,17 @@ Deno.serve(async (req) => {
       _meta: { delivered, total: recipients.length, errors_count: errors.length },
     });
 
-    return new Response(JSON.stringify({ delivered, total: recipients.length, errors: errors.slice(0, 10) }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ delivered, total: recipients.length, errors: errors.slice(0, 10) }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
   } catch (e) {
     console.error("send-campaign error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

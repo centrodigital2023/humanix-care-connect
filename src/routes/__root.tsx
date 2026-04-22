@@ -19,7 +19,9 @@ import {
 import appCss from "../styles.css?url";
 
 const FloatingWAChat = lazy(() =>
-  import("@/components/humanix/FloatingWAChat").then((module) => ({ default: module.FloatingWAChat })),
+  import("@/components/humanix/FloatingWAChat").then((module) => ({
+    default: module.FloatingWAChat,
+  })),
 );
 
 function NotFoundComponent() {
@@ -53,7 +55,10 @@ export const Route = createRootRoute({
       { name: "description", content: SITE_DESCRIPTION },
       { name: "author", content: "Humanix" },
       { name: "google-site-verification", content: "ohLJMuczZHl79QIbEcvqP4UgjxZd8LAhhMhWU9IN_mQ" },
-      { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" },
+      {
+        name: "robots",
+        content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
+      },
       { name: "theme-color", content: "#0A192F" },
       { name: "format-detection", content: "telephone=no" },
       { name: "apple-mobile-web-app-title", content: SITE_NAME },

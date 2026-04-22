@@ -16,11 +16,12 @@ const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY") ?? "";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 async function aiReply(userText: string): Promise<string> {
-  if (!LOVABLE_API_KEY) return "¡Hola! Hemos recibido tu mensaje. Un asesor Humanix te responderá en breve.";
+  if (!LOVABLE_API_KEY)
+    return "¡Hola! Hemos recibido tu mensaje. Un asesor Humanix te responderá en breve.";
   try {
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -55,22 +56,19 @@ async function aiReply(userText: string): Promise<string> {
 async function sendWhatsApp(to: string, text: string): Promise<string | null> {
   if (!ACCESS_TOKEN || !PHONE_ID) return null;
   try {
-    const res = await fetch(
-      `https://graph.facebook.com/v21.0/${PHONE_ID}/messages`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${ACCESS_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messaging_product: "whatsapp",
-          to,
-          type: "text",
-          text: { body: text },
-        }),
-      }
-    );
+    const res = await fetch(`https://graph.facebook.com/v21.0/${PHONE_ID}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: text },
+      }),
+    });
     if (!res.ok) {
       console.error("[wa send]", res.status, await res.text());
       return null;
@@ -140,7 +138,7 @@ Deno.serve(async (req) => {
                   last_message_at: new Date().toISOString(),
                   last_message_preview: text.slice(0, 120),
                 },
-                { onConflict: "owner_id,phone" }
+                { onConflict: "owner_id,phone" },
               )
               .select()
               .single();

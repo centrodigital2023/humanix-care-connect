@@ -59,10 +59,7 @@ import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/evaluador")({
   head: () => ({
-    meta: [
-      { title: "Evaluador · Humanix" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Evaluador · Humanix" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: EvaluatorPage,
 });

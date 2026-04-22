@@ -67,8 +67,7 @@ Deno.serve(async (req) => {
           },
           {
             role: "user",
-            content:
-              "Perfil JSON:\n```json\n" + JSON.stringify(profile, null, 2) + "\n```",
+            content: "Perfil JSON:\n```json\n" + JSON.stringify(profile, null, 2) + "\n```",
           },
         ],
         tools: [TOOL],
@@ -105,9 +104,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("rate-suggester error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

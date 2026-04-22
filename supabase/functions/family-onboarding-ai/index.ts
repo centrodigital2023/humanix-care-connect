@@ -9,8 +9,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 const SYSTEM = `Eres el asistente de onboarding de Humanix Colombia.
@@ -106,10 +105,10 @@ Completa lo que puedas inferir con alta confianza y deja en "" lo que no.`;
       );
     }
     if (resp.status === 402) {
-      return new Response(
-        JSON.stringify({ error: "Sin créditos en Lovable AI." }),
-        { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Sin créditos en Lovable AI." }), {
+        status: 402,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
     if (!resp.ok) {
       const t = await resp.text();
@@ -119,9 +118,7 @@ Completa lo que puedas inferir con alta confianza y deja en "" lo que no.`;
 
     const data = await resp.json();
     const call = data?.choices?.[0]?.message?.tool_calls?.[0];
-    const args = call?.function?.arguments
-      ? JSON.parse(call.function.arguments)
-      : {};
+    const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : {};
 
     return new Response(JSON.stringify({ ok: true, data: args }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

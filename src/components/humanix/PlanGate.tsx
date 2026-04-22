@@ -7,12 +7,7 @@
 import { Link } from "@tanstack/react-router";
 import { Lock, Sparkles, Crown, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  FEATURE_MIN_PLAN,
-  PLAN_CATALOG,
-  type PlanFeature,
-  type PlanKey,
-} from "@/lib/plans";
+import { FEATURE_MIN_PLAN, PLAN_CATALOG, type PlanFeature, type PlanKey } from "@/lib/plans";
 import { usePlan } from "@/hooks/use-plan";
 import { useAppUser } from "@/hooks/use-app-user";
 
@@ -33,8 +28,7 @@ export function PlanGate({ feature, min, children, fallback }: GateProps) {
   if (allowed) return <>{children}</>;
 
   if (fallback !== undefined) return <>{fallback}</>;
-  const minPlan: PlanKey =
-    min ?? (feature ? FEATURE_MIN_PLAN[feature] : "essential_monthly");
+  const minPlan: PlanKey = min ?? (feature ? FEATURE_MIN_PLAN[feature] : "essential_monthly");
   return <UpgradeCta min={minPlan} />;
 }
 

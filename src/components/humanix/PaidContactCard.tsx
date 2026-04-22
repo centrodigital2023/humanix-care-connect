@@ -4,13 +4,7 @@
 // para resguardar el teléfono detrás de RLS server-side.
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  MessageSquare,
-  Phone,
-  Loader2,
-  ShieldCheck,
-  ExternalLink,
-} from "lucide-react";
+import { MessageSquare, Phone, Loader2, ShieldCheck, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -58,9 +52,12 @@ export function PaidContactCard({ bookingId, peerName, isPaid, amountCOP }: Prop
   const openInbox = async () => {
     setOpeningInbox(true);
     try {
-      const { data, error } = await supabase.rpc("get_or_create_booking_conversation" as never, {
-        _booking_id: bookingId,
-      } as never);
+      const { data, error } = await supabase.rpc(
+        "get_or_create_booking_conversation" as never,
+        {
+          _booking_id: bookingId,
+        } as never,
+      );
       if (error) throw error;
       const convId = typeof data === "string" ? data : (data as { id?: string })?.id;
       if (!convId) throw new Error("No se pudo abrir la conversación");
@@ -75,9 +72,12 @@ export function PaidContactCard({ bookingId, peerName, isPaid, amountCOP }: Prop
   const openWhatsApp = async () => {
     setRevealing(true);
     try {
-      const { data, error } = await supabase.rpc("get_booking_contact" as never, {
-        _booking_id: bookingId,
-      } as never);
+      const { data, error } = await supabase.rpc(
+        "get_booking_contact" as never,
+        {
+          _booking_id: bookingId,
+        } as never,
+      );
       if (error) throw error;
       const rows = (data ?? []) as Array<{
         peer_id: string;
@@ -113,12 +113,10 @@ export function PaidContactCard({ bookingId, peerName, isPaid, amountCOP }: Prop
           <p className="text-xs uppercase tracking-wider text-biosensor font-semibold">
             Contacto habilitado
           </p>
-          <p className="font-display text-base font-bold mt-0.5">
-            Comunícate con {peerName}
-          </p>
+          <p className="font-display text-base font-bold mt-0.5">Comunícate con {peerName}</p>
           <p className="text-xs text-muted-foreground mt-1">
-            El pago está confirmado. Usa el chat interno para quedar registro auditable o
-            WhatsApp para coordinación inmediata.
+            El pago está confirmado. Usa el chat interno para quedar registro auditable o WhatsApp
+            para coordinación inmediata.
           </p>
         </div>
       </div>
@@ -145,11 +143,7 @@ export function PaidContactCard({ bookingId, peerName, isPaid, amountCOP }: Prop
           disabled={revealing}
           className="justify-center"
         >
-          {revealing ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Phone className="h-4 w-4" />
-          )}
+          {revealing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Phone className="h-4 w-4" />}
           WhatsApp
           <ExternalLink className="h-3 w-3 opacity-60" />
         </Button>

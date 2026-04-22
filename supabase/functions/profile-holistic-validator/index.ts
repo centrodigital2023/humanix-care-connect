@@ -6,7 +6,8 @@ const TOOL = {
   type: "function",
   function: {
     name: "validate_profile",
-    description: "Evalúa si el perfil profesional puede publicarse, detectando errores graves y advertencias menores.",
+    description:
+      "Evalúa si el perfil profesional puede publicarse, detectando errores graves y advertencias menores.",
     parameters: {
       type: "object",
       properties: {
@@ -23,7 +24,8 @@ const TOOL = {
             required: ["field", "message"],
             additionalProperties: false,
           },
-          description: "Errores que BLOQUEAN publicación: documento falso, datos contradictorios graves, RETHUS no coincide, faltan obligatorios.",
+          description:
+            "Errores que BLOQUEAN publicación: documento falso, datos contradictorios graves, RETHUS no coincide, faltan obligatorios.",
         },
         warnings: {
           type: "array",
@@ -55,7 +57,8 @@ Deno.serve(async (req) => {
     const { profile, documents, references } = await req.json();
     if (!profile) {
       return new Response(JSON.stringify({ error: "profile requerido" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -71,12 +74,15 @@ Deno.serve(async (req) => {
       extracted: d.ai_extracted,
     }));
 
-    const refsByType = (references ?? []).reduce((acc: Record<string, unknown[]>, r: Record<string, unknown>) => {
-      const k = String(r.ref_type ?? "other");
-      acc[k] = acc[k] ?? [];
-      acc[k].push({ name: r.full_name, phone: r.phone, relation: r.relation });
-      return acc;
-    }, {});
+    const refsByType = (references ?? []).reduce(
+      (acc: Record<string, unknown[]>, r: Record<string, unknown>) => {
+        const k = String(r.ref_type ?? "other");
+        acc[k] = acc[k] ?? [];
+        acc[k].push({ name: r.full_name, phone: r.phone, relation: r.relation });
+        return acc;
+      },
+      {},
+    );
 
     const REQUIRED_DOCS = ["cv", "id_document", "utility_bill"];
     const has = (t: string) =>
@@ -119,24 +125,31 @@ Deno.serve(async (req) => {
     if (!resp.ok) {
       if (resp.status === 429 || resp.status === 402) {
         return new Response(
-          JSON.stringify({ error: resp.status === 429 ? "Demasiadas solicitudes." : "Créditos IA agotados." }),
+          JSON.stringify({
+            error: resp.status === 429 ? "Demasiadas solicitudes." : "Créditos IA agotados.",
+          }),
           { status: resp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
       const t = await resp.text();
       console.error("gateway:", resp.status, t);
       return new Response(JSON.stringify({ error: "Error IA" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
-    const validation = call ? JSON.parse(call.function.arguments || "{}") : {
-      is_publishable: false, score: 0,
-      critical_errors: [{ field: "system", message: "No se pudo evaluar." }],
-      warnings: [], ai_summary: "Sin respuesta de IA.",
-    };
+    const validation = call
+      ? JSON.parse(call.function.arguments || "{}")
+      : {
+          is_publishable: false,
+          score: 0,
+          critical_errors: [{ field: "system", message: "No se pudo evaluar." }],
+          warnings: [],
+          ai_summary: "Sin respuesta de IA.",
+        };
 
     return new Response(JSON.stringify({ validation }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -144,7 +157,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("validator:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

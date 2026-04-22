@@ -75,44 +75,38 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
-    const resp = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "Eres un asistente que estructura información de profesionales de la salud en Colombia. " +
-                "Extrae los campos solicitados a partir del texto del usuario. " +
-                "Si una tarifa se da en miles ('25 mil'), conviértela a número. " +
-                "Si no se menciona algo, omítelo. NO inventes datos.",
-            },
-            { role: "user", content: text },
-          ],
-          tools: [TOOL],
-          tool_choice: {
-            type: "function",
-            function: { name: "save_professional_profile" },
-          },
-        }),
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Eres un asistente que estructura información de profesionales de la salud en Colombia. " +
+              "Extrae los campos solicitados a partir del texto del usuario. " +
+              "Si una tarifa se da en miles ('25 mil'), conviértela a número. " +
+              "Si no se menciona algo, omítelo. NO inventes datos.",
+          },
+          { role: "user", content: text },
+        ],
+        tools: [TOOL],
+        tool_choice: {
+          type: "function",
+          function: { name: "save_professional_profile" },
+        },
+      }),
+    });
 
     if (!resp.ok) {
       if (resp.status === 429 || resp.status === 402) {
         return new Response(
           JSON.stringify({
-            error:
-              resp.status === 429
-                ? "Demasiadas solicitudes."
-                : "Créditos IA agotados.",
+            error: resp.status === 429 ? "Demasiadas solicitudes." : "Créditos IA agotados.",
           }),
           { status: resp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
@@ -138,9 +132,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("onboarding-extractor error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

@@ -25,7 +25,9 @@ function ContactoPage() {
   });
   const [enviado, setEnviado] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -58,7 +60,8 @@ function ContactoPage() {
               ¿Cómo podemos <span className="text-gradient-bio">ayudarte</span>?
             </h1>
             <p className="mt-5 max-w-3xl text-base sm:text-lg text-cyber-foreground/75 leading-relaxed">
-              Nos encantaría saber de ti. Nuestro equipo está disponible para responder tus preguntas, escuchar tus sugerencias y ayudarte.
+              Nos encantaría saber de ti. Nuestro equipo está disponible para responder tus
+              preguntas, escuchar tus sugerencias y ayudarte.
             </p>
           </div>
         </section>
@@ -80,7 +83,10 @@ function ContactoPage() {
                 <div>
                   <h3 className="font-bold text-foreground mb-1">Email</h3>
                   <p className="text-muted-foreground text-sm">
-                    <a href="mailto:contacto@humanix.co" className="hover:text-biosensor transition-colors">
+                    <a
+                      href="mailto:contacto@humanix.co"
+                      className="hover:text-biosensor transition-colors"
+                    >
                       contacto@humanix.co
                     </a>
                   </p>
@@ -113,9 +119,7 @@ function ContactoPage() {
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground mb-1">Ubicación</h3>
-                  <p className="text-muted-foreground text-sm">
-                    Bogotá D.C., Colombia
-                  </p>
+                  <p className="text-muted-foreground text-sm">Bogotá D.C., Colombia</p>
                   <p className="text-muted-foreground text-xs mt-1">Centro de Operaciones</p>
                 </div>
               </div>
@@ -129,7 +133,8 @@ function ContactoPage() {
                 <div>
                   <h3 className="font-bold text-foreground mb-1">Horario</h3>
                   <p className="text-muted-foreground text-sm">
-                    Lunes a Viernes: 8:00 AM - 6:00 PM<br />
+                    Lunes a Viernes: 8:00 AM - 6:00 PM
+                    <br />
                     Sábados: 9:00 AM - 2:00 PM
                   </p>
                   <p className="text-muted-foreground text-xs mt-1">Hora Colombia (UTC-5)</p>
@@ -140,16 +145,28 @@ function ContactoPage() {
                 <h3 className="font-bold text-foreground mb-3">Departamentos</h3>
                 <div className="space-y-2 text-sm">
                   <p className="text-muted-foreground">
-                    <strong>Soporte Técnico:</strong> <a href="mailto:support@humanix.co" className="text-biosensor hover:underline">support@humanix.co</a>
+                    <strong>Soporte Técnico:</strong>{" "}
+                    <a href="mailto:support@humanix.co" className="text-biosensor hover:underline">
+                      support@humanix.co
+                    </a>
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>Prensa:</strong> <a href="mailto:press@humanix.co" className="text-biosensor hover:underline">press@humanix.co</a>
+                    <strong>Prensa:</strong>{" "}
+                    <a href="mailto:press@humanix.co" className="text-biosensor hover:underline">
+                      press@humanix.co
+                    </a>
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>Empleos:</strong> <a href="mailto:jobs@humanix.co" className="text-biosensor hover:underline">jobs@humanix.co</a>
+                    <strong>Empleos:</strong>{" "}
+                    <a href="mailto:jobs@humanix.co" className="text-biosensor hover:underline">
+                      jobs@humanix.co
+                    </a>
                   </p>
                   <p className="text-muted-foreground">
-                    <strong>Legal:</strong> <a href="mailto:legal@humanix.co" className="text-biosensor hover:underline">legal@humanix.co</a>
+                    <strong>Legal:</strong>{" "}
+                    <a href="mailto:legal@humanix.co" className="text-biosensor hover:underline">
+                      legal@humanix.co
+                    </a>
                   </p>
                 </div>
               </div>
@@ -158,10 +175,13 @@ function ContactoPage() {
             {/* Formulario de Contacto */}
             <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[var(--shadow-card)]">
               <h2 className="text-2xl font-bold text-foreground mb-6">Envíanos un mensaje</h2>
-              
+
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="nombre" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="nombre"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Nombre completo
                   </label>
                   <input
@@ -193,7 +213,10 @@ function ContactoPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="asunto" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="asunto"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Asunto
                   </label>
                   <select
@@ -215,7 +238,10 @@ function ContactoPage() {
                 </div>
 
                 <div>
-                  <label htmlFor="mensaje" className="block text-sm font-medium text-foreground mb-2">
+                  <label
+                    htmlFor="mensaje"
+                    className="block text-sm font-medium text-foreground mb-2"
+                  >
                     Mensaje
                   </label>
                   <textarea
@@ -244,7 +270,11 @@ function ContactoPage() {
                 </button>
 
                 <p className="text-xs text-muted-foreground text-center">
-                  Protegemos tu privacidad. Lee nuestra <a href="/privacidad" className="text-biosensor hover:underline">Política de Privacidad</a>.
+                  Protegemos tu privacidad. Lee nuestra{" "}
+                  <a href="/privacidad" className="text-biosensor hover:underline">
+                    Política de Privacidad
+                  </a>
+                  .
                 </p>
               </form>
             </div>
@@ -255,9 +285,13 @@ function ContactoPage() {
           <div className="rounded-3xl border border-border bg-card p-8 text-center">
             <h2 className="text-2xl font-bold text-foreground mb-4">¿Eres profesional de salud?</h2>
             <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Si eres médico, enfermero, psicólogo u otro profesional de salud y quieres unirte a Humanix, tenemos un proceso de registro especial para ti.
+              Si eres médico, enfermero, psicólogo u otro profesional de salud y quieres unirte a
+              Humanix, tenemos un proceso de registro especial para ti.
             </p>
-            <a href="#" className="inline-flex items-center gap-2 px-6 py-3 bg-biosensor text-white rounded-lg font-medium hover:bg-biosensor/90 transition-colors">
+            <a
+              href="#"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-biosensor text-white rounded-lg font-medium hover:bg-biosensor/90 transition-colors"
+            >
               Registrarme como Profesional
             </a>
           </div>

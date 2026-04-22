@@ -10,9 +10,11 @@ Deno.serve(async (req) => {
 
   try {
     const { offer_id } = await req.json();
-    if (!offer_id) return new Response(JSON.stringify({ error: "offer_id requerido" }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    if (!offer_id)
+      return new Response(JSON.stringify({ error: "offer_id requerido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -21,13 +23,17 @@ Deno.serve(async (req) => {
     const { data: o } = await admin
       .from("job_offers")
       .select("id,title,description,specialty_required,city,modality,amount,requirements,posted_by")
-      .eq("id", offer_id).maybeSingle();
-    if (!o) return new Response(JSON.stringify({ error: "Oferta no encontrada" }), {
-      status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+      .eq("id", offer_id)
+      .maybeSingle();
+    if (!o)
+      return new Response(JSON.stringify({ error: "Oferta no encontrada" }), {
+        status: 404,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     if (o.posted_by !== auth.userId) {
       return new Response(JSON.stringify({ error: "No autorizado" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -42,13 +48,19 @@ Deno.serve(async (req) => {
     ].join("\n");
 
     const embedding = embedText(text);
-    const { error } = await admin
-      .from("offer_embeddings")
-      .upsert({ offer_id: o.id, embedding, source_text: text.slice(0, 4000), updated_at: new Date().toISOString() });
+    const { error } = await admin.from("offer_embeddings").upsert({
+      offer_id: o.id,
+      embedding,
+      source_text: text.slice(0, 4000),
+      updated_at: new Date().toISOString(),
+    });
     if (error) throw error;
 
     await admin.from("ai_credits_ledger").insert({
-      user_id: auth.userId, feature: "embed-offer", credits_used: 1, meta: { offer_id: o.id },
+      user_id: auth.userId,
+      feature: "embed-offer",
+      credits_used: 1,
+      meta: { offer_id: o.id },
     });
 
     return new Response(JSON.stringify({ ok: true }), {
@@ -56,9 +68,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("embed-offer error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

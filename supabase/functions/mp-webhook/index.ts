@@ -45,8 +45,10 @@ Deno.serve(async (req) => {
     await fetch(`${SUPABASE_URL}/rest/v1/mp_payments`, {
       method: "POST",
       headers: {
-        apikey: SRK, Authorization: `Bearer ${SRK}`,
-        "Content-Type": "application/json", Prefer: "resolution=merge-duplicates",
+        apikey: SRK,
+        Authorization: `Bearer ${SRK}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
         user_id: userId,
@@ -67,7 +69,9 @@ Deno.serve(async (req) => {
       await fetch(`${SUPABASE_URL}/rest/v1/mp_subscriptions?user_id=eq.${userId}`, {
         method: "PATCH",
         headers: {
-          apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json",
+          apikey: SRK,
+          Authorization: `Bearer ${SRK}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           status: "active",
@@ -80,9 +84,14 @@ Deno.serve(async (req) => {
       // Notificación in-app
       await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
         method: "POST",
-        headers: { apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json" },
+        headers: {
+          apikey: SRK,
+          Authorization: `Bearer ${SRK}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          user_id: userId, type: "payment_approved",
+          user_id: userId,
+          type: "payment_approved",
           title: "✅ Suscripción Humanix activa",
           body: "Tu suscripción mensual fue aprobada. ¡Ya puedes usar todas las funciones premium!",
           link: "/dashboard",
@@ -92,19 +101,27 @@ Deno.serve(async (req) => {
       await fetch(`${SUPABASE_URL}/rest/v1/mp_subscriptions?user_id=eq.${userId}`, {
         method: "PATCH",
         headers: {
-          apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json",
+          apikey: SRK,
+          Authorization: `Bearer ${SRK}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ status }),
       });
       await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
         method: "POST",
-        headers: { apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json" },
+        headers: {
+          apikey: SRK,
+          Authorization: `Bearer ${SRK}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          user_id: userId, type: `payment_${status}`,
+          user_id: userId,
+          type: `payment_${status}`,
           title: status === "rejected" ? "❌ Pago rechazado" : "Suscripción cancelada",
-          body: status === "rejected"
-            ? "No pudimos procesar tu pago con Mercado Pago. Puedes reintentar desde /planes."
-            : "Tu suscripción fue cancelada. Puedes reactivarla cuando quieras.",
+          body:
+            status === "rejected"
+              ? "No pudimos procesar tu pago con Mercado Pago. Puedes reintentar desde /planes."
+              : "Tu suscripción fue cancelada. Puedes reactivarla cuando quieras.",
           link: "/planes",
         }),
       });

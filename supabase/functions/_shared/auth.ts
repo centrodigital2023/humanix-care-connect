@@ -5,8 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 export const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 export type AuthResult =
@@ -18,10 +17,10 @@ export async function requireUser(req: Request): Promise<AuthResult> {
   if (!authHeader.startsWith("Bearer ")) {
     return {
       ok: false,
-      response: new Response(
-        JSON.stringify({ error: "No autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      ),
+      response: new Response(JSON.stringify({ error: "No autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }),
     };
   }
   const token = authHeader.slice("Bearer ".length).trim();
@@ -30,10 +29,10 @@ export async function requireUser(req: Request): Promise<AuthResult> {
   if (!supabaseUrl || !supabaseAnon) {
     return {
       ok: false,
-      response: new Response(
-        JSON.stringify({ error: "Configuración de auth incompleta" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      ),
+      response: new Response(JSON.stringify({ error: "Configuración de auth incompleta" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }),
     };
   }
   const supabase = createClient(supabaseUrl, supabaseAnon, {
@@ -43,10 +42,10 @@ export async function requireUser(req: Request): Promise<AuthResult> {
   if (error || !data?.user) {
     return {
       ok: false,
-      response: new Response(
-        JSON.stringify({ error: "No autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      ),
+      response: new Response(JSON.stringify({ error: "No autorizado" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }),
     };
   }
   return { ok: true, userId: data.user.id, token };

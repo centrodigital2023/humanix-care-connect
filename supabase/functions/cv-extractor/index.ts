@@ -26,7 +26,8 @@ const TOOL = {
         service_cities: { type: "array", items: { type: "string" } },
         bio: {
           type: "string",
-          description: "Bio profesional 2-3 frases en primera persona, en español, cálida y precisa.",
+          description:
+            "Bio profesional 2-3 frases en primera persona, en español, cálida y precisa.",
         },
         work_experience: {
           type: "array",
@@ -209,9 +210,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("cv-extractor error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

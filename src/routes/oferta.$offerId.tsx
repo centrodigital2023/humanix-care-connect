@@ -86,8 +86,7 @@ export const Route = createFileRoute("/oferta/$offerId")({
         { property: "og:title", content: `Oferta de empleo en salud · ${SITE_NAME}` },
         {
           property: "og:description",
-          content:
-            "Aplica a esta oferta de talento humano en salud verificada en Colombia.",
+          content: "Aplica a esta oferta de talento humano en salud verificada en Colombia.",
         },
         { name: "twitter:card", content: "summary_large_image" },
       ],
@@ -136,7 +135,10 @@ function jobPostingLd(offer: Offer): Record<string, unknown> {
     },
     hiringOrganization: {
       "@type": "Organization",
-      name: offer.poster_type === "institution" ? "Institución de salud verificada" : "Familia verificada",
+      name:
+        offer.poster_type === "institution"
+          ? "Institución de salud verificada"
+          : "Familia verificada",
       sameAs: SITE_URL,
     },
     jobLocation: {

@@ -97,10 +97,7 @@ function buildClient(config: HumanixAiConfig) {
     return config.accessToken;
   }
 
-  async function call<TBody, TRes>(
-    fnName: string,
-    opts: FetchOpts<TBody> = {},
-  ): Promise<TRes> {
+  async function call<TBody, TRes>(fnName: string, opts: FetchOpts<TBody> = {}): Promise<TRes> {
     const token = await resolveToken();
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
@@ -210,10 +207,7 @@ export function createHumanixAi(config: HumanixAiConfig): HumanixAiClient {
         raw: true,
       });
       if (!res.ok || !res.body) {
-        throw new HumanixAiError(
-          `humanix-assistant respondió ${res.status}`,
-          res.status,
-        );
+        throw new HumanixAiError(`humanix-assistant respondió ${res.status}`, res.status);
       }
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
@@ -245,11 +239,9 @@ export function createHumanixAi(config: HumanixAiConfig): HumanixAiClient {
       return full;
     },
 
-    suggestRates: ({ profile }) =>
-      call("rate-suggester", { body: { profile } }),
+    suggestRates: ({ profile }) => call("rate-suggester", { body: { profile } }),
 
-    matchOffers: ({ profile, offers }) =>
-      call("match-offers", { body: { profile, offers } }),
+    matchOffers: ({ profile, offers }) => call("match-offers", { body: { profile, offers } }),
 
     semanticMatch: ({ mode, id, limit, minSimilarity }) =>
       call("semantic-match", {
@@ -258,8 +250,7 @@ export function createHumanixAi(config: HumanixAiConfig): HumanixAiClient {
 
     embedText: ({ text }) => call("embed-text", { body: { text } }),
 
-    classifyPqrs: ({ ticket_id }) =>
-      call("pqrs-classifier", { body: { ticket_id } }),
+    classifyPqrs: ({ ticket_id }) => call("pqrs-classifier", { body: { ticket_id } }),
 
     bioSummary: ({ text }) => call("bio-summary", { body: { text } }),
 
@@ -268,8 +259,7 @@ export function createHumanixAi(config: HumanixAiConfig): HumanixAiClient {
     verifyDocument: ({ document_url, document_type }) =>
       call("document-verifier", { body: { document_url, document_type } }),
 
-    socialTrustScore: ({ user_id }) =>
-      call("social-trust-score", { body: { user_id } }),
+    socialTrustScore: ({ user_id }) => call("social-trust-score", { body: { user_id } }),
 
     raw: (fnName, body, signal) => call(fnName, { body, signal }),
   };
@@ -278,9 +268,7 @@ export function createHumanixAi(config: HumanixAiConfig): HumanixAiClient {
 // ---------- Instancia por defecto (uso dentro de la app) ----------
 
 const SUPABASE_URL =
-  (typeof import.meta !== "undefined" &&
-    (import.meta as ImportMeta).env?.VITE_SUPABASE_URL) ||
-  "";
+  (typeof import.meta !== "undefined" && (import.meta as ImportMeta).env?.VITE_SUPABASE_URL) || "";
 const SUPABASE_ANON =
   (typeof import.meta !== "undefined" &&
     (import.meta as ImportMeta).env?.VITE_SUPABASE_PUBLISHABLE_KEY) ||

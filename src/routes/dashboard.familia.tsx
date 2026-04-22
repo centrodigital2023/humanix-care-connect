@@ -829,9 +829,7 @@ function FamilyDashboard() {
               Ver comparativa completa →
             </Link>
           </div>
-          {user?.id && (
-            <MercadoPagoSubscription userId={user.id} defaultPlan="essential_monthly" />
-          )}
+          {user?.id && <MercadoPagoSubscription userId={user.id} defaultPlan="essential_monthly" />}
         </section>
       </div>
     </AppShell>

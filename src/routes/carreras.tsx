@@ -32,7 +32,9 @@ function CarrerasPage() {
           <ul className="space-y-3">
             <li className="flex gap-3">
               <span className="text-biosensor font-bold">→</span>
-              <span className="text-muted-foreground">Impacto social real en millones de colombianos</span>
+              <span className="text-muted-foreground">
+                Impacto social real en millones de colombianos
+              </span>
             </li>
             <li className="flex gap-3">
               <span className="text-biosensor font-bold">→</span>
@@ -40,7 +42,9 @@ function CarrerasPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-biosensor font-bold">→</span>
-              <span className="text-muted-foreground">Oportunidades de crecimiento profesional</span>
+              <span className="text-muted-foreground">
+                Oportunidades de crecimiento profesional
+              </span>
             </li>
             <li className="flex gap-3">
               <span className="text-biosensor font-bold">→</span>
@@ -82,15 +86,11 @@ function CarrerasPage() {
             </div>
             <div className="bg-biosensor/5 border border-biosensor/20 rounded-xl p-4">
               <h3 className="font-bold text-foreground mb-2">Operaciones</h3>
-              <p className="text-sm text-muted-foreground">
-                Supply Chain, Finance, HR, Legal
-              </p>
+              <p className="text-sm text-muted-foreground">Supply Chain, Finance, HR, Legal</p>
             </div>
             <div className="bg-biosensor/5 border border-biosensor/20 rounded-xl p-4">
               <h3 className="font-bold text-foreground mb-2">Sostenibilidad</h3>
-              <p className="text-sm text-muted-foreground">
-                Impact Specialist, Compliance Officer
-              </p>
+              <p className="text-sm text-muted-foreground">Impact Specialist, Compliance Officer</p>
             </div>
           </div>
         </div>
@@ -141,35 +141,49 @@ function CarrerasPage() {
           <h2 className="text-2xl font-bold text-foreground mb-4">Proceso de Selección</h2>
           <div className="space-y-4">
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">1</div>
+              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">
+                1
+              </div>
               <div>
                 <h3 className="font-bold text-foreground">Revisión de candidatura</h3>
                 <p className="text-sm text-muted-foreground">Evaluamos tu perfil y experiencia</p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">2</div>
+              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">
+                2
+              </div>
               <div>
                 <h3 className="font-bold text-foreground">Entrevista inicial</h3>
-                <p className="text-sm text-muted-foreground">Conversamos sobre tu experiencia y motivación</p>
+                <p className="text-sm text-muted-foreground">
+                  Conversamos sobre tu experiencia y motivación
+                </p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">3</div>
+              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">
+                3
+              </div>
               <div>
                 <h3 className="font-bold text-foreground">Prueba técnica/práctica</h3>
                 <p className="text-sm text-muted-foreground">Demostramos nuestro trabajo juntos</p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">4</div>
+              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">
+                4
+              </div>
               <div>
                 <h3 className="font-bold text-foreground">Entrevista con liderazgo</h3>
-                <p className="text-sm text-muted-foreground">Conoces al equipo y discutimos visión</p>
+                <p className="text-sm text-muted-foreground">
+                  Conoces al equipo y discutimos visión
+                </p>
               </div>
             </div>
             <div className="flex gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">5</div>
+              <div className="flex-shrink-0 w-8 h-8 bg-biosensor/20 text-biosensor rounded-full flex items-center justify-center font-bold text-sm">
+                5
+              </div>
               <div>
                 <h3 className="font-bold text-foreground">Oferta</h3>
                 <p className="text-sm text-muted-foreground">¡Bienvenido al equipo!</p>
@@ -180,10 +194,17 @@ function CarrerasPage() {
 
         <div className="mt-8 pt-8 border-t border-border text-center">
           <p className="text-muted-foreground mb-4">
-            ¿Viste una posición que te interesa? Envía tu CV a <a href="mailto:jobs@humanix.co" className="text-biosensor font-medium hover:underline">jobs@humanix.co</a>
+            ¿Viste una posición que te interesa? Envía tu CV a{" "}
+            <a href="mailto:jobs@humanix.co" className="text-biosensor font-medium hover:underline">
+              jobs@humanix.co
+            </a>
           </p>
           <p className="text-sm text-muted-foreground">
-            O <a href="/contacto" className="text-biosensor font-medium hover:underline">contactanos</a> si tienes preguntas.
+            O{" "}
+            <a href="/contacto" className="text-biosensor font-medium hover:underline">
+              contactanos
+            </a>{" "}
+            si tienes preguntas.
           </p>
         </div>
       </div>

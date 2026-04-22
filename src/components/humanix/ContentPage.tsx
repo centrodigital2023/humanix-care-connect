@@ -12,7 +12,14 @@ interface ContentPageProps {
   children: ReactNode;
 }
 
-export function ContentPage({ icon: Icon, badge, title, subtitle, description, children }: ContentPageProps) {
+export function ContentPage({
+  icon: Icon,
+  badge,
+  title,
+  subtitle,
+  description,
+  children,
+}: ContentPageProps) {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />

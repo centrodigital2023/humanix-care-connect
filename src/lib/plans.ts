@@ -4,11 +4,7 @@
 //   - supabase/functions/mp-create-subscription/index.ts (pricing server-side)
 //   - supabase/migrations/.../plans_logic.sql (plan_tier_rank)
 
-export type PlanKey =
-  | "free"
-  | "essential_monthly"
-  | "pro_monthly"
-  | "institution_monthly";
+export type PlanKey = "free" | "essential_monthly" | "pro_monthly" | "institution_monthly";
 
 export type PlanFeature =
   | "profile"
@@ -93,12 +89,7 @@ export const PLAN_CATALOG: Record<PlanKey, PlanDef> = {
     priceLabel: "COP 29.000",
     priceNote: "/mes",
     audience: "Profesionales que quieren visibilidad máxima.",
-    features: [
-      "visibility_boost",
-      "career_coach",
-      "ai_message_suggestions",
-      "priority_antifraud",
-    ],
+    features: ["visibility_boost", "career_coach", "ai_message_suggestions", "priority_antifraud"],
     featuresLabel: [
       "Todo lo del Esencial",
       "Boost de visibilidad en búsquedas",

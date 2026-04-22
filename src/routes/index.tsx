@@ -17,7 +17,9 @@ import { LaunchBar } from "@/components/humanix/LaunchBar";
 import { buildSeo, faqLd, jsonLdString, SITE_NAME } from "@/lib/seo";
 
 const HumanixAssistant = lazy(() =>
-  import("@/components/humanix/HumanixAssistant").then((module) => ({ default: module.HumanixAssistant })),
+  import("@/components/humanix/HumanixAssistant").then((module) => ({
+    default: module.HumanixAssistant,
+  })),
 );
 const StickyCTA = lazy(() =>
   import("@/components/humanix/StickyCTA").then((module) => ({ default: module.StickyCTA })),

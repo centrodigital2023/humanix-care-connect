@@ -7,8 +7,7 @@ const TOOL = {
   type: "function",
   function: {
     name: "save_bio_summary",
-    description:
-      "Genera bio profesional (publicable) y resumen IA detallado a partir del perfil.",
+    description: "Genera bio profesional (publicable) y resumen IA detallado a partir del perfil.",
     parameters: {
       type: "object",
       properties: {
@@ -109,9 +108,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("bio-summary error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

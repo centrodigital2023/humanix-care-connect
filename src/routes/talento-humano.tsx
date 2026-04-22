@@ -28,10 +28,7 @@ import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/talento-humano")({
   head: () => ({
-    meta: [
-      { title: "Talento Humano · Humanix" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Talento Humano · Humanix" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: HRPage,
 });

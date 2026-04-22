@@ -17,7 +17,14 @@ const TOOL = {
         ai_score: { type: "number", description: "0-100 calidad del banner" },
         recommendation: { type: "string", description: "Justificación ≤200 chars" },
       },
-      required: ["title_suggestion", "description_suggestion", "cta_suggestion", "audience", "ai_score", "recommendation"],
+      required: [
+        "title_suggestion",
+        "description_suggestion",
+        "cta_suggestion",
+        "audience",
+        "ai_score",
+        "recommendation",
+      ],
       additionalProperties: false,
     },
   },
@@ -30,25 +37,44 @@ Deno.serve(async (req) => {
 
   try {
     const { title, description, cta_label, target_intent } = await req.json();
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
     // Validar staff
-    const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", auth.userId);
-    const isStaff = (roles ?? []).some((r) => ["superadmin", "hr_staff", "evaluator"].includes(r.role));
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId);
+    const isStaff = (roles ?? []).some((r) =>
+      ["superadmin", "hr_staff", "evaluator"].includes(r.role),
+    );
     if (!isStaff) {
       return new Response(JSON.stringify({ error: "No autorizado" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")!}`, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")!}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "Eres un copywriter senior de marketing digital para Humanix, plataforma de cuidadores de salud en Colombia. Genera copy persuasivo, claro y empático en español neutro colombiano. CTA ≤4 palabras." },
-          { role: "user", content: `Banner actual:\nTítulo: ${title || "(vacío)"}\nDescripción: ${description || "(vacía)"}\nCTA: ${cta_label || "(vacío)"}\nIntención: ${target_intent || "promoción general"}` },
+          {
+            role: "system",
+            content:
+              "Eres un copywriter senior de marketing digital para Humanix, plataforma de cuidadores de salud en Colombia. Genera copy persuasivo, claro y empático en español neutro colombiano. CTA ≤4 palabras.",
+          },
+          {
+            role: "user",
+            content: `Banner actual:\nTítulo: ${title || "(vacío)"}\nDescripción: ${description || "(vacía)"}\nCTA: ${cta_label || "(vacío)"}\nIntención: ${target_intent || "promoción general"}`,
+          },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "recommend_ad" } },
@@ -57,9 +83,15 @@ Deno.serve(async (req) => {
 
     if (!aiResp.ok) {
       if (aiResp.status === 429 || aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: aiResp.status === 429 ? "Demasiadas solicitudes" : "Créditos IA agotados" }), {
-          status: aiResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error: aiResp.status === 429 ? "Demasiadas solicitudes" : "Créditos IA agotados",
+          }),
+          {
+            status: aiResp.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
       throw new Error("AI error");
     }
@@ -69,7 +101,9 @@ Deno.serve(async (req) => {
     const parsed = call ? JSON.parse(call.function.arguments || "{}") : null;
     if (!parsed) throw new Error("Sin recomendación");
 
-    await admin.from("ai_credits_ledger").insert({ user_id: auth.userId, feature: "ad-recommender", credits_used: 1 });
+    await admin
+      .from("ai_credits_ledger")
+      .insert({ user_id: auth.userId, feature: "ad-recommender", credits_used: 1 });
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,7 +111,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     console.error("ad-recommender error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });

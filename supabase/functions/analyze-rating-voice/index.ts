@@ -23,66 +23,67 @@ Deno.serve(async (req) => {
 
     const dataUrl = `data:${mt};base64,${audio_base64}`;
 
-    const upstream = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "Eres un asistente que escucha valoraciones de servicios de cuidado en salud en Colombia. " +
-                "Transcribe en español neutro y clasifica el sentimiento. Sé estricto: si hay quejas, " +
-                "trato inadecuado, demoras graves, alertas de seguridad o incumplimientos, marca alert=true.",
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "text",
-                  text: "Transcribe este audio de valoración y devuelve el análisis estructurado.",
-                },
-                {
-                  type: "input_audio",
-                  input_audio: { data: dataUrl, format: mt.includes("mp4") ? "mp4" : mt.includes("webm") ? "webm" : "wav" },
-                },
-              ],
-            },
-          ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "save_rating_analysis",
-                description: "Devuelve transcripción y análisis de sentimiento.",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    transcript: { type: "string", description: "Transcripción literal en español." },
-                    sentiment: { type: "string", enum: ["positive", "neutral", "negative"] },
-                    score: { type: "number", description: "Confianza 0..1 del sentimiento." },
-                    summary: { type: "string", description: "Resumen en 1-2 frases." },
-                    alert: {
-                      type: "boolean",
-                      description: "true si hay riesgo, queja grave o señales que requieran revisión del superadmin.",
-                    },
-                  },
-                  required: ["transcript", "sentiment", "score", "summary", "alert"],
-                  additionalProperties: false,
+    const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Eres un asistente que escucha valoraciones de servicios de cuidado en salud en Colombia. " +
+              "Transcribe en español neutro y clasifica el sentimiento. Sé estricto: si hay quejas, " +
+              "trato inadecuado, demoras graves, alertas de seguridad o incumplimientos, marca alert=true.",
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "Transcribe este audio de valoración y devuelve el análisis estructurado.",
+              },
+              {
+                type: "input_audio",
+                input_audio: {
+                  data: dataUrl,
+                  format: mt.includes("mp4") ? "mp4" : mt.includes("webm") ? "webm" : "wav",
                 },
               },
+            ],
+          },
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "save_rating_analysis",
+              description: "Devuelve transcripción y análisis de sentimiento.",
+              parameters: {
+                type: "object",
+                properties: {
+                  transcript: { type: "string", description: "Transcripción literal en español." },
+                  sentiment: { type: "string", enum: ["positive", "neutral", "negative"] },
+                  score: { type: "number", description: "Confianza 0..1 del sentimiento." },
+                  summary: { type: "string", description: "Resumen en 1-2 frases." },
+                  alert: {
+                    type: "boolean",
+                    description:
+                      "true si hay riesgo, queja grave o señales que requieran revisión del superadmin.",
+                  },
+                },
+                required: ["transcript", "sentiment", "score", "summary", "alert"],
+                additionalProperties: false,
+              },
             },
-          ],
-          tool_choice: { type: "function", function: { name: "save_rating_analysis" } },
-        }),
-      },
-    );
+          },
+        ],
+        tool_choice: { type: "function", function: { name: "save_rating_analysis" } },
+      }),
+    });
 
     if (!upstream.ok) {
       if (upstream.status === 429) {
@@ -92,10 +93,10 @@ Deno.serve(async (req) => {
         );
       }
       if (upstream.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos IA agotados." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+        return new Response(JSON.stringify({ error: "Créditos IA agotados." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       const t = await upstream.text();
       console.error("Gateway error:", upstream.status, t);

@@ -17,12 +17,20 @@ const TOOL = {
             title: { type: "string" },
             description: { type: "string" },
             specialty_required: { type: "string" },
-            modality: { type: "string", enum: ["hour","shift","month","package"] },
+            modality: { type: "string", enum: ["hour", "shift", "month", "package"] },
             suggested_amount_cop: { type: "number" },
             city: { type: "string" },
             requirements: { type: "array", items: { type: "string" } },
           },
-          required: ["title","description","specialty_required","modality","suggested_amount_cop","city","requirements"],
+          required: [
+            "title",
+            "description",
+            "specialty_required",
+            "modality",
+            "suggested_amount_cop",
+            "city",
+            "requirements",
+          ],
           additionalProperties: false,
         },
         candidate_reasons: {
@@ -34,12 +42,12 @@ const TOOL = {
               score: { type: "number" },
               reason: { type: "string" },
             },
-            required: ["user_id","score","reason"],
+            required: ["user_id", "score", "reason"],
             additionalProperties: false,
           },
         },
       },
-      required: ["offer_draft","candidate_reasons"],
+      required: ["offer_draft", "candidate_reasons"],
       additionalProperties: false,
     },
   },
@@ -72,9 +80,15 @@ async function embed(text: string): Promise<number[] | null> {
 }
 
 function cosine(a: number[], b: number[]) {
-  let dot=0, na=0, nb=0;
-  for (let i=0;i<a.length;i++){dot+=a[i]*b[i]; na+=a[i]*a[i]; nb+=b[i]*b[i];}
-  return dot/(Math.sqrt(na)*Math.sqrt(nb)||1);
+  let dot = 0,
+    na = 0,
+    nb = 0;
+  for (let i = 0; i < a.length; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  return dot / (Math.sqrt(na) * Math.sqrt(nb) || 1);
 }
 
 Deno.serve(async (req) => {
@@ -87,11 +101,17 @@ Deno.serve(async (req) => {
     if (!brief) throw new Error("brief requerido");
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
 
     // 1) Embedding del brief y top candidatos por similitud (con fallback si embeddings no disponibles)
     const v = await embed(brief);
-    const { data: pes } = await admin.from("profile_embeddings").select("user_id,embedding").limit(300);
+    const { data: pes } = await admin
+      .from("profile_embeddings")
+      .select("user_id,embedding")
+      .limit(300);
     let scored: { user_id: string; similarity: number }[] = [];
     if (v && pes && pes.length) {
       scored = (pes ?? [])
@@ -115,23 +135,31 @@ Deno.serve(async (req) => {
       scored = (fallbackPros ?? []).map((p) => ({ user_id: p.user_id, similarity: 0.5 }));
     }
 
-    const ids = scored.map(s=>s.user_id);
+    const ids = scored.map((s) => s.user_id);
     const { data: pros } = await admin
       .from("professional_profiles")
-      .select("user_id,specialty,sub_specialties,years_experience,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,verified,rethus_verified,bio")
+      .select(
+        "user_id,specialty,sub_specialties,years_experience,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,verified,rethus_verified,bio",
+      )
       .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
     const { data: profiles } = await admin
-      .from("public_profiles_safe").select("user_id,full_name,city,avatar_url")
+      .from("public_profiles_safe")
+      .select("user_id,full_name,city,avatar_url")
       .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
-    const byId = new Map((pros ?? []).map(p=>[p.user_id,p]));
-    const profMap = new Map((profiles ?? []).map(p=>[p.user_id,p]));
-    const candidates = scored.map(s=>({
-      user_id: s.user_id, similarity: s.similarity,
-      ...byId.get(s.user_id), profile: profMap.get(s.user_id),
-    })).filter(c=>c.user_id && byId.get(c.user_id));
+    const byId = new Map((pros ?? []).map((p) => [p.user_id, p]));
+    const profMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+    const candidates = scored
+      .map((s) => ({
+        user_id: s.user_id,
+        similarity: s.similarity,
+        ...byId.get(s.user_id),
+        profile: profMap.get(s.user_id),
+      }))
+      .filter((c) => c.user_id && byId.get(c.user_id));
 
     // 2) Llamar al LLM con tool calling
-    const sys = "Eres copiloto de contratación de Humanix (Colombia, salud en casa). " +
+    const sys =
+      "Eres copiloto de contratación de Humanix (Colombia, salud en casa). " +
       "A partir del brief del solicitante y de los candidatos disponibles, devuelve: " +
       "1) un borrador de oferta claro y profesional en español, con monto COP justo de mercado " +
       "(hora 25-45k, turno 12h 120-220k, mes 2.5-4.5M COP según especialidad y experiencia); " +
@@ -139,23 +167,28 @@ Deno.serve(async (req) => {
       "Solo elige máximo 5 candidatos verdaderamente relevantes. Nunca inventes user_id: " +
       "usa exactamente los que aparecen en CANDIDATOS.";
 
-    const userMsg = `BRIEF DEL SOLICITANTE:\n${brief}\n\nCIUDAD PREFERIDA: ${city ?? "no especificada"}\n\n` +
+    const userMsg =
+      `BRIEF DEL SOLICITANTE:\n${brief}\n\nCIUDAD PREFERIDA: ${city ?? "no especificada"}\n\n` +
       `CANDIDATOS DISPONIBLES (${candidates.length}):\n` +
-      candidates.map(c => JSON.stringify({
-        user_id: c.user_id,
-        nombre: c.profile?.full_name,
-        ciudad: c.profile?.city,
-        especialidad: c.specialty,
-        sub: c.sub_specialties,
-        años: c.years_experience,
-        trust: c.trust_score,
-        rating: c.avg_rating,
-        rethus: c.rethus_verified,
-        verified: c.verified,
-        tarifas: { hora: c.hourly_rate, turno: c.shift_rate, mes: c.monthly_rate },
-        ciudades_servicio: c.service_cities,
-        similitud: c.similarity.toFixed(2),
-      })).join("\n");
+      candidates
+        .map((c) =>
+          JSON.stringify({
+            user_id: c.user_id,
+            nombre: c.profile?.full_name,
+            ciudad: c.profile?.city,
+            especialidad: c.specialty,
+            sub: c.sub_specialties,
+            años: c.years_experience,
+            trust: c.trust_score,
+            rating: c.avg_rating,
+            rethus: c.rethus_verified,
+            verified: c.verified,
+            tarifas: { hora: c.hourly_rate, turno: c.shift_rate, mes: c.monthly_rate },
+            ciudades_servicio: c.service_cities,
+            similitud: c.similarity.toFixed(2),
+          }),
+        )
+        .join("\n");
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -172,9 +205,15 @@ Deno.serve(async (req) => {
     });
     if (!aiResp.ok) {
       if (aiResp.status === 429 || aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: aiResp.status === 429 ? "Demasiadas solicitudes" : "Créditos IA agotados" }), {
-          status: aiResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error: aiResp.status === 429 ? "Demasiadas solicitudes" : "Créditos IA agotados",
+          }),
+          {
+            status: aiResp.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
       const t = await aiResp.text();
       console.error("gateway:", aiResp.status, t);
@@ -185,12 +224,14 @@ Deno.serve(async (req) => {
     const parsed = call ? JSON.parse(call.function.arguments || "{}") : {};
 
     // Enriquecer candidate_reasons con datos públicos
-    const reasonMap = new Map<string, {score:number; reason:string}>(
-      (parsed.candidate_reasons ?? []).map((r: {user_id:string;score:number;reason:string}) => [r.user_id, r])
+    const reasonMap = new Map<string, { score: number; reason: string }>(
+      (parsed.candidate_reasons ?? []).map(
+        (r: { user_id: string; score: number; reason: string }) => [r.user_id, r],
+      ),
     );
     const enrichedCandidates = candidates
-      .filter(c => reasonMap.has(c.user_id))
-      .map(c => ({
+      .filter((c) => reasonMap.has(c.user_id))
+      .map((c) => ({
         user_id: c.user_id,
         full_name: c.profile?.full_name,
         city: c.profile?.city,
@@ -206,21 +247,26 @@ Deno.serve(async (req) => {
         score: reasonMap.get(c.user_id)!.score,
         reason: reasonMap.get(c.user_id)!.reason,
       }))
-      .sort((a,b)=>b.score-a.score);
+      .sort((a, b) => b.score - a.score);
 
     await admin.from("ai_credits_ledger").insert({
-      user_id: auth.userId, feature: "hiring-copilot", credits_used: 3,
+      user_id: auth.userId,
+      feature: "hiring-copilot",
+      credits_used: 3,
     });
 
-    return new Response(JSON.stringify({
-      offer_draft: parsed.offer_draft,
-      candidates: enrichedCandidates,
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(
+      JSON.stringify({
+        offer_draft: parsed.offer_draft,
+        candidates: enrichedCandidates,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("hiring-copilot error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

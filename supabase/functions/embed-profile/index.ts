@@ -15,7 +15,9 @@ Deno.serve(async (req) => {
     );
     const { data: pro } = await supabase
       .from("professional_profiles")
-      .select("specialty,sub_specialties,years_experience,bio,service_cities,languages,certifications,work_experience,ai_summary,ai_strengths,hourly_rate,shift_rate,monthly_rate")
+      .select(
+        "specialty,sub_specialties,years_experience,bio,service_cities,languages,certifications,work_experience,ai_summary,ai_strengths,hourly_rate,shift_rate,monthly_rate",
+      )
       .eq("user_id", auth.userId)
       .maybeSingle();
     if (!pro) {
@@ -39,13 +41,18 @@ Deno.serve(async (req) => {
     ].join("\n");
 
     const embedding = embedText(text);
-    const { error } = await supabase
-      .from("profile_embeddings")
-      .upsert({ user_id: auth.userId, embedding, source_text: text.slice(0, 4000), updated_at: new Date().toISOString() });
+    const { error } = await supabase.from("profile_embeddings").upsert({
+      user_id: auth.userId,
+      embedding,
+      source_text: text.slice(0, 4000),
+      updated_at: new Date().toISOString(),
+    });
     if (error) throw error;
 
     await supabase.from("ai_credits_ledger").insert({
-      user_id: auth.userId, feature: "embed-profile", credits_used: 1,
+      user_id: auth.userId,
+      feature: "embed-profile",
+      credits_used: 1,
     });
 
     return new Response(JSON.stringify({ ok: true }), {
@@ -53,9 +60,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("embed-profile error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

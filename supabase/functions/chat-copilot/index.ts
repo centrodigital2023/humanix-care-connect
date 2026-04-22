@@ -12,7 +12,9 @@ const TOOL = {
       type: "object",
       properties: {
         suggestions: {
-          type: "array", minItems: 3, maxItems: 3,
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
           items: { type: "string" },
         },
       },
@@ -31,18 +33,24 @@ Deno.serve(async (req) => {
     const { conversation_id } = await req.json();
     if (!conversation_id) throw new Error("conversation_id requerido");
 
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const admin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
     const { data: conv } = await admin
       .from("conversations")
       .select("id, poster_id, professional_id")
-      .eq("id", conversation_id).maybeSingle();
+      .eq("id", conversation_id)
+      .maybeSingle();
     if (!conv) throw new Error("Conversación no encontrada");
     if (conv.poster_id !== auth.userId && conv.professional_id !== auth.userId) {
       return new Response(JSON.stringify({ error: "No autorizado" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const role = auth.userId === conv.professional_id ? "profesional de salud" : "familia/IPS contratante";
+    const role =
+      auth.userId === conv.professional_id ? "profesional de salud" : "familia/IPS contratante";
 
     const { data: msgs } = await admin
       .from("messages")
@@ -63,11 +71,17 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          { role: "system", content:
-            `Eres un copiloto de comunicación para Humanix (cuidado humano en Colombia). ` +
-            `Sugiere 3 respuestas breves (máx 25 palabras cada una), cálidas, profesionales y accionables que el usuario actual (${role}) podría enviar. ` +
-            `Evita prometer cosas que no se han dicho. Español neutro colombiano.` },
-          { role: "user", content: `Conversación hasta ahora:\n${conversation || "(vacía)"}\n\nDame 3 respuestas para enviar yo.` },
+          {
+            role: "system",
+            content:
+              `Eres un copiloto de comunicación para Humanix (cuidado humano en Colombia). ` +
+              `Sugiere 3 respuestas breves (máx 25 palabras cada una), cálidas, profesionales y accionables que el usuario actual (${role}) podría enviar. ` +
+              `Evita prometer cosas que no se han dicho. Español neutro colombiano.`,
+          },
+          {
+            role: "user",
+            content: `Conversación hasta ahora:\n${conversation || "(vacía)"}\n\nDame 3 respuestas para enviar yo.`,
+          },
         ],
         tools: [TOOL],
         tool_choice: { type: "function", function: { name: "reply_suggestions" } },
@@ -75,9 +89,15 @@ Deno.serve(async (req) => {
     });
     if (!aiResp.ok) {
       if (aiResp.status === 429 || aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: aiResp.status === 429 ? "Demasiadas solicitudes" : "Créditos IA agotados" }), {
-          status: aiResp.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return new Response(
+          JSON.stringify({
+            error: aiResp.status === 429 ? "Demasiadas solicitudes" : "Créditos IA agotados",
+          }),
+          {
+            status: aiResp.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          },
+        );
       }
       throw new Error("Error IA");
     }
@@ -86,7 +106,9 @@ Deno.serve(async (req) => {
     const parsed = call ? JSON.parse(call.function.arguments || "{}") : { suggestions: [] };
 
     await admin.from("ai_credits_ledger").insert({
-      user_id: auth.userId, feature: "chat-copilot", credits_used: 1,
+      user_id: auth.userId,
+      feature: "chat-copilot",
+      credits_used: 1,
     });
 
     return new Response(JSON.stringify({ suggestions: parsed.suggestions ?? [] }), {
@@ -94,9 +116,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("chat-copilot error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

@@ -12,10 +12,7 @@ export const Route = createFileRoute("/mensajes")({
     c: typeof search.c === "string" ? search.c : undefined,
   }),
   head: () => ({
-    meta: [
-      { title: "Mensajes · Humanix" },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: [{ title: "Mensajes · Humanix" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   component: MensajesPage,
 });
@@ -95,9 +92,7 @@ function MensajesPage() {
           setLastMsgs(map);
         }
 
-        const appIds = list
-          .map((c) => c.application_id)
-          .filter((id): id is string => !!id);
+        const appIds = list.map((c) => c.application_id).filter((id): id is string => !!id);
         if (appIds.length > 0) {
           const { data: apps } = await supabase
             .from("applications")

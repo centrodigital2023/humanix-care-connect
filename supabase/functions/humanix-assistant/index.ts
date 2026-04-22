@@ -28,9 +28,6 @@ const SYSTEM_BY_PERSONA: Record<string, string> = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-
-
-
   try {
     const { messages, persona } = await req.json();
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -43,24 +40,20 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
-    const system =
-      SYSTEM_BY_PERSONA[persona as string] ?? SYSTEM_BY_PERSONA.default;
+    const system = SYSTEM_BY_PERSONA[persona as string] ?? SYSTEM_BY_PERSONA.default;
 
-    const upstream = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          stream: true,
-          messages: [{ role: "system", content: system }, ...messages],
-        }),
+    const upstream = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        stream: true,
+        messages: [{ role: "system", content: system }, ...messages],
+      }),
+    });
 
     if (!upstream.ok) {
       if (upstream.status === 429) {

@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      { global: { headers: { Authorization: authHeader } } },
     );
     const {
       data: { user },
@@ -61,22 +61,19 @@ Deno.serve(async (req) => {
 
     let waId: string | null = null;
     if (ACCESS_TOKEN && PHONE_ID) {
-      const res = await fetch(
-        `https://graph.facebook.com/v21.0/${PHONE_ID}/messages`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${ACCESS_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: contact.phone,
-            type: "text",
-            text: { body },
-          }),
-        }
-      );
+      const res = await fetch(`https://graph.facebook.com/v21.0/${PHONE_ID}/messages`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          messaging_product: "whatsapp",
+          to: contact.phone,
+          type: "text",
+          text: { body },
+        }),
+      });
       if (!res.ok) {
         const errTxt = await res.text();
         console.error("[wa send manual]", res.status, errTxt);
@@ -85,7 +82,7 @@ Deno.serve(async (req) => {
           {
             status: 502,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
+          },
         );
       }
       const json = await res.json();

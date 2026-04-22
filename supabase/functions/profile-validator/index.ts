@@ -56,49 +56,43 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");
 
-    const resp = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content:
-                "Eres un evaluador imparcial de perfiles de profesionales de salud en Colombia. " +
-                "Evalúa con base en datos reales del perfil, no inventes. " +
-                "Da feedback constructivo y específico para Colombia (RETHUS, mercado COP, ciudades).",
-            },
-            {
-              role: "user",
-              content:
-                "Evalúa este perfil JSON y completa la herramienta:\n```json\n" +
-                JSON.stringify(profile, null, 2) +
-                "\n```",
-            },
-          ],
-          tools: [TOOL],
-          tool_choice: {
-            type: "function",
-            function: { name: "evaluate_profile" },
-          },
-        }),
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
       },
-    );
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content:
+              "Eres un evaluador imparcial de perfiles de profesionales de salud en Colombia. " +
+              "Evalúa con base en datos reales del perfil, no inventes. " +
+              "Da feedback constructivo y específico para Colombia (RETHUS, mercado COP, ciudades).",
+          },
+          {
+            role: "user",
+            content:
+              "Evalúa este perfil JSON y completa la herramienta:\n```json\n" +
+              JSON.stringify(profile, null, 2) +
+              "\n```",
+          },
+        ],
+        tools: [TOOL],
+        tool_choice: {
+          type: "function",
+          function: { name: "evaluate_profile" },
+        },
+      }),
+    });
 
     if (!resp.ok) {
       if (resp.status === 429 || resp.status === 402) {
         return new Response(
           JSON.stringify({
-            error:
-              resp.status === 429
-                ? "Demasiadas solicitudes."
-                : "Créditos IA agotados.",
+            error: resp.status === 429 ? "Demasiadas solicitudes." : "Créditos IA agotados.",
           }),
           { status: resp.status, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
@@ -132,9 +126,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("profile-validator error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

@@ -78,9 +78,11 @@ function normalizePlan(row: SubRow | null | undefined): {
 }
 
 export function usePlan(userId: string | null | undefined): UserPlanState {
-  const [state, setState] = useState<Omit<UserPlanState, "has" | "can" | "def" | "refresh" | "tier"> & {
-    tier: number;
-  }>(() => ({
+  const [state, setState] = useState<
+    Omit<UserPlanState, "has" | "can" | "def" | "refresh" | "tier"> & {
+      tier: number;
+    }
+  >(() => ({
     plan: "free",
     tier: 0,
     status: null,
@@ -137,10 +139,7 @@ export function usePlan(userId: string | null | undefined): UserPlanState {
     };
   }, [userId, load]);
 
-  const has = useCallback(
-    (min: PlanKey) => hasAtLeast(state.plan, min),
-    [state.plan],
-  );
+  const has = useCallback((min: PlanKey) => hasAtLeast(state.plan, min), [state.plan]);
   const can = useCallback(
     (feature: PlanFeature) => canUseFeature(state.plan, feature),
     [state.plan],

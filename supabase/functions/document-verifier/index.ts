@@ -22,7 +22,8 @@ const TOOL = {
         },
         document_type_detected: {
           type: "string",
-          description: "Qué tipo de documento detectó la IA (cv, rethus, diploma, cedula, recibo_servicios, referencia_laboral, otro).",
+          description:
+            "Qué tipo de documento detectó la IA (cv, rethus, diploma, cedula, recibo_servicios, referencia_laboral, otro).",
         },
         confidence: {
           type: "number",
@@ -31,16 +32,19 @@ const TOOL = {
         issues: {
           type: "array",
           items: { type: "string" },
-          description: "Lista de problemas detectados (ej: 'documento ilegible', 'fecha vencida', 'tipo no coincide', 'parece editado').",
+          description:
+            "Lista de problemas detectados (ej: 'documento ilegible', 'fecha vencida', 'tipo no coincide', 'parece editado').",
         },
         extracted: {
           type: "object",
-          description: "Datos clave extraídos del documento. Ej: { name, document_number, issue_date, issuer, address, account_number }.",
+          description:
+            "Datos clave extraídos del documento. Ej: { name, document_number, issue_date, issuer, address, account_number }.",
           additionalProperties: true,
         },
         reason: {
           type: "string",
-          description: "Resumen breve (1-2 frases) explicando el veredicto, en español, dirigido al profesional.",
+          description:
+            "Resumen breve (1-2 frases) explicando el veredicto, en español, dirigido al profesional.",
         },
       },
       required: ["is_valid", "confidence", "issues", "reason"],
@@ -51,12 +55,17 @@ const TOOL = {
 
 const TYPE_HINTS: Record<string, string> = {
   cv: "Hoja de vida (CV). Debe listar formación, experiencia y datos de contacto.",
-  rethus: "Certificado RETHUS (Registro Único Nacional del Talento Humano en Salud, Colombia). Debe contener nombre, número de registro, profesión y fecha.",
+  rethus:
+    "Certificado RETHUS (Registro Único Nacional del Talento Humano en Salud, Colombia). Debe contener nombre, número de registro, profesión y fecha.",
   diploma: "Diploma o certificación profesional/de curso (BLS, ACLS, título universitario, etc.).",
-  id_document: "Cédula de ciudadanía colombiana (frente o reverso). Debe verse el nombre, número y foto.",
-  utility_bill: "Recibo de servicios públicos (luz, agua, gas, internet) reciente — máximo 60 días — donde aparezca dirección y nombre.",
-  work_reference: "Carta de referencia laboral firmada con nombre del referente, cargo, empresa, contacto y descripción del desempeño.",
-  family_reference: "Carta o constancia de referencia familiar/personal con nombre, contacto y relación.",
+  id_document:
+    "Cédula de ciudadanía colombiana (frente o reverso). Debe verse el nombre, número y foto.",
+  utility_bill:
+    "Recibo de servicios públicos (luz, agua, gas, internet) reciente — máximo 60 días — donde aparezca dirección y nombre.",
+  work_reference:
+    "Carta de referencia laboral firmada con nombre del referente, cargo, empresa, contacto y descripción del desempeño.",
+  family_reference:
+    "Carta o constancia de referencia familiar/personal con nombre, contacto y relación.",
   other: "Documento profesional genérico.",
 };
 
@@ -227,9 +236,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("document-verifier error:", e);
-    return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

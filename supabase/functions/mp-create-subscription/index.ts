@@ -30,19 +30,22 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") ?? "https://humanix.com";
 
-    const title = plan === "essential_monthly"
-      ? "Humanix Esencial · Suscripción mensual"
-      : "Humanix Pro · Suscripción mensual profesional";
+    const title =
+      plan === "essential_monthly"
+        ? "Humanix Esencial · Suscripción mensual"
+        : "Humanix Pro · Suscripción mensual profesional";
 
     // Preferencia simple (no recurrente). Para recurrente se usa /preapproval, pero esto cobra mensualmente con redirección.
     const prefBody = {
-      items: [{
-        id: plan,
-        title,
-        quantity: 1,
-        unit_price: amount,
-        currency_id: "COP",
-      }],
+      items: [
+        {
+          id: plan,
+          title,
+          quantity: 1,
+          unit_price: amount,
+          currency_id: "COP",
+        },
+      ],
       payer: { email },
       back_urls: {
         success: `${origin}/dashboard/profesional?mp=success`,
@@ -65,7 +68,8 @@ Deno.serve(async (req) => {
       const t = await r.text();
       console.error("MP preference error:", r.status, t);
       return new Response(JSON.stringify({ error: "Mercado Pago error", details: t }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     const pref = await r.json();
@@ -80,19 +84,28 @@ Deno.serve(async (req) => {
         Prefer: "resolution=merge-duplicates",
       },
       body: JSON.stringify({
-        user_id: userId, plan, amount, currency: "COP", status: "pending", mp_payer_email: email,
+        user_id: userId,
+        plan,
+        amount,
+        currency: "COP",
+        status: "pending",
+        mp_payer_email: email,
       }),
     });
 
-    return new Response(JSON.stringify({
-      init_point: pref.init_point,
-      sandbox_init_point: pref.sandbox_init_point,
-      preference_id: pref.id,
-    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(
+      JSON.stringify({
+        init_point: pref.init_point,
+        sandbox_init_point: pref.sandbox_init_point,
+        preference_id: pref.id,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     console.error("mp-create-subscription:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
