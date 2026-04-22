@@ -98,10 +98,10 @@ function FamiliasPage() {
                 <Heart className="h-3.5 w-3.5" />
                 Para familias
               </span>
-              <h1 className="mt-4 font-display text-4xl sm:text-5xl font-bold leading-[1.05]">
+              <h1 className="mt-4 font-display text-[clamp(1.875rem,5.5vw,3rem)] font-bold leading-[1.05]">
                 Cuidado humano de confianza, <span className="text-copper">a un toque</span>.
               </h1>
-              <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+              <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
                 Encuentra enfermeros y cuidadores certificados para adultos mayores, postoperatorios
                 o cuidado pediátrico. Verificación RETHUS, ETA en vivo y pago protegido.
               </p>
@@ -144,12 +144,12 @@ function FamiliasPage() {
               Comisión transparente del 5% por contratación. Sin permanencia, sin sorpresas.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-              <Button variant="copper" size="xl" asChild>
+              <Button variant="copper" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/buscar" search={{ tab: "profesionales" }}>
                   Buscar cuidador <ArrowRight className="ml-1 h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="glass" size="xl" asChild>
+              <Button variant="glass" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/planes">Ver detalles del plan</Link>
               </Button>
             </div>
