@@ -78,6 +78,9 @@ verify_jwt = true
 [functions.social-trust-score]
 verify_jwt = false
 
+[functions.trust-verdict]
+verify_jwt = true
+
 [functions.send-campaign]
 verify_jwt = true
 

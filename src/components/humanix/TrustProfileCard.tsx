@@ -158,6 +158,14 @@ export function TrustProfileCard({
   const [docs, setDocs] = useState<DocRow[]>([]);
   const [rating, setRating] = useState<{ avg: number; count: number }>({ avg: 0, count: 0 });
   const [bookings, setBookings] = useState<number>(0);
+  const [aiVerdict, setAiVerdict] = useState<{
+    confidence: "alta" | "media" | "baja";
+    score: number;
+    reasons: string[];
+    caution?: string;
+    summary: string;
+  } | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -226,10 +234,97 @@ export function TrustProfileCard({
       setBookings(bookingsR.count ?? 0);
       setLoading(false);
     })();
+
+    const ch = sb
+      .channel(`trust_profile_${userId}_${role}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "service_ratings", filter: `rated_id=eq.${userId}` },
+        async () => {
+          const { data } = await sb.from("service_ratings").select("stars").eq("rated_id", userId);
+          const stars = ((data ?? []) as { stars: number }[]).map((r) => r.stars);
+          if (!active) return;
+          setRating(
+            stars.length > 0
+              ? { avg: stars.reduce((a, b) => a + b, 0) / stars.length, count: stars.length }
+              : { avg: 0, count: 0 },
+          );
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: role === "professional" ? "professional_documents" : "family_documents",
+          filter: `user_id=eq.${userId}`,
+        },
+        async () => {
+          const { data } = await sb
+            .from(role === "professional" ? "professional_documents" : "family_documents")
+            .select("id, doc_type, status, ai_verified, ai_score")
+            .eq("user_id", userId);
+          if (!active) return;
+          setDocs((data ?? []) as DocRow[]);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      sb.removeChannel(ch);
+    };
+  }, [userId, role]);
+
+  // Real AI verdict via trust-verdict edge function (Gemini)
+  useEffect(() => {
+    if (loading) return;
+    let active = true;
+    setAiLoading(true);
+    const snapshot = {
+      role,
+      name_masked: base?.full_name ? base.full_name.split(" ").map((p, i) => (i === 0 ? p : (p[0] ?? "") + "."))
+        .join(" ") : null,
+      city: base?.city ?? null,
+      has_address: Boolean(
+        role === "professional" ? pro?.home_city : fam?.default_address,
+      ),
+      rating_avg: rating.count > 0 ? Number(rating.avg.toFixed(2)) : pro?.avg_rating ?? null,
+      rating_count: rating.count,
+      completed_bookings: bookings,
+      specialty: role === "professional" ? pro?.specialty ?? null : null,
+      years_experience: role === "professional" ? pro?.years_experience ?? null : null,
+      rethus_verified: role === "professional" ? pro?.rethus_verified === true : null,
+      verified: role === "professional" ? pro?.verified === true : null,
+      trust_score: role === "professional" ? pro?.trust_score ?? null : null,
+      docs_approved: docs.filter((d) => d.status === "approved" || d.ai_verified === true)
+        .map((d) => d.doc_type),
+      docs_pending: docs.filter((d) => d.status === "pending" || d.status === "review").length,
+      docs_avg_ai_score:
+        docs.length > 0
+          ? Math.round(docs.reduce((s, d) => s + (d.ai_score ?? 0), 0) / docs.length)
+          : 0,
+    };
+    (async () => {
+      try {
+        const { data, error } = await sb.functions.invoke("trust-verdict", {
+          body: { snapshot },
+        });
+        if (!active) return;
+        if (error) throw error;
+        const result = (data as { result?: typeof aiVerdict } | null)?.result ?? null;
+        if (result) setAiVerdict(result);
+      } catch {
+        // Silently fall back to heuristic verdict below.
+      } finally {
+        if (active) setAiLoading(false);
+      }
+    })();
     return () => {
       active = false;
     };
-  }, [userId, role]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, userId, role]);
 
   const approvedDocs = useMemo(
     () => docs.filter((d) => d.status === "approved" || d.ai_verified === true),
@@ -379,35 +474,72 @@ export function TrustProfileCard({
 
           <div
             className={`rounded-xl border p-3 ${
-              verdict.tone === "good"
+              (aiVerdict?.confidence ?? (verdict.tone === "good" ? "alta" : "media")) === "alta"
                 ? "border-biosensor/40 bg-biosensor/5"
-                : verdict.tone === "warn"
+                : (aiVerdict?.confidence ?? "media") === "media"
                   ? "border-copper/40 bg-copper/5"
-                  : "border-border bg-muted/40"
+                  : "border-rose-500/40 bg-rose-500/5"
             }`}
           >
             <div className="flex items-start gap-2">
               <div
                 className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${
-                  verdict.tone === "good"
+                  (aiVerdict?.confidence ?? (verdict.tone === "good" ? "alta" : "media")) === "alta"
                     ? "bg-biosensor/15 text-biosensor"
-                    : verdict.tone === "warn"
+                    : (aiVerdict?.confidence ?? "media") === "media"
                       ? "bg-copper/15 text-copper"
-                      : "bg-muted text-muted-foreground"
+                      : "bg-rose-500/15 text-rose-600"
                 }`}
               >
-                <VerdictIcon className={`h-4 w-4 ${verdict.icon === Loader2 ? "animate-spin" : ""}`} />
+                {aiLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <VerdictIcon className="h-4 w-4" />
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                  Inspector de seguridad IA
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    Inspector de seguridad IA
+                  </p>
+                  {aiVerdict ? (
+                    <span className="text-[10px] font-bold text-biosensor">
+                      {aiVerdict.score}/100
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-xs font-semibold capitalize">
+                  {aiVerdict
+                    ? `Confianza ${aiVerdict.confidence}`
+                    : aiLoading
+                      ? "Analizando con IA…"
+                      : verdict.label}
                 </p>
-                <p className="text-xs font-semibold">{verdict.label}</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {role === "professional"
-                    ? "Credenciales cruzadas con RETHUS, documentos y reputación de servicios previos."
-                    : "Historial de trato, pagos y referencias contrastado con la comunidad."}
+                  {aiVerdict?.summary ??
+                    (role === "professional"
+                      ? "Credenciales cruzadas con RETHUS, documentos y reputación de servicios previos."
+                      : "Historial de trato, pagos y referencias contrastado con la comunidad.")}
                 </p>
+                {aiVerdict?.reasons && aiVerdict.reasons.length > 0 ? (
+                  <ul className="mt-1.5 space-y-0.5">
+                    {aiVerdict.reasons.slice(0, 3).map((r, i) => (
+                      <li
+                        key={i}
+                        className="text-[10px] text-muted-foreground inline-flex items-start gap-1"
+                      >
+                        <BadgeCheck className="h-2.5 w-2.5 text-biosensor mt-0.5 shrink-0" />
+                        <span>{r}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {aiVerdict?.caution ? (
+                  <p className="mt-1.5 text-[10px] text-copper inline-flex items-start gap-1">
+                    <FileWarning className="h-2.5 w-2.5 mt-0.5 shrink-0" />
+                    <span>{aiVerdict.caution}</span>
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
