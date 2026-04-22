@@ -25,6 +25,9 @@ import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
+import { SmartProfileCard } from "@/components/humanix/SmartProfileCard";
+import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
+import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
@@ -505,40 +508,13 @@ function FamilyDashboard() {
       }
     >
       <div className="space-y-8">
-        {/* Banner perfil — siempre visible (completar o editar) */}
-        {!dataLoading && (
-          <Card
-            className={`p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 ${
-              onboardingComplete
-                ? "border-biosensor/40 bg-gradient-to-br from-biosensor/10 to-transparent"
-                : "border-copper/40 bg-gradient-to-br from-copper/10 to-transparent"
-            }`}
-          >
-            <div
-              className={`inline-flex h-11 w-11 items-center justify-center rounded-xl shrink-0 ${
-                onboardingComplete ? "bg-biosensor/15 text-biosensor" : "bg-copper/15 text-copper"
-              }`}
-            >
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-display text-base sm:text-lg font-semibold">
-                {onboardingComplete
-                  ? "Tu perfil familiar está completo"
-                  : "Completa tu perfil para contratar de forma segura"}
-              </p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {onboardingComplete
-                  ? "Puedes actualizar tus datos, contacto de emergencia o foto cuando quieras."
-                  : "Te tomará menos de 2 minutos: foto, cédula, dirección y contacto de emergencia."}
-              </p>
-            </div>
-            <Button variant={onboardingComplete ? "outline" : "copper"} asChild>
-              <Link to="/dashboard/familia/onboarding">
-                {onboardingComplete ? "Editar perfil" : "Completar ahora"}
-              </Link>
-            </Button>
-          </Card>
+        {/* Tarjeta inteligente de completitud de perfil */}
+        {!dataLoading && user && (
+          <SmartProfileCard
+            userId={user.id}
+            fullName={user.fullName}
+            avatarUrl={user.avatarUrl ?? null}
+          />
         )}
 
         {/* KPIs */}
@@ -831,6 +807,12 @@ function FamilyDashboard() {
           </div>
           {user?.id && <MercadoPagoSubscription userId={user.id} defaultPlan="essential_monthly" />}
         </section>
+
+        {/* Valoraciones pendientes (bidireccional) */}
+        {user?.id && <PendingRatingsCard userId={user.id} role="family" />}
+
+        {/* Zona de peligro: eliminar mi propio perfil */}
+        {user?.id && <DangerZoneCard userId={user.id} role="family" />}
       </div>
     </AppShell>
   );

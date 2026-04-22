@@ -37,6 +37,8 @@ import { ReferencesManager } from "@/components/humanix/ReferencesManager";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
 import { NotificationsBell } from "@/components/humanix/NotificationsBell";
 import { PublishGate } from "@/components/humanix/PublishGate";
+import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
+import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -996,6 +998,20 @@ function ProDashboard() {
             </div>
           )}
         </section>
+
+        {/* Valoraciones pendientes del profesional hacia sus clientes */}
+        {userId && (
+          <section className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
+            <PendingRatingsCard userId={userId} role="professional" />
+          </section>
+        )}
+
+        {/* Zona de peligro: eliminar mi propio perfil profesional */}
+        {userId && (
+          <section className="mx-auto max-w-7xl px-4 sm:px-6 pb-6">
+            <DangerZoneCard userId={userId} role="professional" />
+          </section>
+        )}
       </main>
 
       <HumanixAssistant
