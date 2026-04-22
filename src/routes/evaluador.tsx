@@ -25,6 +25,11 @@ import {
   FileText,
   Award,
   ShieldCheck,
+  Globe,
+  Link as LinkIcon,
+  GraduationCap,
+  Newspaper,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -98,9 +103,18 @@ type Professional = {
   languages: string[] | null;
   service_cities: string[] | null;
   social_trust_score: number | null;
+  social_trust_breakdown: unknown | null;
   created_at: string;
   profile?: { full_name: string | null; email: string | null; phone: string | null };
   docs?: ProDocLite[];
+};
+
+type SocialTrustResult = {
+  score: number;
+  breakdown: Record<string, number>;
+  strengths: string[];
+  weaknesses: string[];
+  recommendation: string;
 };
 
 type ProDocLite = {
@@ -346,6 +360,308 @@ function DocStrip({
   );
 }
 
+/** Construye URL de búsqueda pública del profesional en un sitio web. */
+function buildSearchUrl(
+  platform: string,
+  name: string,
+  specialty: string | null,
+  city: string | null,
+): string {
+  const q = [name, specialty, city].filter(Boolean).join(" ").trim();
+  const enc = encodeURIComponent(q);
+  switch (platform) {
+    case "google":
+      return `https://www.google.com/search?q=${enc}`;
+    case "google_cv":
+      return `https://www.google.com/search?q=${encodeURIComponent(`${name} hoja de vida ${specialty ?? ""} filetype:pdf`)}`;
+    case "google_news":
+      return `https://www.google.com/search?q=${enc}&tbm=nws`;
+    case "linkedin":
+      return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(name)}`;
+    case "facebook":
+      return `https://www.facebook.com/search/people/?q=${encodeURIComponent(name)}`;
+    case "instagram":
+      return `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(name)}`;
+    case "x":
+      return `https://x.com/search?q=${encodeURIComponent(name)}&src=typed_query&f=user`;
+    case "youtube":
+      return `https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`;
+    case "scholar":
+      return `https://scholar.google.com/scholar?q=${encodeURIComponent(name)}`;
+    case "rethus":
+      return `https://web.sispro.gov.co/THS/Clientes/Consultas/ConsultaPublicaTHS.aspx`;
+    default:
+      return `https://www.google.com/search?q=${enc}`;
+  }
+}
+
+type WebTarget = {
+  id: string;
+  label: string;
+  sub: string;
+  icon: typeof Globe;
+  tone: string;
+};
+
+const WEB_TARGETS: WebTarget[] = [
+  { id: "google", label: "Google", sub: "Rastro general", icon: Globe, tone: "from-sky-500/15 to-sky-500/5 border-sky-500/30 text-sky-600" },
+  { id: "google_cv", label: "CV público", sub: "filetype:pdf", icon: FileText, tone: "from-fuchsia-neural/15 to-fuchsia-neural/5 border-fuchsia-neural/30 text-fuchsia-neural" },
+  { id: "linkedin", label: "LinkedIn", sub: "Trayectoria laboral", icon: Briefcase, tone: "from-blue-500/15 to-blue-500/5 border-blue-500/30 text-blue-600" },
+  { id: "facebook", label: "Facebook", sub: "Perfil personal", icon: Users, tone: "from-indigo-500/15 to-indigo-500/5 border-indigo-500/30 text-indigo-600" },
+  { id: "instagram", label: "Instagram", sub: "Reputación visual", icon: Eye, tone: "from-pink-500/15 to-pink-500/5 border-pink-500/30 text-pink-600" },
+  { id: "x", label: "X / Twitter", sub: "Opiniones públicas", icon: Megaphone, tone: "from-zinc-500/15 to-zinc-500/5 border-zinc-500/30 text-zinc-700" },
+  { id: "youtube", label: "YouTube", sub: "Videos / menciones", icon: Eye, tone: "from-red-500/15 to-red-500/5 border-red-500/30 text-red-600" },
+  { id: "scholar", label: "Scholar", sub: "Publicaciones", icon: GraduationCap, tone: "from-emerald-500/15 to-emerald-500/5 border-emerald-500/30 text-emerald-600" },
+  { id: "google_news", label: "Noticias", sub: "Menciones en prensa", icon: Newspaper, tone: "from-amber-500/15 to-amber-500/5 border-amber-500/30 text-amber-600" },
+  { id: "rethus", label: "RETHUS", sub: "Registro oficial MinSalud", icon: ShieldCheck, tone: "from-biosensor/20 to-biosensor/5 border-biosensor/40 text-biosensor" },
+];
+
+/** Panel IA: verificación de nombre + presencia web + reputación social. */
+function WebPresencePanel({
+  pro,
+  docs,
+  onScoreUpdated,
+}: {
+  pro: Professional;
+  docs: ProDocLite[];
+  onScoreUpdated: (score: number, breakdown: unknown) => void;
+}) {
+  const name = pro.profile?.full_name ?? "";
+  const [scanBusy, setScanBusy] = useState(false);
+  const [trust, setTrust] = useState<SocialTrustResult | null>(() => {
+    const br = pro.social_trust_breakdown;
+    if (br && typeof br === "object" && pro.social_trust_score != null) {
+      const o = br as Record<string, unknown>;
+      return {
+        score: pro.social_trust_score,
+        breakdown: (o as Record<string, number>) ?? {},
+        strengths: Array.isArray(o.strengths) ? (o.strengths as string[]) : [],
+        weaknesses: Array.isArray(o.weaknesses) ? (o.weaknesses as string[]) : [],
+        recommendation: typeof o.recommendation === "string" ? (o.recommendation as string) : "",
+      };
+    }
+    return null;
+  });
+
+  const nameMatches = useMemo(() => {
+    return docs
+      .filter((d) => d.ai_extracted || d.file_name)
+      .map((d) => ({ doc: d, match: docNameMatch(name, d) }));
+  }, [docs, name]);
+
+  const matchCount = nameMatches.filter((m) => m.match === "match").length;
+  const mismatchCount = nameMatches.filter((m) => m.match === "mismatch").length;
+  const analyzable = nameMatches.length;
+
+  async function runSocialTrustScan() {
+    setScanBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("social-trust-score", {
+        body: { user_id: pro.user_id },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const parsed: SocialTrustResult = {
+        score: Math.round(data.score ?? 0),
+        breakdown: data.breakdown ?? {},
+        strengths: Array.isArray(data.strengths) ? data.strengths : [],
+        weaknesses: Array.isArray(data.weaknesses) ? data.weaknesses : [],
+        recommendation: data.recommendation ?? "",
+      };
+      setTrust(parsed);
+      onScoreUpdated(parsed.score, {
+        ...parsed.breakdown,
+        strengths: parsed.strengths,
+        weaknesses: parsed.weaknesses,
+        recommendation: parsed.recommendation,
+      });
+      toast.success(`Escaneo IA completo · Social Trust ${parsed.score}/100`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo escanear");
+    } finally {
+      setScanBusy(false);
+    }
+  }
+
+  return (
+    <Card className="p-4 space-y-4">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0">
+          <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+            <Globe className="h-3.5 w-3.5 text-fuchsia-neural" /> Presencia web &amp; verificación IA
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Verifica el nombre contra los documentos y explora el rastro público del profesional.
+          </p>
+        </div>
+        <Button size="sm" variant="hero" onClick={runSocialTrustScan} disabled={scanBusy}>
+          {scanBusy ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Escaneando…
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-3.5 w-3.5 mr-1" /> Escaneo IA reputación
+            </>
+          )}
+        </Button>
+      </div>
+
+      {/* Consistencia de nombre */}
+      <div className="rounded-lg bg-muted/20 border p-3 space-y-2">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <p className="text-xs font-semibold flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5 text-biosensor" /> Consistencia de nombre
+          </p>
+          {analyzable > 0 ? (
+            mismatchCount === 0 ? (
+              <Badge className="bg-biosensor/20 text-biosensor border-biosensor/30 text-[10px]">
+                <CheckCircle2 className="h-3 w-3 mr-0.5" /> Nombre ✓ {matchCount}/{analyzable} docs
+              </Badge>
+            ) : (
+              <Badge variant="destructive" className="text-[10px]">
+                <AlertTriangle className="h-3 w-3 mr-0.5" /> ≠ Nombre en {mismatchCount}/{analyzable} docs
+              </Badge>
+            )
+          ) : (
+            <Badge variant="outline" className="text-[10px]">
+              Sin docs para cotejar
+            </Badge>
+          )}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Nombre registrado:{" "}
+          <span className="font-medium text-foreground">{name || "—"}</span>
+        </p>
+        {nameMatches.length > 0 && (
+          <div className="flex gap-1.5 overflow-x-auto pb-1 [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full">
+            {nameMatches.map(({ doc, match }) => (
+              <div
+                key={doc.id}
+                className={`shrink-0 rounded-md border px-2 py-1 text-[10px] flex items-center gap-1 ${
+                  match === "match"
+                    ? "border-biosensor/30 bg-biosensor/5 text-biosensor"
+                    : match === "mismatch"
+                      ? "border-destructive/30 bg-destructive/5 text-destructive"
+                      : "border-border bg-muted/30 text-muted-foreground"
+                }`}
+                title={extractDocName(doc.ai_extracted, doc.file_name) || "Sin nombre"}
+              >
+                {match === "match" ? (
+                  <CheckCircle2 className="h-2.5 w-2.5" />
+                ) : match === "mismatch" ? (
+                  <XCircle className="h-2.5 w-2.5" />
+                ) : (
+                  <span className="h-2.5 w-2.5 text-center leading-none">?</span>
+                )}
+                <span className="uppercase font-semibold">{labelForDocType(doc.doc_type)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Banda deslizable de presencia web */}
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold flex items-center gap-1.5">
+            <Search className="h-3.5 w-3.5 text-copper" /> Buscar en sitios web
+          </p>
+          <span className="text-[10px] text-muted-foreground">← desliza →</span>
+        </div>
+        {!name ? (
+          <p className="text-[11px] text-muted-foreground italic">
+            Sin nombre registrado — no se pueden generar búsquedas.
+          </p>
+        ) : (
+          <div className="flex gap-2 overflow-x-auto pb-2 scroll-smooth snap-x [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-thumb]:rounded-full">
+            {WEB_TARGETS.map((t) => {
+              const Icon = t.icon;
+              const url = buildSearchUrl(t.id, name, pro.specialty, pro.home_city);
+              return (
+                <a
+                  key={t.id}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`shrink-0 snap-start w-[168px] rounded-xl border bg-gradient-to-br ${t.tone} p-3 flex flex-col gap-1.5 hover:scale-[1.02] transition-transform`}
+                >
+                  <div className="flex items-center justify-between">
+                    <Icon className="h-4 w-4" />
+                    <ExternalLink className="h-3 w-3 opacity-70" />
+                  </div>
+                  <p className="text-xs font-bold leading-tight">{t.label}</p>
+                  <p className="text-[10px] opacity-80 leading-tight">{t.sub}</p>
+                  <span className="text-[10px] mt-auto font-medium inline-flex items-center gap-1">
+                    <LinkIcon className="h-2.5 w-2.5" /> Abrir búsqueda
+                  </span>
+                </a>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Resultado Social Trust */}
+      {trust && (
+        <div className="rounded-lg border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-3 space-y-2">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <p className="text-xs font-semibold flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" /> Social Trust Score (IA)
+            </p>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-24 rounded-full bg-muted overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${trust.score >= 70 ? "bg-biosensor" : trust.score >= 50 ? "bg-copper" : "bg-destructive"}`}
+                  style={{ width: `${trust.score}%` }}
+                />
+              </div>
+              <span
+                className={`text-sm font-bold ${trust.score >= 70 ? "text-biosensor" : trust.score >= 50 ? "text-copper" : "text-destructive"}`}
+              >
+                {trust.score}/100
+              </span>
+            </div>
+          </div>
+          {trust.recommendation && (
+            <p className="text-xs text-muted-foreground italic">“{trust.recommendation}”</p>
+          )}
+          <div className="grid sm:grid-cols-2 gap-2">
+            {trust.strengths.length > 0 && (
+              <div className="rounded bg-biosensor/10 border border-biosensor/20 p-2">
+                <p className="text-[10px] uppercase font-semibold text-biosensor mb-1">Fortalezas</p>
+                <ul className="text-[11px] space-y-0.5">
+                  {trust.strengths.map((s, i) => (
+                    <li key={i} className="flex gap-1">
+                      <CheckCircle2 className="h-3 w-3 mt-0.5 shrink-0 text-biosensor" />
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {trust.weaknesses.length > 0 && (
+              <div className="rounded bg-destructive/5 border border-destructive/20 p-2">
+                <p className="text-[10px] uppercase font-semibold text-destructive mb-1">
+                  Debilidades
+                </p>
+                <ul className="text-[11px] space-y-0.5">
+                  {trust.weaknesses.map((s, i) => (
+                    <li key={i} className="flex gap-1">
+                      <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0 text-destructive" />
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 function EvaluatorPage() {
   const { user, loading, logout } = useAppUser({
     allow: ["superadmin", "evaluator", "hr_staff"],
@@ -429,7 +745,7 @@ function ProfessionalsTab({ reviewerId }: { reviewerId: string }) {
     const { data: rows } = await supabase
       .from("professional_profiles")
       .select(
-        "user_id, avatar_url, specialty, home_city, bio, years_experience, rethus_number, rethus_verified, hourly_rate, avg_rating, total_jobs, published, blocked, blocked_reason, verified, ai_summary, ai_strengths, work_experience, certifications, languages, service_cities, social_trust_score, created_at",
+        "user_id, avatar_url, specialty, home_city, bio, years_experience, rethus_number, rethus_verified, hourly_rate, avg_rating, total_jobs, published, blocked, blocked_reason, verified, ai_summary, ai_strengths, work_experience, certifications, languages, service_cities, social_trust_score, social_trust_breakdown, created_at",
       )
       .order("created_at", { ascending: false })
       .limit(500);
@@ -1350,6 +1666,21 @@ function ProfessionalDetailDialog({
                   </div>
                 </Card>
               )}
+
+              {/* ── Presencia web &amp; verificación IA ─────────────────────── */}
+              <WebPresencePanel
+                pro={pro}
+                docs={docs.map((d) => ({
+                  id: d.id,
+                  doc_type: d.doc_type,
+                  file_name: d.file_name,
+                  status: d.status,
+                  ai_score: d.ai_score,
+                  ai_verified: docExtras[d.id]?.ai_verified ?? null,
+                  ai_extracted: docExtras[d.id]?.ai_extracted ?? null,
+                }))}
+                onScoreUpdated={() => onChanged()}
+              />
 
               {/* ── Documentos en grid ──────────────────────────────────────── */}
               <Card className="p-4">
