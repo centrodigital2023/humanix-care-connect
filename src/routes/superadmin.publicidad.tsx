@@ -102,6 +102,85 @@ const EMPTY: Partial<Banner> = {
   active: true,
 };
 
+// -----------------------------------------------------------------------------
+// 5 banners inteligentes — borradores listos (active:false) para revisión.
+// Copy alineado con las audiencias y landings reales de Humanix.
+// -----------------------------------------------------------------------------
+const SMART_BANNERS: Array<
+  Omit<
+    Banner,
+    "id" | "created_at" | "impressions" | "clicks" | "shares_count" | "starts_at" | "ends_at"
+  >
+> = [
+  {
+    title: "Cuidado en casa con profesionales verificados",
+    description:
+      "Auxiliares de enfermería, terapeutas y médicos verificados con RETHUS. Reserva en minutos, paga seguro.",
+    cta_label: "Buscar profesional",
+    link_url: "/familias?utm_source=banner&utm_medium=web&utm_campaign=familia-cuidado-casa",
+    image_url: null,
+    audience: "family",
+    position: "home_hero",
+    active: false,
+    ai_recommendation:
+      "Mensaje orientado a familias con audiencia amplia. Prioriza verificación RETHUS y rapidez.",
+    ai_score: 0.82,
+  },
+  {
+    title: "¿Eres profesional de salud? Gana más en tu ciudad",
+    description:
+      "Decide cuándo, dónde y cuánto cobras. Pagos inmediatos, ofertas cerca de ti y agenda flexible.",
+    cta_label: "Postularme gratis",
+    link_url: "/profesionales?utm_source=banner&utm_medium=web&utm_campaign=profesional-gana-mas",
+    image_url: null,
+    audience: "professional",
+    position: "profesionales_top",
+    active: false,
+    ai_recommendation: "Tono motivacional con beneficios concretos (pago, flexibilidad, cercanía).",
+    ai_score: 0.85,
+  },
+  {
+    title: "Clínicas e IPS: cubre turnos en minutos",
+    description:
+      "Talento humano verificado, scoring por IA, facturación DIAN. Panel B2B para directores y jefes de talento.",
+    cta_label: "Hablar con ventas",
+    link_url: "/talento-humano?utm_source=banner&utm_medium=web&utm_campaign=institucion-turnos",
+    image_url: null,
+    audience: "institution",
+    position: "institucion_hero",
+    active: false,
+    ai_recommendation:
+      "Mensaje B2B con foco en velocidad de cobertura y cumplimiento regulatorio.",
+    ai_score: 0.78,
+  },
+  {
+    title: "IA en tiempo real para salud en Colombia",
+    description:
+      "Verificación automática de documentos, matchmaking semántico y antifraude. Todo bajo la Ley 1581.",
+    cta_label: "Ver cómo funciona",
+    link_url: "/tecnologia?utm_source=banner&utm_medium=web&utm_campaign=tecnologia-ia",
+    image_url: null,
+    audience: "all",
+    position: "tecnologia_hero",
+    active: false,
+    ai_recommendation: "Banner de producto para usuarios curiosos por la tecnología. Cross-audience.",
+    ai_score: 0.74,
+  },
+  {
+    title: "Plan Familiar · Primer mes gratis",
+    description:
+      "Cuidado preventivo para toda tu familia: visitas programadas, respuesta ante emergencias, créditos por referidos.",
+    cta_label: "Probar gratis",
+    link_url: "/planes?utm_source=banner&utm_medium=web&utm_campaign=referidos-familia",
+    image_url: null,
+    audience: "family",
+    position: "planes_hero",
+    active: false,
+    ai_recommendation: "Promoción con incentivo económico + referidos virales.",
+    ai_score: 0.88,
+  },
+];
+
 function PublicidadPage() {
   const { user, loading, logout } = useAppUser({ allow: ["superadmin"] });
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -111,6 +190,7 @@ function PublicidadPage() {
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [carouselPlaying, setCarouselPlaying] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [seeding, setSeeding] = useState(false);
   const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.co";
 
@@ -235,6 +315,31 @@ function PublicidadPage() {
       else n.add(id);
       return n;
     });
+  };
+
+  const seedSmart = async () => {
+    if (!user) return;
+    setSeeding(true);
+    try {
+      const payload = SMART_BANNERS.map((b) => ({
+        ...b,
+        created_by: user.id,
+      }));
+      const { error } = await supabase.from("ad_banners").insert(payload);
+      if (error) throw error;
+      await supabase.rpc("log_audit", {
+        _action: "ad.seed",
+        _resource_type: "ad_banners",
+        _severity: "info",
+        _meta: { count: payload.length } as never,
+      });
+      toast.success(`${payload.length} banners creados como borradores`);
+      await load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo crear los banners");
+    } finally {
+      setSeeding(false);
+    }
   };
 
   const activeBanners = banners.filter((b) => b.active);
@@ -767,10 +872,43 @@ function PublicidadPage() {
 
         <div>
           {banners.length === 0 ? (
-            <Card className="p-14 text-center text-sm text-muted-foreground">
+            <Card className="p-10 text-center">
               <Megaphone className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p className="font-semibold">Sin banners todavía</p>
-              <p className="mt-1">Crea el primero con el botón "Nuevo banner".</p>
+              <p className="font-semibold text-foreground">Sin banners todavía</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Crea el primero con{" "}
+                <span className="font-medium text-foreground">"Nuevo banner"</span> o deja que la
+                IA prepare 5 propuestas listas para lanzar.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
+                <Button
+                  variant="hero"
+                  onClick={() => {
+                    setEditing(EMPTY);
+                    setOpen(true);
+                  }}
+                  className="gap-1.5"
+                >
+                  <Plus className="h-4 w-4" /> Nuevo banner
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void seedSmart()}
+                  disabled={seeding}
+                  className="gap-1.5"
+                >
+                  {seeding ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-biosensor" />
+                  )}
+                  {seeding ? "Creando…" : "Completar con IA · 5 banners"}
+                </Button>
+              </div>
+              <p className="mt-4 text-[11px] text-muted-foreground">
+                Los banners IA se crean como <span className="font-medium">borradores</span>{" "}
+                (inactivos). Revísalos y actívalos cuando estés listo.
+              </p>
             </Card>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
