@@ -4,6 +4,11 @@ import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 const MP_BASE = "https://api.mercadopago.com";
 
+const PRICE_BY_PLAN: Record<string, number> = {
+  essential_monthly: 9000,
+  pro_monthly: 29900,
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const auth = await requireUser(req);
@@ -16,18 +21,23 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     const body = await req.json().catch(() => ({}));
-    const plan = body.plan ?? "pro_monthly";
-    const amount = Number(body.amount ?? 49900);
+    const requestedPlan = typeof body.plan === "string" ? body.plan : "pro_monthly";
+    const plan = requestedPlan in PRICE_BY_PLAN ? requestedPlan : "pro_monthly";
+    const amount = PRICE_BY_PLAN[plan];
     const userId = auth.userId;
     const email = body.email ?? "comprador@humanix.com";
 
     const origin = req.headers.get("origin") ?? "https://humanix.com";
 
+    const title = plan === "essential_monthly"
+      ? "Humanix Esencial · Suscripción mensual"
+      : "Humanix Pro · Suscripción mensual profesional";
+
     // Preferencia simple (no recurrente). Para recurrente se usa /preapproval, pero esto cobra mensualmente con redirección.
     const prefBody = {
       items: [{
         id: plan,
-        title: "Humanix Pro · Suscripción mensual profesional",
+        title,
         quantity: 1,
         unit_price: amount,
         currency_id: "COP",
