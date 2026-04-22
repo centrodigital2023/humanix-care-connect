@@ -7,18 +7,13 @@ type FooterLink = { label: string; to?: string; href?: string };
 
 const cols: { title: string; links: FooterLink[] }[] = [
   {
-    title: "Soluciones",
+    title: "Soluciones y plataforma",
     links: [
       { label: "Profesionales de salud", to: "/profesionales" },
       { label: "Familias", to: "/familias" },
       { label: "Clínicas e IPS", to: "/talento-humano" },
       { label: "Buscar cuidado", to: "/buscar" },
       { label: "Planes y precios", to: "/planes" },
-    ],
-  },
-  {
-    title: "Plataforma",
-    links: [
       { label: "Tecnología IA", to: "/tecnologia" },
       { label: "Sobre Humanix", to: "/sobre" },
       { label: "Carreras", to: "/carreras" },
@@ -27,7 +22,7 @@ const cols: { title: string; links: FooterLink[] }[] = [
     ],
   },
   {
-    title: "Legal y cumplimiento",
+    title: "Legal, cumplimiento y soporte",
     links: [
       { label: "Términos y condiciones", to: "/terminos" },
       { label: "Política de privacidad", to: "/privacidad" },
@@ -40,11 +35,11 @@ const cols: { title: string; links: FooterLink[] }[] = [
 export function Footer() {
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-14">
-        <div className="grid lg:grid-cols-5 gap-10">
-          <div className="lg:col-span-2">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-5">
             <Logo />
-            <p className="mt-4 text-sm text-muted-foreground max-w-sm leading-relaxed">
+            <p className="mt-4 text-sm text-muted-foreground max-w-md leading-relaxed">
               Plataforma colombiana de talento humano en salud, con IA en tiempo real, verificación
               RETHUS y pagos inmediatos.
             </p>
@@ -79,35 +74,57 @@ export function Footer() {
               humanix.lat
             </p>
           </div>
-          {cols.map((c) => (
-            <div key={c.title}>
-              <p className="text-sm font-semibold mb-3">{c.title}</p>
-              <ul className="space-y-2">
-                {c.links.map((l) => (
-                  <li key={l.label}>
-                    {l.to ? (
-                      <Link
-                        to={l.to as never}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {l.label}
-                      </Link>
-                    ) : (
-                      <a
-                        href={l.href ?? "#"}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {l.label}
-                      </a>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div className="lg:col-span-5">
+            <p className="text-sm font-semibold mb-3">{cols[0].title}</p>
+            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {cols[0].links.map((l) => (
+                <li key={l.label}>
+                  {l.to ? (
+                    <Link
+                      to={l.to as never}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={l.href ?? "#"}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="lg:col-span-2">
+            <p className="text-sm font-semibold mb-3">{cols[1].title}</p>
+            <ul className="space-y-2">
+              {cols[1].links.map((l) => (
+                <li key={l.label}>
+                  {l.to ? (
+                    <Link
+                      to={l.to as never}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ) : (
+                    <a
+                      href={l.href ?? "#"}
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {l.label}
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-border">
+        <div className="mt-8 sm:mt-10 pt-6 border-t border-border">
           <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
             {SOCIAL_LINKS.map((s) => (
               <a
@@ -132,7 +149,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Humanix Colombia · humanix.lat · Todos los derechos reservados.
           </p>
