@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       }),
     });
 
-    // Actualizar suscripción si fue aprobado
+    // Actualizar suscripción según estado
     if (status === "approved" && userId) {
       const periodEnd = new Date();
       periodEnd.setMonth(periodEnd.getMonth() + 1);
@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
           status: "active",
           current_period_end: periodEnd.toISOString(),
           next_payment_at: periodEnd.toISOString(),
+          cancel_at_period_end: false,
         }),
       });
 
@@ -82,9 +83,29 @@ Deno.serve(async (req) => {
         headers: { apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: userId, type: "payment_approved",
-          title: "✅ Suscripción Humanix Pro activa",
-          body: "Tu suscripción mensual fue aprobada. ¡Ya puedes recibir ofertas premium!",
-          link: "/dashboard/profesional",
+          title: "✅ Suscripción Humanix activa",
+          body: "Tu suscripción mensual fue aprobada. ¡Ya puedes usar todas las funciones premium!",
+          link: "/dashboard",
+        }),
+      });
+    } else if ((status === "rejected" || status === "cancelled") && userId) {
+      await fetch(`${SUPABASE_URL}/rest/v1/mp_subscriptions?user_id=eq.${userId}`, {
+        method: "PATCH",
+        headers: {
+          apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status }),
+      });
+      await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
+        method: "POST",
+        headers: { apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId, type: `payment_${status}`,
+          title: status === "rejected" ? "❌ Pago rechazado" : "Suscripción cancelada",
+          body: status === "rejected"
+            ? "No pudimos procesar tu pago con Mercado Pago. Puedes reintentar desde /planes."
+            : "Tu suscripción fue cancelada. Puedes reactivarla cuando quieras.",
+          link: "/planes",
         }),
       });
     }
