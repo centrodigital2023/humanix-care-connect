@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Handshake, ShieldCheck, X, Send, Info } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Handshake, ShieldCheck, X, Send, Info, Sparkles, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
@@ -250,6 +250,78 @@ export function AgendaViewer({
   const pendingKey = pendingCell ? `${pendingCell.day.toDateString()}-${pendingCell.hour}` : null;
   const isSendingPending = pendingKey !== null && sending === pendingKey;
 
+  // ── Smart picks (IA-heurística): sugiere hasta 3 mejores horarios/necesidades
+  // para tocar en 1 clic. Se ordenan por cercanía temporal y densidad de franjas
+  // contiguas. El objetivo: que familias y profesionales agenden sin pensar.
+  const smartPicks = useMemo(() => {
+    const now = new Date();
+    if (targetRole === "professional") {
+      const free = slots
+        .filter((s) => s.status === "free" && new Date(s.starts_at) > now)
+        .map((s) => {
+          const d = new Date(s.starts_at);
+          const contiguous = slots.filter((x) => {
+            const xt = new Date(x.starts_at);
+            return (
+              x.status === "free" &&
+              xt.getFullYear() === d.getFullYear() &&
+              xt.getMonth() === d.getMonth() &&
+              xt.getDate() === d.getDate() &&
+              xt.getHours() >= d.getHours() &&
+              xt.getHours() < d.getHours() + 4
+            );
+          }).length;
+          return { start: d, contiguous };
+        })
+        .filter(
+          ({ start }) =>
+            !busyCells.has(
+              `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}-${start.getHours()}`,
+            ),
+        )
+        .sort(
+          (a, b) =>
+            b.contiguous - a.contiguous || a.start.getTime() - b.start.getTime(),
+        )
+        .slice(0, 3);
+      return free.map(({ start, contiguous }) => ({
+        day: new Date(start.getFullYear(), start.getMonth(), start.getDate()),
+        hour: start.getHours(),
+        contiguous,
+        rate: targetHourlyRate ?? null,
+        label: start.toLocaleDateString("es-CO", {
+          weekday: "short",
+          day: "numeric",
+          month: "short",
+        }),
+      }));
+    }
+    const open = needs
+      .filter((n) => n.status === "open" && new Date(n.starts_at) > now)
+      .map((n) => ({ n, start: new Date(n.starts_at) }))
+      .filter(
+        ({ start }) =>
+          !busyCells.has(
+            `${start.getFullYear()}-${start.getMonth()}-${start.getDate()}-${start.getHours()}`,
+          ),
+      )
+      .sort((a, b) => a.start.getTime() - b.start.getTime())
+      .slice(0, 3);
+    return open.map(({ n, start }) => ({
+      day: new Date(start.getFullYear(), start.getMonth(), start.getDate()),
+      hour: start.getHours(),
+      contiguous: 1,
+      rate: n.hourly_rate,
+      label: start.toLocaleDateString("es-CO", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      }),
+    }));
+  }, [slots, needs, targetRole, targetHourlyRate, busyCells]);
+
+  const canAct = Boolean(currentUserId) && currentRole !== null && currentRole !== targetRole;
+
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border-b border-border">
@@ -287,6 +359,73 @@ export function AgendaViewer({
 
       <div className={`grid ${showInfo || pendingCell ? "lg:grid-cols-[1fr_360px]" : "grid-cols-1"}`}>
         <div>
+      {/* Smart picks IA: un tap para contratar/postularse en el mejor horario */}
+      {!loading && smartPicks.length > 0 && (
+        <div className="px-3 pt-3 pb-2 border-b border-border/60 bg-gradient-to-br from-biosensor/5 via-fuchsia-neural/5 to-transparent">
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" />
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-fuchsia-neural">
+              Sugerencias IA
+            </p>
+            <span className="text-[10px] text-muted-foreground">
+              {targetRole === "professional"
+                ? "Mejores horarios libres próximos"
+                : "Necesidades abiertas más cercanas"}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {smartPicks.map((p, i) => {
+              const isBest = i === 0;
+              return (
+                <button
+                  key={`${p.day.toISOString()}-${p.hour}`}
+                  type="button"
+                  disabled={!canAct}
+                  onClick={() => {
+                    setPendingCell({ day: p.day, hour: p.hour });
+                    // Scroll agenda week to that day
+                    setWeekStart(startOfWeek(p.day));
+                  }}
+                  className={`group inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition-all ${
+                    isBest
+                      ? "border-biosensor bg-biosensor/10 text-biosensor hover:bg-biosensor/20"
+                      : "border-border bg-card hover:border-biosensor/50 hover:bg-biosensor/5"
+                  } ${!canAct ? "opacity-60 cursor-not-allowed" : ""}`}
+                  title={
+                    !canAct
+                      ? currentRole === targetRole
+                        ? "Solo la otra parte puede agendar aquí"
+                        : "Inicia sesión para agendar"
+                      : "Toca para preparar la propuesta"
+                  }
+                >
+                  {isBest && <Zap className="h-3 w-3" />}
+                  <span className="font-semibold">{p.label}</span>
+                  <span className="text-muted-foreground">
+                    · {p.hour.toString().padStart(2, "0")}:00
+                  </span>
+                  {p.rate ? (
+                    <span className="text-[10px] text-muted-foreground">
+                      · ${p.rate.toLocaleString("es-CO")}/h
+                    </span>
+                  ) : null}
+                  {targetRole === "professional" && p.contiguous > 1 ? (
+                    <span className="text-[10px] rounded-full bg-fuchsia-neural/15 text-fuchsia-neural px-1.5">
+                      {p.contiguous}h seguidas
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+          {!canAct && !currentUserId ? (
+            <p className="mt-2 text-[10px] text-muted-foreground">
+              Inicia sesión como {targetRole === "professional" ? "familia" : "profesional"} para
+              agendar con un toque.
+            </p>
+          ) : null}
+        </div>
+      )}
       {loading ? (
         <div className="p-12 text-center text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Cargando…

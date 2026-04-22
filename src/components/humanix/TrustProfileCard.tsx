@@ -307,6 +307,14 @@ export function TrustProfileCard({
     };
     (async () => {
       try {
+        // Only call the IA verdict when the visitor is authenticated.
+        // Anonymous visitors see the heuristic fallback (avoids 401s from
+        // trust-verdict which requires a JWT).
+        const { data: sessionData } = await sb.auth.getSession();
+        if (!sessionData?.session) {
+          if (active) setAiLoading(false);
+          return;
+        }
         const { data, error } = await sb.functions.invoke("trust-verdict", {
           body: { snapshot },
         });
