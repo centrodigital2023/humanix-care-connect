@@ -14,7 +14,8 @@ import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
-import { buildSeo, faqLd, jsonLdString, SITE_NAME } from "@/lib/seo";
+import * as seo from "@/lib/seo";
+const { buildSeo, faqLd, SITE_NAME } = seo;
 
 const HumanixAssistant = lazy(() =>
   import("@/components/humanix/HumanixAssistant").then((module) => ({
@@ -40,7 +41,7 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdString(faqLd(faqs)) }}
+        dangerouslySetInnerHTML={{ __html: seo.jsonLdString(faqLd(faqs)) }}
       />
       <LaunchBar />
       <Navbar />

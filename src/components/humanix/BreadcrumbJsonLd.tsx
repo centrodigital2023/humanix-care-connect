@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { breadcrumbLd, jsonLdString } from "@/lib/seo";
+import * as seo from "@/lib/seo";
 
 export type BreadcrumbItem = { name: string; path: string };
 
@@ -11,7 +11,7 @@ export function BreadcrumbJsonLd({ items }: { items: BreadcrumbItem[] }): ReactN
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: jsonLdString(breadcrumbLd(items)) }}
+      dangerouslySetInnerHTML={{ __html: seo.jsonLdString(seo.breadcrumbLd(items)) }}
     />
   );
 }

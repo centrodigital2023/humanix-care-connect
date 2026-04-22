@@ -1,7 +1,8 @@
 import { Suspense, lazy } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
-import {
+import * as seo from "@/lib/seo";
+const {
   DEFAULT_LOCALE,
   SITE_DESCRIPTION,
   SITE_NAME,
@@ -11,10 +12,9 @@ import {
   SOCIAL_IMAGE_URL,
   SOCIAL_IMAGE_WIDTH,
   TWITTER_HANDLE,
-  jsonLdString,
   organizationLd,
   websiteLd,
-} from "@/lib/seo";
+} = seo;
 
 import appCss from "../styles.css?url";
 
@@ -108,11 +108,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <HeadContent />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLdString(organizationLd()) }}
+          dangerouslySetInnerHTML={{ __html: seo.jsonLdString(organizationLd()) }}
         />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLdString(websiteLd()) }}
+          dangerouslySetInnerHTML={{ __html: seo.jsonLdString(websiteLd()) }}
         />
       </head>
       <body>

@@ -19,7 +19,8 @@ import { Footer } from "@/components/humanix/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
-import { SITE_NAME, SITE_URL, jsonLdString } from "@/lib/seo";
+import * as seo from "@/lib/seo";
+const { SITE_NAME, SITE_URL } = seo;
 
 type Offer = {
   id: string;
@@ -243,7 +244,7 @@ function OfferPublicPage() {
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: jsonLdString(jobPostingLd(offer)) }}
+        dangerouslySetInnerHTML={{ __html: seo.jsonLdString(jobPostingLd(offer)) }}
       />
 
       <Navbar />
