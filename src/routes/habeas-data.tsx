@@ -1,28 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/humanix/LegalPage";
+import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/habeas-data")({
-  head: () => ({
-    meta: [
-      { title: "Habeas Data · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Autorización para el tratamiento de datos personales según la Ley 1581 de 2012 y el Decreto 1377 de 2013.",
-      },
-      { property: "og:title", content: "Habeas Data · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Conoce tus derechos y cómo Humanix protege tus datos personales bajo la normativa colombiana.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Habeas Data · Colombia",
+      path: "/habeas-data",
+      description:
+        "Autorización para el tratamiento de datos personales según la Ley 1581 de 2012 y el Decreto 1377 de 2013.",
+    }),
   component: HabeasDataPage,
 });
 
 function HabeasDataPage() {
   return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", path: "/" },
+          { name: "Habeas Data", path: "/habeas-data" },
+        ]}
+      />
     <LegalPage
       badge="Habeas Data"
       title={
@@ -86,5 +86,6 @@ function HabeasDataPage() {
         </p>
       </LegalSection>
     </LegalPage>
+    </>
   );
 }

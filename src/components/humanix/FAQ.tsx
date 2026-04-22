@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-const faqs = [
+export const faqs = [
   {
     q: "¿Cómo verifica Humanix a los profesionales?",
     a: "Cruzamos datos con RETHUS, validamos cédula con biometría facial y nuestro motor de IA calcula un Trust Score. Un evaluador humano confirma cada perfil pre-aprobado antes de publicarlo.",

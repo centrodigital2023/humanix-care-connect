@@ -14,24 +14,18 @@ import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { Button } from "@/components/ui/button";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
+import { buildSeo, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/tecnologia")({
-  head: () => ({
-    meta: [
-      { title: "Tecnología IA · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Matching semántico, geolocalización en vivo, validación anti-fraude IA y análisis de sentimiento por voz. La arquitectura que potencia el talento humano en salud de Colombia.",
-      },
-      { property: "og:title", content: "Tecnología IA · Humanix Colombia" },
-      {
-        property: "og:description",
-        content:
-          "Embeddings, Realtime y Lovable AI Gateway: la IA que conecta cuidado humano con cumplimiento RETHUS y Habeas Data.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Tecnología IA · Colombia",
+      path: "/tecnologia",
+      description:
+        "Matching semántico, geolocalización en vivo, validación anti-fraude IA y análisis de sentimiento por voz. La arquitectura que potencia el talento humano en salud de Colombia.",
+      image: `${SITE_URL}/og/tecnologia.svg`,
+      imageAlt: "Humanix Tecnología · IA en tiempo real para salud en Colombia",
+    }),
   component: TecnologiaPage,
 });
 

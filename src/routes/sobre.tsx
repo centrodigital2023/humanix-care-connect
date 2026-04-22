@@ -1,26 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Building2 } from "lucide-react";
-import { SITE_URL } from "@/lib/seo";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/sobre")({
-  head: () => ({
-    meta: [
-      { title: "Sobre Humanix · Plataforma de Salud en Colombia" },
-      {
-        name: "description",
-        content:
-          "Conoce Humanix, la plataforma que conecta profesionales de salud verificados con familias y clínicas en Colombia.",
-      },
-      { property: "og:title", content: "Sobre Humanix · Colombia" },
-      {
-        property: "og:description",
-        content:
-          "Descubre nuestra misión, visión y cómo transformamos la atención médica en Colombia.",
-      },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/sobre` }],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Sobre Humanix · Plataforma de Salud en Colombia",
+      path: "/sobre",
+      description:
+        "Conoce Humanix, la plataforma que conecta profesionales de salud verificados con familias y clínicas en Colombia.",
+    }),
   component: SobrePage,
 });
 

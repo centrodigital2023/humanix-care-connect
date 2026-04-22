@@ -6,25 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
+import { buildSeo } from "@/lib/seo";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/planes")({
-  head: () => ({
-    meta: [
-      { title: "Planes y precios · Humanix" },
-      {
-        name: "description",
-        content:
-          "Un plan para cada historia humana. Desde gratis para profesionales hasta $99.000 COP/mes para empresas. Sin permanencia. Cancela cuando quieras.",
-      },
-      { property: "og:title", content: "Planes y precios · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Profesional gratis o $29.000/mes Pro. Familia: 5% por turno. Empresa desde $99.000 COP/mes. Pagos en pesos colombianos.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Planes y precios",
+      path: "/planes",
+      description:
+        "Un plan para cada historia humana. Desde gratis para profesionales hasta $99.000 COP/mes para empresas. Sin permanencia. Cancela cuando quieras.",
+    }),
   component: PlansPage,
 });
 

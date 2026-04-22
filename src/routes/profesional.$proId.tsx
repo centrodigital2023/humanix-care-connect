@@ -24,11 +24,18 @@ import { BookNowButton } from "@/components/humanix/BookNowButton";
 export const Route = createFileRoute("/profesional/$proId")({
   head: ({ params }) => ({
     meta: [
-      { title: `Perfil profesional · Humanix` },
+      { title: `Perfil profesional verificado · Humanix` },
       {
         name: "description",
-        content: `Conoce el perfil verificado del profesional ${params.proId} en Humanix.`,
+        content: `Conoce el perfil verificado del profesional ${params.proId} en Humanix: especialidad, experiencia, RETHUS, rating y disponibilidad.`,
       },
+      { property: "og:type", content: "profile" },
+      { property: "og:title", content: "Perfil profesional verificado · Humanix" },
+      {
+        property: "og:description",
+        content: "Profesional de salud verificado con RETHUS y Trust Score. Contrata en minutos.",
+      },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: ProfessionalPublicPage,

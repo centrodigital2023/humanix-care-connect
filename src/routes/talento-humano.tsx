@@ -27,7 +27,12 @@ import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/talento-humano")({
-  head: () => ({ meta: [{ title: "Talento Humano · Humanix" }] }),
+  head: () => ({
+    meta: [
+      { title: "Talento Humano · Humanix" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: HRPage,
 });
 

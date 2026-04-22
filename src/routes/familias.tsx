@@ -6,24 +6,47 @@ import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { Button } from "@/components/ui/button";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
+import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
+import { buildSeo, jsonLdString, SITE_URL, SITE_NAME } from "@/lib/seo";
+
+const familiasServiceLd = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Humanix · Cuidado en casa verificado",
+  serviceType: "Contratación de cuidadores y enfermeros a domicilio",
+  provider: {
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+  },
+  areaServed: {
+    "@type": "Country",
+    name: "Colombia",
+  },
+  audience: {
+    "@type": "Audience",
+    audienceType: "Familias con adulto mayor, postoperatorio o pediátrico",
+  },
+  offers: {
+    "@type": "AggregateOffer",
+    priceCurrency: "COP",
+    lowPrice: "25000",
+    highPrice: "3500000",
+    offerCount: "500",
+  },
+  url: `${SITE_URL}/familias`,
+} as const;
 
 export const Route = createFileRoute("/familias")({
-  head: () => ({
-    meta: [
-      { title: "Familias · Encuentra cuidador en minutos | Humanix" },
-      {
-        name: "description",
-        content:
-          "Contrata cuidadores y enfermeros verificados con RETHUS para tu familia en Colombia. Geolocalización en vivo, botón de emergencia 24/7 y pagos protegidos.",
-      },
-      { property: "og:title", content: "Familias · Encuentra cuidador en minutos | Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Cuidado humano de confianza con IA: candidatos verificados, ETA en vivo y respaldo total.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Familias · Encuentra cuidador en minutos",
+      path: "/familias",
+      description:
+        "Contrata cuidadores y enfermeros verificados con RETHUS para tu familia en Colombia. Geolocalización en vivo, botón de emergencia 24/7 y pagos protegidos.",
+      image: `${SITE_URL}/og/familias.svg`,
+      imageAlt: "Humanix para familias · cuidado humano verificado en Colombia",
+    }),
   component: FamiliasPage,
 });
 
@@ -53,6 +76,16 @@ const benefits = [
 function FamiliasPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", path: "/" },
+          { name: "Familias", path: "/familias" },
+        ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(familiasServiceLd) }}
+      />
       <Navbar />
       <main className="pt-24 pb-20">
         {/* Hero + Wizard */}

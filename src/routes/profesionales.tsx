@@ -15,24 +15,40 @@ import { Footer } from "@/components/humanix/Footer";
 import { Button } from "@/components/ui/button";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
+import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
+import { buildSeo, jsonLdString, SITE_URL, SITE_NAME } from "@/lib/seo";
+
+const profesionalesServiceLd = {
+  "@context": "https://schema.org",
+  "@type": "Service",
+  name: "Humanix · Marketplace laboral para talento humano en salud",
+  serviceType: "Marketplace de empleos para enfermeros, auxiliares y cuidadores",
+  provider: {
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+  },
+  areaServed: {
+    "@type": "Country",
+    name: "Colombia",
+  },
+  audience: {
+    "@type": "Audience",
+    audienceType: "Enfermeros, auxiliares de enfermería, cuidadores y médicos generales",
+  },
+  url: `${SITE_URL}/profesionales`,
+} as const;
 
 export const Route = createFileRoute("/profesionales")({
-  head: () => ({
-    meta: [
-      { title: "Profesionales de salud · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Enfermeros, auxiliares y cuidadores: encuentra turnos por hora, jornada o paquetes en toda Colombia. Verificación RETHUS, Trust Score y pagos en Nequi al instante.",
-      },
-      { property: "og:title", content: "Profesionales de salud · Humanix Colombia" },
-      {
-        property: "og:description",
-        content:
-          "Trabaja cuando quieras, donde quieras. Reputación verificable y pagos inmediatos por cada turno.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Profesionales de salud · Colombia",
+      path: "/profesionales",
+      description:
+        "Enfermeros, auxiliares y cuidadores: encuentra turnos por hora, jornada o paquetes en toda Colombia. Verificación RETHUS, Trust Score y pagos en Nequi al instante.",
+      image: `${SITE_URL}/og/profesionales.svg`,
+      imageAlt: "Humanix para profesionales · turnos, pagos en Nequi y Trust Score",
+    }),
   component: ProfesionalesPage,
 });
 
@@ -79,6 +95,16 @@ const steps = [
 function ProfesionalesPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", path: "/" },
+          { name: "Profesionales", path: "/profesionales" },
+        ]}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(profesionalesServiceLd) }}
+      />
       <Navbar />
       <main className="pt-28 pb-20">
         <section className="mx-auto max-w-7xl px-4 sm:px-6">

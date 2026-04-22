@@ -3,26 +3,16 @@ import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
 import { useState } from "react";
-import { SITE_URL } from "@/lib/seo";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/contacto")({
-  head: () => ({
-    meta: [
-      { title: "Contacto · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Ponte en contacto con Humanix. Estamos aquí para responder tus preguntas y escuchar tus sugerencias.",
-      },
-      { property: "og:title", content: "Contacto · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Información de contacto y formulario para comunicarte con Humanix.",
-      },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/contacto` }],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Contacto · Colombia",
+      path: "/contacto",
+      description:
+        "Ponte en contacto con Humanix. Estamos aquí para responder tus preguntas y escuchar tus sugerencias.",
+    }),
   component: ContactoPage,
 });
 

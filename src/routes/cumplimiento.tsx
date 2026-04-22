@@ -1,28 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/humanix/LegalPage";
+import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/cumplimiento")({
-  head: () => ({
-    meta: [
-      { title: "Cumplimiento Min. Salud · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Cómo Humanix cumple con la normatividad del Ministerio de Salud y Protección Social de Colombia: RETHUS, Resolución 3100, habilitación y más.",
-      },
-      { property: "og:title", content: "Cumplimiento Min. Salud · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Marco normativo, RETHUS, Ley 911, Resolución 3100 y estándares de calidad aplicados en Humanix.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Cumplimiento Min. Salud · Colombia",
+      path: "/cumplimiento",
+      description:
+        "Cómo Humanix cumple con la normatividad del Ministerio de Salud y Protección Social de Colombia: RETHUS, Resolución 3100, habilitación y más.",
+    }),
   component: CumplimientoPage,
 });
 
 function CumplimientoPage() {
   return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", path: "/" },
+          { name: "Cumplimiento Min. Salud", path: "/cumplimiento" },
+        ]}
+      />
     <LegalPage
       badge="Min. Salud"
       title={
@@ -88,5 +88,6 @@ function CumplimientoPage() {
         </p>
       </LegalSection>
     </LegalPage>
+    </>
   );
 }

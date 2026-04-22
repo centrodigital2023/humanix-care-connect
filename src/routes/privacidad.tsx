@@ -1,28 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/humanix/LegalPage";
+import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/privacidad")({
-  head: () => ({
-    meta: [
-      { title: "Política de Privacidad · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Cómo recopilamos, usamos y protegemos tus datos personales en Humanix, según la Ley 1581 de 2012 de Colombia.",
-      },
-      { property: "og:title", content: "Política de Privacidad · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Tratamiento de datos personales, finalidades, derechos del titular y medidas de seguridad en Humanix.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Política de Privacidad · Colombia",
+      path: "/privacidad",
+      description:
+        "Cómo recopilamos, usamos y protegemos tus datos personales en Humanix, según la Ley 1581 de 2012 de Colombia.",
+    }),
   component: PrivacidadPage,
 });
 
 function PrivacidadPage() {
   return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", path: "/" },
+          { name: "Política de Privacidad", path: "/privacidad" },
+        ]}
+      />
     <LegalPage
       badge="Privacidad"
       title={
@@ -95,5 +95,6 @@ function PrivacidadPage() {
         </p>
       </LegalSection>
     </LegalPage>
+    </>
   );
 }

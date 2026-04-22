@@ -1,26 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Newspaper } from "lucide-react";
-import { SITE_URL } from "@/lib/seo";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/prensa")({
-  head: () => ({
-    meta: [
-      { title: "Prensa · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Novedades, comunicados de prensa y cobertura mediática sobre Humanix y la transformación de la salud en Colombia.",
-      },
-      { property: "og:title", content: "Prensa · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Entérate de las últimas noticias y desarrollos en Humanix.",
-      },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/prensa` }],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Prensa · Colombia",
+      path: "/prensa",
+      description:
+        "Novedades, comunicados de prensa y cobertura mediática sobre Humanix y la transformación de la salud en Colombia.",
+    }),
   component: PrensaPage,
 });
 

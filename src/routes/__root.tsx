@@ -1,7 +1,20 @@
 import { Suspense, lazy } from "react";
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo";
+import {
+  DEFAULT_LOCALE,
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  SOCIAL_IMAGE_ALT,
+  SOCIAL_IMAGE_HEIGHT,
+  SOCIAL_IMAGE_URL,
+  SOCIAL_IMAGE_WIDTH,
+  TWITTER_HANDLE,
+  jsonLdString,
+  organizationLd,
+  websiteLd,
+} from "@/lib/seo";
 
 import appCss from "../styles.css?url";
 
@@ -42,27 +55,32 @@ export const Route = createRootRoute({
       { name: "google-site-verification", content: "ohLJMuczZHl79QIbEcvqP4UgjxZd8LAhhMhWU9IN_mQ" },
       { name: "robots", content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" },
       { name: "theme-color", content: "#0A192F" },
+      { name: "format-detection", content: "telephone=no" },
+      { name: "apple-mobile-web-app-title", content: SITE_NAME },
+      { name: "application-name", content: SITE_NAME },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: SITE_NAME },
-      { property: "og:locale", content: "es_CO" },
+      { property: "og:locale", content: DEFAULT_LOCALE },
       { property: "og:url", content: SITE_URL },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@HumanixColombia" },
+      { name: "twitter:site", content: TWITTER_HANDLE },
       { property: "og:title", content: `${SITE_NAME} · Talento humano en salud para Colombia` },
       { name: "twitter:title", content: `${SITE_NAME} · Talento humano en salud para Colombia` },
       { property: "og:description", content: SITE_DESCRIPTION },
       { name: "twitter:description", content: SITE_DESCRIPTION },
       { property: "og:image", content: SOCIAL_IMAGE_URL },
+      { property: "og:image:alt", content: SOCIAL_IMAGE_ALT },
+      { property: "og:image:width", content: SOCIAL_IMAGE_WIDTH },
+      { property: "og:image:height", content: SOCIAL_IMAGE_HEIGHT },
       { name: "twitter:image", content: SOCIAL_IMAGE_URL },
+      { name: "twitter:image:alt", content: SOCIAL_IMAGE_ALT },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "canonical", href: SITE_URL },
-      { rel: "alternate", hrefLang: "es-CO", href: SITE_URL },
-      { rel: "alternate", hrefLang: "x-default", href: SITE_URL },
       { rel: "dns-prefetch", href: "https://fonts.googleapis.com" },
       { rel: "dns-prefetch", href: "https://fonts.gstatic.com" },
       { rel: "dns-prefetch", href: "https://rwllmouomrytejtbpxvn.supabase.co" },
+      { rel: "dns-prefetch", href: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "preconnect", href: "https://rwllmouomrytejtbpxvn.supabase.co" },
@@ -79,28 +97,18 @@ export const Route = createRootRoute({
 });
 
 function RootShell({ children }: { children: React.ReactNode }) {
-  const organizationLdJson = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE_NAME,
-    url: SITE_URL,
-    logo: `${SITE_URL}/favicon.ico`,
-    sameAs: ["https://www.linkedin.com", "https://x.com/HumanixColombia"],
-    contactPoint: [
-      {
-        "@type": "ContactPoint",
-        contactType: "customer support",
-        email: "contacto@humanix.co",
-        availableLanguage: ["Spanish"],
-      },
-    ],
-  };
-
   return (
     <html lang="es-CO">
       <head>
         <HeadContent />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLdJson) }} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(organizationLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLdString(websiteLd()) }}
+        />
       </head>
       <body>
         {children}

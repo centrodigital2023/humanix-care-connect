@@ -58,7 +58,12 @@ import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/evaluador")({
-  head: () => ({ meta: [{ title: "Evaluador · Humanix" }] }),
+  head: () => ({
+    meta: [
+      { title: "Evaluador · Humanix" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: EvaluatorPage,
 });
 

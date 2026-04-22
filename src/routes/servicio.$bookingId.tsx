@@ -16,9 +16,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/humanix/Navbar";
 import { LiveTracking } from "@/components/humanix/LiveTracking";
 import { BookingChat } from "@/components/humanix/BookingChat";
+import { PaidContactCard } from "@/components/humanix/PaidContactCard";
 import { VoiceRating } from "@/components/humanix/VoiceRating";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { toast } from "sonner";
+
+const PAID_STATUSES = new Set(["confirmed", "in_route", "in_progress", "completed"]);
 
 export const Route = createFileRoute("/servicio/$bookingId")({
   head: () => ({
@@ -29,6 +32,7 @@ export const Route = createFileRoute("/servicio/$bookingId")({
         content:
           "Sigue en vivo a tu profesional de salud, conversa por chat y valora el servicio cuando termine.",
       },
+      { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: ServicePage,
@@ -332,11 +336,19 @@ function ServicePage() {
                 </div>
               </div>
 
-              <BookingChat
-                conversationId={conversationId}
-                currentUserId={userId}
-                peerName={peerName}
-              />
+              <div className="space-y-4">
+                <PaidContactCard
+                  bookingId={booking.id}
+                  peerName={peerName}
+                  isPaid={PAID_STATUSES.has(booking.status)}
+                  amountCOP={booking.total_amount}
+                />
+                <BookingChat
+                  conversationId={conversationId}
+                  currentUserId={userId}
+                  peerName={peerName}
+                />
+              </div>
             </div>
           )}
 

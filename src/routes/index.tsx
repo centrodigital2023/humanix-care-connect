@@ -8,13 +8,13 @@ import { AudienceSection } from "@/components/humanix/AudienceSection";
 import { TechSection } from "@/components/humanix/TechSection";
 import { Testimonials } from "@/components/humanix/Testimonials";
 import { Pricing } from "@/components/humanix/Pricing";
-import { FAQ } from "@/components/humanix/FAQ";
+import { FAQ, faqs } from "@/components/humanix/FAQ";
 import { CTA } from "@/components/humanix/CTA";
 import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/seo";
+import { buildSeo, faqLd, jsonLdString, SITE_NAME } from "@/lib/seo";
 
 const HumanixAssistant = lazy(() =>
   import("@/components/humanix/HumanixAssistant").then((module) => ({ default: module.HumanixAssistant })),
@@ -24,23 +24,22 @@ const StickyCTA = lazy(() =>
 );
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: `${SITE_NAME} · Talento humano en salud para Colombia` },
-      { name: "description", content: SITE_DESCRIPTION },
-      { property: "og:title", content: `${SITE_NAME} · Talento humano en salud para Colombia` },
-      { property: "og:description", content: SITE_DESCRIPTION },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-    links: [{ rel: "canonical", href: SITE_URL }],
-  }),
+  head: () =>
+    buildSeo({
+      title: `${SITE_NAME} · Talento humano en salud para Colombia`,
+      path: "/",
+      appendSiteName: false,
+    }),
   component: Index,
 });
 
 function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLdString(faqLd(faqs)) }}
+      />
       <LaunchBar />
       <Navbar />
       <main>

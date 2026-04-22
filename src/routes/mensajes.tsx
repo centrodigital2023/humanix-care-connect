@@ -8,13 +8,21 @@ import { useAppUser, pathForRole } from "@/hooks/use-app-user";
 import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/mensajes")({
-  head: () => ({ meta: [{ title: "Mensajes · Humanix" }] }),
+  validateSearch: (search: Record<string, unknown>): { c?: string } => ({
+    c: typeof search.c === "string" ? search.c : undefined,
+  }),
+  head: () => ({
+    meta: [
+      { title: "Mensajes · Humanix" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: MensajesPage,
 });
 
 type ConversationRow = {
   id: string;
-  application_id: string;
+  application_id: string | null;
   poster_id: string;
   professional_id: string;
   last_message_at: string;
@@ -27,11 +35,12 @@ type OfferLite = { id: string; title: string };
 
 function MensajesPage() {
   const { user, loading, logout } = useAppUser();
+  const { c: requestedConvId } = Route.useSearch();
   const [convs, setConvs] = useState<ConversationRow[]>([]);
   const [others, setOthers] = useState<Record<string, OtherProfile>>({});
   const [lastMsgs, setLastMsgs] = useState<Record<string, LastMsg>>({});
   const [offers, setOffers] = useState<Record<string, OfferLite>>({});
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(requestedConvId ?? null);
   const [dataLoading, setDataLoading] = useState(true);
 
   useEffect(() => {
@@ -46,7 +55,13 @@ function MensajesPage() {
       const list = (convData ?? []) as ConversationRow[];
       if (!active) return;
       setConvs(list);
-      if (list.length > 0) setActiveId((curr) => curr ?? list[0].id);
+      if (list.length > 0) {
+        setActiveId((curr) => {
+          if (curr && list.some((c) => c.id === curr)) return curr;
+          if (requestedConvId && list.some((c) => c.id === requestedConvId)) return requestedConvId;
+          return list[0].id;
+        });
+      }
 
       // Otros participantes
       const otherIds = Array.from(
@@ -80,28 +95,33 @@ function MensajesPage() {
           setLastMsgs(map);
         }
 
-        const appIds = list.map((c) => c.application_id);
-        const { data: apps } = await supabase
-          .from("applications")
-          .select("id, job_offer_id")
-          .in("id", appIds);
-        const offerIds = (apps ?? []).map((a) => a.job_offer_id);
-        if (offerIds.length > 0) {
-          const { data: offerRows } = await supabase
-            .from("job_offers")
-            .select("id, title")
-            .in("id", offerIds);
-          const appToOffer = new Map((apps ?? []).map((a) => [a.id, a.job_offer_id]));
-          const offerById = new Map((offerRows ?? []).map((o) => [o.id, o as OfferLite]));
-          const final: Record<string, OfferLite> = {};
-          for (const c of list) {
-            const oid = appToOffer.get(c.application_id);
-            if (oid) {
-              const off = offerById.get(oid);
-              if (off) final[c.id] = off;
+        const appIds = list
+          .map((c) => c.application_id)
+          .filter((id): id is string => !!id);
+        if (appIds.length > 0) {
+          const { data: apps } = await supabase
+            .from("applications")
+            .select("id, job_offer_id")
+            .in("id", appIds);
+          const offerIds = (apps ?? []).map((a) => a.job_offer_id);
+          if (offerIds.length > 0) {
+            const { data: offerRows } = await supabase
+              .from("job_offers")
+              .select("id, title")
+              .in("id", offerIds);
+            const appToOffer = new Map((apps ?? []).map((a) => [a.id, a.job_offer_id]));
+            const offerById = new Map((offerRows ?? []).map((o) => [o.id, o as OfferLite]));
+            const final: Record<string, OfferLite> = {};
+            for (const c of list) {
+              if (!c.application_id) continue;
+              const oid = appToOffer.get(c.application_id);
+              if (oid) {
+                const off = offerById.get(oid);
+                if (off) final[c.id] = off;
+              }
             }
+            if (active) setOffers(final);
           }
-          if (active) setOffers(final);
         }
       }
       setDataLoading(false);

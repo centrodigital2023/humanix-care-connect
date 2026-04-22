@@ -1,28 +1,28 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/humanix/LegalPage";
+import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/terminos")({
-  head: () => ({
-    meta: [
-      { title: "Términos y Condiciones · Humanix Colombia" },
-      {
-        name: "description",
-        content:
-          "Términos y condiciones de uso de la plataforma Humanix para profesionales de la salud, familias y clínicas en Colombia.",
-      },
-      { property: "og:title", content: "Términos y Condiciones · Humanix" },
-      {
-        property: "og:description",
-        content:
-          "Reglas de uso, responsabilidades, pagos y resolución de disputas en Humanix Colombia.",
-      },
-    ],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Términos y Condiciones · Colombia",
+      path: "/terminos",
+      description:
+        "Términos y condiciones de uso de la plataforma Humanix para profesionales de la salud, familias y clínicas en Colombia.",
+    }),
   component: TerminosPage,
 });
 
 function TerminosPage() {
   return (
+    <>
+      <BreadcrumbJsonLd
+        items={[
+          { name: "Inicio", path: "/" },
+          { name: "Términos y Condiciones", path: "/terminos" },
+        ]}
+      />
     <LegalPage
       badge="Legal"
       title={
@@ -101,5 +101,6 @@ function TerminosPage() {
         </p>
       </LegalSection>
     </LegalPage>
+    </>
   );
 }

@@ -1,26 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ContentPage } from "@/components/humanix/ContentPage";
 import { Briefcase } from "lucide-react";
-import { SITE_URL } from "@/lib/seo";
+import { buildSeo } from "@/lib/seo";
 
 export const Route = createFileRoute("/carreras")({
-  head: () => ({
-    meta: [
-      { title: "Trabaja en Humanix · Oportunidades de Carrera" },
-      {
-        name: "description",
-        content:
-          "Únete a nuestro equipo. Buscamos talento en medicina, tecnología y emprendimiento para transformar la salud en Colombia.",
-      },
-      { property: "og:title", content: "Carreras en Humanix · Colombia" },
-      {
-        property: "og:description",
-        content:
-          "Descubre nuestras oportunidades laborales y sé parte de la revolución de la salud digital.",
-      },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/carreras` }],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Trabaja en Humanix · Oportunidades de Carrera",
+      path: "/carreras",
+      description:
+        "Únete a nuestro equipo. Buscamos talento en medicina, tecnología y emprendimiento para transformar la salud en Colombia.",
+    }),
   component: CarrerasPage,
 });
 

@@ -14,6 +14,7 @@ import { Route as TecnologiaRouteImport } from './routes/tecnologia'
 import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as SobreRouteImport } from './routes/sobre'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ProfesionalesRouteImport } from './routes/profesionales'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PrensaRouteImport } from './routes/prensa'
@@ -38,6 +39,7 @@ import { Route as SuperadminCrmRouteImport } from './routes/superadmin.crm'
 import { Route as SuperadminAuditoriaRouteImport } from './routes/superadmin.auditoria'
 import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
 import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
+import { Route as OfertaOfferIdRouteImport } from './routes/oferta.$offerId'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
@@ -67,6 +69,11 @@ const SuperadminRoute = SuperadminRouteImport.update({
 const SobreRoute = SobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfesionalesRoute = ProfesionalesRouteImport.update({
@@ -189,6 +196,11 @@ const ProfesionalProIdRoute = ProfesionalProIdRouteImport.update({
   path: '/profesional/$proId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OfertaOfferIdRoute = OfertaOfferIdRouteImport.update({
+  id: '/oferta/$offerId',
+  path: '/oferta/$offerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -232,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
@@ -241,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
@@ -267,6 +281,7 @@ export interface FileRoutesByTo {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
@@ -275,6 +290,7 @@ export interface FileRoutesByTo {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
@@ -303,6 +319,7 @@ export interface FileRoutesById {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/superadmin': typeof SuperadminRouteWithChildren
   '/talento-humano': typeof TalentoHumanoRoute
@@ -312,6 +329,7 @@ export interface FileRoutesById {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
@@ -341,6 +359,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/sitemap.xml'
     | '/sobre'
     | '/superadmin'
     | '/talento-humano'
@@ -350,6 +369,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/oferta/$offerId'
     | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
@@ -376,6 +396,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/sitemap.xml'
     | '/sobre'
     | '/talento-humano'
     | '/tecnologia'
@@ -384,6 +405,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/oferta/$offerId'
     | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
@@ -411,6 +433,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/sitemap.xml'
     | '/sobre'
     | '/superadmin'
     | '/talento-humano'
@@ -420,6 +443,7 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/oferta/$offerId'
     | '/profesional/$proId'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
@@ -448,11 +472,13 @@ export interface RootRouteChildren {
   PrensaRoute: typeof PrensaRoute
   PrivacidadRoute: typeof PrivacidadRoute
   ProfesionalesRoute: typeof ProfesionalesRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   SuperadminRoute: typeof SuperadminRouteWithChildren
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
   TerminosRoute: typeof TerminosRoute
+  OfertaOfferIdRoute: typeof OfertaOfferIdRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
 }
@@ -492,6 +518,13 @@ declare module '@tanstack/react-router' {
       path: '/sobre'
       fullPath: '/sobre'
       preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profesionales': {
@@ -662,6 +695,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfesionalProIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/oferta/$offerId': {
+      id: '/oferta/$offerId'
+      path: '/oferta/$offerId'
+      fullPath: '/oferta/$offerId'
+      preLoaderRoute: typeof OfertaOfferIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/whatsapp': {
       id: '/dashboard/whatsapp'
       path: '/whatsapp'
@@ -769,11 +809,13 @@ const rootRouteChildren: RootRouteChildren = {
   PrensaRoute: PrensaRoute,
   PrivacidadRoute: PrivacidadRoute,
   ProfesionalesRoute: ProfesionalesRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   SuperadminRoute: SuperadminRouteWithChildren,
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
   TerminosRoute: TerminosRoute,
+  OfertaOfferIdRoute: OfertaOfferIdRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
 }
