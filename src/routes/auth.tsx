@@ -9,6 +9,7 @@ import {
   HeartHandshake,
   Stethoscope,
   MapPin,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,6 +102,12 @@ function AuthPage() {
   });
   const [address, setAddress] = useState("");
 
+  // Email verification step (after signup). Supabase sends a 6-digit OTP code
+  // to the email; we must verify it with `verifyOtp` to activate the account.
+  const [needsOtp, setNeedsOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [resending, setResending] = useState(false);
+
   // Redirect if already logged in
   useEffect(() => {
     const target = search.redirect ?? "/dashboard";
@@ -118,7 +125,7 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -136,10 +143,30 @@ function AuthPage() {
           },
         });
         if (error) throw error;
-        toast.success("¡Cuenta creada! Bienvenido a Humanix.");
+        // If Supabase project has "Confirm email" enabled, session will be
+        // null and user must verify via the OTP code we just emailed.
+        if (!data.session) {
+          setNeedsOtp(true);
+          toast.success(
+            "Te enviamos un código de 6 dígitos a tu email. Ingresa el código para activar tu cuenta.",
+          );
+        } else {
+          toast.success("¡Cuenta creada! Bienvenido a Humanix.");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          // Email-not-confirmed surface → push user into OTP step instead of failing.
+          if (/not confirmed|email.*confirm/i.test(error.message)) {
+            setNeedsOtp(true);
+            toast.info(
+              "Tu cuenta aún no está verificada. Te reenviamos el código a tu email.",
+            );
+            await supabase.auth.resend({ type: "signup", email });
+            return;
+          }
+          throw error;
+        }
         toast.success("¡Hola de nuevo!");
       }
     } catch (err) {
@@ -147,6 +174,48 @@ function AuthPage() {
       toast.error(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const verifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) {
+      toast.error("El código debe tener 6 dígitos");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: "signup",
+      });
+      if (error) throw error;
+      toast.success("¡Email verificado! Bienvenido a Humanix.");
+      // onAuthStateChange will redirect.
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Código inválido o expirado";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendCode = async () => {
+    if (!email) {
+      toast.error("Ingresa tu email primero");
+      return;
+    }
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email });
+      if (error) throw error;
+      toast.success("Código reenviado. Revisa tu bandeja y la carpeta de spam.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "No se pudo reenviar";
+      toast.error(msg);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -191,6 +260,75 @@ function AuthPage() {
           </div>
 
           <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elegant)] p-6 sm:p-8">
+            {needsOtp ? (
+              <div>
+                <div className="mb-6 text-center">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-biosensor/10 text-biosensor mb-3">
+                    <ShieldCheck className="h-7 w-7" />
+                  </div>
+                  <h2 className="font-display text-2xl font-bold">Verifica tu email</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Te enviamos un código de 6 dígitos a{" "}
+                    <span className="font-semibold text-foreground">{email}</span>. Ingresa el
+                    código para activar tu cuenta.
+                  </p>
+                </div>
+                <form onSubmit={verifyOtp} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="otp">Código de verificación</Label>
+                    <Input
+                      id="otp"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]*"
+                      maxLength={6}
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                      required
+                      placeholder="123456"
+                      className="text-center text-2xl font-mono tracking-[0.6em] h-14"
+                      autoFocus
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="hero"
+                    size="lg"
+                    className="w-full"
+                    disabled={loading || otp.length !== 6}
+                  >
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Activar cuenta
+                  </Button>
+                </form>
+                <div className="mt-5 pt-5 border-t border-border/60 space-y-2 text-center">
+                  <p className="text-xs text-muted-foreground">
+                    ¿No llegó el código? Revisa la carpeta de spam.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={resendCode}
+                    disabled={resending}
+                    className="text-sm font-semibold text-foreground hover:text-biosensor underline underline-offset-2 disabled:opacity-50"
+                  >
+                    {resending ? "Reenviando…" : "Reenviar código"}
+                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setNeedsOtp(false);
+                        setOtp("");
+                      }}
+                      className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+                    >
+                      ← Cambiar email
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
             <div className="mb-6 text-center">
               <h2 className="font-display text-2xl font-bold">
                 {mode === "signup" ? "Crea tu cuenta" : "Bienvenido de nuevo"}
@@ -426,6 +564,8 @@ function AuthPage() {
               Al continuar aceptas los términos, política de privacidad y tratamiento de datos
               personales (Habeas Data) de Humanix.
             </p>
+              </>
+            )}
           </div>
         </div>
       </div>
