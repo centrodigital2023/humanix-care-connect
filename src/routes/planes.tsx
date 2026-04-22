@@ -92,12 +92,12 @@ function PlansPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 pt-24 pb-12 sm:pt-28 sm:pb-16">
         <header className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/30">
             <Crown className="h-3 w-3" /> Planes Humanix
           </span>
-          <h1 className="mt-3 font-display text-3xl sm:text-5xl font-bold">
+          <h1 className="mt-3 font-display text-[clamp(1.875rem,5vw,3rem)] font-bold">
             Un plan para cada historia humana.
           </h1>
           <p className="mt-3 text-muted-foreground">

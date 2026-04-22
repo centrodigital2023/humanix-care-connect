@@ -90,8 +90,8 @@ function TecnologiaPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Navbar />
-      <main className="pt-24 pb-20">
-        <section className="relative overflow-hidden py-16">
+      <main className="pt-20 sm:pt-24 pb-16 sm:pb-20">
+        <section className="relative overflow-hidden py-12 sm:py-16">
           <div className="absolute inset-0 bg-cyber" />
           <div className="absolute inset-0 bg-aurora opacity-70" />
           <div className="absolute inset-0 grid-pattern opacity-40" />
@@ -100,10 +100,10 @@ function TecnologiaPage() {
               <Sparkles className="h-3.5 w-3.5" />
               Tecnología
             </span>
-            <h1 className="mt-4 font-display text-4xl sm:text-6xl font-bold leading-[1.05] text-cyber-foreground">
+            <h1 className="mt-4 font-display text-[clamp(2rem,6vw,3.75rem)] font-bold leading-[1.05] text-cyber-foreground">
               IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
             </h1>
-            <p className="mt-5 max-w-3xl text-lg text-cyber-foreground/70 leading-relaxed">
+            <p className="mt-5 max-w-3xl text-base sm:text-lg text-cyber-foreground/70 leading-relaxed">
               Construido sobre Lovable Cloud (Postgres + Realtime + pgvector + Edge Functions) y
               Lovable AI Gateway con Gemini. Cumple con la regulación colombiana y se adapta a la
               infraestructura de cualquier IPS.

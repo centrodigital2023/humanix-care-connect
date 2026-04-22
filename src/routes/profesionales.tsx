@@ -107,28 +107,28 @@ function ProfesionalesPage() {
         dangerouslySetInnerHTML={{ __html: seo.jsonLdString(profesionalesServiceLd) }}
       />
       <Navbar />
-      <main className="pt-28 pb-20">
+      <main className="pt-24 sm:pt-28 pb-16 sm:pb-20">
         <section className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="max-w-3xl">
             <span className="inline-flex items-center gap-2 rounded-full border border-biosensor/30 bg-biosensor/10 px-3.5 py-1.5 text-xs font-medium text-biosensor">
               <Stethoscope className="h-3.5 w-3.5" />
               Para profesionales de salud
             </span>
-            <h1 className="mt-4 font-display text-4xl sm:text-5xl font-bold leading-[1.05]">
+            <h1 className="mt-4 font-display text-[clamp(1.875rem,5.5vw,3rem)] font-bold leading-[1.05]">
               Tu carrera en salud, <span className="text-gradient-bio">sin fricción</span>.
             </h1>
-            <p className="mt-5 text-lg text-muted-foreground leading-relaxed">
+            <p className="mt-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
               Humanix conecta enfermeros, auxiliares y cuidadores con familias, clínicas y agencias
               de toda Colombia. Trabaja cuando quieras, cobra al instante y construye reputación
               verificable.
             </p>
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <Button variant="hero" size="xl" asChild>
+              <Button variant="hero" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/auth" search={{ role: "professional" }}>
                   Crear perfil gratis <ArrowRight className="ml-1 h-5 w-5" />
                 </Link>
               </Button>
-              <Button variant="glass" size="xl" asChild>
+              <Button variant="glass" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/buscar" search={{ tab: "ofertas" }}>
                   Ver ofertas abiertas
                 </Link>
