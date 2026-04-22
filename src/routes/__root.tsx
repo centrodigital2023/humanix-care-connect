@@ -14,6 +14,8 @@ const {
   TWITTER_HANDLE,
   organizationLd,
   websiteLd,
+  localBusinessLd,
+  webApplicationLd,
 } = seo;
 
 import appCss from "../styles.css?url";
@@ -113,6 +115,14 @@ function RootShell({ children }: { children: React.ReactNode }) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: seo.jsonLdString(websiteLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: seo.jsonLdString(localBusinessLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: seo.jsonLdString(webApplicationLd()) }}
         />
       </head>
       <body>

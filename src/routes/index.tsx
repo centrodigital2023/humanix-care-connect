@@ -5,17 +5,26 @@ import { Hero } from "@/components/humanix/Hero";
 import { LiveSocialProof } from "@/components/humanix/LiveSocialProof";
 import { TrustBar } from "@/components/humanix/TrustBar";
 import { AudienceSection } from "@/components/humanix/AudienceSection";
-import { TechSection } from "@/components/humanix/TechSection";
-import { Testimonials } from "@/components/humanix/Testimonials";
-import { Pricing } from "@/components/humanix/Pricing";
-import { FAQ, faqs } from "@/components/humanix/FAQ";
-import { CTA } from "@/components/humanix/CTA";
 import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
 const { buildSeo, faqLd, SITE_NAME } = seo;
+
+// Below-the-fold: lazy to mejorar FCP/LCP
+const TechSection = lazy(() =>
+  import("@/components/humanix/TechSection").then((m) => ({ default: m.TechSection })),
+);
+const Testimonials = lazy(() =>
+  import("@/components/humanix/Testimonials").then((m) => ({ default: m.Testimonials })),
+);
+const Pricing = lazy(() =>
+  import("@/components/humanix/Pricing").then((m) => ({ default: m.Pricing })),
+);
+const FAQ = lazy(() => import("@/components/humanix/FAQ").then((m) => ({ default: m.FAQ })));
+const CTA = lazy(() => import("@/components/humanix/CTA").then((m) => ({ default: m.CTA })));
 
 const HumanixAssistant = lazy(() =>
   import("@/components/humanix/HumanixAssistant").then((module) => ({
@@ -53,11 +62,13 @@ function Index() {
         <LiveSocialProof />
         <TrustBar />
         <AudienceSection />
-        <TechSection />
-        <Testimonials />
-        <Pricing />
-        <FAQ />
-        <CTA />
+        <Suspense fallback={<div className="min-h-[200px]" />}>
+          <TechSection />
+          <Testimonials />
+          <Pricing />
+          <FAQ />
+          <CTA />
+        </Suspense>
       </main>
       <Footer />
       <Suspense fallback={null}>

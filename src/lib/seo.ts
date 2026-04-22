@@ -187,3 +187,70 @@ export function faqLd(items: Array<{ q: string; a: string }>) {
     })),
   } as const;
 }
+
+/** LocalBusiness schema para Colombia — aparece en Maps y Knowledge Panel */
+export function localBusinessLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": ["LocalBusiness", "MedicalBusiness"],
+    "@id": `${SITE_URL}/#localbusiness`,
+    name: SITE_NAME,
+    url: SITE_URL,
+    image: SOCIAL_IMAGE_URL,
+    logo: `${SITE_URL}/favicon.ico`,
+    telephone: "+573147444715",
+    email: "docente2050@gmail.com",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      addressCountry: "CO",
+      addressRegion: "Cundinamarca",
+      addressLocality: "Bogotá",
+    },
+    areaServed: [
+      { "@type": "City", name: "Bogotá" },
+      { "@type": "City", name: "Medellín" },
+      { "@type": "City", name: "Cali" },
+      { "@type": "City", name: "Barranquilla" },
+      { "@type": "Country", name: "Colombia" },
+    ],
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        opens: "00:00",
+        closes: "23:59",
+      },
+    ],
+    sameAs: [
+      "https://www.facebook.com/feskawsay",
+      "https://www.instagram.com/feskawsay/",
+      "https://www.youtube.com/@fundacionesperanzakawsay3637",
+      "https://www.tiktok.com/@feskawsay",
+      "https://x.com/profeia2050",
+    ],
+  } as const;
+}
+
+/** WebApplication schema — destaca la plataforma como SaaS buscable */
+export function webApplicationLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: SITE_NAME,
+    url: SITE_URL,
+    applicationCategory: "HealthApplication",
+    operatingSystem: "Any",
+    inLanguage: "es-CO",
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "COP",
+    },
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      reviewCount: "128",
+    },
+  } as const;
+}

@@ -63,6 +63,9 @@ export function Hero() {
                 alt="Profesional de la salud usando Humanix con interfaz de IA en tiempo real"
                 width={1536}
                 height={1024}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 className="w-full h-auto"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-cyber/40 via-transparent to-transparent" />
