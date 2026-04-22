@@ -107,8 +107,9 @@ export function VoiceRating({
           .from("rating-voice")
           .upload(path, audioBlob, { contentType: "audio/webm", upsert: false });
         if (upErr) throw upErr;
-        const { data: pub } = supabase.storage.from("rating-voice").getPublicUrl(path);
-        voice_url = pub.publicUrl;
+        // Bucket is private — store the object path; participants/staff fetch
+        // a short-lived signed URL on demand via supabase.storage.createSignedUrl().
+        voice_url = path;
       }
 
       const { error } = await supabase.from("service_ratings").insert({
