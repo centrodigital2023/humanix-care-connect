@@ -63,10 +63,14 @@ export function Navbar() {
             </Link>
           </Button>
           <Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
-            <Link to="/auth">Iniciar sesión</Link>
+            <Link to="/auth" search={{ mode: "signin" }}>
+              Iniciar sesión
+            </Link>
           </Button>
           <Button variant="hero" size="sm" className="hidden sm:inline-flex" asChild>
-            <Link to="/auth">Empezar gratis</Link>
+            <Link to="/auth" search={{ mode: "signup" }}>
+              Empezar gratis
+            </Link>
           </Button>
           <button
             onClick={() => setOpen(!open)}
@@ -91,8 +95,21 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
+            <Button variant="ghost" size="sm" className="mt-2 w-full" asChild>
+              <Link
+                to="/auth"
+                search={{ mode: "signin" }}
+                onClick={() => setOpen(false)}
+              >
+                Iniciar sesión
+              </Link>
+            </Button>
             <Button variant="hero" size="sm" className="mt-2 w-full" asChild>
-              <Link to="/auth" onClick={() => setOpen(false)}>
+              <Link
+                to="/auth"
+                search={{ mode: "signup" }}
+                onClick={() => setOpen(false)}
+              >
                 Empezar gratis
               </Link>
             </Button>

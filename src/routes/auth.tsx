@@ -19,7 +19,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>): { role?: Role; redirect?: string } => {
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { role?: Role; redirect?: string; mode?: "signin" | "signup" } => {
     const r = search.role;
     const role: Role | undefined =
       r === "professional" || r === "family" || r === "institution" ? r : undefined;
@@ -27,9 +29,13 @@ export const Route = createFileRoute("/auth")({
       typeof search.redirect === "string" && search.redirect.startsWith("/")
         ? search.redirect
         : undefined;
-    const out: { role?: Role; redirect?: string } = {};
+    const m = search.mode;
+    const mode: "signin" | "signup" | undefined =
+      m === "signin" || m === "signup" ? m : undefined;
+    const out: { role?: Role; redirect?: string; mode?: "signin" | "signup" } = {};
     if (role) out.role = role;
     if (redirect) out.redirect = redirect;
+    if (mode) out.mode = mode;
     return out;
   },
   head: () => ({
@@ -74,7 +80,7 @@ const roleConfig: Record<
 function AuthPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
-  const [mode, setMode] = useState<"signin" | "signup">("signup");
+  const [mode, setMode] = useState<"signin" | "signup">(search.mode ?? "signup");
   // Si vino con ?role=professional desde /profesionales, lo respetamos.
   // Si no vino con rol, ocultamos profesional y dejamos solo family/institution.
   const allowProfessional = search.role === "professional";
