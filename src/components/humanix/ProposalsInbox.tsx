@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { CheckCircle2, XCircle, Handshake, Loader2, Clock, User } from "lucide-react";
+import { CheckCircle2, XCircle, Handshake, Loader2, Clock, User, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { TrustProfileCard } from "./TrustProfileCard";
 
 const sb = supabase as unknown as SupabaseClient;
 
@@ -46,6 +47,7 @@ export function ProposalsInbox({
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [peers, setPeers] = useState<Record<string, PeerProfile>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -271,7 +273,8 @@ export function ProposalsInbox({
                     ? "bg-rose-500/10 text-rose-700 border-rose-500/30"
                     : "bg-muted text-muted-foreground border-border";
             return (
-              <div key={p.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div key={p.id} className="p-4 border-b border-border/50 last:border-b-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-muted overflow-hidden shrink-0 flex items-center justify-center">
                   {peer?.avatar_url ? (
                     <img src={peer.avatar_url} alt={peer.full_name ?? ""} className="h-full w-full object-cover" />
@@ -306,6 +309,14 @@ export function ProposalsInbox({
                           ? "Cancelada"
                           : "Expirada"}
                 </Badge>
+                <Button
+                  size="sm"
+                  variant={expanded === p.id ? "secondary" : "ghost"}
+                  onClick={() => setExpanded((e) => (e === p.id ? null : p.id))}
+                  title="Ver perfil de confianza"
+                >
+                  <Info className="h-3.5 w-3.5" />
+                </Button>
                 {p.status === "pending" && tab === "incoming" ? (
                   <div className="flex items-center gap-2">
                     <Button
@@ -335,6 +346,16 @@ export function ProposalsInbox({
                       Ver servicio
                     </Link>
                   </Button>
+                ) : null}
+                </div>
+                {expanded === p.id ? (
+                  <div className="mt-3">
+                    <TrustProfileCard
+                      userId={peerId}
+                      role={role === "family" ? "professional" : "family"}
+                      compact
+                    />
+                  </div>
                 ) : null}
               </div>
             );

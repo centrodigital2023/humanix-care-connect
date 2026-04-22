@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Heart, Handshake, Loader2, Clock, MapPin } from "lucide-react";
+import { Heart, Handshake, Loader2, Clock, MapPin, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { TrustProfileCard } from "./TrustProfileCard";
 
 const sb = supabase as unknown as SupabaseClient;
 
@@ -28,6 +29,7 @@ export function OpenFamilyNeedsList({ professionalId }: { professionalId: string
   const [families, setFamilies] = useState<Record<string, Fam>>({});
   const [applied, setApplied] = useState<Set<string>>(new Set());
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -139,7 +141,8 @@ export function OpenFamilyNeedsList({ professionalId }: { professionalId: string
             const hours = Math.max(1, Math.round((end.getTime() - start.getTime()) / 3_600_000));
             const total = n.hourly_rate * hours;
             return (
-              <div key={n.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div key={n.id} className="p-4 border-b border-border/50 last:border-b-0">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">
                     {fam?.full_name ?? "Familia Humanix"}
@@ -163,8 +166,12 @@ export function OpenFamilyNeedsList({ professionalId }: { professionalId: string
                     </p>
                   ) : null}
                 </div>
-                <Button asChild size="sm" variant="outline">
-                  <Link to="/dashboard/familia">Ver perfil familia</Link>
+                <Button
+                  size="sm"
+                  variant={expanded === n.id ? "secondary" : "outline"}
+                  onClick={() => setExpanded((e) => (e === n.id ? null : n.id))}
+                >
+                  <Info className="h-3 w-3 mr-1" /> Perfil
                 </Button>
                 <Button size="sm" onClick={() => apply(n)} disabled={busyId === n.id}>
                   {busyId === n.id ? (
@@ -174,6 +181,17 @@ export function OpenFamilyNeedsList({ professionalId }: { professionalId: string
                   )}
                   Postularme
                 </Button>
+                </div>
+                {expanded === n.id ? (
+                  <div className="mt-3">
+                    <TrustProfileCard
+                      userId={n.family_user_id}
+                      role="family"
+                      highlightAddress={n.service_address}
+                      compact
+                    />
+                  </div>
+                ) : null}
               </div>
             );
           })

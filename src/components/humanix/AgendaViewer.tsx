@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Handshake, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Handshake, ShieldCheck, X, Send, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { TrustProfileCard } from "./TrustProfileCard";
 
 const sb = supabase as unknown as SupabaseClient;
 
@@ -63,6 +64,8 @@ export function AgendaViewer({
   const [busyCells, setBusyCells] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState<string | null>(null);
+  const [pendingCell, setPendingCell] = useState<{ day: Date; hour: number } | null>(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   const weekEnd = useMemo(() => addDays(weekStart, 7), [weekStart]);
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
@@ -168,8 +171,7 @@ export function AgendaViewer({
       return;
     }
     const key = `${day.toDateString()}-${hour}`;
-    setSending(key);
-    try {
+    setSending(key);    try {
       const start = new Date(day);
       start.setHours(hour, 0, 0, 0);
       const end = new Date(start);
@@ -220,6 +222,7 @@ export function AgendaViewer({
         s.add(`${day.getFullYear()}-${day.getMonth()}-${day.getDate()}-${hour}`);
         return s;
       });
+      setPendingCell(null);
       onProposalSent?.();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error enviando propuesta");
@@ -229,6 +232,23 @@ export function AgendaViewer({
   }
 
   const today = new Date();
+
+  const pendingHourlyRate = (() => {
+    if (!pendingCell) return null;
+    if (targetRole === "professional") return targetHourlyRate ?? 20000;
+    const n = needAt(pendingCell.day, pendingCell.hour);
+    return n?.hourly_rate ?? null;
+  })();
+  const pendingNeedNotes = (() => {
+    if (!pendingCell || targetRole !== "family") return null;
+    return needAt(pendingCell.day, pendingCell.hour)?.notes ?? null;
+  })();
+  const pendingAddress = (() => {
+    if (!pendingCell || targetRole !== "family") return null;
+    return needAt(pendingCell.day, pendingCell.hour)?.service_address ?? null;
+  })();
+  const pendingKey = pendingCell ? `${pendingCell.day.toDateString()}-${pendingCell.hour}` : null;
+  const isSendingPending = pendingKey !== null && sending === pendingKey;
 
   return (
     <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -245,6 +265,14 @@ export function AgendaViewer({
           </p>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant={showInfo ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setShowInfo((v) => !v)}
+            title="Ver perfil de confianza"
+          >
+            <Info className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => setWeekStart((w) => addDays(w, -7))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -257,6 +285,8 @@ export function AgendaViewer({
         </div>
       </div>
 
+      <div className={`grid ${showInfo || pendingCell ? "lg:grid-cols-[1fr_360px]" : "grid-cols-1"}`}>
+        <div>
       {loading ? (
         <div className="p-12 text-center text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Cargando…
@@ -308,7 +338,7 @@ export function AgendaViewer({
                           <button
                             type="button"
                             disabled={state !== "free" || isSending || already || !currentUserId}
-                            onClick={() => propose(d, h)}
+                            onClick={() => setPendingCell({ day: d, hour: h })}
                             className={`w-full h-8 rounded-md border ${cls} transition-colors flex items-center justify-center ${already ? "opacity-70 ring-2 ring-fuchsia-neural" : ""}`}
                             title={
                               already
@@ -341,7 +371,7 @@ export function AgendaViewer({
                         <button
                           type="button"
                           disabled={!isOpen || isSending || already || !currentUserId}
-                          onClick={() => propose(d, h)}
+                          onClick={() => setPendingCell({ day: d, hour: h })}
                           className={`w-full h-8 rounded-md border ${cls} transition-colors flex items-center justify-center ${already ? "opacity-70 ring-2 ring-fuchsia-neural" : ""}`}
                           title={
                             already
@@ -380,6 +410,106 @@ export function AgendaViewer({
           </>
         )}
         <Legend color="ring-2 ring-fuchsia-neural bg-transparent" label="Propuesta enviada" />
+      </div>
+        </div>
+
+        {showInfo || pendingCell ? (
+          <aside className="border-t lg:border-t-0 lg:border-l border-border bg-muted/20 p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Perfil de confianza
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={() => {
+                  setPendingCell(null);
+                  setShowInfo(false);
+                }}
+              >
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <TrustProfileCard
+              userId={targetUserId}
+              role={targetRole}
+              highlightAddress={pendingAddress}
+              compact
+            />
+            {pendingCell ? (
+              <div className="rounded-xl border border-biosensor/30 bg-biosensor/5 p-3 space-y-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-biosensor">
+                  Confirmar turno
+                </p>
+                <div className="text-xs space-y-0.5">
+                  <p>
+                    <span className="text-muted-foreground">Fecha:</span>{" "}
+                    <span className="font-medium">
+                      {pendingCell.day.toLocaleDateString("es-CO", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </span>
+                  </p>
+                  <p>
+                    <span className="text-muted-foreground">Hora:</span>{" "}
+                    <span className="font-medium">
+                      {pendingCell.hour.toString().padStart(2, "0")}:00 —{" "}
+                      {(pendingCell.hour + 1).toString().padStart(2, "0")}:00
+                    </span>
+                  </p>
+                  {pendingHourlyRate != null ? (
+                    <p>
+                      <span className="text-muted-foreground">Tarifa:</span>{" "}
+                      <span className="font-medium">
+                        ${pendingHourlyRate.toLocaleString("es-CO")}/h
+                      </span>
+                    </p>
+                  ) : null}
+                  {pendingNeedNotes ? (
+                    <p className="text-[11px] text-muted-foreground line-clamp-3 pt-1">
+                      “{pendingNeedNotes}”
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-biosensor hover:bg-biosensor/90"
+                    disabled={isSendingPending || !currentUserId || currentRole === targetRole}
+                    onClick={() => propose(pendingCell.day, pendingCell.hour)}
+                  >
+                    {isSendingPending ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                    ) : (
+                      <Send className="h-3.5 w-3.5 mr-1" />
+                    )}
+                    {targetRole === "professional" ? "Contratar" : "Postularme"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPendingCell(null)}
+                    disabled={isSendingPending}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+                {!currentUserId ? (
+                  <p className="text-[10px] text-muted-foreground">
+                    Inicia sesión para enviar la propuesta.
+                  </p>
+                ) : currentRole === targetRole ? (
+                  <p className="text-[10px] text-muted-foreground">
+                    Solo la otra parte puede enviar propuestas en esta agenda.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </aside>
+        ) : null}
       </div>
     </div>
   );
