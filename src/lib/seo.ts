@@ -117,10 +117,13 @@ export function buildSeo(opts: SeoOptions): { meta: Meta[]; links: Link[] } {
 /**
  * Serialize structured data so it can be embedded as JSON-LD via
  * `dangerouslySetInnerHTML`. Escapes `</script>` to prevent HTML injection.
+ *
+ * Exported as a const arrow to guarantee a stable binding under Vite SSR
+ * (function declarations can occasionally fail to bind through the SSR module
+ * proxy during HMR, surfacing as "jsonLdString is not a function").
  */
-export function jsonLdString(data: unknown): string {
-  return JSON.stringify(data).replace(/</g, "\\u003c");
-}
+export const jsonLdString = (data: unknown): string =>
+  JSON.stringify(data).replace(/</g, "\\u003c");
 
 /** Reusable JSON-LD builders ------------------------------------------------ */
 
