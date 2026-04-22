@@ -142,6 +142,18 @@ function ProfessionalPublicPage() {
     };
   }, [proId]);
 
+  // Dynamic SEO: ajusta <title> y descripción una vez que sabemos el nombre real
+  useEffect(() => {
+    if (!pro || !profile) return;
+    const nm = profile.full_name ?? "Profesional verificado";
+    const sp = pro.specialty ?? "profesional de salud";
+    const cy = profile.city ?? pro.service_cities?.[0] ?? "Colombia";
+    document.title = `${nm} · ${sp} en ${cy} · Humanix`;
+    const desc = `${nm}, ${sp} con verificación RETHUS${pro.rethus_verified ? " ✅" : ""} en ${cy}. Agenda en línea, calificaciones reales y contratación segura en Humanix.`;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", desc);
+  }, [pro, profile]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
@@ -287,11 +299,23 @@ function ProfessionalPublicPage() {
                   </Button>
                 )}
               </div>
+              <a
+                href="#agenda"
+                className="mt-2 block text-center text-[11px] text-muted-foreground hover:text-biosensor underline-offset-2 hover:underline"
+              >
+                Ver agenda y elegir horario ↓
+              </a>
             </div>
           </header>
 
           {/* Agenda pública: familia puede contratar slots verdes */}
-          <div className="mt-6">
+          <section id="agenda" className="mt-6 scroll-mt-24">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="font-display text-lg font-semibold">Agenda y disponibilidad</h2>
+              <span className="text-[11px] text-muted-foreground">
+                Horarios en tiempo real
+              </span>
+            </div>
             <AgendaViewer
               targetUserId={pro.user_id}
               targetRole="professional"
@@ -305,7 +329,7 @@ function ProfessionalPublicPage() {
               }
               targetHourlyRate={pro.hourly_rate ?? null}
             />
-          </div>
+          </section>
 
           {/* Body */}
           <div className="mt-6 grid lg:grid-cols-3 gap-6">
