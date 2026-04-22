@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Stethoscope, Building2, Crown, Loader2, Heart } from "lucide-react";
+import { Check, Stethoscope, Building2, Crown, Loader2, Heart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,12 +15,12 @@ export const Route = createFileRoute("/planes")({
       title: "Planes y precios",
       path: "/planes",
       description:
-        "Un plan para cada historia humana. Desde gratis para profesionales hasta $99.000 COP/mes para empresas. Sin permanencia. Cancela cuando quieras.",
+        "Un plan para cada historia humana. Desde gratis, Esencial $9.000, Pro $29.000 e Institución desde $99.000 COP/mes. Sin permanencia. Cancela cuando quieras.",
     }),
   component: PlansPage,
 });
 
-type PlanKey = "profesional" | "familia" | "empresa";
+type PlanKey = "free" | "esencial" | "pro" | "institucion";
 
 const PLANS: {
   key: PlanKey;
@@ -29,61 +29,86 @@ const PLANS: {
   priceNote: string;
   audience: string;
   icon: typeof Stethoscope;
-  tone: "bio" | "fuchsia" | "copper";
+  tone: "bio" | "fuchsia" | "copper" | "muted";
   highlight?: boolean;
   features: string[];
   cta: string;
   amount: number;
+  dbPlan?: string; // para mapear con mp_subscriptions.plan / subscriptions.plan
 }[] = [
   {
-    key: "profesional",
-    name: "Profesional",
-    priceLabel: "Gratis",
-    priceNote: "o $29.000 COP/mes Pro",
-    audience: "Para enfermeros, auxiliares y cuidadores independientes.",
+    key: "free",
+    name: "Free",
+    priceLabel: "COP 0",
+    priceNote: "siempre",
+    audience: "Para conocer Humanix sin compromiso.",
+    icon: Heart,
+    tone: "muted",
+    amount: 0,
+    features: [
+      "Crear perfil profesional o familiar",
+      "Buscar y aplicar a ofertas abiertas",
+      "Asistente IA básico (preguntas generales)",
+      "Mensajería 1:1 cuando se acepta una aplicación",
+    ],
+    cta: "Empezar gratis",
+  },
+  {
+    key: "esencial",
+    name: "Esencial",
+    priceLabel: "COP 9.000",
+    priceNote: "/mes",
+    audience: "Familias y profesionales que quieren todo activo.",
+    icon: Sparkles,
+    tone: "copper",
+    highlight: true,
+    amount: 9000,
+    dbPlan: "essential_monthly",
+    features: [
+      "Match IA en menos de 150 ms",
+      "Buzón de postulaciones ilimitado",
+      "Contacto directo por WhatsApp con la otra parte",
+      "Geolocalización en vivo y ETA",
+      "Verificación RETHUS y anti-fraude IA incluida",
+      "Sin comisión: el profesional cobra directo al cliente",
+    ],
+    cta: "Suscribirme por $9.000",
+  },
+  {
+    key: "pro",
+    name: "Pro Profesional",
+    priceLabel: "COP 29.000",
+    priceNote: "/mes",
+    audience: "Profesionales que quieren visibilidad máxima.",
     icon: Stethoscope,
     tone: "bio",
     amount: 29000,
+    dbPlan: "pro_monthly",
     features: [
-      "Perfil verificado RETHUS",
-      "Postulación a turnos ilimitados",
-      "Calendario y notificaciones",
-      "Pagos en Nequi y PSE",
+      "Todo lo del Esencial",
+      "Boost de visibilidad en búsquedas",
+      "Coach de carrera 24/7 (mejorar perfil y Trust Score)",
+      "Sugerencias IA en cada mensaje",
+      "Validación anti-fraude IA prioritaria",
     ],
-    cta: "Crear perfil",
+    cta: "Activar Pro",
   },
   {
-    key: "familia",
-    name: "Familia",
-    priceLabel: "5%",
-    priceNote: "por turno contratado",
-    audience: "Encuentra cuidador certificado para tu ser querido.",
-    icon: Heart,
-    tone: "copper",
-    highlight: true,
-    amount: 0,
-    features: [
-      "Búsqueda y match en minutos",
-      "Geolocalización en vivo",
-      "Botón de emergencia 24/7",
-      "Seguro Sura incluido",
-    ],
-    cta: "Contratar ahora",
-  },
-  {
-    key: "empresa",
-    name: "Empresa",
-    priceLabel: "Desde $99.000",
-    priceNote: "COP/mes",
-    audience: "Para IPS, clínicas y agencias con +10 profesionales.",
+    key: "institucion",
+    name: "Institución (IPS)",
+    priceLabel: "Desde COP 99.000",
+    priceNote: "/mes",
+    audience: "Clínicas, hospitales y agencias de cuidado.",
     icon: Building2,
     tone: "fuchsia",
     amount: 99000,
+    dbPlan: "institution_monthly",
     features: [
-      "Panel de superadministrador con IA",
-      "Predicción de ausentismo",
-      "API y webhooks",
-      "Auditoría Min. Salud",
+      "Bolsa de créditos IA mensual",
+      "Multi-usuario con roles (HR, evaluador, admin)",
+      "Pipeline de candidatos con scoring IA",
+      "Detección de inconsistencias en CVs y RETHUS",
+      "Soporte prioritario y onboarding asistido",
     ],
     cta: "Hablar con ventas",
   },
@@ -93,10 +118,12 @@ const TONE: Record<string, string> = {
   bio: "border-biosensor/30 bg-biosensor/5 text-biosensor",
   fuchsia: "border-fuchsia-neural/40 bg-fuchsia-neural/5 text-fuchsia-neural",
   copper: "border-copper/30 bg-copper/5 text-copper",
+  muted: "border-border bg-muted/40 text-muted-foreground",
 };
 
 function PlansPage() {
   const [currentPlan, setCurrentPlan] = useState<string | null>(null);
+  const [hasSession, setHasSession] = useState(false);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<PlanKey | null>(null);
 
@@ -107,6 +134,7 @@ function PlansPage() {
         setLoading(false);
         return;
       }
+      setHasSession(true);
       const [subRes, mpRes] = await Promise.all([
         supabase
           .from("subscriptions")
@@ -128,16 +156,22 @@ function PlansPage() {
     })();
   }, []);
 
-  const choose = async (plan: PlanKey, amount: number) => {
-    if (plan === "familia") {
-      window.location.href = "/auth?redirect=" + encodeURIComponent("/buscar");
+  const isCurrent = (p: (typeof PLANS)[number]) => {
+    if (p.key === "free") return hasSession && !currentPlan;
+    return currentPlan === p.dbPlan;
+  };
+
+  const choose = async (plan: PlanKey, amount: number, dbPlan?: string) => {
+    if (plan === "free") {
+      window.location.href = "/auth";
       return;
     }
-    if (plan === "empresa") {
-      window.location.href = "mailto:hola@humanix.co?subject=Plan Empresa Humanix";
+    if (plan === "institucion") {
+      window.location.href =
+        "mailto:hola@humanix.co?subject=Plan Institución Humanix (IPS)";
       return;
     }
-    // plan === "profesional" → checkout Pro
+    // esencial | pro → checkout Mercado Pago
     setActing(plan);
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -148,7 +182,7 @@ function PlansPage() {
       }
       const { data, error } = await supabase.functions.invoke("mp-create-subscription", {
         body: {
-          plan: "pro_monthly",
+          plan: dbPlan ?? "pro_monthly",
           amount,
           email: sess.session.user.email,
         },
@@ -169,7 +203,7 @@ function PlansPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 py-12 sm:py-16">
         <header className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/30">
             <Crown className="h-3 w-3" /> Planes Humanix
@@ -184,10 +218,10 @@ function PlansPage() {
           </p>
         </header>
 
-        <section className="mt-10 grid md:grid-cols-3 gap-6">
+        <section className="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {PLANS.map((p) => {
             const Icon = p.icon;
-            const isCurrent = currentPlan === p.key;
+            const current = isCurrent(p);
             return (
               <Card
                 key={p.key}
@@ -210,7 +244,9 @@ function PlansPage() {
                 <h2 className="mt-3 font-display text-xl font-semibold">{p.name}</h2>
                 <p className="text-xs text-muted-foreground mt-0.5">{p.audience}</p>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold font-display">{p.priceLabel}</span>
+                  <span className="text-3xl sm:text-4xl font-bold font-display">
+                    {p.priceLabel}
+                  </span>
                   {p.priceNote && (
                     <p className="text-sm text-muted-foreground mt-0.5">{p.priceNote}</p>
                   )}
@@ -225,12 +261,20 @@ function PlansPage() {
                 </ul>
                 <Button
                   className="mt-6 w-full"
-                  variant={p.highlight ? "copper" : p.tone === "fuchsia" ? "hero" : "outline"}
-                  disabled={loading || acting === p.key || isCurrent}
-                  onClick={() => choose(p.key, p.amount)}
+                  variant={
+                    p.highlight
+                      ? "copper"
+                      : p.tone === "fuchsia"
+                        ? "hero"
+                        : p.tone === "muted"
+                          ? "outline"
+                          : "outline"
+                  }
+                  disabled={loading || acting === p.key || current}
+                  onClick={() => choose(p.key, p.amount, p.dbPlan)}
                 >
                   {acting === p.key && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  {isCurrent ? "Tu plan actual" : p.cta}
+                  {current ? "Tu plan actual" : p.cta}
                 </Button>
               </Card>
             );
