@@ -3,6 +3,24 @@
 
 import { corsHeaders } from "../_shared/auth.ts";
 
+// Simple in-memory IP rate limiter (per edge function instance).
+// Protege de abuso anónimo que dispararía costos del Lovable AI gateway.
+const HITS = new Map<string, { count: number; ts: number }>();
+const WINDOW_MS = 60_000; // 1 min
+const MAX_HITS = 12;      // 12 mensajes / min / IP
+
+function rateLimited(ip: string): boolean {
+  const now = Date.now();
+  const rec = HITS.get(ip);
+  if (!rec || now - rec.ts > WINDOW_MS) {
+    HITS.set(ip, { count: 1, ts: now });
+    return false;
+  }
+  rec.count += 1;
+  if (rec.count > MAX_HITS) return true;
+  return false;
+}
+
 const SYSTEM_BY_PERSONA: Record<string, string> = {
   professional:
     "Eres Humanix Assistant, un coach IA para profesionales de la salud en Colombia (enfermeros, auxiliares, cuidadores). " +
@@ -28,6 +46,17 @@ const SYSTEM_BY_PERSONA: Record<string, string> = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("cf-connecting-ip") ??
+    "anon";
+  if (rateLimited(ip)) {
+    return new Response(
+      JSON.stringify({ error: "Demasiadas solicitudes. Intenta en un minuto." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+
   try {
     const { messages, persona } = await req.json();
     if (!Array.isArray(messages) || messages.length === 0) {
@@ -35,6 +64,17 @@ Deno.serve(async (req) => {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    // Límite defensivo: evita payloads gigantes que disparen tokens.
+    const totalChars = messages.reduce(
+      (n: number, m: { content?: string }) => n + (m.content?.length ?? 0),
+      0,
+    );
+    if (messages.length > 30 || totalChars > 12_000) {
+      return new Response(
+        JSON.stringify({ error: "Conversación demasiado larga. Reinicia el chat." }),
+        { status: 413, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
