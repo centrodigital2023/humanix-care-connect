@@ -15,6 +15,7 @@ import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
 import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfesionalesRouteImport } from './routes/profesionales'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PrensaRouteImport } from './routes/prensa'
@@ -75,6 +76,11 @@ const SobreRoute = SobreRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfesionalesRoute = ProfesionalesRouteImport.update({
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/superadmin': typeof SuperadminRouteWithChildren
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/talento-humano': typeof TalentoHumanoRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
   '/superadmin': typeof SuperadminRouteWithChildren
@@ -368,6 +377,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
     | '/superadmin'
@@ -406,6 +416,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
     | '/talento-humano'
@@ -444,6 +455,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
     | '/superadmin'
@@ -484,6 +496,7 @@ export interface RootRouteChildren {
   PrensaRoute: typeof PrensaRoute
   PrivacidadRoute: typeof PrivacidadRoute
   ProfesionalesRoute: typeof ProfesionalesRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
   SuperadminRoute: typeof SuperadminRouteWithChildren
@@ -537,6 +550,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profesionales': {
@@ -830,6 +850,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrensaRoute: PrensaRoute,
   PrivacidadRoute: PrivacidadRoute,
   ProfesionalesRoute: ProfesionalesRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
   SuperadminRoute: SuperadminRouteWithChildren,

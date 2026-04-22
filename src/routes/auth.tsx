@@ -109,6 +109,10 @@ function AuthPage() {
   const [otp, setOtp] = useState("");
   const [resending, setResending] = useState(false);
 
+  // Forgot-password flow: request a reset link to the user's email.
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
   // Redirect if already logged in
   useEffect(() => {
     const target = search.redirect ?? "/dashboard";
@@ -220,6 +224,28 @@ function AuthPage() {
     }
   };
 
+  const requestReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Ingresa tu correo");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast.success("Te enviamos un enlace para restablecer tu contraseña.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "No se pudo enviar el enlace";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground bg-aurora">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
@@ -261,8 +287,88 @@ function AuthPage() {
           </div>
 
           <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elegant)] p-6 sm:p-8">
-            {needsOtp ? (
+            {forgotMode ? (
               <div>
+                <div className="mb-6 text-center">
+                  <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-copper/10 text-copper mb-3">
+                    <Lock className="h-7 w-7" />
+                  </div>
+                  <h2 className="font-display text-2xl font-bold">
+                    {forgotSent ? "Revisa tu correo" : "Recuperar contraseña"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {forgotSent
+                      ? "Te enviamos un enlace seguro para escribir tu nueva contraseña. El enlace expira en 1 hora."
+                      : "Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña."}
+                  </p>
+                </div>
+                {forgotSent ? (
+                  <div className="space-y-4">
+                    <div className="rounded-xl border border-border bg-muted/40 p-4 text-center">
+                      <p className="text-sm font-semibold">{email}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        ¿No llegó? Revisa la carpeta de spam o vuelve a intentarlo.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setForgotSent(false)}
+                    >
+                      Reenviar a otro correo
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotMode(false);
+                        setForgotSent(false);
+                      }}
+                      className="w-full text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+                    >
+                      ← Volver a iniciar sesión
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={requestReset} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="forgot-email">Correo</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="forgot-email"
+                          type="email"
+                          autoComplete="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          className="pl-9"
+                          placeholder="tu@email.com"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      variant="hero"
+                      size="lg"
+                      className="w-full"
+                      disabled={loading}
+                    >
+                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Enviar enlace de recuperación
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setForgotMode(false)}
+                      className="w-full text-sm text-muted-foreground hover:text-foreground underline underline-offset-2"
+                    >
+                      ← Volver a iniciar sesión
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : needsOtp ? (              <div>
                 <div className="mb-6 text-center">
                   <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-biosensor/10 text-biosensor mb-3">
                     <ShieldCheck className="h-7 w-7" />
@@ -527,6 +633,17 @@ function AuthPage() {
                     placeholder="Mínimo 8 caracteres"
                   />
                 </div>
+                {mode === "signin" && (
+                  <div className="text-right">
+                    <button
+                      type="button"
+                      onClick={() => setForgotMode(true)}
+                      className="text-xs text-muted-foreground hover:text-biosensor underline underline-offset-2"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  </div>
+                )}
               </div>
 
               <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
