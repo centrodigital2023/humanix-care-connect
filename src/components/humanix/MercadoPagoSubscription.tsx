@@ -57,7 +57,7 @@ export function MercadoPagoSubscription({ userId }: { userId: string }) {
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("mp-create-subscription", {
-        body: { plan: "pro_monthly", amount: 29900 },
+        body: { plan: "pro_monthly", amount: 29000 },
       });
       if (error) throw error;
       const url = data?.init_point ?? data?.sandbox_init_point;
@@ -95,7 +95,7 @@ export function MercadoPagoSubscription({ userId }: { userId: string }) {
       {active ? (
         <>
           <p className="text-sm text-muted-foreground">
-            Tu suscripción está activa por <strong>{COP(sub?.amount ?? 29900)}/mes</strong>.
+            Tu suscripción está activa por <strong>{COP(sub?.amount ?? 29000)}/mes</strong>.
           </p>
           {sub?.current_period_end && (
             <p className="text-xs text-muted-foreground mt-1">
@@ -124,7 +124,7 @@ export function MercadoPagoSubscription({ userId }: { userId: string }) {
           </p>
           <div className="mt-4 rounded-xl bg-gradient-to-br from-fuchsia-neural/10 to-biosensor/10 border border-fuchsia-neural/20 p-4">
             <p className="text-2xl font-bold">
-              {COP(29900)}
+              {COP(29000)}
               <span className="text-sm font-normal text-muted-foreground">/mes</span>
             </p>
             <ul className="mt-3 space-y-1.5 text-sm">

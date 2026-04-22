@@ -36,7 +36,7 @@ const plans = [
   },
   {
     name: "Pro Profesional",
-    price: "COP 29.900",
+    price: "COP 29.000",
     sub: "/mes",
     desc: "Profesionales que quieren visibilidad máxima.",
     features: [

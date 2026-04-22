@@ -6,7 +6,8 @@ const MP_BASE = "https://api.mercadopago.com";
 
 const PRICE_BY_PLAN: Record<string, number> = {
   essential_monthly: 9000,
-  pro_monthly: 29900,
+  pro_monthly: 29000,
+  institution_monthly: 99000,
 };
 
 Deno.serve(async (req) => {

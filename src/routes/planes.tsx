@@ -21,7 +21,7 @@ export const Route = createFileRoute("/planes")({
       {
         property: "og:description",
         content:
-          "Profesional gratis o $29.900/mes Pro. Familia: 5% por turno. Empresa desde $990.000 COP/mes. Pagos en pesos colombianos.",
+          "Profesional gratis o $29.000/mes Pro. Familia: 5% por turno. Empresa desde $99.000 COP/mes. Pagos en pesos colombianos.",
       },
     ],
   }),
@@ -47,11 +47,11 @@ const PLANS: {
     key: "profesional",
     name: "Profesional",
     priceLabel: "Gratis",
-    priceNote: "o $29.900 COP/mes Pro",
+    priceNote: "o $29.000 COP/mes Pro",
     audience: "Para enfermeros, auxiliares y cuidadores independientes.",
     icon: Stethoscope,
     tone: "bio",
-    amount: 29900,
+    amount: 29000,
     features: [
       "Perfil verificado RETHUS",
       "Postulación a turnos ilimitados",
@@ -81,7 +81,7 @@ const PLANS: {
   {
     key: "empresa",
     name: "Empresa",
-    priceLabel: "Desde $990.000",
+    priceLabel: "Desde $99.000",
     priceNote: "COP/mes",
     audience: "Para IPS, clínicas y agencias con +10 profesionales.",
     icon: Building2,
