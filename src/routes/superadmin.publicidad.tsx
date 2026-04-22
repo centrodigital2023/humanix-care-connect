@@ -65,6 +65,7 @@ const NAV: NavItem[] = [
   { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
   { label: "Marketplace", to: "/superadmin/marketplace", icon: Briefcase },
   { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "Marketing", to: "/superadmin/marketing", icon: Sparkles },
   { label: "CRM", to: "/superadmin/crm", icon: MessageSquare },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },

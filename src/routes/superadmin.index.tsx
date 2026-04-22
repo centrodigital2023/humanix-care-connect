@@ -16,6 +16,7 @@ import {
   Star,
   ScrollText,
   Megaphone,
+  Sparkles,
   MessageSquare,
   MapPin,
   CheckCircle2,
@@ -55,6 +56,7 @@ const NAV: NavItem[] = [
   { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
   { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
   { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "Marketing", to: "/superadmin/marketing", icon: Sparkles },
   { label: "CRM", to: "/superadmin/crm", icon: Mail },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
@@ -696,6 +698,13 @@ function SuperadminPage() {
             desc="CRUD de banners con recomendación IA y publicación."
             to="/superadmin/publicidad"
             tone="copper"
+          />
+          <ShortcutCard
+            icon={Sparkles}
+            title="Marketing"
+            desc="8 plantillas + tarjetas dinámicas de profesionales y ofertas para redes."
+            to="/superadmin/marketing"
+            tone="fuchsia"
           />
           <ShortcutCard
             icon={MessageSquare}

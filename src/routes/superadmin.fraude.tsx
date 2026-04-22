@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   ScrollText,
   Megaphone,
+  Sparkles,
   MessageSquare,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +33,7 @@ const NAV: NavItem[] = [
   { label: "Anti-fraude", to: "/superadmin/fraude", icon: ShieldAlert },
   { label: "Auditoría", to: "/superadmin/auditoria", icon: ScrollText },
   { label: "Publicidad", to: "/superadmin/publicidad", icon: Megaphone },
+  { label: "Marketing", to: "/superadmin/marketing", icon: Sparkles },
   { label: "CRM", to: "/superadmin/crm", icon: MessageSquare },
   { label: "Talento Humano", to: "/talento-humano", icon: Users },
   { label: "Evaluador", to: "/evaluador", icon: FileCheck },
