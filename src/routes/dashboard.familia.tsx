@@ -24,6 +24,7 @@ import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
+import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
@@ -819,6 +820,19 @@ function FamilyDashboard() {
             />
           </section>
         )}
+
+        {/* Planes y suscripción */}
+        <section id="planes">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-display text-lg font-semibold">Tu plan Humanix</h2>
+            <Link to="/planes" className="text-xs text-copper hover:underline">
+              Ver comparativa completa →
+            </Link>
+          </div>
+          {user?.id && (
+            <MercadoPagoSubscription userId={user.id} defaultPlan="essential_monthly" />
+          )}
+        </section>
       </div>
     </AppShell>
   );
