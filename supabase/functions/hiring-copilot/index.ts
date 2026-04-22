@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
         user_id: c.user_id,
         full_name: c.profile?.full_name,
         city: c.profile?.city,
-        avatar_url: c.profile?.avatar_url ?? c.avatar_url,
+        avatar_url: c.profile?.avatar_url ?? null,
         specialty: c.specialty,
         years_experience: c.years_experience,
         trust_score: c.trust_score,

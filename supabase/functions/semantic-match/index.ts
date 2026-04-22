@@ -90,14 +90,6 @@ Deno.serve(async (req) => {
     if (mode === "text-to-pros") {
       if (!text) throw new Error("text requerido");
       const v = await embed(text);
-      // Cast a vector y consulta directa con admin
-      const { data, error } = await admin
-        .rpc("match_professionals_for_offer" as never, {
-          /* fallback no aplica */
-        })
-        .maybeSingle()
-        .then(() => ({ data: null, error: null }))
-        .catch(() => ({ data: null, error: null }));
       // Hacemos consulta directa por similitud usando SQL embebido.
       const { data: pros, error: e2 } = await admin
         .from("profile_embeddings")
