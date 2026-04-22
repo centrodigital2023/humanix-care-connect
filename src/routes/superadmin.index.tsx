@@ -1,12 +1,52 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Loader2,
+  ShieldAlert,
+  Users,
+  Briefcase,
+  FileCheck,
+  Mail,
+  Plus,
+  Copy,
+  LayoutDashboard,
+  TrendingUp,
+  Mic,
+  AlertOctagon,
+  Star,
+  ScrollText,
+  Megaphone,
+  MessageSquare,
+  MapPin,
+  CheckCircle2,
+  Volume2,
+  ExternalLink,
+  Clock,
+  PhoneCall,
+  Activity,
+  ArrowRight,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { useAppUser } from "@/hooks/use-app-user";
 
-export const Route = createFileRoute("/superadmin")({
-  component: SuperadminLayout,
+export const Route = createFileRoute("/superadmin/")({
+  head: () => ({ meta: [{ title: "Superadmin · Humanix" }] }),
+  component: SuperadminPage,
 });
-
-function SuperadminLayout() {
-  return <Outlet />;
-}
 
 type AppRole = "professional" | "family" | "institution" | "superadmin" | "hr_staff" | "evaluator";
 
@@ -78,7 +118,6 @@ function SuperadminPage() {
     if (!user) return;
     void loadData();
 
-    // Realtime: emergencias + alertas IA + auditoría → auto-refresh
     const ch = supabase
       .channel("superadmin-realtime")
       .on(
@@ -324,7 +363,6 @@ function SuperadminPage() {
         </section>
 
         <section className="grid lg:grid-cols-2 gap-4">
-          {/* ── Emergencias activas ─────────────────────────────── */}
           <Card
             className={`p-6 transition-colors ${emergencies.length > 0 ? "border-fuchsia-neural/50 bg-fuchsia-neural/[0.03]" : "border-border"}`}
           >
@@ -431,7 +469,6 @@ function SuperadminPage() {
             </div>
           </Card>
 
-          {/* ── Alertas IA · Voz ────────────────────────────────── */}
           <Card
             className={`p-6 transition-colors ${aiAlerts.length > 0 ? "border-copper/50 bg-copper/[0.03]" : "border-border"}`}
           >
