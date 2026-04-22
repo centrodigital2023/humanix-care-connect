@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
   ShieldAlert,
@@ -149,10 +149,28 @@ function AuditoriaPage() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="max-w-md w-full p-6 text-center space-y-3">
+          <h1 className="text-lg font-semibold">Necesitas iniciar sesión</h1>
+          <p className="text-sm text-muted-foreground">
+            Este módulo requiere permisos de superadmin.
+          </p>
+          <div className="pt-2">
+            <Link to="/auth" className="inline-flex">
+              <Button variant="hero">Ir a iniciar sesión</Button>
+            </Link>
+          </div>
+        </Card>
       </div>
     );
   }
