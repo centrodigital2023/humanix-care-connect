@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Sparkles, Stethoscope, Heart, Building2, Crown, Loader2, Zap } from "lucide-react";
+import { Check, Stethoscope, Building2, Crown, Loader2, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -15,105 +15,83 @@ export const Route = createFileRoute("/planes")({
       {
         name: "description",
         content:
-          "Plan Esencial Humanix: $9.000 COP/mes para familias y profesionales. Sin comisiones por servicio: el profesional cobra directo.",
+          "Un plan para cada historia humana. Desde gratis para profesionales hasta $990.000 COP/mes para empresas. Sin permanencia. Cancela cuando quieras.",
       },
       { property: "og:title", content: "Planes y precios · Humanix" },
       {
         property: "og:description",
         content:
-          "Plan Esencial $9.000 COP/mes. Pagos Mercado Pago. El profesional cobra directo al cliente.",
+          "Profesional gratis o $9.900/mes Pro. Familia: 5% por turno. Empresa desde $990.000 COP/mes. Pagos en pesos colombianos.",
       },
     ],
   }),
   component: PlansPage,
 });
 
-type PlanKey = "free" | "essential" | "pro" | "institution";
+type PlanKey = "profesional" | "familia" | "empresa";
 
 const PLANS: {
   key: PlanKey;
   name: string;
-  price: string;
-  cycle: string;
+  priceLabel: string;
+  priceNote: string;
   audience: string;
-  icon: typeof Sparkles;
-  tone: "bio" | "fuchsia" | "copper" | "cyber";
+  icon: typeof Stethoscope;
+  tone: "bio" | "fuchsia" | "copper";
   highlight?: boolean;
   features: string[];
   cta: string;
-  /** Monto en COP para Mercado Pago. 0 si no aplica. */
   amount: number;
 }[] = [
   {
-    key: "free",
-    name: "Free",
-    price: "COP 0",
-    cycle: "siempre",
-    audience: "Para conocer Humanix sin compromiso.",
-    icon: Sparkles,
+    key: "profesional",
+    name: "Profesional",
+    priceLabel: "Gratis",
+    priceNote: "o $9.900 COP/mes Pro",
+    audience: "Para enfermeros, auxiliares y cuidadores independientes.",
+    icon: Stethoscope,
     tone: "bio",
-    amount: 0,
+    amount: 9900,
     features: [
-      "Crear perfil profesional o familiar",
-      "Buscar y aplicar a ofertas abiertas",
-      "Asistente IA básico (preguntas generales)",
-      "Mensajería 1:1 cuando se acepta una aplicación",
+      "Perfil verificado RETHUS",
+      "Postulación a turnos ilimitados",
+      "Calendario y notificaciones",
+      "Pagos en Nequi y PSE",
     ],
-    cta: "Empezar gratis",
+    cta: "Crear perfil",
   },
   {
-    key: "essential",
-    name: "Esencial",
-    price: "COP 9.000",
-    cycle: "/mes",
-    audience: "Familias y profesionales que quieren todo activo.",
-    icon: Zap,
+    key: "familia",
+    name: "Familia",
+    priceLabel: "5%",
+    priceNote: "por turno contratado",
+    audience: "Encuentra cuidador certificado para tu ser querido.",
+    icon: Heart,
     tone: "copper",
     highlight: true,
-    amount: 9000,
+    amount: 0,
     features: [
-      "Match IA en menos de 150 ms",
-      "Buzón de postulaciones ilimitado",
-      "Contacto directo por WhatsApp con la otra parte",
-      "Geolocalización en vivo y ETA",
-      "Verificación RETHUS y anti-fraude IA incluida",
-      "Sin comisión: el profesional cobra directo al cliente",
+      "Búsqueda y match en minutos",
+      "Geolocalización en vivo",
+      "Botón de emergencia 24/7",
+      "Seguro Sura incluido",
     ],
-    cta: "Suscribirme por $9.000",
+    cta: "Contratar ahora",
   },
   {
-    key: "pro",
-    name: "Pro Profesional",
-    price: "COP 29.900",
-    cycle: "/mes",
-    audience: "Profesionales que quieren visibilidad máxima.",
-    icon: Stethoscope,
-    tone: "fuchsia",
-    amount: 29900,
-    features: [
-      "Todo lo del Esencial",
-      "Boost de visibilidad en búsquedas",
-      "Coach de carrera 24/7 (mejorar perfil y Trust Score)",
-      "Sugerencias IA en cada mensaje",
-      "Validación anti-fraude IA prioritaria",
-    ],
-    cta: "Activar Pro",
-  },
-  {
-    key: "institution",
-    name: "Institución (IPS)",
-    price: "Desde COP 299.000",
-    cycle: "/mes",
-    audience: "Clínicas, hospitales y agencias de cuidado.",
+    key: "empresa",
+    name: "Empresa",
+    priceLabel: "Desde $990.000",
+    priceNote: "COP/mes",
+    audience: "Para IPS, clínicas y agencias con +10 profesionales.",
     icon: Building2,
-    tone: "cyber",
-    amount: 299000,
+    tone: "fuchsia",
+    amount: 990000,
     features: [
-      "Bolsa de créditos IA mensual",
-      "Multi-usuario con roles (HR, evaluador, admin)",
-      "Pipeline de candidatos con scoring IA",
-      "Detección de inconsistencias en CVs y RETHUS",
-      "Soporte prioritario y onboarding asistido",
+      "Panel de superadministrador con IA",
+      "Predicción de ausentismo",
+      "API y webhooks",
+      "Auditoría Min. Salud",
     ],
     cta: "Hablar con ventas",
   },
@@ -123,7 +101,6 @@ const TONE: Record<string, string> = {
   bio: "border-biosensor/30 bg-biosensor/5 text-biosensor",
   fuchsia: "border-fuchsia-neural/40 bg-fuchsia-neural/5 text-fuchsia-neural",
   copper: "border-copper/30 bg-copper/5 text-copper",
-  cyber: "border-cyber/30 bg-cyber/5 text-cyber dark:text-cyber-foreground",
 };
 
 function PlansPage() {
@@ -160,14 +137,15 @@ function PlansPage() {
   }, []);
 
   const choose = async (plan: PlanKey, amount: number) => {
-    if (plan === "free") {
-      toast.success("Ya tienes acceso gratuito a Humanix.");
+    if (plan === "familia") {
+      window.location.href = "/auth?redirect=" + encodeURIComponent("/buscar");
       return;
     }
-    if (plan === "institution") {
-      window.location.href = "mailto:hola@humanix.co?subject=Plan Institucional Humanix";
+    if (plan === "empresa") {
+      window.location.href = "mailto:hola@humanix.co?subject=Plan Empresa Humanix";
       return;
     }
+    // plan === "profesional" → checkout Pro
     setActing(plan);
     try {
       const { data: sess } = await supabase.auth.getSession();
@@ -176,20 +154,18 @@ function PlansPage() {
         window.location.href = `/auth?redirect=${encodeURIComponent("/planes")}`;
         return;
       }
-
       const { data, error } = await supabase.functions.invoke("mp-create-subscription", {
         body: {
-          plan: plan === "essential" ? "essential_monthly" : "pro_monthly",
+          plan: "pro_monthly",
           amount,
           email: sess.session.user.email,
         },
       });
       if (error) throw error;
-
       const url =
         (data as { init_point?: string; sandbox_init_point?: string })?.init_point ??
         (data as { sandbox_init_point?: string })?.sandbox_init_point;
-      if (!url) throw new Error("No se pudo iniciar el checkout de Mercado Pago.");
+      if (!url) throw new Error("No se pudo iniciar el checkout.");
       window.location.href = url;
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error al iniciar el pago");
@@ -201,40 +177,37 @@ function PlansPage() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-16">
+      <main className="mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-16">
         <header className="text-center max-w-2xl mx-auto">
           <span className="inline-flex items-center gap-1 text-xs px-3 py-1 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/30">
             <Crown className="h-3 w-3" /> Planes Humanix
           </span>
           <h1 className="mt-3 font-display text-3xl sm:text-5xl font-bold">
-            La IA que trabaja para ti.
+            Un plan para cada historia humana.
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Plan Esencial desde <span className="font-semibold text-copper">$9.000 COP/mes</span>.
-            Sin comisiones por servicio: el profesional cobra directo al cliente en efectivo, Nequi
-            o transferencia.
+            Pagos en pesos colombianos.{" "}
+            <span className="font-semibold text-foreground">Sin permanencia.</span>{" "}
+            Cancela cuando quieras.
           </p>
         </header>
 
-        <section className="mt-10 grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="mt-10 grid md:grid-cols-3 gap-6">
           {PLANS.map((p) => {
             const Icon = p.icon;
-            const isCurrent =
-              currentPlan === p.key ||
-              (p.key === "essential" && currentPlan === "essential_monthly") ||
-              (p.key === "pro" && currentPlan === "pro_monthly");
+            const isCurrent = currentPlan === p.key;
             return (
               <Card
                 key={p.key}
-                className={`p-6 flex flex-col ${
+                className={`p-6 flex flex-col relative ${
                   p.highlight
                     ? "border-copper/50 shadow-[var(--shadow-elegant)] ring-1 ring-copper/20"
                     : ""
                 }`}
               >
                 {p.highlight && (
-                  <span className="self-start inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-copper/10 text-copper border border-copper/30 mb-3">
-                    Más recomendado
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-3 py-0.5 rounded-full bg-copper text-white border border-copper/30 font-semibold whitespace-nowrap">
+                    Más elegido
                   </span>
                 )}
                 <div
@@ -243,12 +216,14 @@ function PlansPage() {
                   <Icon className="h-5 w-5" />
                 </div>
                 <h2 className="mt-3 font-display text-xl font-semibold">{p.name}</h2>
-                <p className="text-xs text-muted-foreground">{p.audience}</p>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-3xl font-bold font-display">{p.price}</span>
-                  <span className="text-xs text-muted-foreground">{p.cycle}</span>
+                <p className="text-xs text-muted-foreground mt-0.5">{p.audience}</p>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold font-display">{p.priceLabel}</span>
+                  {p.priceNote && (
+                    <p className="text-sm text-muted-foreground mt-0.5">{p.priceNote}</p>
+                  )}
                 </div>
-                <ul className="mt-4 space-y-2 text-sm flex-1">
+                <ul className="mt-5 space-y-2 text-sm flex-1">
                   {p.features.map((f) => (
                     <li key={f} className="flex gap-2">
                       <Check className="h-4 w-4 text-biosensor mt-0.5 shrink-0" />
@@ -257,8 +232,8 @@ function PlansPage() {
                   ))}
                 </ul>
                 <Button
-                  className="mt-5 w-full"
-                  variant={p.highlight ? "copper" : "outline"}
+                  className="mt-6 w-full"
+                  variant={p.highlight ? "copper" : p.tone === "fuchsia" ? "hero" : "outline"}
                   disabled={loading || acting === p.key || isCurrent}
                   onClick={() => choose(p.key, p.amount)}
                 >
@@ -276,7 +251,7 @@ function PlansPage() {
             <a href="mailto:hola@humanix.co" className="text-biosensor underline">
               hola@humanix.co
             </a>{" "}
-            y armamos un plan para tu IPS.
+            y armamos un plan para tu IPS o clínica.
           </p>
           <Link
             to="/"
@@ -290,3 +265,4 @@ function PlansPage() {
     </div>
   );
 }
+
