@@ -16,7 +16,21 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Tope defensivo: ~10 MB binario ≈ 14 MB en base64. Evita ataques DoS/costos IA.
+    if (typeof audio_base64 !== "string" || audio_base64.length > 14_000_000) {
+      return new Response(JSON.stringify({ error: "audio demasiado grande" }), {
+        status: 413,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const mt = (mime_type as string) || "audio/webm";
+    const ALLOWED_AUDIO = ["audio/webm", "audio/mp4", "audio/mpeg", "audio/wav", "audio/ogg"];
+    if (!ALLOWED_AUDIO.some((a) => mt.startsWith(a))) {
+      return new Response(JSON.stringify({ error: "mime_type no permitido" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY no configurada");

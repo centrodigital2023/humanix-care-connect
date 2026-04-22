@@ -3,9 +3,11 @@
 // fullName, idNumber, phone, city, defaultAddress, emergencyName,
 // emergencyPhone, patientName, patientRelation, patientAge, careHints[].
 // También sugiere un "siguiente paso inteligente" según el contexto.
-// CORS abierto y verify_jwt=false (declarado en config.toml).
+// verify_jwt=true en config.toml + validación de usuario adentro como
+// defensa en profundidad.
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
+import { requireUser } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -67,6 +69,9 @@ const TOOL = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
 
   try {
     const { freeText = "", partial = {} } = await req.json().catch(() => ({}));

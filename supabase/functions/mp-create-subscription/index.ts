@@ -26,9 +26,18 @@ Deno.serve(async (req) => {
     const plan = requestedPlan in PRICE_BY_PLAN ? requestedPlan : "pro_monthly";
     const amount = PRICE_BY_PLAN[plan];
     const userId = auth.userId;
-    const email = body.email ?? "comprador@humanix.lat";
+    // Validación ligera del email: solo se usa como "payer hint" para MP.
+    const emailRaw = typeof body.email === "string" ? body.email.trim().slice(0, 120) : "";
+    const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)
+      ? emailRaw
+      : "comprador@humanix.lat";
 
-    const origin = req.headers.get("origin") ?? "https://humanix.lat";
+    // Anti open-redirect: solo se aceptan orígenes de humanix.lat. Si el
+    // header Origin viene de otro dominio, forzamos el canónico.
+    const rawOrigin = req.headers.get("origin") ?? "";
+    const origin = /^https:\/\/([a-z0-9-]+\.)?humanix\.lat$/i.test(rawOrigin)
+      ? rawOrigin
+      : "https://humanix.lat";
 
     const title =
       plan === "essential_monthly"
