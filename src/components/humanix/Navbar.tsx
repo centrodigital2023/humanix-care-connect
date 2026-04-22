@@ -67,6 +67,19 @@ export function Navbar() {
             href={CONTACT.whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => {
+              e.preventDefault();
+              try {
+                const w = window.open(CONTACT.whatsappUrl, "_blank", "noopener,noreferrer");
+                if (!w) {
+                  if (window.top && window.top !== window.self)
+                    window.top.location.href = CONTACT.whatsappUrl;
+                  else window.location.href = CONTACT.whatsappUrl;
+                }
+              } catch {
+                window.location.href = CONTACT.whatsappUrl;
+              }
+            }}
             aria-label={`WhatsApp Humanix ${CONTACT.phoneDisplay}`}
             title={`WhatsApp ${CONTACT.phoneDisplay}`}
             className="hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-md text-[#25D366] hover:bg-[#25D366]/10 transition-colors"

@@ -3,8 +3,27 @@ import { MessageCircle, X, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CONTACT } from "@/lib/social";
 
-const WA_NUMBER = CONTACT.whatsappNumber;
 const WA_URL = CONTACT.whatsappUrl;
+
+/**
+ * Abre WhatsApp forzando una ventana top-level (evita ERR_BLOCKED_BY_RESPONSE
+ * cuando la app corre dentro de un iframe — preview de Lovable, Webviews, etc.).
+ */
+function openWhatsApp() {
+  try {
+    const win = window.open(WA_URL, "_blank", "noopener,noreferrer");
+    if (!win) {
+      // Bloqueador de popups: intenta romper el iframe escribiendo en top.
+      if (window.top && window.top !== window.self) {
+        window.top.location.href = WA_URL;
+      } else {
+        window.location.href = WA_URL;
+      }
+    }
+  } catch {
+    window.location.href = WA_URL;
+  }
+}
 
 /**
  * Botón flotante global de WhatsApp.
@@ -51,12 +70,16 @@ export function FloatingWAChat() {
               Hola 👋 Estamos disponibles por WhatsApp para resolver dudas, ayudarte a encontrar
               profesional o reportar cualquier incidente.
             </p>
-            <a href={WA_URL} target="_blank" rel="noopener noreferrer" className="block">
-              <Button variant="hero" className="w-full" size="lg">
-                <Phone className="h-4 w-4" />
-                Abrir WhatsApp
-              </Button>
-            </a>
+            <Button
+              variant="hero"
+              className="w-full"
+              size="lg"
+              onClick={openWhatsApp}
+              type="button"
+            >
+              <Phone className="h-4 w-4" />
+              Abrir WhatsApp
+            </Button>
             <p className="text-[11px] text-center text-muted-foreground">
               {CONTACT.phoneDisplay} · Línea oficial Humanix
             </p>
