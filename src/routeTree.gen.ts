@@ -16,6 +16,7 @@ import { Route as SuperadminRouteImport } from './routes/superadmin'
 import { Route as SobreRouteImport } from './routes/sobre'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as RecursosRouteImport } from './routes/recursos'
 import { Route as ProfesionalesRouteImport } from './routes/profesionales'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PrensaRouteImport } from './routes/prensa'
@@ -24,11 +25,25 @@ import { Route as MensajesRouteImport } from './routes/mensajes'
 import { Route as HabeasDataRouteImport } from './routes/habeas-data'
 import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
+import { Route as EnfermeriaPereiraRouteImport } from './routes/enfermeria-pereira'
+import { Route as EnfermeriaMedellinRouteImport } from './routes/enfermeria-medellin'
+import { Route as EnfermeriaDomiciliariaRouteImport } from './routes/enfermeria-domiciliaria'
+import { Route as EnfermeriaCartagenaRouteImport } from './routes/enfermeria-cartagena'
+import { Route as EnfermeriaCaliRouteImport } from './routes/enfermeria-cali'
+import { Route as EnfermeriaBucaramangaRouteImport } from './routes/enfermeria-bucaramanga'
+import { Route as EnfermeriaBogotaRouteImport } from './routes/enfermeria-bogota'
+import { Route as EnfermeriaBarranquillaRouteImport } from './routes/enfermeria-barranquilla'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CumplimientoRouteImport } from './routes/cumplimiento'
+import { Route as CuidadorDomicilioRouteImport } from './routes/cuidador-domicilio'
+import { Route as CuidadoPostoperatorioRouteImport } from './routes/cuidado-postoperatorio'
+import { Route as CuidadoPediatricoRouteImport } from './routes/cuidado-pediatrico'
+import { Route as CuidadoPaliativoRouteImport } from './routes/cuidado-paliativo'
+import { Route as CuidadoAdultoMayorRouteImport } from './routes/cuidado-adulto-mayor'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as CarrerasRouteImport } from './routes/carreras'
 import { Route as BuscarRouteImport } from './routes/buscar'
+import { Route as AuxiliarEnfermeriaRouteImport } from './routes/auxiliar-enfermeria'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperadminIndexRouteImport } from './routes/superadmin.index'
@@ -40,6 +55,7 @@ import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude
 import { Route as SuperadminCrmRouteImport } from './routes/superadmin.crm'
 import { Route as SuperadminAuditoriaRouteImport } from './routes/superadmin.auditoria'
 import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
+import { Route as RecursosSlugRouteImport } from './routes/recursos.$slug'
 import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
 import { Route as OfertaOfferIdRouteImport } from './routes/oferta.$offerId'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
@@ -83,6 +99,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecursosRoute = RecursosRouteImport.update({
+  id: '/recursos',
+  path: '/recursos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfesionalesRoute = ProfesionalesRouteImport.update({
   id: '/profesionales',
   path: '/profesionales',
@@ -123,6 +144,46 @@ const EvaluadorRoute = EvaluadorRouteImport.update({
   path: '/evaluador',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnfermeriaPereiraRoute = EnfermeriaPereiraRouteImport.update({
+  id: '/enfermeria-pereira',
+  path: '/enfermeria-pereira',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaMedellinRoute = EnfermeriaMedellinRouteImport.update({
+  id: '/enfermeria-medellin',
+  path: '/enfermeria-medellin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaDomiciliariaRoute = EnfermeriaDomiciliariaRouteImport.update({
+  id: '/enfermeria-domiciliaria',
+  path: '/enfermeria-domiciliaria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaCartagenaRoute = EnfermeriaCartagenaRouteImport.update({
+  id: '/enfermeria-cartagena',
+  path: '/enfermeria-cartagena',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaCaliRoute = EnfermeriaCaliRouteImport.update({
+  id: '/enfermeria-cali',
+  path: '/enfermeria-cali',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaBucaramangaRoute = EnfermeriaBucaramangaRouteImport.update({
+  id: '/enfermeria-bucaramanga',
+  path: '/enfermeria-bucaramanga',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaBogotaRoute = EnfermeriaBogotaRouteImport.update({
+  id: '/enfermeria-bogota',
+  path: '/enfermeria-bogota',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaBarranquillaRoute = EnfermeriaBarranquillaRouteImport.update({
+  id: '/enfermeria-barranquilla',
+  path: '/enfermeria-barranquilla',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -131,6 +192,31 @@ const DashboardRoute = DashboardRouteImport.update({
 const CumplimientoRoute = CumplimientoRouteImport.update({
   id: '/cumplimiento',
   path: '/cumplimiento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadorDomicilioRoute = CuidadorDomicilioRouteImport.update({
+  id: '/cuidador-domicilio',
+  path: '/cuidador-domicilio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoPostoperatorioRoute = CuidadoPostoperatorioRouteImport.update({
+  id: '/cuidado-postoperatorio',
+  path: '/cuidado-postoperatorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoPediatricoRoute = CuidadoPediatricoRouteImport.update({
+  id: '/cuidado-pediatrico',
+  path: '/cuidado-pediatrico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoPaliativoRoute = CuidadoPaliativoRouteImport.update({
+  id: '/cuidado-paliativo',
+  path: '/cuidado-paliativo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoAdultoMayorRoute = CuidadoAdultoMayorRouteImport.update({
+  id: '/cuidado-adulto-mayor',
+  path: '/cuidado-adulto-mayor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactoRoute = ContactoRouteImport.update({
@@ -146,6 +232,11 @@ const CarrerasRoute = CarrerasRouteImport.update({
 const BuscarRoute = BuscarRouteImport.update({
   id: '/buscar',
   path: '/buscar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuxiliarEnfermeriaRoute = AuxiliarEnfermeriaRouteImport.update({
+  id: '/auxiliar-enfermeria',
+  path: '/auxiliar-enfermeria',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -203,6 +294,11 @@ const ServicioBookingIdRoute = ServicioBookingIdRouteImport.update({
   path: '/servicio/$bookingId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecursosSlugRoute = RecursosSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RecursosRoute,
+} as any)
 const ProfesionalProIdRoute = ProfesionalProIdRouteImport.update({
   id: '/profesional/$proId',
   path: '/profesional/$proId',
@@ -243,11 +339,25 @@ const DashboardFamiliaOnboardingRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
+  '/cuidado-paliativo': typeof CuidadoPaliativoRoute
+  '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
+  '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
+  '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/enfermeria-barranquilla': typeof EnfermeriaBarranquillaRoute
+  '/enfermeria-bogota': typeof EnfermeriaBogotaRoute
+  '/enfermeria-bucaramanga': typeof EnfermeriaBucaramangaRoute
+  '/enfermeria-cali': typeof EnfermeriaCaliRoute
+  '/enfermeria-cartagena': typeof EnfermeriaCartagenaRoute
+  '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
+  '/enfermeria-medellin': typeof EnfermeriaMedellinRoute
+  '/enfermeria-pereira': typeof EnfermeriaPereiraRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -256,6 +366,7 @@ export interface FileRoutesByFullPath {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/recursos': typeof RecursosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -269,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
+  '/recursos/$slug': typeof RecursosSlugRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
@@ -283,10 +395,24 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
+  '/cuidado-paliativo': typeof CuidadoPaliativoRoute
+  '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
+  '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
+  '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
+  '/enfermeria-barranquilla': typeof EnfermeriaBarranquillaRoute
+  '/enfermeria-bogota': typeof EnfermeriaBogotaRoute
+  '/enfermeria-bucaramanga': typeof EnfermeriaBucaramangaRoute
+  '/enfermeria-cali': typeof EnfermeriaCaliRoute
+  '/enfermeria-cartagena': typeof EnfermeriaCartagenaRoute
+  '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
+  '/enfermeria-medellin': typeof EnfermeriaMedellinRoute
+  '/enfermeria-pereira': typeof EnfermeriaPereiraRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -295,6 +421,7 @@ export interface FileRoutesByTo {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/recursos': typeof RecursosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -307,6 +434,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
+  '/recursos/$slug': typeof RecursosSlugRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
@@ -322,11 +450,25 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
+  '/cuidado-paliativo': typeof CuidadoPaliativoRoute
+  '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
+  '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
+  '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/enfermeria-barranquilla': typeof EnfermeriaBarranquillaRoute
+  '/enfermeria-bogota': typeof EnfermeriaBogotaRoute
+  '/enfermeria-bucaramanga': typeof EnfermeriaBucaramangaRoute
+  '/enfermeria-cali': typeof EnfermeriaCaliRoute
+  '/enfermeria-cartagena': typeof EnfermeriaCartagenaRoute
+  '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
+  '/enfermeria-medellin': typeof EnfermeriaMedellinRoute
+  '/enfermeria-pereira': typeof EnfermeriaPereiraRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -335,6 +477,7 @@ export interface FileRoutesById {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
+  '/recursos': typeof RecursosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -348,6 +491,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
+  '/recursos/$slug': typeof RecursosSlugRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
@@ -364,11 +508,25 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auxiliar-enfermeria'
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cuidado-adulto-mayor'
+    | '/cuidado-paliativo'
+    | '/cuidado-pediatrico'
+    | '/cuidado-postoperatorio'
+    | '/cuidador-domicilio'
     | '/cumplimiento'
     | '/dashboard'
+    | '/enfermeria-barranquilla'
+    | '/enfermeria-bogota'
+    | '/enfermeria-bucaramanga'
+    | '/enfermeria-cali'
+    | '/enfermeria-cartagena'
+    | '/enfermeria-domiciliaria'
+    | '/enfermeria-medellin'
+    | '/enfermeria-pereira'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -377,6 +535,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/recursos'
     | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
@@ -390,6 +549,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/oferta/$offerId'
     | '/profesional/$proId'
+    | '/recursos/$slug'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
     | '/superadmin/crm'
@@ -404,10 +564,24 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auxiliar-enfermeria'
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cuidado-adulto-mayor'
+    | '/cuidado-paliativo'
+    | '/cuidado-pediatrico'
+    | '/cuidado-postoperatorio'
+    | '/cuidador-domicilio'
     | '/cumplimiento'
+    | '/enfermeria-barranquilla'
+    | '/enfermeria-bogota'
+    | '/enfermeria-bucaramanga'
+    | '/enfermeria-cali'
+    | '/enfermeria-cartagena'
+    | '/enfermeria-domiciliaria'
+    | '/enfermeria-medellin'
+    | '/enfermeria-pereira'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -416,6 +590,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/recursos'
     | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
@@ -428,6 +603,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/oferta/$offerId'
     | '/profesional/$proId'
+    | '/recursos/$slug'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
     | '/superadmin/crm'
@@ -442,11 +618,25 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/auxiliar-enfermeria'
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cuidado-adulto-mayor'
+    | '/cuidado-paliativo'
+    | '/cuidado-pediatrico'
+    | '/cuidado-postoperatorio'
+    | '/cuidador-domicilio'
     | '/cumplimiento'
     | '/dashboard'
+    | '/enfermeria-barranquilla'
+    | '/enfermeria-bogota'
+    | '/enfermeria-bucaramanga'
+    | '/enfermeria-cali'
+    | '/enfermeria-cartagena'
+    | '/enfermeria-domiciliaria'
+    | '/enfermeria-medellin'
+    | '/enfermeria-pereira'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -455,6 +645,7 @@ export interface FileRouteTypes {
     | '/prensa'
     | '/privacidad'
     | '/profesionales'
+    | '/recursos'
     | '/reset-password'
     | '/sitemap.xml'
     | '/sobre'
@@ -468,6 +659,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/oferta/$offerId'
     | '/profesional/$proId'
+    | '/recursos/$slug'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
     | '/superadmin/crm'
@@ -483,11 +675,25 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  AuxiliarEnfermeriaRoute: typeof AuxiliarEnfermeriaRoute
   BuscarRoute: typeof BuscarRoute
   CarrerasRoute: typeof CarrerasRoute
   ContactoRoute: typeof ContactoRoute
+  CuidadoAdultoMayorRoute: typeof CuidadoAdultoMayorRoute
+  CuidadoPaliativoRoute: typeof CuidadoPaliativoRoute
+  CuidadoPediatricoRoute: typeof CuidadoPediatricoRoute
+  CuidadoPostoperatorioRoute: typeof CuidadoPostoperatorioRoute
+  CuidadorDomicilioRoute: typeof CuidadorDomicilioRoute
   CumplimientoRoute: typeof CumplimientoRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  EnfermeriaBarranquillaRoute: typeof EnfermeriaBarranquillaRoute
+  EnfermeriaBogotaRoute: typeof EnfermeriaBogotaRoute
+  EnfermeriaBucaramangaRoute: typeof EnfermeriaBucaramangaRoute
+  EnfermeriaCaliRoute: typeof EnfermeriaCaliRoute
+  EnfermeriaCartagenaRoute: typeof EnfermeriaCartagenaRoute
+  EnfermeriaDomiciliariaRoute: typeof EnfermeriaDomiciliariaRoute
+  EnfermeriaMedellinRoute: typeof EnfermeriaMedellinRoute
+  EnfermeriaPereiraRoute: typeof EnfermeriaPereiraRoute
   EvaluadorRoute: typeof EvaluadorRoute
   FamiliasRoute: typeof FamiliasRoute
   HabeasDataRoute: typeof HabeasDataRoute
@@ -496,6 +702,7 @@ export interface RootRouteChildren {
   PrensaRoute: typeof PrensaRoute
   PrivacidadRoute: typeof PrivacidadRoute
   ProfesionalesRoute: typeof ProfesionalesRoute
+  RecursosRoute: typeof RecursosRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
@@ -559,6 +766,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recursos': {
+      id: '/recursos'
+      path: '/recursos'
+      fullPath: '/recursos'
+      preLoaderRoute: typeof RecursosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profesionales': {
       id: '/profesionales'
       path: '/profesionales'
@@ -615,6 +829,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EvaluadorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enfermeria-pereira': {
+      id: '/enfermeria-pereira'
+      path: '/enfermeria-pereira'
+      fullPath: '/enfermeria-pereira'
+      preLoaderRoute: typeof EnfermeriaPereiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-medellin': {
+      id: '/enfermeria-medellin'
+      path: '/enfermeria-medellin'
+      fullPath: '/enfermeria-medellin'
+      preLoaderRoute: typeof EnfermeriaMedellinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-domiciliaria': {
+      id: '/enfermeria-domiciliaria'
+      path: '/enfermeria-domiciliaria'
+      fullPath: '/enfermeria-domiciliaria'
+      preLoaderRoute: typeof EnfermeriaDomiciliariaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-cartagena': {
+      id: '/enfermeria-cartagena'
+      path: '/enfermeria-cartagena'
+      fullPath: '/enfermeria-cartagena'
+      preLoaderRoute: typeof EnfermeriaCartagenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-cali': {
+      id: '/enfermeria-cali'
+      path: '/enfermeria-cali'
+      fullPath: '/enfermeria-cali'
+      preLoaderRoute: typeof EnfermeriaCaliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-bucaramanga': {
+      id: '/enfermeria-bucaramanga'
+      path: '/enfermeria-bucaramanga'
+      fullPath: '/enfermeria-bucaramanga'
+      preLoaderRoute: typeof EnfermeriaBucaramangaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-bogota': {
+      id: '/enfermeria-bogota'
+      path: '/enfermeria-bogota'
+      fullPath: '/enfermeria-bogota'
+      preLoaderRoute: typeof EnfermeriaBogotaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-barranquilla': {
+      id: '/enfermeria-barranquilla'
+      path: '/enfermeria-barranquilla'
+      fullPath: '/enfermeria-barranquilla'
+      preLoaderRoute: typeof EnfermeriaBarranquillaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -627,6 +897,41 @@ declare module '@tanstack/react-router' {
       path: '/cumplimiento'
       fullPath: '/cumplimiento'
       preLoaderRoute: typeof CumplimientoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidador-domicilio': {
+      id: '/cuidador-domicilio'
+      path: '/cuidador-domicilio'
+      fullPath: '/cuidador-domicilio'
+      preLoaderRoute: typeof CuidadorDomicilioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-postoperatorio': {
+      id: '/cuidado-postoperatorio'
+      path: '/cuidado-postoperatorio'
+      fullPath: '/cuidado-postoperatorio'
+      preLoaderRoute: typeof CuidadoPostoperatorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-pediatrico': {
+      id: '/cuidado-pediatrico'
+      path: '/cuidado-pediatrico'
+      fullPath: '/cuidado-pediatrico'
+      preLoaderRoute: typeof CuidadoPediatricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-paliativo': {
+      id: '/cuidado-paliativo'
+      path: '/cuidado-paliativo'
+      fullPath: '/cuidado-paliativo'
+      preLoaderRoute: typeof CuidadoPaliativoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-adulto-mayor': {
+      id: '/cuidado-adulto-mayor'
+      path: '/cuidado-adulto-mayor'
+      fullPath: '/cuidado-adulto-mayor'
+      preLoaderRoute: typeof CuidadoAdultoMayorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contacto': {
@@ -648,6 +953,13 @@ declare module '@tanstack/react-router' {
       path: '/buscar'
       fullPath: '/buscar'
       preLoaderRoute: typeof BuscarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auxiliar-enfermeria': {
+      id: '/auxiliar-enfermeria'
+      path: '/auxiliar-enfermeria'
+      fullPath: '/auxiliar-enfermeria'
+      preLoaderRoute: typeof AuxiliarEnfermeriaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -726,6 +1038,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/servicio/$bookingId'
       preLoaderRoute: typeof ServicioBookingIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/recursos/$slug': {
+      id: '/recursos/$slug'
+      path: '/$slug'
+      fullPath: '/recursos/$slug'
+      preLoaderRoute: typeof RecursosSlugRouteImport
+      parentRoute: typeof RecursosRoute
     }
     '/profesional/$proId': {
       id: '/profesional/$proId'
@@ -810,6 +1129,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface RecursosRouteChildren {
+  RecursosSlugRoute: typeof RecursosSlugRoute
+}
+
+const RecursosRouteChildren: RecursosRouteChildren = {
+  RecursosSlugRoute: RecursosSlugRoute,
+}
+
+const RecursosRouteWithChildren = RecursosRoute._addFileChildren(
+  RecursosRouteChildren,
+)
+
 interface SuperadminRouteChildren {
   SuperadminAuditoriaRoute: typeof SuperadminAuditoriaRoute
   SuperadminCrmRoute: typeof SuperadminCrmRoute
@@ -837,11 +1168,25 @@ const SuperadminRouteWithChildren = SuperadminRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  AuxiliarEnfermeriaRoute: AuxiliarEnfermeriaRoute,
   BuscarRoute: BuscarRoute,
   CarrerasRoute: CarrerasRoute,
   ContactoRoute: ContactoRoute,
+  CuidadoAdultoMayorRoute: CuidadoAdultoMayorRoute,
+  CuidadoPaliativoRoute: CuidadoPaliativoRoute,
+  CuidadoPediatricoRoute: CuidadoPediatricoRoute,
+  CuidadoPostoperatorioRoute: CuidadoPostoperatorioRoute,
+  CuidadorDomicilioRoute: CuidadorDomicilioRoute,
   CumplimientoRoute: CumplimientoRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  EnfermeriaBarranquillaRoute: EnfermeriaBarranquillaRoute,
+  EnfermeriaBogotaRoute: EnfermeriaBogotaRoute,
+  EnfermeriaBucaramangaRoute: EnfermeriaBucaramangaRoute,
+  EnfermeriaCaliRoute: EnfermeriaCaliRoute,
+  EnfermeriaCartagenaRoute: EnfermeriaCartagenaRoute,
+  EnfermeriaDomiciliariaRoute: EnfermeriaDomiciliariaRoute,
+  EnfermeriaMedellinRoute: EnfermeriaMedellinRoute,
+  EnfermeriaPereiraRoute: EnfermeriaPereiraRoute,
   EvaluadorRoute: EvaluadorRoute,
   FamiliasRoute: FamiliasRoute,
   HabeasDataRoute: HabeasDataRoute,
@@ -850,6 +1195,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrensaRoute: PrensaRoute,
   PrivacidadRoute: PrivacidadRoute,
   ProfesionalesRoute: ProfesionalesRoute,
+  RecursosRoute: RecursosRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,
