@@ -47,6 +47,7 @@ type Requirement = {
 export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
   const [loading, setLoading] = useState(true);
   const [reqs, setReqs] = useState<Requirement[]>([]);
+  const [docsOpen, setDocsOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
