@@ -104,9 +104,7 @@ function TecnologiaPage() {
               IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
             </h1>
             <p className="mt-5 max-w-3xl text-base sm:text-lg text-cyber-foreground/70 leading-relaxed">
-              Construido sobre Lovable Cloud (Postgres + Realtime + pgvector + Edge Functions) y
-              Lovable AI Gateway con Gemini. Cumple con la regulación colombiana y se adapta a la
-              infraestructura de cualquier IPS.
+              Cumple con la regulación colombiana y se adapta a la infraestructura de cualquier IPS.
             </p>
           </div>
         </section>
@@ -153,8 +151,8 @@ function TecnologiaPage() {
           <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-border bg-border">
             {[
               { v: "<150 ms", l: "Match en vivo" },
-              { v: "847+", l: "Profesionales activos" },
-              { v: "99.2%", l: "Trust Score promedio" },
+              { v: "87+", l: "Profesionales activos" },
+              { v: "94.2%", l: "Trust Score promedio" },
               { v: "24/7", l: "Soporte IA" },
             ].map((k) => (
               <div key={k.l} className="bg-card p-6 text-center">
