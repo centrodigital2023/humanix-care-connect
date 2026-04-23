@@ -45,7 +45,7 @@ export function Article({
       <main className="pt-24 pb-20">
         <article className="mx-auto max-w-3xl px-4 sm:px-6">
           <Link
-            to="/recursos"
+            to={"/recursos" as never}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
           >
             <ArrowLeft className="h-4 w-4" />
