@@ -81,14 +81,6 @@ export const Route = createRootRoute({
       { property: "og:image:height", content: SOCIAL_IMAGE_HEIGHT },
       { name: "twitter:image", content: SOCIAL_IMAGE_URL },
       { name: "twitter:image:alt", content: SOCIAL_IMAGE_ALT },
-      { title: "Humanix: Conectamos profesionales de salud con oportunidades" },
-      { property: "og:title", content: "Humanix: Conectamos profesionales de salud con oportunidades" },
-      { name: "twitter:title", content: "Humanix: Conectamos profesionales de salud con oportunidades" },
-      { name: "description", content: "Talento humano en salud, conectado al instante. Cuidado de confianza, a un toque" },
-      { property: "og:description", content: "Talento humano en salud, conectado al instante. Cuidado de confianza, a un toque" },
-      { name: "twitter:description", content: "Talento humano en salud, conectado al instante. Cuidado de confianza, a un toque" },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/66e5da49-42bd-43f1-8771-ab71ea51f8b2" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/66e5da49-42bd-43f1-8771-ab71ea51f8b2" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -102,6 +94,9 @@ export const Route = createRootRoute({
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+        media: "print",
+        // @ts-expect-error - swapped to all on load for non-blocking fonts
+        onLoad: "this.media='all'",
       },
       { rel: "sitemap", type: "application/xml", href: "/sitemap.xml" },
     ],
