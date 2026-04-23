@@ -12,12 +12,16 @@ import {
   Loader2,
   Sparkles,
   AlertTriangle,
+  UploadCloud,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { FamilyDocumentsManager } from "@/components/humanix/FamilyDocumentsManager";
 
 type Props = {
   userId: string;
@@ -43,6 +47,7 @@ type Requirement = {
 export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
   const [loading, setLoading] = useState(true);
   const [reqs, setReqs] = useState<Requirement[]>([]);
+  const [docsOpen, setDocsOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -287,6 +292,34 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
             <ArrowRight className="h-4 w-4 ml-1" />
           </Link>
         </Button>
+      </div>
+
+      {/* Adjuntar documentos sin salir del dashboard */}
+      <div className="px-5 sm:px-6 pb-5 sm:pb-6 -mt-2">
+        <button
+          type="button"
+          onClick={() => setDocsOpen((v) => !v)}
+          className="w-full flex items-center justify-between gap-2 rounded-lg border border-border bg-background/60 hover:bg-muted/40 px-3 py-2.5 text-sm font-medium transition-colors"
+          aria-expanded={docsOpen}
+        >
+          <span className="inline-flex items-center gap-2">
+            <UploadCloud className="h-4 w-4 text-fuchsia-neural" />
+            Adjuntar documentos ahora
+            <span className="text-[11px] text-muted-foreground font-normal hidden sm:inline">
+              · cédula, recibo, historia clínica…
+            </span>
+          </span>
+          {docsOpen ? (
+            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          )}
+        </button>
+        {docsOpen && (
+          <div className="mt-3 rounded-xl border border-border bg-background/40 p-3 sm:p-4">
+            <FamilyDocumentsManager userId={userId} />
+          </div>
+        )}
       </div>
     </Card>
   );
