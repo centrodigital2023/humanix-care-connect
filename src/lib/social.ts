@@ -3,8 +3,8 @@
 export const CONTACT = {
   whatsappNumber: "573147444715",
   whatsappUrl: "https://wa.me/573147444715",
-  email: "docente2050@gmail.com",
-  emailUrl: "mailto:docente2050@gmail.com",
+  email: "centrodigital2023@gmail.com",
+  emailUrl: "mailto:centrodigital2023@gmail.com",
   phoneDisplay: "+57 314 744 4715",
   phoneUrl: "tel:+573147444715",
 } as const;
@@ -28,8 +28,8 @@ export const SOCIAL_LINKS: SocialLink[] = [
   {
     key: "email",
     label: "Email",
-    handle: "docente2050@gmail.com",
-    href: "mailto:docente2050@gmail.com",
+    handle: "centrodigital2023@gmail.com",
+    href: "mailto:centrodigital2023@gmail.com",
     brandColor: "#EA4335",
   },
   {
