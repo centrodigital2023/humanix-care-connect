@@ -24,7 +24,14 @@ import { Route as MensajesRouteImport } from './routes/mensajes'
 import { Route as HabeasDataRouteImport } from './routes/habeas-data'
 import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
+import { Route as EnfermeriaPereiraRouteImport } from './routes/enfermeria-pereira'
+import { Route as EnfermeriaMedellinRouteImport } from './routes/enfermeria-medellin'
 import { Route as EnfermeriaDomiciliariaRouteImport } from './routes/enfermeria-domiciliaria'
+import { Route as EnfermeriaCartagenaRouteImport } from './routes/enfermeria-cartagena'
+import { Route as EnfermeriaCaliRouteImport } from './routes/enfermeria-cali'
+import { Route as EnfermeriaBucaramangaRouteImport } from './routes/enfermeria-bucaramanga'
+import { Route as EnfermeriaBogotaRouteImport } from './routes/enfermeria-bogota'
+import { Route as EnfermeriaBarranquillaRouteImport } from './routes/enfermeria-barranquilla'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CumplimientoRouteImport } from './routes/cumplimiento'
 import { Route as CuidadorDomicilioRouteImport } from './routes/cuidador-domicilio'
@@ -130,9 +137,44 @@ const EvaluadorRoute = EvaluadorRouteImport.update({
   path: '/evaluador',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnfermeriaPereiraRoute = EnfermeriaPereiraRouteImport.update({
+  id: '/enfermeria-pereira',
+  path: '/enfermeria-pereira',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaMedellinRoute = EnfermeriaMedellinRouteImport.update({
+  id: '/enfermeria-medellin',
+  path: '/enfermeria-medellin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EnfermeriaDomiciliariaRoute = EnfermeriaDomiciliariaRouteImport.update({
   id: '/enfermeria-domiciliaria',
   path: '/enfermeria-domiciliaria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaCartagenaRoute = EnfermeriaCartagenaRouteImport.update({
+  id: '/enfermeria-cartagena',
+  path: '/enfermeria-cartagena',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaCaliRoute = EnfermeriaCaliRouteImport.update({
+  id: '/enfermeria-cali',
+  path: '/enfermeria-cali',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaBucaramangaRoute = EnfermeriaBucaramangaRouteImport.update({
+  id: '/enfermeria-bucaramanga',
+  path: '/enfermeria-bucaramanga',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaBogotaRoute = EnfermeriaBogotaRouteImport.update({
+  id: '/enfermeria-bogota',
+  path: '/enfermeria-bogota',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EnfermeriaBarranquillaRoute = EnfermeriaBarranquillaRouteImport.update({
+  id: '/enfermeria-barranquilla',
+  path: '/enfermeria-barranquilla',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -296,7 +338,14 @@ export interface FileRoutesByFullPath {
   '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/enfermeria-barranquilla': typeof EnfermeriaBarranquillaRoute
+  '/enfermeria-bogota': typeof EnfermeriaBogotaRoute
+  '/enfermeria-bucaramanga': typeof EnfermeriaBucaramangaRoute
+  '/enfermeria-cali': typeof EnfermeriaCaliRoute
+  '/enfermeria-cartagena': typeof EnfermeriaCartagenaRoute
   '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
+  '/enfermeria-medellin': typeof EnfermeriaMedellinRoute
+  '/enfermeria-pereira': typeof EnfermeriaPereiraRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -342,7 +391,14 @@ export interface FileRoutesByTo {
   '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
   '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
+  '/enfermeria-barranquilla': typeof EnfermeriaBarranquillaRoute
+  '/enfermeria-bogota': typeof EnfermeriaBogotaRoute
+  '/enfermeria-bucaramanga': typeof EnfermeriaBucaramangaRoute
+  '/enfermeria-cali': typeof EnfermeriaCaliRoute
+  '/enfermeria-cartagena': typeof EnfermeriaCartagenaRoute
   '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
+  '/enfermeria-medellin': typeof EnfermeriaMedellinRoute
+  '/enfermeria-pereira': typeof EnfermeriaPereiraRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -389,7 +445,14 @@ export interface FileRoutesById {
   '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/enfermeria-barranquilla': typeof EnfermeriaBarranquillaRoute
+  '/enfermeria-bogota': typeof EnfermeriaBogotaRoute
+  '/enfermeria-bucaramanga': typeof EnfermeriaBucaramangaRoute
+  '/enfermeria-cali': typeof EnfermeriaCaliRoute
+  '/enfermeria-cartagena': typeof EnfermeriaCartagenaRoute
   '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
+  '/enfermeria-medellin': typeof EnfermeriaMedellinRoute
+  '/enfermeria-pereira': typeof EnfermeriaPereiraRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -438,7 +501,14 @@ export interface FileRouteTypes {
     | '/cuidador-domicilio'
     | '/cumplimiento'
     | '/dashboard'
+    | '/enfermeria-barranquilla'
+    | '/enfermeria-bogota'
+    | '/enfermeria-bucaramanga'
+    | '/enfermeria-cali'
+    | '/enfermeria-cartagena'
     | '/enfermeria-domiciliaria'
+    | '/enfermeria-medellin'
+    | '/enfermeria-pereira'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -484,7 +554,14 @@ export interface FileRouteTypes {
     | '/cuidado-postoperatorio'
     | '/cuidador-domicilio'
     | '/cumplimiento'
+    | '/enfermeria-barranquilla'
+    | '/enfermeria-bogota'
+    | '/enfermeria-bucaramanga'
+    | '/enfermeria-cali'
+    | '/enfermeria-cartagena'
     | '/enfermeria-domiciliaria'
+    | '/enfermeria-medellin'
+    | '/enfermeria-pereira'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -530,7 +607,14 @@ export interface FileRouteTypes {
     | '/cuidador-domicilio'
     | '/cumplimiento'
     | '/dashboard'
+    | '/enfermeria-barranquilla'
+    | '/enfermeria-bogota'
+    | '/enfermeria-bucaramanga'
+    | '/enfermeria-cali'
+    | '/enfermeria-cartagena'
     | '/enfermeria-domiciliaria'
+    | '/enfermeria-medellin'
+    | '/enfermeria-pereira'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -578,7 +662,14 @@ export interface RootRouteChildren {
   CuidadorDomicilioRoute: typeof CuidadorDomicilioRoute
   CumplimientoRoute: typeof CumplimientoRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  EnfermeriaBarranquillaRoute: typeof EnfermeriaBarranquillaRoute
+  EnfermeriaBogotaRoute: typeof EnfermeriaBogotaRoute
+  EnfermeriaBucaramangaRoute: typeof EnfermeriaBucaramangaRoute
+  EnfermeriaCaliRoute: typeof EnfermeriaCaliRoute
+  EnfermeriaCartagenaRoute: typeof EnfermeriaCartagenaRoute
   EnfermeriaDomiciliariaRoute: typeof EnfermeriaDomiciliariaRoute
+  EnfermeriaMedellinRoute: typeof EnfermeriaMedellinRoute
+  EnfermeriaPereiraRoute: typeof EnfermeriaPereiraRoute
   EvaluadorRoute: typeof EvaluadorRoute
   FamiliasRoute: typeof FamiliasRoute
   HabeasDataRoute: typeof HabeasDataRoute
@@ -706,11 +797,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EvaluadorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enfermeria-pereira': {
+      id: '/enfermeria-pereira'
+      path: '/enfermeria-pereira'
+      fullPath: '/enfermeria-pereira'
+      preLoaderRoute: typeof EnfermeriaPereiraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-medellin': {
+      id: '/enfermeria-medellin'
+      path: '/enfermeria-medellin'
+      fullPath: '/enfermeria-medellin'
+      preLoaderRoute: typeof EnfermeriaMedellinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/enfermeria-domiciliaria': {
       id: '/enfermeria-domiciliaria'
       path: '/enfermeria-domiciliaria'
       fullPath: '/enfermeria-domiciliaria'
       preLoaderRoute: typeof EnfermeriaDomiciliariaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-cartagena': {
+      id: '/enfermeria-cartagena'
+      path: '/enfermeria-cartagena'
+      fullPath: '/enfermeria-cartagena'
+      preLoaderRoute: typeof EnfermeriaCartagenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-cali': {
+      id: '/enfermeria-cali'
+      path: '/enfermeria-cali'
+      fullPath: '/enfermeria-cali'
+      preLoaderRoute: typeof EnfermeriaCaliRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-bucaramanga': {
+      id: '/enfermeria-bucaramanga'
+      path: '/enfermeria-bucaramanga'
+      fullPath: '/enfermeria-bucaramanga'
+      preLoaderRoute: typeof EnfermeriaBucaramangaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-bogota': {
+      id: '/enfermeria-bogota'
+      path: '/enfermeria-bogota'
+      fullPath: '/enfermeria-bogota'
+      preLoaderRoute: typeof EnfermeriaBogotaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/enfermeria-barranquilla': {
+      id: '/enfermeria-barranquilla'
+      path: '/enfermeria-barranquilla'
+      fullPath: '/enfermeria-barranquilla'
+      preLoaderRoute: typeof EnfermeriaBarranquillaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -988,7 +1128,14 @@ const rootRouteChildren: RootRouteChildren = {
   CuidadorDomicilioRoute: CuidadorDomicilioRoute,
   CumplimientoRoute: CumplimientoRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  EnfermeriaBarranquillaRoute: EnfermeriaBarranquillaRoute,
+  EnfermeriaBogotaRoute: EnfermeriaBogotaRoute,
+  EnfermeriaBucaramangaRoute: EnfermeriaBucaramangaRoute,
+  EnfermeriaCaliRoute: EnfermeriaCaliRoute,
+  EnfermeriaCartagenaRoute: EnfermeriaCartagenaRoute,
   EnfermeriaDomiciliariaRoute: EnfermeriaDomiciliariaRoute,
+  EnfermeriaMedellinRoute: EnfermeriaMedellinRoute,
+  EnfermeriaPereiraRoute: EnfermeriaPereiraRoute,
   EvaluadorRoute: EvaluadorRoute,
   FamiliasRoute: FamiliasRoute,
   HabeasDataRoute: HabeasDataRoute,
