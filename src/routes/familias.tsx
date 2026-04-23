@@ -60,7 +60,7 @@ const benefits = [
   {
     icon: ShieldCheck,
     title: "100% verificados",
-    desc: "Cédula, RETHUS y biometría facial validados con IA. Antifraude permanente.",
+     desc: "Cédula, RETHUS  validados por talento humano. Antifraude permanente.",
   },
   {
     icon: Activity,
@@ -70,7 +70,7 @@ const benefits = [
   {
     icon: PhoneCall,
     title: "Soporte 24/7",
-    desc: "WhatsApp directo, copiloto IA de contratación y respaldo de pólizas reconocidas.",
+     desc: "WhatsApp directo, copiloto IA de contratación.",
   },
 ];
 
@@ -140,9 +140,9 @@ function FamiliasPage() {
             <h2 className="font-display text-2xl sm:text-3xl font-bold">
               ¿Lista para encontrar el cuidador ideal?
             </h2>
-            <p className="mt-2 text-muted-foreground">
-              Comisión transparente del 5% por contratación. Sin permanencia, sin sorpresas.
-            </p>
+             <p className="mt-2 text-muted-foreground">
+               Planes transparentes sin cobros ocultos. Sin permanencia, sin sorpresas.
+             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <Button variant="copper" size="xl" className="w-full sm:w-auto" asChild>
                 <Link to="/buscar" search={{ tab: "profesionales" }}>
