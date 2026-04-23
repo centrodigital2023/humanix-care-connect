@@ -103,9 +103,7 @@ function TecnologiaPage() {
             <h1 className="mt-4 font-display text-[clamp(2rem,6vw,3.75rem)] font-bold leading-[1.05] text-cyber-foreground">
               IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
             </h1>
-            <p className="mt-5 max-w-3xl text-base sm:text-lg text-cyber-foreground/70 leading-relaxed">
-              Cumple con la regulación colombiana y se adapta a la infraestructura de cualquier IPS.
-            </p>
+            <p className="mt-5 max-w-3xl text-base sm:text-lg text-cyber-foreground/70 leading-relaxed" />
           </div>
         </section>
 
