@@ -12,12 +12,16 @@ import {
   Loader2,
   Sparkles,
   AlertTriangle,
+  UploadCloud,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
+import { FamilyDocumentsManager } from "@/components/humanix/FamilyDocumentsManager";
 
 type Props = {
   userId: string;
