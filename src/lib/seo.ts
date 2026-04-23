@@ -139,7 +139,7 @@ export function organizationLd() {
       {
         "@type": "ContactPoint",
         contactType: "customer support",
-        email: "docente2050@gmail.com",
+        email: "centrodigital2023@gmail.com",
         telephone: "+573147444715",
         availableLanguage: ["Spanish"],
         areaServed: "CO",
@@ -199,7 +199,7 @@ export function localBusinessLd() {
     image: SOCIAL_IMAGE_URL,
     logo: `${SITE_URL}/favicon.ico`,
     telephone: "+573147444715",
-    email: "docente2050@gmail.com",
+    email: "centrodigital2023@gmail.com",
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
