@@ -26,6 +26,7 @@ import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CumplimientoRouteImport } from './routes/cumplimiento'
+import { Route as CuidadoAdultoMayorRouteImport } from './routes/cuidado-adulto-mayor'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as CarrerasRouteImport } from './routes/carreras'
 import { Route as BuscarRouteImport } from './routes/buscar'
@@ -131,6 +132,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CumplimientoRoute = CumplimientoRouteImport.update({
   id: '/cumplimiento',
   path: '/cumplimiento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoAdultoMayorRoute = CuidadoAdultoMayorRouteImport.update({
+  id: '/cuidado-adulto-mayor',
+  path: '/cuidado-adulto-mayor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactoRoute = ContactoRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByTo {
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
   '/evaluador': typeof EvaluadorRoute
@@ -367,6 +376,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cuidado-adulto-mayor'
     | '/cumplimiento'
     | '/dashboard'
     | '/evaluador'
@@ -407,6 +417,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cuidado-adulto-mayor'
     | '/cumplimiento'
     | '/evaluador'
     | '/familias'
@@ -445,6 +456,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cuidado-adulto-mayor'
     | '/cumplimiento'
     | '/dashboard'
     | '/evaluador'
@@ -486,6 +498,7 @@ export interface RootRouteChildren {
   BuscarRoute: typeof BuscarRoute
   CarrerasRoute: typeof CarrerasRoute
   ContactoRoute: typeof ContactoRoute
+  CuidadoAdultoMayorRoute: typeof CuidadoAdultoMayorRoute
   CumplimientoRoute: typeof CumplimientoRoute
   DashboardRoute: typeof DashboardRouteWithChildren
   EvaluadorRoute: typeof EvaluadorRoute
@@ -627,6 +640,13 @@ declare module '@tanstack/react-router' {
       path: '/cumplimiento'
       fullPath: '/cumplimiento'
       preLoaderRoute: typeof CumplimientoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-adulto-mayor': {
+      id: '/cuidado-adulto-mayor'
+      path: '/cuidado-adulto-mayor'
+      fullPath: '/cuidado-adulto-mayor'
+      preLoaderRoute: typeof CuidadoAdultoMayorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contacto': {
@@ -840,6 +860,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuscarRoute: BuscarRoute,
   CarrerasRoute: CarrerasRoute,
   ContactoRoute: ContactoRoute,
+  CuidadoAdultoMayorRoute: CuidadoAdultoMayorRoute,
   CumplimientoRoute: CumplimientoRoute,
   DashboardRoute: DashboardRouteWithChildren,
   EvaluadorRoute: EvaluadorRoute,
