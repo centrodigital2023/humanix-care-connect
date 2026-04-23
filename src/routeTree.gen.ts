@@ -24,12 +24,18 @@ import { Route as MensajesRouteImport } from './routes/mensajes'
 import { Route as HabeasDataRouteImport } from './routes/habeas-data'
 import { Route as FamiliasRouteImport } from './routes/familias'
 import { Route as EvaluadorRouteImport } from './routes/evaluador'
+import { Route as EnfermeriaDomiciliariaRouteImport } from './routes/enfermeria-domiciliaria'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CumplimientoRouteImport } from './routes/cumplimiento'
+import { Route as CuidadorDomicilioRouteImport } from './routes/cuidador-domicilio'
+import { Route as CuidadoPostoperatorioRouteImport } from './routes/cuidado-postoperatorio'
+import { Route as CuidadoPediatricoRouteImport } from './routes/cuidado-pediatrico'
+import { Route as CuidadoPaliativoRouteImport } from './routes/cuidado-paliativo'
 import { Route as CuidadoAdultoMayorRouteImport } from './routes/cuidado-adulto-mayor'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as CarrerasRouteImport } from './routes/carreras'
 import { Route as BuscarRouteImport } from './routes/buscar'
+import { Route as AuxiliarEnfermeriaRouteImport } from './routes/auxiliar-enfermeria'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperadminIndexRouteImport } from './routes/superadmin.index'
@@ -124,6 +130,11 @@ const EvaluadorRoute = EvaluadorRouteImport.update({
   path: '/evaluador',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EnfermeriaDomiciliariaRoute = EnfermeriaDomiciliariaRouteImport.update({
+  id: '/enfermeria-domiciliaria',
+  path: '/enfermeria-domiciliaria',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -132,6 +143,26 @@ const DashboardRoute = DashboardRouteImport.update({
 const CumplimientoRoute = CumplimientoRouteImport.update({
   id: '/cumplimiento',
   path: '/cumplimiento',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadorDomicilioRoute = CuidadorDomicilioRouteImport.update({
+  id: '/cuidador-domicilio',
+  path: '/cuidador-domicilio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoPostoperatorioRoute = CuidadoPostoperatorioRouteImport.update({
+  id: '/cuidado-postoperatorio',
+  path: '/cuidado-postoperatorio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoPediatricoRoute = CuidadoPediatricoRouteImport.update({
+  id: '/cuidado-pediatrico',
+  path: '/cuidado-pediatrico',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CuidadoPaliativoRoute = CuidadoPaliativoRouteImport.update({
+  id: '/cuidado-paliativo',
+  path: '/cuidado-paliativo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CuidadoAdultoMayorRoute = CuidadoAdultoMayorRouteImport.update({
@@ -152,6 +183,11 @@ const CarrerasRoute = CarrerasRouteImport.update({
 const BuscarRoute = BuscarRouteImport.update({
   id: '/buscar',
   path: '/buscar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuxiliarEnfermeriaRoute = AuxiliarEnfermeriaRouteImport.update({
+  id: '/auxiliar-enfermeria',
+  path: '/auxiliar-enfermeria',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -249,12 +285,18 @@ const DashboardFamiliaOnboardingRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
+  '/cuidado-paliativo': typeof CuidadoPaliativoRoute
+  '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
+  '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
+  '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -290,11 +332,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
+  '/cuidado-paliativo': typeof CuidadoPaliativoRoute
+  '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
+  '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
+  '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
+  '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -330,12 +378,18 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
+  '/cuidado-paliativo': typeof CuidadoPaliativoRoute
+  '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
+  '/cuidado-postoperatorio': typeof CuidadoPostoperatorioRoute
+  '/cuidador-domicilio': typeof CuidadorDomicilioRoute
   '/cumplimiento': typeof CumplimientoRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/enfermeria-domiciliaria': typeof EnfermeriaDomiciliariaRoute
   '/evaluador': typeof EvaluadorRoute
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
@@ -373,12 +427,18 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/auxiliar-enfermeria'
     | '/buscar'
     | '/carreras'
     | '/contacto'
     | '/cuidado-adulto-mayor'
+    | '/cuidado-paliativo'
+    | '/cuidado-pediatrico'
+    | '/cuidado-postoperatorio'
+    | '/cuidador-domicilio'
     | '/cumplimiento'
     | '/dashboard'
+    | '/enfermeria-domiciliaria'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -414,11 +474,17 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/auxiliar-enfermeria'
     | '/buscar'
     | '/carreras'
     | '/contacto'
     | '/cuidado-adulto-mayor'
+    | '/cuidado-paliativo'
+    | '/cuidado-pediatrico'
+    | '/cuidado-postoperatorio'
+    | '/cuidador-domicilio'
     | '/cumplimiento'
+    | '/enfermeria-domiciliaria'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -453,12 +519,18 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/auth'
+    | '/auxiliar-enfermeria'
     | '/buscar'
     | '/carreras'
     | '/contacto'
     | '/cuidado-adulto-mayor'
+    | '/cuidado-paliativo'
+    | '/cuidado-pediatrico'
+    | '/cuidado-postoperatorio'
+    | '/cuidador-domicilio'
     | '/cumplimiento'
     | '/dashboard'
+    | '/enfermeria-domiciliaria'
     | '/evaluador'
     | '/familias'
     | '/habeas-data'
@@ -495,12 +567,18 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
+  AuxiliarEnfermeriaRoute: typeof AuxiliarEnfermeriaRoute
   BuscarRoute: typeof BuscarRoute
   CarrerasRoute: typeof CarrerasRoute
   ContactoRoute: typeof ContactoRoute
   CuidadoAdultoMayorRoute: typeof CuidadoAdultoMayorRoute
+  CuidadoPaliativoRoute: typeof CuidadoPaliativoRoute
+  CuidadoPediatricoRoute: typeof CuidadoPediatricoRoute
+  CuidadoPostoperatorioRoute: typeof CuidadoPostoperatorioRoute
+  CuidadorDomicilioRoute: typeof CuidadorDomicilioRoute
   CumplimientoRoute: typeof CumplimientoRoute
   DashboardRoute: typeof DashboardRouteWithChildren
+  EnfermeriaDomiciliariaRoute: typeof EnfermeriaDomiciliariaRoute
   EvaluadorRoute: typeof EvaluadorRoute
   FamiliasRoute: typeof FamiliasRoute
   HabeasDataRoute: typeof HabeasDataRoute
@@ -628,6 +706,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EvaluadorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/enfermeria-domiciliaria': {
+      id: '/enfermeria-domiciliaria'
+      path: '/enfermeria-domiciliaria'
+      fullPath: '/enfermeria-domiciliaria'
+      preLoaderRoute: typeof EnfermeriaDomiciliariaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -640,6 +725,34 @@ declare module '@tanstack/react-router' {
       path: '/cumplimiento'
       fullPath: '/cumplimiento'
       preLoaderRoute: typeof CumplimientoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidador-domicilio': {
+      id: '/cuidador-domicilio'
+      path: '/cuidador-domicilio'
+      fullPath: '/cuidador-domicilio'
+      preLoaderRoute: typeof CuidadorDomicilioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-postoperatorio': {
+      id: '/cuidado-postoperatorio'
+      path: '/cuidado-postoperatorio'
+      fullPath: '/cuidado-postoperatorio'
+      preLoaderRoute: typeof CuidadoPostoperatorioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-pediatrico': {
+      id: '/cuidado-pediatrico'
+      path: '/cuidado-pediatrico'
+      fullPath: '/cuidado-pediatrico'
+      preLoaderRoute: typeof CuidadoPediatricoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cuidado-paliativo': {
+      id: '/cuidado-paliativo'
+      path: '/cuidado-paliativo'
+      fullPath: '/cuidado-paliativo'
+      preLoaderRoute: typeof CuidadoPaliativoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cuidado-adulto-mayor': {
@@ -668,6 +781,13 @@ declare module '@tanstack/react-router' {
       path: '/buscar'
       fullPath: '/buscar'
       preLoaderRoute: typeof BuscarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auxiliar-enfermeria': {
+      id: '/auxiliar-enfermeria'
+      path: '/auxiliar-enfermeria'
+      fullPath: '/auxiliar-enfermeria'
+      preLoaderRoute: typeof AuxiliarEnfermeriaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -857,12 +977,18 @@ const SuperadminRouteWithChildren = SuperadminRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
+  AuxiliarEnfermeriaRoute: AuxiliarEnfermeriaRoute,
   BuscarRoute: BuscarRoute,
   CarrerasRoute: CarrerasRoute,
   ContactoRoute: ContactoRoute,
   CuidadoAdultoMayorRoute: CuidadoAdultoMayorRoute,
+  CuidadoPaliativoRoute: CuidadoPaliativoRoute,
+  CuidadoPediatricoRoute: CuidadoPediatricoRoute,
+  CuidadoPostoperatorioRoute: CuidadoPostoperatorioRoute,
+  CuidadorDomicilioRoute: CuidadorDomicilioRoute,
   CumplimientoRoute: CumplimientoRoute,
   DashboardRoute: DashboardRouteWithChildren,
+  EnfermeriaDomiciliariaRoute: EnfermeriaDomiciliariaRoute,
   EvaluadorRoute: EvaluadorRoute,
   FamiliasRoute: FamiliasRoute,
   HabeasDataRoute: HabeasDataRoute,

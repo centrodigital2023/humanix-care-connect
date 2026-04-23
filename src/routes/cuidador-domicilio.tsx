@@ -11,7 +11,6 @@ export const Route = createFileRoute("/cuidador-domicilio")({
       description:
         "Cuidadores con experiencia comprobable y antecedentes verificados. Acompañamiento, higiene, alimentación y compañía con tarifas desde $20.000/hora.",
     }),
-  command: Page,
   component: Page,
 });
 
