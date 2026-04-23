@@ -55,6 +55,7 @@ import { Route as SuperadminFraudeRouteImport } from './routes/superadmin.fraude
 import { Route as SuperadminCrmRouteImport } from './routes/superadmin.crm'
 import { Route as SuperadminAuditoriaRouteImport } from './routes/superadmin.auditoria'
 import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookingId'
+import { Route as RecursosSlugRouteImport } from './routes/recursos.$slug'
 import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
 import { Route as OfertaOfferIdRouteImport } from './routes/oferta.$offerId'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
@@ -293,6 +294,11 @@ const ServicioBookingIdRoute = ServicioBookingIdRouteImport.update({
   path: '/servicio/$bookingId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecursosSlugRoute = RecursosSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => RecursosRoute,
+} as any)
 const ProfesionalProIdRoute = ProfesionalProIdRouteImport.update({
   id: '/profesional/$proId',
   path: '/profesional/$proId',
@@ -360,7 +366,7 @@ export interface FileRoutesByFullPath {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
-  '/recursos': typeof RecursosRoute
+  '/recursos': typeof RecursosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
+  '/recursos/$slug': typeof RecursosSlugRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
@@ -414,7 +421,7 @@ export interface FileRoutesByTo {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
-  '/recursos': typeof RecursosRoute
+  '/recursos': typeof RecursosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -427,6 +434,7 @@ export interface FileRoutesByTo {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
+  '/recursos/$slug': typeof RecursosSlugRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
@@ -469,7 +477,7 @@ export interface FileRoutesById {
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
   '/profesionales': typeof ProfesionalesRoute
-  '/recursos': typeof RecursosRoute
+  '/recursos': typeof RecursosRouteWithChildren
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sobre': typeof SobreRoute
@@ -483,6 +491,7 @@ export interface FileRoutesById {
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
+  '/recursos/$slug': typeof RecursosSlugRoute
   '/servicio/$bookingId': typeof ServicioBookingIdRoute
   '/superadmin/auditoria': typeof SuperadminAuditoriaRoute
   '/superadmin/crm': typeof SuperadminCrmRoute
@@ -540,6 +549,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/oferta/$offerId'
     | '/profesional/$proId'
+    | '/recursos/$slug'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
     | '/superadmin/crm'
@@ -593,6 +603,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/oferta/$offerId'
     | '/profesional/$proId'
+    | '/recursos/$slug'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
     | '/superadmin/crm'
@@ -648,6 +659,7 @@ export interface FileRouteTypes {
     | '/dashboard/whatsapp'
     | '/oferta/$offerId'
     | '/profesional/$proId'
+    | '/recursos/$slug'
     | '/servicio/$bookingId'
     | '/superadmin/auditoria'
     | '/superadmin/crm'
@@ -690,7 +702,7 @@ export interface RootRouteChildren {
   PrensaRoute: typeof PrensaRoute
   PrivacidadRoute: typeof PrivacidadRoute
   ProfesionalesRoute: typeof ProfesionalesRoute
-  RecursosRoute: typeof RecursosRoute
+  RecursosRoute: typeof RecursosRouteWithChildren
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SobreRoute: typeof SobreRoute
@@ -1027,6 +1039,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicioBookingIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recursos/$slug': {
+      id: '/recursos/$slug'
+      path: '/$slug'
+      fullPath: '/recursos/$slug'
+      preLoaderRoute: typeof RecursosSlugRouteImport
+      parentRoute: typeof RecursosRoute
+    }
     '/profesional/$proId': {
       id: '/profesional/$proId'
       path: '/profesional/$proId'
@@ -1110,6 +1129,18 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
   DashboardRouteChildren,
 )
 
+interface RecursosRouteChildren {
+  RecursosSlugRoute: typeof RecursosSlugRoute
+}
+
+const RecursosRouteChildren: RecursosRouteChildren = {
+  RecursosSlugRoute: RecursosSlugRoute,
+}
+
+const RecursosRouteWithChildren = RecursosRoute._addFileChildren(
+  RecursosRouteChildren,
+)
+
 interface SuperadminRouteChildren {
   SuperadminAuditoriaRoute: typeof SuperadminAuditoriaRoute
   SuperadminCrmRoute: typeof SuperadminCrmRoute
@@ -1164,7 +1195,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrensaRoute: PrensaRoute,
   PrivacidadRoute: PrivacidadRoute,
   ProfesionalesRoute: ProfesionalesRoute,
-  RecursosRoute: RecursosRoute,
+  RecursosRoute: RecursosRouteWithChildren,
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SobreRoute: SobreRoute,

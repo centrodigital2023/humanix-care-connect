@@ -7,27 +7,50 @@ type FooterLink = { label: string; to?: string; href?: string };
 
 const cols: { title: string; links: FooterLink[] }[] = [
   {
-    title: "Soluciones y plataforma",
+    title: "Servicios de cuidado",
     links: [
-      { label: "Profesionales de salud", to: "/profesionales" },
+      { label: "Enfermería domiciliaria 24/7", to: "/enfermeria-domiciliaria" },
+      { label: "Cuidado adulto mayor", to: "/cuidado-adulto-mayor" },
+      { label: "Cuidado postoperatorio", to: "/cuidado-postoperatorio" },
+      { label: "Cuidado pediátrico", to: "/cuidado-pediatrico" },
+      { label: "Cuidados paliativos", to: "/cuidado-paliativo" },
+      { label: "Cuidador a domicilio", to: "/cuidador-domicilio" },
+      { label: "Auxiliar de enfermería", to: "/auxiliar-enfermeria" },
+    ],
+  },
+  {
+    title: "Ciudades",
+    links: [
+      { label: "Bogotá", to: "/enfermeria-bogota" },
+      { label: "Medellín", to: "/enfermeria-medellin" },
+      { label: "Cali", to: "/enfermeria-cali" },
+      { label: "Barranquilla", to: "/enfermeria-barranquilla" },
+      { label: "Cartagena", to: "/enfermeria-cartagena" },
+      { label: "Bucaramanga", to: "/enfermeria-bucaramanga" },
+      { label: "Pereira", to: "/enfermeria-pereira" },
+    ],
+  },
+  {
+    title: "Plataforma",
+    links: [
       { label: "Familias", to: "/familias" },
+      { label: "Profesionales", to: "/profesionales" },
       { label: "Clínicas e IPS", to: "/talento-humano" },
       { label: "Buscar cuidado", to: "/buscar" },
-      { label: "Planes y precios", to: "/planes" },
+      { label: "Planes", to: "/planes" },
       { label: "Tecnología IA", to: "/tecnologia" },
+      { label: "Recursos", to: "/recursos" },
       { label: "Sobre Humanix", to: "/sobre" },
-      { label: "Carreras", to: "/carreras" },
-      { label: "Prensa y medios", to: "/prensa" },
       { label: "Contacto", to: "/contacto" },
     ],
   },
   {
-    title: "Legal, cumplimiento y soporte",
+    title: "Legal",
     links: [
-      { label: "Términos y condiciones", to: "/terminos" },
-      { label: "Política de privacidad", to: "/privacidad" },
-      { label: "Habeas Data (Ley 1581)", to: "/habeas-data" },
-      { label: "Cumplimiento Min. Salud", to: "/cumplimiento" },
+      { label: "Términos", to: "/terminos" },
+      { label: "Privacidad", to: "/privacidad" },
+      { label: "Habeas Data", to: "/habeas-data" },
+      { label: "Cumplimiento", to: "/cumplimiento" },
     ],
   },
 ];
@@ -37,7 +60,7 @@ export function Footer() {
     <footer className="border-t border-border">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12">
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-4">
             <Logo />
             <p className="mt-4 text-sm text-muted-foreground max-w-md leading-relaxed">
               Plataforma colombiana de talento humano en salud, con IA en tiempo real, verificación
@@ -74,54 +97,32 @@ export function Footer() {
               humanix.lat
             </p>
           </div>
-          <div className="lg:col-span-5">
-            <p className="text-sm font-semibold mb-3">{cols[0].title}</p>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {cols[0].links.map((l) => (
-                <li key={l.label}>
-                  {l.to ? (
-                    <Link
-                      to={l.to as never}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {l.label}
-                    </Link>
-                  ) : (
-                    <a
-                      href={l.href ?? "#"}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {l.label}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="lg:col-span-2">
-            <p className="text-sm font-semibold mb-3">{cols[1].title}</p>
-            <ul className="space-y-2">
-              {cols[1].links.map((l) => (
-                <li key={l.label}>
-                  {l.to ? (
-                    <Link
-                      to={l.to as never}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {l.label}
-                    </Link>
-                  ) : (
-                    <a
-                      href={l.href ?? "#"}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {l.label}
-                    </a>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {cols.map((col, idx) => (
+            <div key={col.title} className={idx === 2 ? "lg:col-span-3" : "lg:col-span-2"}>
+              <p className="text-sm font-semibold mb-3">{col.title}</p>
+              <ul className="space-y-2">
+                {col.links.map((l) => (
+                  <li key={l.label}>
+                    {l.to ? (
+                      <Link
+                        to={l.to as never}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {l.label}
+                      </Link>
+                    ) : (
+                      <a
+                        href={l.href ?? "#"}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {l.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
         <div className="mt-8 sm:mt-10 pt-6 border-t border-border">
