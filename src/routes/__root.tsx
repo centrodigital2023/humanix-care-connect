@@ -57,6 +57,7 @@ export const Route = createRootRoute({
       { name: "description", content: SITE_DESCRIPTION },
       { name: "author", content: "Humanix" },
       { name: "google-site-verification", content: "ohLJMuczZHl79QIbEcvqP4UgjxZd8LAhhMhWU9IN_mQ" },
+      { name: "facebook-domain-verification", content: "j33zetynanp07lsxc1k5zzns607pbm" },
       {
         name: "robots",
         content: "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1",
