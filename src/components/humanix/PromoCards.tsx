@@ -16,11 +16,18 @@ import {
   MessageCircle,
   Link2,
   Check,
+  Upload,
+  Wand2,
+  ImageIcon,
+  Loader2,
+  Trash2,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShareButtons } from "./ShareButtons";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export type PromoTemplate = {
   id: string;
@@ -209,7 +216,12 @@ export function PromoCards({ origin }: { origin: string }) {
   const [shareCounts, setShareCounts] = useState<Record<string, number>>({});
   const [lightbox, setLightbox] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [bgImages, setBgImages] = useState<Record<string, string>>({});
+  const [generating, setGenerating] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [sharingNative, setSharingNative] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const utm = "?utm_source=social&utm_medium=share&utm_campaign=promo";
   const baseUrl = useMemo(() => `${origin}/${utm}`, [origin]);
@@ -233,6 +245,7 @@ export function PromoCards({ origin }: { origin: string }) {
         await navigator.clipboard.writeText(`${shareText}\n${baseUrl}`);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        toast.success("Texto y enlace copiados");
       } else {
         window.open(
           buildShareUrl(networkId, baseUrl, `${tpl.emoji} ${tpl.headline}`, shareText),
@@ -245,6 +258,110 @@ export function PromoCards({ origin }: { origin: string }) {
     [baseUrl],
   );
 
+  // Render card a PNG blob (para Web Share API y descarga)
+  const renderCardBlob = useCallback(async (tpl: PromoTemplate): Promise<Blob | null> => {
+    const node = cardRefs.current[tpl.id];
+    if (!node) return null;
+    const html2canvas = (await import("html2canvas")).default;
+    const canvas = await html2canvas(node, { scale: 2, backgroundColor: null, useCORS: true });
+    return await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob((b) => resolve(b), "image/png"),
+    );
+  }, []);
+
+  // Compartir nativo con archivo (mobile: abre IG, FB, WhatsApp con la imagen)
+  const handleNativeShare = useCallback(
+    async (tpl: PromoTemplate) => {
+      const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${baseUrl}`;
+      setSharingNative(true);
+      try {
+        const blob = await renderCardBlob(tpl);
+        if (!blob) throw new Error("No se pudo renderizar la tarjeta");
+        const file = new File([blob], `humanix-${tpl.id}.png`, { type: "image/png" });
+        const nav = navigator as Navigator & {
+          canShare?: (data: ShareData) => boolean;
+        };
+        if (nav.canShare && nav.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: tpl.headline,
+            text: shareText,
+          });
+          setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
+          toast.success("Compartido");
+        } else {
+          // Fallback: descargar PNG y copiar texto
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `humanix-${tpl.id}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+          await navigator.clipboard.writeText(shareText);
+          toast.info("Imagen descargada y texto copiado. Súbela a tu red social.");
+        }
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") {
+          toast.error("No se pudo compartir: " + (e as Error).message);
+        }
+      } finally {
+        setSharingNative(false);
+      }
+    },
+    [baseUrl, renderCardBlob],
+  );
+
+  // Subir imagen local
+  const handleUploadImage = useCallback(
+    (tpl: PromoTemplate, file: File) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Selecciona una imagen válida");
+        return;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        toast.error("Imagen demasiado grande (máx 8 MB)");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        setBgImages((p) => ({ ...p, [tpl.id]: reader.result as string }));
+        toast.success("Imagen agregada");
+      };
+      reader.readAsDataURL(file);
+    },
+    [],
+  );
+
+  // Generar imagen con IA
+  const handleGenerateImage = useCallback(
+    async (tpl: PromoTemplate) => {
+      const prompt = aiPrompt.trim() || `Escena que represente: ${tpl.headline}. ${tpl.subline}`;
+      setGenerating(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("promo-image-gen", {
+          body: { prompt, aspect },
+        });
+        if (error) throw error;
+        const img = (data as { image?: string; error?: string })?.image;
+        if (!img) throw new Error((data as { error?: string })?.error ?? "Sin imagen");
+        setBgImages((p) => ({ ...p, [tpl.id]: img }));
+        toast.success("Imagen generada con IA");
+      } catch (e) {
+        const msg = (e as Error).message ?? "Error generando imagen";
+        if (msg.includes("402") || msg.toLowerCase().includes("crédit")) {
+          toast.error("Créditos IA agotados. Recarga en Settings → Workspace → Usage.");
+        } else if (msg.includes("429")) {
+          toast.error("Demasiadas solicitudes, intenta en unos segundos.");
+        } else {
+          toast.error(msg);
+        }
+      } finally {
+        setGenerating(false);
+      }
+    },
+    [aiPrompt, aspect],
+  );
+
   const downloadCard = async (tpl: PromoTemplate) => {
     const node = cardRefs.current[tpl.id];
     if (!node) return;
@@ -255,9 +372,11 @@ export function PromoCards({ origin }: { origin: string }) {
       link.download = `humanix-${tpl.id}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
+      toast.success("PNG descargado");
     } catch {
       const text = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${baseUrl}`;
       await navigator.clipboard.writeText(text);
+      toast.info("Texto copiado al portapapeles");
     }
   };
 
@@ -265,6 +384,7 @@ export function PromoCards({ origin }: { origin: string }) {
   const activeStyles = VARIANT_STYLES[active.variant];
   const ActiveIcon = active.icon;
   const aspectConfig = ASPECTS.find((a) => a.label === aspect)!;
+  const activeBg = bgImages[active.id];
 
   return (
     <div className="space-y-5">
@@ -314,7 +434,7 @@ export function PromoCards({ origin }: { origin: string }) {
             }}
             onClick={() => setLightbox(true)}
           >
-            <CardContent tpl={active} styles={activeStyles} />
+            <CardContent tpl={active} styles={activeStyles} bgImage={activeBg} />
           </div>
 
           {/* Dots navigation */}
@@ -421,6 +541,98 @@ export function PromoCards({ origin }: { origin: string }) {
           >
             <Download className="h-3.5 w-3.5" /> Descargar PNG
           </Button>
+
+          {/* Web Share nativo (mobile) */}
+          <Button
+            size="sm"
+            className="w-full gap-1.5 bg-gradient-to-r from-biosensor to-fuchsia-neural text-white"
+            disabled={sharingNative}
+            onClick={() => void handleNativeShare(active)}
+          >
+            {sharingNative ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Share2 className="h-3.5 w-3.5" />
+            )}
+            Compartir imagen (Instagram, FB, WhatsApp)
+          </Button>
+
+          {/* Bloque imagen: subir o generar con IA */}
+          <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <ImageIcon className="h-3.5 w-3.5 text-fuchsia-neural" />
+              Imagen de fondo (opcional)
+            </div>
+            <div className="flex gap-1.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUploadImage(active, f);
+                  e.target.value = "";
+                }}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1 gap-1 text-xs"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-3 w-3" /> Subir
+              </Button>
+              {activeBg && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="gap-1 text-xs text-destructive"
+                  onClick={() => {
+                    setBgImages((p) => {
+                      const next = { ...p };
+                      delete next[active.id];
+                      return next;
+                    });
+                  }}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+            <input
+              type="text"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="Prompt IA (opcional, usa el copy si está vacío)"
+              className="w-full text-xs rounded-md border border-border bg-background px-2 py-1.5"
+            />
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full gap-1 text-xs"
+              disabled={generating}
+              onClick={() => void handleGenerateImage(active)}
+            >
+              {generating ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Wand2 className="h-3 w-3 text-fuchsia-neural" />
+              )}
+              {generating ? "Generando..." : "Generar con IA"}
+            </Button>
+          </div>
+
+          {/* Aviso Facebook */}
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 text-[10px] text-muted-foreground flex gap-1.5">
+            <Info className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
+            <span>
+              <strong className="text-foreground">Tip Facebook:</strong> si Facebook muestra
+              "Enlace no disponible", verifica el dominio <code>humanix.lat</code> en
+              Business Manager → Seguridad de marca → Dominios. Mientras tanto, usa el botón
+              "Compartir imagen" para subir la tarjeta como foto directa.
+            </span>
+          </div>
         </div>
       </div>
 
@@ -494,7 +706,7 @@ export function PromoCards({ origin }: { origin: string }) {
                 activeStyles.glow,
               )}
             >
-              <CardContent tpl={active} styles={activeStyles} large />
+              <CardContent tpl={active} styles={activeStyles} bgImage={activeBg} large />
             </div>
             <div className="mt-3 flex gap-2 justify-center flex-wrap">
               {NETWORKS.slice(0, 4).map(({ id, label, color, Icon }) => (
@@ -520,15 +732,28 @@ export function PromoCards({ origin }: { origin: string }) {
 function CardContent({
   tpl,
   styles,
+  bgImage,
   large = false,
 }: {
   tpl: PromoTemplate;
   styles: (typeof VARIANT_STYLES)[keyof typeof VARIANT_STYLES];
+  bgImage?: string;
   large?: boolean;
 }) {
   const Icon = tpl.icon;
   return (
     <div className={cn("relative h-full flex flex-col justify-between", large ? "p-8" : "p-5")}>
+      {bgImage && (
+        <>
+          <img
+            src={bgImage}
+            alt=""
+            crossOrigin="anonymous"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/30" />
+        </>
+      )}
       <div className="absolute inset-0 grid-pattern opacity-20" />
       {/* Top row */}
       <div className="relative flex items-start justify-between">

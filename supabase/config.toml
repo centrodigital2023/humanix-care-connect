@@ -100,3 +100,6 @@ secure_password_change = true
 otp_length = 6
 otp_expiry = 900
 
+
+[functions.promo-image-gen]
+verify_jwt = true
