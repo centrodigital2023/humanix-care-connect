@@ -115,16 +115,12 @@ export function useAppUser(options: { requireAuth?: boolean; allow?: AppRole[] }
         });
       } catch (err) {
         console.error("[useAppUser] loadUser failed:", err);
-        // Fail open: still let the user in with default role to avoid stuck loaders.
+        // Fail closed: never assume a default role on error. If the route is
+        // restricted, send the user to /auth so admin pages can't be reached
+        // by satisfying the catch path.
         if (active) {
-          setUser({
-            id: uid,
-            email,
-            fullName: email,
-            avatarUrl: null,
-            roles: ["family"],
-            primaryRole: "family",
-          });
+          setUser(null);
+          if (allow || requireAuth) safeRedirect("/auth");
         }
       } finally {
         if (active) setLoading(false);
