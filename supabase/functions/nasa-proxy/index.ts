@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
     const url = new URL(req.url);
     const endpoint = (url.searchParams.get("endpoint") || "apod").toLowerCase();
     const translate = url.searchParams.get("translate") === "true";
-    const NASA_API_KEY = Deno.env.get("NASA_API_KEY") || "DEMO_KEY";
+    const NASA_API_KEY = (Deno.env.get("NASA_API_KEY") || "DEMO_KEY").trim();
 
     let upstream: string;
     if (endpoint === "apod") {
