@@ -58,6 +58,7 @@ import { ShareButtons } from "@/components/humanix/ShareButtons";
 import { PromoCards } from "@/components/humanix/PromoCards";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchNasaImage } from "@/lib/nasa";
 
 export const Route = createFileRoute("/superadmin/publicidad")({
   head: () => ({ meta: [{ title: "Publicidad · Superadmin" }] }),
