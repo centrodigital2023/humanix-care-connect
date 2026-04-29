@@ -64,6 +64,10 @@ export function ShareButtons({
   const [copied, setCopied] = useState(false);
 
   const handle = async (target: ShareTarget) => {
+    if (!url || url.trim() === "" || url.trim() === "#") {
+      toast.error("URL no disponible para compartir");
+      return;
+    }
     if (target === "copy") {
       try {
         await navigator.clipboard.writeText(url);
