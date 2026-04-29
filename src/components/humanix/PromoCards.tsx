@@ -378,31 +378,58 @@ export function PromoCards({ origin }: { origin: string }) {
     async (tpl: PromoTemplate) => {
       const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${shareUrlFor(tpl)}`;
       setSharingNative(true);
+      const nav = navigator as Navigator & {
+        canShare?: (data: ShareData) => boolean;
+        share?: (data: ShareData) => Promise<void>;
+      };
+      // Feature-detect synchronously. Web Share with files only works reliably
+      // on mobile (Android/iOS). On desktop the gesture is lost after the
+      // async render, throwing "Must be handling a user gesture". Detect that
+      // up-front and go straight to the download fallback.
+      const probeFile = new File(["x"], "probe.png", { type: "image/png" });
+      const canShareFiles =
+        typeof nav.share === "function" &&
+        typeof nav.canShare === "function" &&
+        nav.canShare({ files: [probeFile] });
+      const isMobile =
+        typeof navigator !== "undefined" &&
+        /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
       try {
         const blob = await renderCardBlob(tpl);
         if (!blob) throw new Error("No se pudo renderizar la tarjeta");
         const file = new File([blob], `humanix-${tpl.id}.png`, { type: "image/png" });
-        const nav = navigator as Navigator & {
-          canShare?: (data: ShareData) => boolean;
-        };
-        if (nav.canShare && nav.canShare({ files: [file] })) {
-          await navigator.share({
-            files: [file],
-            title: tpl.headline,
-            text: shareText,
-          });
-          setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
-          toast.success("Compartido");
-        } else {
-          // Fallback: descargar PNG y copiar texto
+        const downloadFallback = async () => {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
           a.download = `humanix-${tpl.id}.png`;
           a.click();
           URL.revokeObjectURL(url);
-          await navigator.clipboard.writeText(shareText);
-          toast.info("Imagen descargada y texto copiado. Súbela a tu red social.");
+          try {
+            await navigator.clipboard.writeText(shareText);
+            toast.info("Imagen descargada y texto copiado. Súbela a tu red social.");
+          } catch {
+            toast.info("Imagen descargada. Súbela a tu red social.");
+          }
+        };
+        // Only try Web Share with files on mobile where the gesture survives.
+        if (canShareFiles && isMobile && nav.canShare!({ files: [file] })) {
+          try {
+            await nav.share!({
+              files: [file],
+              title: tpl.headline,
+              text: shareText,
+            });
+            setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
+            toast.success("Compartido");
+          } catch (err) {
+            const name = (err as Error).name;
+            if (name === "AbortError") return;
+            // NotAllowedError = gesture lost. Fall back silently.
+            await downloadFallback();
+          }
+        } else {
+          await downloadFallback();
         }
       } catch (e) {
         if ((e as Error).name !== "AbortError") {
