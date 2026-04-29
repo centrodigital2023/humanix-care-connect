@@ -214,6 +214,7 @@ function PublicidadPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [carouselIdx, setCarouselIdx] = useState(0);
   const [carouselPlaying, setCarouselPlaying] = useState(true);
+  const [previewDevice, setPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seeding, setSeeding] = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
