@@ -927,6 +927,17 @@ export function PromoCards({ origin }: { origin: string }) {
               )}
               {generating ? "Generando..." : "Generar con IA"}
             </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full gap-1 text-xs"
+              disabled={generating}
+              onClick={() => void handleNasaImage(active)}
+              title="Usa la imagen astronómica del día de NASA"
+            >
+              <Telescope className="h-3 w-3 text-biosensor" />
+              Fondo NASA (APOD)
+            </Button>
           </div>
 
           {/* Aviso Facebook */}
