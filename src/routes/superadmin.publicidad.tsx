@@ -112,6 +112,21 @@ const EMPTY: Partial<Banner> = {
   active: true,
 };
 
+// Normaliza una URL para uso en href / share. Acepta:
+//   • absolutas (http/https) → tal cual
+//   • relativas ("/familias?x=1") → absolutas usando origin
+//   • vacías / null / "#" → null (no se debe renderizar como href)
+function normalizeUrl(raw: string | null | undefined, origin: string): string | null {
+  if (!raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed === "#") return null;
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith("/")) return `${origin}${trimmed}`;
+  // mailto:, tel:, etc.
+  if (/^[a-z]+:/i.test(trimmed)) return trimmed;
+  return `${origin}/${trimmed}`;
+}
+
 // -----------------------------------------------------------------------------
 // 5 banners inteligentes — borradores listos (active:false) para revisión.
 // Copy alineado con las audiencias y landings reales de Humanix.
