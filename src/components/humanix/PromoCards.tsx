@@ -365,11 +365,12 @@ export function PromoCards({ origin }: { origin: string }) {
   const renderCardBlob = useCallback(async (tpl: PromoTemplate): Promise<Blob | null> => {
     const node = cardRefs.current[tpl.id];
     if (!node) return null;
-    const html2canvas = (await import("html2canvas")).default;
-    const canvas = await html2canvas(node, { scale: 2, backgroundColor: null, useCORS: true });
-    return await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob((b) => resolve(b), "image/png"),
-    );
+    const { toBlob } = await import("html-to-image");
+    return await toBlob(node, {
+      pixelRatio: 2,
+      cacheBust: true,
+      backgroundColor: "#ffffff",
+    });
   }, []);
 
   // Compartir nativo con archivo (mobile: abre IG, FB, WhatsApp con la imagen)
@@ -437,20 +438,17 @@ export function PromoCards({ origin }: { origin: string }) {
 
   // Renderizar TODAS las tarjetas como blobs PNG (carrusel)
   const renderAllBlobs = useCallback(async (): Promise<{ name: string; blob: Blob }[]> => {
-    const html2canvas = (await import("html2canvas")).default;
+    const { toBlob } = await import("html-to-image");
     const out: { name: string; blob: Blob }[] = [];
     for (let i = 0; i < TEMPLATES.length; i++) {
       const tpl = TEMPLATES[i];
       const node = cardRefs.current[tpl.id];
       if (!node) continue;
-      const canvas = await html2canvas(node, {
-        scale: 2,
-        backgroundColor: null,
-        useCORS: true,
+      const blob = await toBlob(node, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#ffffff",
       });
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob((b) => resolve(b), "image/png"),
-      );
       if (blob) {
         const idx = String(i + 1).padStart(2, "0");
         out.push({ name: `humanix-${idx}-${tpl.id}.png`, blob });
