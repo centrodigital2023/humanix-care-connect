@@ -232,11 +232,101 @@ export function PromoCards({ origin }: { origin: string }) {
   const [aiPrompt, setAiPrompt] = useState("");
   const [sharingNative, setSharingNative] = useState(false);
   const [carouselBusy, setCarouselBusy] = useState(false);
+  const [dynamicCards, setDynamicCards] = useState<PromoTemplate[]>([]);
+  const [loadingDynamic, setLoadingDynamic] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const utm = "?utm_source=social&utm_medium=share&utm_campaign=promo";
   const baseUrl = useMemo(() => `${origin}/${utm}`, [origin]);
+
+  // Combined templates: static + dynamic professionals/offers
+  const TEMPLATES = useMemo<PromoTemplate[]>(
+    () => [...STATIC_TEMPLATES, ...dynamicCards],
+    [dynamicCards],
+  );
+
+  // Per-card share URL (uses dynamic targetPath when available)
+  const shareUrlFor = useCallback(
+    (tpl: PromoTemplate) => {
+      const path = tpl.dynamic?.targetPath ?? "/";
+      return `${origin}${path}${utm}&utm_content=${tpl.id}`;
+    },
+    [origin],
+  );
+
+  // Load dynamic cards (professionals + offers) from DB
+  const loadDynamic = useCallback(async () => {
+    setLoadingDynamic(true);
+    try {
+      const VARIANTS: PromoTemplate["variant"][] = ["bio", "copper", "fuchsia", "cyber"];
+      const [prosRes, offersRes] = await Promise.all([
+        supabase
+          .from("professional_profiles")
+          .select("user_id, specialty, home_city, avg_rating, total_jobs, avatar_url, bio, hourly_rate")
+          .eq("published", true)
+          .eq("active", true)
+          .order("avg_rating", { ascending: false })
+          .limit(4),
+        supabase
+          .from("job_offers")
+          .select("id, title, city, amount, specialty_required, modality, description")
+          .eq("status", "open")
+          .eq("blocked", false)
+          .order("created_at", { ascending: false })
+          .limit(4),
+      ]);
+
+      const cards: PromoTemplate[] = [];
+      (prosRes.data ?? []).forEach((p, i) => {
+        const rating = Number(p.avg_rating ?? 0).toFixed(1);
+        cards.push({
+          id: `pro-${p.user_id}`,
+          headline: `${p.specialty ?? "Profesional de salud"} verificado en ${p.home_city ?? "Colombia"}`,
+          subline:
+            (p.bio?.slice(0, 110) ?? "") ||
+            `⭐ ${rating} · ${p.total_jobs ?? 0} servicios completados${p.hourly_rate ? ` · desde $${p.hourly_rate.toLocaleString("es-CO")}/h` : ""}.`,
+          hashtags: "#HumanixCo #CuidadoEnCasa #SaludDigital #ProfesionalVerificado",
+          variant: VARIANTS[i % VARIANTS.length],
+          icon: Stethoscope,
+          emoji: "👩‍⚕️✨",
+          dynamic: {
+            kind: "professional",
+            targetPath: `/profesional/${p.user_id}`,
+            avatarUrl: p.avatar_url,
+          },
+        });
+      });
+      (offersRes.data ?? []).forEach((o, i) => {
+        cards.push({
+          id: `offer-${o.id}`,
+          headline: o.title,
+          subline:
+            (o.description?.slice(0, 110) ?? "") ||
+            `📍 ${o.city} · ${o.specialty_required ?? "Salud"} · ${o.modality} · $${(o.amount ?? 0).toLocaleString("es-CO")}.`,
+          hashtags: "#HumanixCo #TrabajoSalud #EnfermeríaCo #OfertaActiva",
+          variant: VARIANTS[(i + 2) % VARIANTS.length],
+          icon: Briefcase,
+          emoji: "💼⚡",
+          dynamic: {
+            kind: "offer",
+            targetPath: `/oferta/${o.id}`,
+          },
+        });
+      });
+      setDynamicCards(cards);
+      if (cards.length) toast.success(`+${cards.length} tarjetas dinámicas cargadas`);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingDynamic(false);
+    }
+  }, []);
+
+  // Auto-load on mount
+  useEffect(() => {
+    void loadDynamic();
+  }, [loadDynamic]);
 
   // Keyboard navigation
   useEffect(() => {
