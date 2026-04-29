@@ -477,6 +477,39 @@ export function PromoCards({ origin }: { origin: string }) {
 
   return (
     <div className="space-y-5">
+      {/* Off-screen render de TODAS las tarjetas (para carrusel/ZIP) */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "-10000px",
+          top: 0,
+          width: 540,
+          pointerEvents: "none",
+          opacity: 0,
+        }}
+      >
+        {TEMPLATES.map((tpl) => {
+          const s = VARIANT_STYLES[tpl.variant];
+          if (tpl.id === active.id) return null; // active ya tiene ref
+          return (
+            <div
+              key={`hidden-${tpl.id}`}
+              ref={(el) => {
+                cardRefs.current[tpl.id] = el;
+              }}
+              className={cn(
+                "w-[540px] aspect-square rounded-2xl overflow-hidden",
+                s.bg,
+                s.text,
+              )}
+            >
+              <CardContent tpl={tpl} styles={s} bgImage={bgImages[tpl.id]} large />
+            </div>
+          );
+        })}
+      </div>
+
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
