@@ -375,7 +375,7 @@ export function PromoCards({ origin }: { origin: string }) {
   // Compartir nativo con archivo (mobile: abre IG, FB, WhatsApp con la imagen)
   const handleNativeShare = useCallback(
     async (tpl: PromoTemplate) => {
-      const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${baseUrl}`;
+      const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${shareUrlFor(tpl)}`;
       setSharingNative(true);
       try {
         const blob = await renderCardBlob(tpl);
@@ -411,7 +411,7 @@ export function PromoCards({ origin }: { origin: string }) {
         setSharingNative(false);
       }
     },
-    [baseUrl, renderCardBlob],
+    [shareUrlFor, renderCardBlob],
   );
 
   // Subir imagen local
