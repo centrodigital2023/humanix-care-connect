@@ -59,20 +59,55 @@ export async function fetchNasa(
 export async function fetchNasaImage(
   endpoint: "apod" | "epic" | "mars" = "apod",
 ): Promise<{ url: string; credit: string } | null> {
-  const data = await fetchNasa(endpoint);
-  if (data.kind === "apod") {
-    if (data.media_type !== "image") return null;
-    return {
-      url: data.hdurl || data.url,
-      credit: `NASA APOD${data.copyright ? ` © ${data.copyright}` : ""}`,
-    };
+  try {
+    const data = await fetchNasa(endpoint);
+    if (data.kind === "apod" && data.media_type === "image") {
+      return {
+        url: data.hdurl || data.url,
+        credit: `NASA APOD${data.copyright ? ` © ${data.copyright}` : ""}`,
+      };
+    }
+    if (data.kind === "epic" && data.url) {
+      return { url: data.url, credit: "NASA EPIC / DSCOVR" };
+    }
+    if (data.kind === "mars" && data.url) {
+      return { url: data.url, credit: `NASA · ${data.rover} (${data.camera})` };
+    }
+    return null;
+  } catch (e) {
+    console.warn("NASA fetch failed", e);
+    return null;
   }
-  if (data.kind === "epic" && data.url) {
-    return { url: data.url, credit: "NASA EPIC / DSCOVR" };
+}
+
+/** Genera una imagen cósmica de respaldo con Gemini cuando NASA no sirve. */
+export async function generateCosmicImage(
+  prompt = "Vista astronómica épica del cosmos: nebulosa colorida con estrellas brillantes, estilo NASA, fotografía espacial profesional",
+  aspect: "1:1" | "16:9" | "9:16" = "1:1",
+): Promise<{ url: string; credit: string } | null> {
+  try {
+    const { data, error } = await supabase.functions.invoke("promo-image-gen", {
+      body: { prompt, aspect },
+    });
+    if (error) throw error;
+    const img = (data as { image?: string })?.image;
+    if (!img) return null;
+    return { url: img, credit: "Generado por IA · inspirado en NASA" };
+  } catch (e) {
+    console.warn("Cosmic AI fallback failed", e);
+    return null;
   }
-  if (data.kind === "mars" && data.url) {
-    return { url: data.url, credit: `NASA · ${data.rover} (${data.camera})` };
-  }
+}
+
+/** Pide imagen NASA y, si falla o no aplica, genera una con IA estilo cósmico. */
+export async function fetchNasaImageWithFallback(
+  endpoint: "apod" | "epic" | "mars" = "apod",
+  aspect: "1:1" | "16:9" | "9:16" = "1:1",
+): Promise<{ url: string; credit: string; source: "nasa" | "ai" } | null> {
+  const nasa = await fetchNasaImage(endpoint);
+  if (nasa) return { ...nasa, source: "nasa" };
+  const ai = await generateCosmicImage(undefined, aspect);
+  if (ai) return { ...ai, source: "ai" };
   return null;
 }
 

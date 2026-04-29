@@ -34,7 +34,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { fetchNasaImage } from "@/lib/nasa";
+import { fetchNasaImageWithFallback } from "@/lib/nasa";
 
 export type PromoTemplate = {
   id: string;
@@ -583,17 +583,22 @@ export function PromoCards({ origin }: { origin: string }) {
     async (tpl: PromoTemplate) => {
       setGenerating(true);
       try {
-        const r = await fetchNasaImage("apod");
-        if (!r) throw new Error("La APOD de hoy no es una imagen");
+        const aspectKey = (aspect as "1:1" | "16:9" | "9:16") || "1:1";
+        const r = await fetchNasaImageWithFallback("apod", aspectKey);
+        if (!r) throw new Error("No se pudo obtener imagen NASA ni generar con IA");
         setBgImages((p) => ({ ...p, [tpl.id]: r.url }));
-        toast.success(`Fondo NASA aplicado · ${r.credit}`);
+        if (r.source === "nasa") {
+          toast.success(`Fondo NASA aplicado · ${r.credit}`);
+        } else {
+          toast.success(`NASA no disponible · usando imagen IA cósmica`);
+        }
       } catch (e) {
         toast.error((e as Error).message || "No se pudo cargar NASA");
       } finally {
         setGenerating(false);
       }
     },
-    [],
+    [aspect],
   );
 
   const downloadCard = async (tpl: PromoTemplate) => {

@@ -58,7 +58,7 @@ import { ShareButtons } from "@/components/humanix/ShareButtons";
 import { PromoCards } from "@/components/humanix/PromoCards";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { fetchNasaImage } from "@/lib/nasa";
+import { fetchNasaImageWithFallback } from "@/lib/nasa";
 
 export const Route = createFileRoute("/superadmin/publicidad")({
   head: () => ({ meta: [{ title: "Publicidad · Superadmin" }] }),
@@ -375,18 +375,27 @@ function PublicidadPage() {
     if (!editing || !user) return;
     setGenImgLoading(true);
     try {
-      const r = await fetchNasaImage("apod");
-      if (!r) throw new Error("La APOD de hoy no es una imagen, intenta otro día");
-      // Descargar y subir al bucket para tener URL estable y evitar hotlink
+      const r = await fetchNasaImageWithFallback("apod", "16:9");
+      if (!r) throw new Error("No se pudo obtener imagen NASA ni generar con IA");
+      // Si es URL remota la descargamos; si es data: URL la convertimos directo
       const blob = await (await fetch(r.url)).blob();
-      const path = `${user.id}/nasa-${Date.now()}.jpg`;
+      const ext = r.source === "ai" ? "png" : "jpg";
+      const prefix = r.source === "ai" ? "cosmic-ai" : "nasa";
+      const path = `${user.id}/${prefix}-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("ad-banners")
-        .upload(path, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+        .upload(path, blob, {
+          contentType: blob.type || (r.source === "ai" ? "image/png" : "image/jpeg"),
+          upsert: false,
+        });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
       setEditing({ ...editing, image_url: pub.publicUrl });
-      toast.success(`Fondo NASA aplicado · ${r.credit}`);
+      toast.success(
+        r.source === "nasa"
+          ? `Fondo NASA aplicado · ${r.credit}`
+          : `NASA no disponible · usando imagen IA cósmica`,
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "No se pudo cargar NASA");
     } finally {
