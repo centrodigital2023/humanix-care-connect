@@ -904,10 +904,33 @@ export function PromoCards({ origin }: { origin: string }) {
           <div className="flex items-center gap-1.5 text-xs font-semibold">
             <Images className="h-3.5 w-3.5 text-fuchsia-neural" />
             Carrusel deslizable ({TEMPLATES.length})
+            {dynamicCards.length > 0 && (
+              <Badge variant="outline" className="ml-1 text-[9px] gap-1">
+                <Sparkles className="h-2.5 w-2.5 text-fuchsia-neural" />
+                {dynamicCards.length} dinámicas
+              </Badge>
+            )}
           </div>
-          <span className="text-[10px] text-muted-foreground">
-            Desliza → como en Facebook · clic para seleccionar
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+              Desliza → como en Facebook · clic para seleccionar
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 text-[10px]"
+              disabled={loadingDynamic}
+              onClick={() => void loadDynamic()}
+              title="Recargar profesionales y ofertas activas"
+            >
+              {loadingDynamic ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+              Actualizar
+            </Button>
+          </div>
         </div>
         <div
           className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 px-1 scroll-smooth touch-pan-x overscroll-x-contain"
