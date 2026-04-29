@@ -23,6 +23,10 @@ import {
   ExternalLink,
   CheckCircle2,
   CircleDot,
+  Upload,
+  ImageIcon,
+  Wand2,
+  X,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -191,6 +195,9 @@ function PublicidadPage() {
   const [carouselPlaying, setCarouselPlaying] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seeding, setSeeding] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [genImgLoading, setGenImgLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.lat";
 
@@ -305,6 +312,60 @@ function PublicidadPage() {
       toast.error(e instanceof Error ? e.message : "Error IA");
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    if (!user || !editing) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen no puede superar 5 MB");
+      return;
+    }
+    setUploadingImg(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("ad-banners")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setEditing({ ...editing, image_url: pub.publicUrl });
+      toast.success("Imagen subida");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo subir la imagen");
+    } finally {
+      setUploadingImg(false);
+    }
+  };
+
+  const generateImage = async () => {
+    if (!editing || !user) return;
+    const prompt =
+      [editing.title, editing.description].filter(Boolean).join(". ") ||
+      "Banner publicitario para Humanix, plataforma colombiana de cuidadores de salud a domicilio";
+    setGenImgLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("promo-image-gen", {
+        body: { prompt, aspect: "16:9" },
+      });
+      if (error) throw error;
+      const dataUrl = (data as { image?: string })?.image;
+      if (!dataUrl) throw new Error("Sin imagen generada");
+      // Convertir data URL a blob y subir al bucket para tener URL pública estable
+      const blob = await (await fetch(dataUrl)).blob();
+      const path = `${user.id}/ai-${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage
+        .from("ad-banners")
+        .upload(path, blob, { contentType: "image/png", upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setEditing({ ...editing, image_url: pub.publicUrl });
+      toast.success("Imagen generada con IA");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo generar la imagen");
+    } finally {
+      setGenImgLoading(false);
     }
   };
 
@@ -534,13 +595,72 @@ function PublicidadPage() {
                       />
                     </div>
                   </div>
-                  <div>
-                    <Label>URL imagen</Label>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5">
+                      <ImageIcon className="h-3.5 w-3.5" /> Imagen del banner
+                    </Label>
                     <Input
                       value={editing.image_url ?? ""}
                       onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
-                      placeholder="https://…"
+                      placeholder="Pega una URL, sube una imagen o genera con IA"
                     />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void uploadImage(f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImg || genImgLoading}
+                        className="gap-1.5"
+                      >
+                        {uploadingImg ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Upload className="h-3.5 w-3.5" />
+                        )}
+                        Subir imagen
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={generateImage}
+                        disabled={genImgLoading || uploadingImg}
+                        className="gap-1.5"
+                      >
+                        {genImgLoading ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-3.5 w-3.5 text-fuchsia-neural" />
+                        )}
+                        Generar con IA
+                      </Button>
+                      {editing.image_url && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing({ ...editing, image_url: "" })}
+                          className="gap-1.5 text-muted-foreground"
+                        >
+                          <X className="h-3.5 w-3.5" /> Quitar
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Subida ≤5 MB · La IA usa el título y la descripción como prompt.
+                    </p>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
