@@ -798,6 +798,93 @@ export function PromoCards({ origin }: { origin: string }) {
       </div>
 
       {/* ── Miniaturas horizontales ───────────────────────────── */}
+      {/* ── Carrusel deslizable estilo Facebook / Temu ────────── */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-1.5 text-xs font-semibold">
+            <Images className="h-3.5 w-3.5 text-fuchsia-neural" />
+            Carrusel deslizable ({TEMPLATES.length})
+          </div>
+          <span className="text-[10px] text-muted-foreground">
+            Desliza → como en Facebook · clic para seleccionar
+          </span>
+        </div>
+        <div
+          className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 px-1 scroll-smooth touch-pan-x overscroll-x-contain"
+          style={{ WebkitOverflowScrolling: "touch", scrollbarWidth: "thin" }}
+        >
+          {TEMPLATES.map((tpl, i) => {
+            const s = VARIANT_STYLES[tpl.variant];
+            const Ico = tpl.icon;
+            const bg = bgImages[tpl.id];
+            return (
+              <button
+                key={`swipe-${tpl.id}`}
+                onClick={() => setActiveIdx(i)}
+                className={cn(
+                  "relative shrink-0 snap-center rounded-2xl overflow-hidden transition-all",
+                  "w-[78%] sm:w-[55%] md:w-[42%] lg:w-[32%] aspect-square",
+                  s.bg,
+                  s.text,
+                  i === activeIdx
+                    ? "ring-2 ring-biosensor ring-offset-2 ring-offset-background scale-[1.01] shadow-xl"
+                    : "opacity-90 hover:opacity-100",
+                )}
+              >
+                {bg && (
+                  <>
+                    <img
+                      src={bg}
+                      alt=""
+                      crossOrigin="anonymous"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/40 to-black/20" />
+                  </>
+                )}
+                <div className="absolute inset-0 grid-pattern opacity-20" />
+                <div className="relative h-full flex flex-col justify-between p-4 text-left">
+                  <div className="flex items-start justify-between">
+                    <div
+                      className={cn(
+                        "flex items-center justify-center rounded-xl border h-9 w-9",
+                        s.chip,
+                      )}
+                    >
+                      <Ico className="h-4 w-4" />
+                    </div>
+                    <div
+                      className={cn(
+                        "font-mono px-2 py-1 rounded-full border text-[9px]",
+                        s.chip,
+                      )}
+                    >
+                      {String(i + 1).padStart(2, "0")} / {TEMPLATES.length}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-bold text-sm leading-snug line-clamp-3">
+                      {tpl.headline}
+                    </p>
+                    <p className="text-[11px] opacity-90 line-clamp-2">{tpl.subline}</p>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] opacity-75">humanix.lat</span>
+                      <span className="text-base">{tpl.emoji}</span>
+                    </div>
+                  </div>
+                </div>
+                {(shareCounts[tpl.id] ?? 0) > 0 && (
+                  <span className="absolute top-2 left-2 text-[9px] bg-black/40 text-white rounded-full px-1.5 py-0.5">
+                    ↗ {shareCounts[tpl.id]}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Miniaturas horizontales ───────────────────────────── */}
       <div className="overflow-x-auto scrollbar-thin pb-2">
         <div className="flex gap-3 w-max px-1">
           {TEMPLATES.map((tpl, i) => {
