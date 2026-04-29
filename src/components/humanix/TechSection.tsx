@@ -4,7 +4,7 @@ const features = [
   {
     icon: Brain,
     title: "Matchmaking predictivo",
-    desc: "LightGBM + embeddings que aprenden de cada contratación exitosa. Match en menos de 150 ms.",
+     desc: "LightGBM + embeddings que aprenden de cada contratación exitosa. Match en menos de 1 km.",
     color: "text-biosensor",
   },
   {
@@ -82,8 +82,8 @@ export function TechSection() {
         {/* KPI strip */}
         <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-cyber-foreground/10 bg-cyber-foreground/10">
           {[
-            { v: "<150ms", l: "Match en vivo" },
-            { v: "847+", l: "Profesionales" },
+             { v: "<1 km", l: "Match en vivo" },
+             { v: "89+", l: "Profesionales" },
             { v: "99.2%", l: "Trust Score" },
             { v: "24/7", l: "Soporte IA" },
           ].map((k) => (

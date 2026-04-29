@@ -12,14 +12,14 @@ const events = [
 
 export function LiveSocialProof() {
   const [i, setI] = useState(0);
-  const [online, setOnline] = useState(847);
+   const [online, setOnline] = useState(89);
 
   useEffect(() => {
     const t = setInterval(() => setI((x) => (x + 1) % events.length), 4000);
-    const o = setInterval(
-      () => setOnline((n) => Math.max(820, Math.min(880, n + (Math.random() > 0.5 ? 1 : -1)))),
-      6000,
-    );
+     const o = setInterval(
+       () => setOnline((n) => Math.max(85, Math.min(95, n + (Math.random() > 0.5 ? 1 : -1)))),
+       6000,
+     );
     return () => {
       clearInterval(t);
       clearInterval(o);
