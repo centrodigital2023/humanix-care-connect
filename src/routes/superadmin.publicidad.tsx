@@ -28,6 +28,10 @@ import {
   Wand2,
   X,
   Telescope,
+  Monitor,
+  Smartphone,
+  Copy,
+  Power,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
