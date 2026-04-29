@@ -944,10 +944,76 @@ function PublicidadPage() {
                 current.impressions > 0
                   ? ((current.clicks / current.impressions) * 100).toFixed(1)
                   : "0.0";
+              const ctaHref = normalizeUrl(current.link_url, origin);
+              const shareUrl = ctaHref ?? `${origin}/?banner=${current.id}`;
+              const isMobile = previewDevice === "mobile";
               return (
-                <div className="grid md:grid-cols-[1fr_280px] min-h-[220px]">
+                <div
+                  className={
+                    isMobile
+                      ? "grid md:grid-cols-[1fr_280px] min-h-[220px]"
+                      : "grid md:grid-cols-[1fr_280px] min-h-[220px]"
+                  }
+                >
                   {/* Banner visual */}
-                  <div className="relative overflow-hidden bg-gradient-to-br from-copper/20 via-background to-biosensor/20 min-h-[200px] flex flex-col">
+                  <div
+                    className={
+                      isMobile
+                        ? "relative overflow-hidden bg-muted/30 min-h-[200px] flex items-center justify-center p-4"
+                        : "relative overflow-hidden bg-gradient-to-br from-copper/20 via-background to-biosensor/20 min-h-[200px] flex flex-col"
+                    }
+                  >
+                  {isMobile ? (
+                    <div className="relative w-[260px] h-[440px] rounded-[2rem] border-[8px] border-foreground/80 bg-background shadow-xl overflow-hidden flex flex-col">
+                      {current.image_url && (
+                        <img
+                          src={current.image_url}
+                          alt={current.title}
+                          className="absolute inset-0 w-full h-full object-cover opacity-50"
+                        />
+                      )}
+                      <div className="relative flex-1 flex flex-col justify-end p-4">
+                        <div className="flex items-center gap-1 mb-2 flex-wrap">
+                          <Badge variant={current.active ? "default" : "secondary"} className="text-[9px]">
+                            {current.active ? "Activo" : "Inactivo"}
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] capitalize bg-background/70">
+                            {current.audience}
+                          </Badge>
+                        </div>
+                        <h3 className="font-display text-lg font-bold leading-tight drop-shadow-sm">
+                          {current.title}
+                        </h3>
+                        {current.description && (
+                          <p className="mt-1 text-xs text-foreground/80 line-clamp-3 leading-relaxed">
+                            {current.description}
+                          </p>
+                        )}
+                        {current.cta_label && (
+                          <div className="mt-2">
+                            {ctaHref ? (
+                              <a
+                                href={ctaHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg bg-biosensor text-biosensor-foreground px-3 py-1.5 text-xs font-semibold hover:bg-biosensor/90 transition-colors"
+                              >
+                                {current.cta_label} <ExternalLink className="h-3 w-3" />
+                              </a>
+                            ) : (
+                              <span
+                                className="inline-flex items-center gap-1 rounded-lg bg-muted text-muted-foreground px-3 py-1.5 text-xs font-semibold cursor-not-allowed"
+                                title="Sin URL destino"
+                              >
+                                {current.cta_label}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                  <>
                     {current.image_url && (
                       <img
                         src={current.image_url}
@@ -1002,17 +1068,28 @@ function PublicidadPage() {
                       )}
                       {current.cta_label && (
                         <div className="mt-3">
-                          <a
-                            href={current.link_url ?? "#"}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-biosensor text-biosensor-foreground px-4 py-2 text-sm font-semibold hover:bg-biosensor/90 transition-colors"
-                          >
-                            {current.cta_label} <ExternalLink className="h-3.5 w-3.5" />
-                          </a>
+                          {ctaHref ? (
+                            <a
+                              href={ctaHref}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-biosensor text-biosensor-foreground px-4 py-2 text-sm font-semibold hover:bg-biosensor/90 transition-colors"
+                            >
+                              {current.cta_label} <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          ) : (
+                            <span
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-muted text-muted-foreground px-4 py-2 text-sm font-semibold cursor-not-allowed"
+                              title="Sin URL destino — agrégala para habilitar el CTA"
+                            >
+                              {current.cta_label}
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
+                  </>
+                  )}
                   </div>
 
                   {/* Right panel: stats + share */}
@@ -1064,7 +1141,7 @@ function PublicidadPage() {
                         Compartir
                       </p>
                       <ShareButtons
-                        url={current.link_url ?? `${origin}/?banner=${current.id}`}
+                        url={shareUrl}
                         title={current.title}
                         description={current.description ?? ""}
                         onShare={async () => {
@@ -1075,10 +1152,15 @@ function PublicidadPage() {
                           await load();
                         }}
                       />
+                      {!ctaHref && (
+                        <p className="mt-1.5 text-[10px] text-muted-foreground italic">
+                          Sin URL destino · se compartirá un enlace de seguimiento
+                        </p>
+                      )}
                     </div>
 
                     {/* Actions */}
-                    <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-border">
+                    <div className="grid grid-cols-2 gap-1.5 pt-3 border-t border-border">
                       <Button
                         size="sm"
                         variant="outline"
@@ -1094,6 +1176,33 @@ function PublicidadPage() {
                         size="sm"
                         variant="outline"
                         className="h-7 text-xs"
+                        onClick={() => void toggleActive(current)}
+                        title={current.active ? "Pausar" : "Activar"}
+                      >
+                        <Power className="h-3 w-3 mr-1" />
+                        {current.active ? "Pausar" : "Activar"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() => void duplicateBanner(current)}
+                      >
+                        <Copy className="h-3 w-3 mr-1" /> Duplicar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs"
+                        onClick={() => void copyPreviewLink(current)}
+                        title="Copiar URL del banner"
+                      >
+                        <Copy className="h-3 w-3 mr-1" /> Copiar URL
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs col-span-2"
                         onClick={() => remove(current.id)}
                       >
                         <Trash2 className="h-3 w-3 mr-1 text-destructive" /> Eliminar
