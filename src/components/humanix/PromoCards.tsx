@@ -24,6 +24,9 @@ import {
   Info,
   Images,
   FileArchive,
+  Stethoscope,
+  Briefcase,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,9 +42,15 @@ export type PromoTemplate = {
   variant: "bio" | "copper" | "fuchsia" | "cyber";
   icon: typeof Sparkles;
   emoji: string;
+  /** Optional dynamic data: when present the card was generated from DB. */
+  dynamic?: {
+    kind: "professional" | "offer";
+    targetPath: string; // e.g. "/profesional/abc" or "/oferta/xyz"
+    avatarUrl?: string | null;
+  };
 };
 
-const TEMPLATES: PromoTemplate[] = [
+const STATIC_TEMPLATES: PromoTemplate[] = [
   {
     id: "ia-match",
     headline: "Encuentra al cuidador perfecto en menos de 150 ms",
@@ -223,11 +232,101 @@ export function PromoCards({ origin }: { origin: string }) {
   const [aiPrompt, setAiPrompt] = useState("");
   const [sharingNative, setSharingNative] = useState(false);
   const [carouselBusy, setCarouselBusy] = useState(false);
+  const [dynamicCards, setDynamicCards] = useState<PromoTemplate[]>([]);
+  const [loadingDynamic, setLoadingDynamic] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const utm = "?utm_source=social&utm_medium=share&utm_campaign=promo";
   const baseUrl = useMemo(() => `${origin}/${utm}`, [origin]);
+
+  // Combined templates: static + dynamic professionals/offers
+  const TEMPLATES = useMemo<PromoTemplate[]>(
+    () => [...STATIC_TEMPLATES, ...dynamicCards],
+    [dynamicCards],
+  );
+
+  // Per-card share URL (uses dynamic targetPath when available)
+  const shareUrlFor = useCallback(
+    (tpl: PromoTemplate) => {
+      const path = tpl.dynamic?.targetPath ?? "/";
+      return `${origin}${path}${utm}&utm_content=${tpl.id}`;
+    },
+    [origin],
+  );
+
+  // Load dynamic cards (professionals + offers) from DB
+  const loadDynamic = useCallback(async () => {
+    setLoadingDynamic(true);
+    try {
+      const VARIANTS: PromoTemplate["variant"][] = ["bio", "copper", "fuchsia", "cyber"];
+      const [prosRes, offersRes] = await Promise.all([
+        supabase
+          .from("professional_profiles")
+          .select("user_id, specialty, home_city, avg_rating, total_jobs, avatar_url, bio, hourly_rate")
+          .eq("published", true)
+          .eq("active", true)
+          .order("avg_rating", { ascending: false })
+          .limit(4),
+        supabase
+          .from("job_offers")
+          .select("id, title, city, amount, specialty_required, modality, description")
+          .eq("status", "open")
+          .eq("blocked", false)
+          .order("created_at", { ascending: false })
+          .limit(4),
+      ]);
+
+      const cards: PromoTemplate[] = [];
+      (prosRes.data ?? []).forEach((p, i) => {
+        const rating = Number(p.avg_rating ?? 0).toFixed(1);
+        cards.push({
+          id: `pro-${p.user_id}`,
+          headline: `${p.specialty ?? "Profesional de salud"} verificado en ${p.home_city ?? "Colombia"}`,
+          subline:
+            (p.bio?.slice(0, 110) ?? "") ||
+            `⭐ ${rating} · ${p.total_jobs ?? 0} servicios completados${p.hourly_rate ? ` · desde $${p.hourly_rate.toLocaleString("es-CO")}/h` : ""}.`,
+          hashtags: "#HumanixCo #CuidadoEnCasa #SaludDigital #ProfesionalVerificado",
+          variant: VARIANTS[i % VARIANTS.length],
+          icon: Stethoscope,
+          emoji: "👩‍⚕️✨",
+          dynamic: {
+            kind: "professional",
+            targetPath: `/profesional/${p.user_id}`,
+            avatarUrl: p.avatar_url,
+          },
+        });
+      });
+      (offersRes.data ?? []).forEach((o, i) => {
+        cards.push({
+          id: `offer-${o.id}`,
+          headline: o.title,
+          subline:
+            (o.description?.slice(0, 110) ?? "") ||
+            `📍 ${o.city} · ${o.specialty_required ?? "Salud"} · ${o.modality} · $${(o.amount ?? 0).toLocaleString("es-CO")}.`,
+          hashtags: "#HumanixCo #TrabajoSalud #EnfermeríaCo #OfertaActiva",
+          variant: VARIANTS[(i + 2) % VARIANTS.length],
+          icon: Briefcase,
+          emoji: "💼⚡",
+          dynamic: {
+            kind: "offer",
+            targetPath: `/oferta/${o.id}`,
+          },
+        });
+      });
+      setDynamicCards(cards);
+      if (cards.length) toast.success(`+${cards.length} tarjetas dinámicas cargadas`);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingDynamic(false);
+    }
+  }, []);
+
+  // Auto-load on mount
+  useEffect(() => {
+    void loadDynamic();
+  }, [loadDynamic]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -244,21 +343,22 @@ export function PromoCards({ origin }: { origin: string }) {
   const handleShare = useCallback(
     async (tpl: PromoTemplate, networkId: string) => {
       const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}`;
+      const url = shareUrlFor(tpl);
       if (networkId === "copy") {
-        await navigator.clipboard.writeText(`${shareText}\n${baseUrl}`);
+        await navigator.clipboard.writeText(`${shareText}\n${url}`);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
         toast.success("Texto y enlace copiados");
       } else {
         window.open(
-          buildShareUrl(networkId, baseUrl, `${tpl.emoji} ${tpl.headline}`, shareText),
+          buildShareUrl(networkId, url, `${tpl.emoji} ${tpl.headline}`, shareText),
           "_blank",
           "noopener,noreferrer,width=640,height=560",
         );
       }
       setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
     },
-    [baseUrl],
+    [shareUrlFor],
   );
 
   // Render card a PNG blob (para Web Share API y descarga)
@@ -275,7 +375,7 @@ export function PromoCards({ origin }: { origin: string }) {
   // Compartir nativo con archivo (mobile: abre IG, FB, WhatsApp con la imagen)
   const handleNativeShare = useCallback(
     async (tpl: PromoTemplate) => {
-      const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${baseUrl}`;
+      const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}\n${shareUrlFor(tpl)}`;
       setSharingNative(true);
       try {
         const blob = await renderCardBlob(tpl);
@@ -311,7 +411,7 @@ export function PromoCards({ origin }: { origin: string }) {
         setSharingNative(false);
       }
     },
-    [baseUrl, renderCardBlob],
+    [shareUrlFor, renderCardBlob],
   );
 
   // Subir imagen local
@@ -804,10 +904,33 @@ export function PromoCards({ origin }: { origin: string }) {
           <div className="flex items-center gap-1.5 text-xs font-semibold">
             <Images className="h-3.5 w-3.5 text-fuchsia-neural" />
             Carrusel deslizable ({TEMPLATES.length})
+            {dynamicCards.length > 0 && (
+              <Badge variant="outline" className="ml-1 text-[9px] gap-1">
+                <Sparkles className="h-2.5 w-2.5 text-fuchsia-neural" />
+                {dynamicCards.length} dinámicas
+              </Badge>
+            )}
           </div>
-          <span className="text-[10px] text-muted-foreground">
-            Desliza → como en Facebook · clic para seleccionar
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground hidden sm:inline">
+              Desliza → como en Facebook · clic para seleccionar
+            </span>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 gap-1 text-[10px]"
+              disabled={loadingDynamic}
+              onClick={() => void loadDynamic()}
+              title="Recargar profesionales y ofertas activas"
+            >
+              {loadingDynamic ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
+              Actualizar
+            </Button>
+          </div>
         </div>
         <div
           className="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-3 px-1 scroll-smooth touch-pan-x overscroll-x-contain"
@@ -877,6 +1000,19 @@ export function PromoCards({ origin }: { origin: string }) {
                   <span className="absolute top-2 left-2 text-[9px] bg-black/40 text-white rounded-full px-1.5 py-0.5">
                     ↗ {shareCounts[tpl.id]}
                   </span>
+                )}
+                {tpl.dynamic && (
+                  <span className="absolute top-2 right-2 text-[9px] bg-fuchsia-neural/90 text-white rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-wide">
+                    {tpl.dynamic.kind === "professional" ? "Pro" : "Oferta"}
+                  </span>
+                )}
+                {tpl.dynamic?.avatarUrl && (
+                  <img
+                    src={tpl.dynamic.avatarUrl}
+                    alt=""
+                    crossOrigin="anonymous"
+                    className="absolute bottom-3 right-3 h-10 w-10 rounded-full border-2 border-white object-cover shadow-lg"
+                  />
                 )}
               </button>
             );
