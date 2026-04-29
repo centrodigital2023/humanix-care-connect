@@ -41,15 +41,15 @@ export function Hero() {
             <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-biosensor animate-pulse-ring" />
-                847 profesionales verificados
+                 89 profesionales verificados
               </div>
               <div className="flex items-center gap-2">
                 <Activity className="h-4 w-4 text-biosensor" />
-                Match en &lt;150 ms
+                 Match en &lt;1 km
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-copper" />
-                Bogotá · Medellín · Cali
+                 Bogotá · Medellín · en todo el país
               </div>
             </div>
           </div>
