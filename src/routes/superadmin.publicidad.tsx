@@ -432,6 +432,52 @@ function PublicidadPage() {
     });
   };
 
+  const toggleActive = async (b: Banner) => {
+    const { error } = await supabase
+      .from("ad_banners")
+      .update({ active: !b.active })
+      .eq("id", b.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(!b.active ? "Banner activado" : "Banner pausado");
+    await load();
+  };
+
+  const duplicateBanner = async (b: Banner) => {
+    if (!user) return;
+    const { error } = await supabase.from("ad_banners").insert({
+      title: `${b.title} (copia)`,
+      description: b.description,
+      cta_label: b.cta_label,
+      link_url: b.link_url,
+      image_url: b.image_url,
+      audience: b.audience,
+      position: b.position,
+      active: false,
+      ai_recommendation: b.ai_recommendation,
+      ai_score: b.ai_score,
+      created_by: user.id,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Banner duplicado como borrador");
+    await load();
+  };
+
+  const copyPreviewLink = async (b: Banner) => {
+    const url = normalizeUrl(b.link_url, origin) ?? `${origin}/?banner=${b.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Enlace copiado");
+    } catch {
+      toast.error("No se pudo copiar");
+    }
+  };
+
   const seedSmart = async () => {
     if (!user) return;
     setSeeding(true);
