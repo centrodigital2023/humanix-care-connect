@@ -877,6 +877,26 @@ function PublicidadPage() {
                 )}
               </h2>
               <div className="flex items-center gap-1">
+                <div className="hidden sm:flex items-center rounded-md border border-border mr-2 p-0.5">
+                  <Button
+                    size="sm"
+                    variant={previewDevice === "desktop" ? "secondary" : "ghost"}
+                    className="h-6 px-2 text-[10px] gap-1"
+                    onClick={() => setPreviewDevice("desktop")}
+                    title="Vista escritorio"
+                  >
+                    <Monitor className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={previewDevice === "mobile" ? "secondary" : "ghost"}
+                    className="h-6 px-2 text-[10px] gap-1"
+                    onClick={() => setPreviewDevice("mobile")}
+                    title="Vista móvil"
+                  >
+                    <Smartphone className="h-3 w-3" />
+                  </Button>
+                </div>
                 <Button
                   size="sm"
                   variant="ghost"
