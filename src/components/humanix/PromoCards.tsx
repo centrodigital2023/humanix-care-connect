@@ -679,6 +679,45 @@ export function PromoCards({ origin }: { origin: string }) {
             Compartir imagen (Instagram, FB, WhatsApp)
           </Button>
 
+          {/* Carrusel completo */}
+          <div className="rounded-xl border border-fuchsia-neural/30 bg-gradient-to-br from-fuchsia-neural/5 to-biosensor/5 p-3 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <Images className="h-3.5 w-3.5 text-fuchsia-neural" />
+              Carrusel completo ({TEMPLATES.length} tarjetas)
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Comparte o descarga las {TEMPLATES.length} tarjetas como un carrusel listo para
+              Instagram, Facebook o LinkedIn.
+            </p>
+            <Button
+              size="sm"
+              className="w-full gap-1.5 bg-gradient-to-r from-fuchsia-neural to-biosensor text-white"
+              disabled={carouselBusy}
+              onClick={() => void handleShareCarousel()}
+            >
+              {carouselBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Share2 className="h-3.5 w-3.5" />
+              )}
+              Compartir carrusel
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full gap-1.5"
+              disabled={carouselBusy}
+              onClick={() => void handleDownloadCarousel()}
+            >
+              {carouselBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileArchive className="h-3.5 w-3.5" />
+              )}
+              Descargar ZIP
+            </Button>
+          </div>
+
           {/* Bloque imagen: subir o generar con IA */}
           <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
             <div className="flex items-center gap-1.5 text-xs font-semibold">
