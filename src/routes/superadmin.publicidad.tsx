@@ -371,6 +371,29 @@ function PublicidadPage() {
     }
   };
 
+  const useNasaImage = async () => {
+    if (!editing || !user) return;
+    setGenImgLoading(true);
+    try {
+      const r = await fetchNasaImage("apod");
+      if (!r) throw new Error("La APOD de hoy no es una imagen, intenta otro día");
+      // Descargar y subir al bucket para tener URL estable y evitar hotlink
+      const blob = await (await fetch(r.url)).blob();
+      const path = `${user.id}/nasa-${Date.now()}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from("ad-banners")
+        .upload(path, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setEditing({ ...editing, image_url: pub.publicUrl });
+      toast.success(`Fondo NASA aplicado · ${r.credit}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo cargar NASA");
+    } finally {
+      setGenImgLoading(false);
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const n = new Set(prev);
