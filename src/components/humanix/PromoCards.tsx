@@ -222,6 +222,7 @@ export function PromoCards({ origin }: { origin: string }) {
   const [generating, setGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [sharingNative, setSharingNative] = useState(false);
+  const [carouselBusy, setCarouselBusy] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
