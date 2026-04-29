@@ -595,13 +595,72 @@ function PublicidadPage() {
                       />
                     </div>
                   </div>
-                  <div>
-                    <Label>URL imagen</Label>
+                  <div className="space-y-2">
+                    <Label className="flex items-center gap-1.5">
+                      <ImageIcon className="h-3.5 w-3.5" /> Imagen del banner
+                    </Label>
                     <Input
                       value={editing.image_url ?? ""}
                       onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
-                      placeholder="https://…"
+                      placeholder="Pega una URL, sube una imagen o genera con IA"
                     />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void uploadImage(f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImg || genImgLoading}
+                        className="gap-1.5"
+                      >
+                        {uploadingImg ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Upload className="h-3.5 w-3.5" />
+                        )}
+                        Subir imagen
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={generateImage}
+                        disabled={genImgLoading || uploadingImg}
+                        className="gap-1.5"
+                      >
+                        {genImgLoading ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Wand2 className="h-3.5 w-3.5 text-fuchsia-neural" />
+                        )}
+                        Generar con IA
+                      </Button>
+                      {editing.image_url && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing({ ...editing, image_url: "" })}
+                          className="gap-1.5 text-muted-foreground"
+                        >
+                          <X className="h-3.5 w-3.5" /> Quitar
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      Subida ≤5 MB · La IA usa el título y la descripción como prompt.
+                    </p>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
