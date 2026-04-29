@@ -50,7 +50,7 @@ export type PromoTemplate = {
   };
 };
 
-const TEMPLATES: PromoTemplate[] = [
+const STATIC_TEMPLATES: PromoTemplate[] = [
   {
     id: "ia-match",
     headline: "Encuentra al cuidador perfecto en menos de 150 ms",
