@@ -27,12 +27,14 @@ import {
   Stethoscope,
   Briefcase,
   RefreshCw,
+  Telescope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchNasaImage } from "@/lib/nasa";
 
 export type PromoTemplate = {
   id: string;
