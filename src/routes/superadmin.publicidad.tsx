@@ -23,6 +23,10 @@ import {
   ExternalLink,
   CheckCircle2,
   CircleDot,
+  Upload,
+  ImageIcon,
+  Wand2,
+  X,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -191,6 +195,9 @@ function PublicidadPage() {
   const [carouselPlaying, setCarouselPlaying] = useState(true);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [seeding, setSeeding] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [genImgLoading, setGenImgLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.lat";
 
