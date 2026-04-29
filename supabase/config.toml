@@ -103,3 +103,6 @@ otp_expiry = 900
 
 [functions.promo-image-gen]
 verify_jwt = true
+
+[functions.nasa-proxy]
+verify_jwt = false

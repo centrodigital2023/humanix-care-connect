@@ -27,12 +27,14 @@ import {
   Stethoscope,
   Briefcase,
   RefreshCw,
+  Telescope,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchNasaImage } from "@/lib/nasa";
 
 export type PromoTemplate = {
   id: string;
@@ -576,6 +578,24 @@ export function PromoCards({ origin }: { origin: string }) {
     [aiPrompt, aspect],
   );
 
+  // Fondo desde NASA (APOD del día)
+  const handleNasaImage = useCallback(
+    async (tpl: PromoTemplate) => {
+      setGenerating(true);
+      try {
+        const r = await fetchNasaImage("apod");
+        if (!r) throw new Error("La APOD de hoy no es una imagen");
+        setBgImages((p) => ({ ...p, [tpl.id]: r.url }));
+        toast.success(`Fondo NASA aplicado · ${r.credit}`);
+      } catch (e) {
+        toast.error((e as Error).message || "No se pudo cargar NASA");
+      } finally {
+        setGenerating(false);
+      }
+    },
+    [],
+  );
+
   const downloadCard = async (tpl: PromoTemplate) => {
     const node = cardRefs.current[tpl.id];
     if (!node) return;
@@ -906,6 +926,17 @@ export function PromoCards({ origin }: { origin: string }) {
                 <Wand2 className="h-3 w-3 text-fuchsia-neural" />
               )}
               {generating ? "Generando..." : "Generar con IA"}
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full gap-1 text-xs"
+              disabled={generating}
+              onClick={() => void handleNasaImage(active)}
+              title="Usa la imagen astronómica del día de NASA"
+            >
+              <Telescope className="h-3 w-3 text-biosensor" />
+              Fondo NASA (APOD)
             </Button>
           </div>
 

@@ -27,6 +27,7 @@ import {
   ImageIcon,
   Wand2,
   X,
+  Telescope,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ import { ShareButtons } from "@/components/humanix/ShareButtons";
 import { PromoCards } from "@/components/humanix/PromoCards";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchNasaImage } from "@/lib/nasa";
 
 export const Route = createFileRoute("/superadmin/publicidad")({
   head: () => ({ meta: [{ title: "Publicidad · Superadmin" }] }),
@@ -369,6 +371,29 @@ function PublicidadPage() {
     }
   };
 
+  const useNasaImage = async () => {
+    if (!editing || !user) return;
+    setGenImgLoading(true);
+    try {
+      const r = await fetchNasaImage("apod");
+      if (!r) throw new Error("La APOD de hoy no es una imagen, intenta otro día");
+      // Descargar y subir al bucket para tener URL estable y evitar hotlink
+      const blob = await (await fetch(r.url)).blob();
+      const path = `${user.id}/nasa-${Date.now()}.jpg`;
+      const { error: upErr } = await supabase.storage
+        .from("ad-banners")
+        .upload(path, blob, { contentType: blob.type || "image/jpeg", upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setEditing({ ...editing, image_url: pub.publicUrl });
+      toast.success(`Fondo NASA aplicado · ${r.credit}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo cargar NASA");
+    } finally {
+      setGenImgLoading(false);
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const n = new Set(prev);
@@ -645,6 +670,18 @@ function PublicidadPage() {
                           <Wand2 className="h-3.5 w-3.5 text-fuchsia-neural" />
                         )}
                         Generar con IA
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={useNasaImage}
+                        disabled={genImgLoading || uploadingImg}
+                        className="gap-1.5"
+                        title="Imagen astronómica del día (NASA APOD)"
+                      >
+                        <Telescope className="h-3.5 w-3.5 text-biosensor" />
+                        Fondo NASA
                       </Button>
                       {editing.image_url && (
                         <Button
