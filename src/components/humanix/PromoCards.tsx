@@ -343,21 +343,22 @@ export function PromoCards({ origin }: { origin: string }) {
   const handleShare = useCallback(
     async (tpl: PromoTemplate, networkId: string) => {
       const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}`;
+      const url = shareUrlFor(tpl);
       if (networkId === "copy") {
-        await navigator.clipboard.writeText(`${shareText}\n${baseUrl}`);
+        await navigator.clipboard.writeText(`${shareText}\n${url}`);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
         toast.success("Texto y enlace copiados");
       } else {
         window.open(
-          buildShareUrl(networkId, baseUrl, `${tpl.emoji} ${tpl.headline}`, shareText),
+          buildShareUrl(networkId, url, `${tpl.emoji} ${tpl.headline}`, shareText),
           "_blank",
           "noopener,noreferrer,width=640,height=560",
         );
       }
       setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
     },
-    [baseUrl],
+    [shareUrlFor],
   );
 
   // Render card a PNG blob (para Web Share API y descarga)
