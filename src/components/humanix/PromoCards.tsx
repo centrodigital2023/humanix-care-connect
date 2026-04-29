@@ -22,6 +22,8 @@ import {
   Loader2,
   Trash2,
   Info,
+  Images,
+  FileArchive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
