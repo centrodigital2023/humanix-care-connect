@@ -40,6 +40,7 @@ import { Route as CuidadoPostoperatorioRouteImport } from './routes/cuidado-post
 import { Route as CuidadoPediatricoRouteImport } from './routes/cuidado-pediatrico'
 import { Route as CuidadoPaliativoRouteImport } from './routes/cuidado-paliativo'
 import { Route as CuidadoAdultoMayorRouteImport } from './routes/cuidado-adulto-mayor'
+import { Route as CosmosRouteImport } from './routes/cosmos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as CarrerasRouteImport } from './routes/carreras'
 import { Route as BuscarRouteImport } from './routes/buscar'
@@ -219,6 +220,11 @@ const CuidadoAdultoMayorRoute = CuidadoAdultoMayorRouteImport.update({
   path: '/cuidado-adulto-mayor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CosmosRoute = CosmosRouteImport.update({
+  id: '/cosmos',
+  path: '/cosmos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactoRoute = ContactoRouteImport.update({
   id: '/contacto',
   path: '/contacto',
@@ -343,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cosmos': typeof CosmosRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
   '/cuidado-paliativo': typeof CuidadoPaliativoRoute
   '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
@@ -399,6 +406,7 @@ export interface FileRoutesByTo {
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cosmos': typeof CosmosRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
   '/cuidado-paliativo': typeof CuidadoPaliativoRoute
   '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
@@ -454,6 +462,7 @@ export interface FileRoutesById {
   '/buscar': typeof BuscarRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
+  '/cosmos': typeof CosmosRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
   '/cuidado-paliativo': typeof CuidadoPaliativoRoute
   '/cuidado-pediatrico': typeof CuidadoPediatricoRoute
@@ -512,6 +521,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cosmos'
     | '/cuidado-adulto-mayor'
     | '/cuidado-paliativo'
     | '/cuidado-pediatrico'
@@ -568,6 +578,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cosmos'
     | '/cuidado-adulto-mayor'
     | '/cuidado-paliativo'
     | '/cuidado-pediatrico'
@@ -622,6 +633,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/carreras'
     | '/contacto'
+    | '/cosmos'
     | '/cuidado-adulto-mayor'
     | '/cuidado-paliativo'
     | '/cuidado-pediatrico'
@@ -679,6 +691,7 @@ export interface RootRouteChildren {
   BuscarRoute: typeof BuscarRoute
   CarrerasRoute: typeof CarrerasRoute
   ContactoRoute: typeof ContactoRoute
+  CosmosRoute: typeof CosmosRoute
   CuidadoAdultoMayorRoute: typeof CuidadoAdultoMayorRoute
   CuidadoPaliativoRoute: typeof CuidadoPaliativoRoute
   CuidadoPediatricoRoute: typeof CuidadoPediatricoRoute
@@ -934,6 +947,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CuidadoAdultoMayorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cosmos': {
+      id: '/cosmos'
+      path: '/cosmos'
+      fullPath: '/cosmos'
+      preLoaderRoute: typeof CosmosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contacto': {
       id: '/contacto'
       path: '/contacto'
@@ -1172,6 +1192,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuscarRoute: BuscarRoute,
   CarrerasRoute: CarrerasRoute,
   ContactoRoute: ContactoRoute,
+  CosmosRoute: CosmosRoute,
   CuidadoAdultoMayorRoute: CuidadoAdultoMayorRoute,
   CuidadoPaliativoRoute: CuidadoPaliativoRoute,
   CuidadoPediatricoRoute: CuidadoPediatricoRoute,
