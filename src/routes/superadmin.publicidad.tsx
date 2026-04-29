@@ -315,6 +315,60 @@ function PublicidadPage() {
     }
   };
 
+  const uploadImage = async (file: File) => {
+    if (!user || !editing) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("La imagen no puede superar 5 MB");
+      return;
+    }
+    setUploadingImg(true);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("ad-banners")
+        .upload(path, file, { contentType: file.type, upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setEditing({ ...editing, image_url: pub.publicUrl });
+      toast.success("Imagen subida");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo subir la imagen");
+    } finally {
+      setUploadingImg(false);
+    }
+  };
+
+  const generateImage = async () => {
+    if (!editing || !user) return;
+    const prompt =
+      [editing.title, editing.description].filter(Boolean).join(". ") ||
+      "Banner publicitario para Humanix, plataforma colombiana de cuidadores de salud a domicilio";
+    setGenImgLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("promo-image-gen", {
+        body: { prompt, aspect: "16:9" },
+      });
+      if (error) throw error;
+      const dataUrl = (data as { image?: string })?.image;
+      if (!dataUrl) throw new Error("Sin imagen generada");
+      // Convertir data URL a blob y subir al bucket para tener URL pública estable
+      const blob = await (await fetch(dataUrl)).blob();
+      const path = `${user.id}/ai-${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage
+        .from("ad-banners")
+        .upload(path, blob, { contentType: "image/png", upsert: false });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setEditing({ ...editing, image_url: pub.publicUrl });
+      toast.success("Imagen generada con IA");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo generar la imagen");
+    } finally {
+      setGenImgLoading(false);
+    }
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) => {
       const n = new Set(prev);
