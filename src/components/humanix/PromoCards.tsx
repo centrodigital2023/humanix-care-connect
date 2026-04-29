@@ -24,6 +24,9 @@ import {
   Info,
   Images,
   FileArchive,
+  Stethoscope,
+  Briefcase,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +42,12 @@ export type PromoTemplate = {
   variant: "bio" | "copper" | "fuchsia" | "cyber";
   icon: typeof Sparkles;
   emoji: string;
+  /** Optional dynamic data: when present the card was generated from DB. */
+  dynamic?: {
+    kind: "professional" | "offer";
+    targetPath: string; // e.g. "/profesional/abc" or "/oferta/xyz"
+    avatarUrl?: string | null;
+  };
 };
 
 const TEMPLATES: PromoTemplate[] = [
