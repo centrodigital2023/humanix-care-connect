@@ -578,6 +578,24 @@ export function PromoCards({ origin }: { origin: string }) {
     [aiPrompt, aspect],
   );
 
+  // Fondo desde NASA (APOD del día)
+  const handleNasaImage = useCallback(
+    async (tpl: PromoTemplate) => {
+      setGenerating(true);
+      try {
+        const r = await fetchNasaImage("apod");
+        if (!r) throw new Error("La APOD de hoy no es una imagen");
+        setBgImages((p) => ({ ...p, [tpl.id]: r.url }));
+        toast.success(`Fondo NASA aplicado · ${r.credit}`);
+      } catch (e) {
+        toast.error((e as Error).message || "No se pudo cargar NASA");
+      } finally {
+        setGenerating(false);
+      }
+    },
+    [],
+  );
+
   const downloadCard = async (tpl: PromoTemplate) => {
     const node = cardRefs.current[tpl.id];
     if (!node) return;
