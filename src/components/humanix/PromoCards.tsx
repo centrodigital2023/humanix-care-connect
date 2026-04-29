@@ -335,6 +335,92 @@ export function PromoCards({ origin }: { origin: string }) {
     [],
   );
 
+  // Renderizar TODAS las tarjetas como blobs PNG (carrusel)
+  const renderAllBlobs = useCallback(async (): Promise<{ name: string; blob: Blob }[]> => {
+    const html2canvas = (await import("html2canvas")).default;
+    const out: { name: string; blob: Blob }[] = [];
+    for (let i = 0; i < TEMPLATES.length; i++) {
+      const tpl = TEMPLATES[i];
+      const node = cardRefs.current[tpl.id];
+      if (!node) continue;
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        backgroundColor: null,
+        useCORS: true,
+      });
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png"),
+      );
+      if (blob) {
+        const idx = String(i + 1).padStart(2, "0");
+        out.push({ name: `humanix-${idx}-${tpl.id}.png`, blob });
+      }
+    }
+    return out;
+  }, []);
+
+  // Descargar carrusel completo como ZIP
+  const handleDownloadCarousel = useCallback(async () => {
+    setCarouselBusy(true);
+    try {
+      const blobs = await renderAllBlobs();
+      if (!blobs.length) throw new Error("No se pudo renderizar");
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      blobs.forEach(({ name, blob }) => zip.file(name, blob));
+      zip.file(
+        "README.txt",
+        `Carrusel Humanix · ${blobs.length} tarjetas listas para Instagram, Facebook y LinkedIn.\n\nSube las imágenes en orden numérico para mantener la secuencia narrativa.\n\n${origin}`,
+      );
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `humanix-carrusel-${blobs.length}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Carrusel descargado (${blobs.length} imágenes)`);
+    } catch (e) {
+      toast.error("No se pudo crear el carrusel: " + (e as Error).message);
+    } finally {
+      setCarouselBusy(false);
+    }
+  }, [renderAllBlobs, origin]);
+
+  // Compartir carrusel completo (Web Share API multi-archivo)
+  const handleShareCarousel = useCallback(async () => {
+    setCarouselBusy(true);
+    try {
+      const blobs = await renderAllBlobs();
+      if (!blobs.length) throw new Error("No se pudo renderizar");
+      const files = blobs.map(
+        ({ name, blob }) => new File([blob], name, { type: "image/png" }),
+      );
+      const shareText = `Carrusel Humanix · ${TEMPLATES.length} tarjetas\n\n${origin}\n\n#HumanixCo #SaludDigital #IAenSalud`;
+      const nav = navigator as Navigator & {
+        canShare?: (data: ShareData) => boolean;
+      };
+      if (nav.canShare && nav.canShare({ files })) {
+        await navigator.share({
+          files,
+          title: "Carrusel Humanix",
+          text: shareText,
+        });
+        toast.success("Carrusel compartido");
+      } else {
+        // Fallback: descargar ZIP
+        toast.info("Tu navegador no soporta compartir carrusel. Descargando ZIP.");
+        await handleDownloadCarousel();
+      }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") {
+        toast.error("No se pudo compartir: " + (e as Error).message);
+      }
+    } finally {
+      setCarouselBusy(false);
+    }
+  }, [renderAllBlobs, origin, handleDownloadCarousel]);
+
   // Generar imagen con IA
   const handleGenerateImage = useCallback(
     async (tpl: PromoTemplate) => {
