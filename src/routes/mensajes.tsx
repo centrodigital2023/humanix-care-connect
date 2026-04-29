@@ -131,7 +131,7 @@ function MensajesPage() {
     if (!user || convs.length === 0) return;
     const ids = convs.map((c) => c.id);
     const channel = supabase
-      .channel("inbox-messages")
+      .channel(`inbox-messages-${user.id}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "messages" },
