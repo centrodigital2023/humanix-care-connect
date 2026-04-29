@@ -671,6 +671,18 @@ function PublicidadPage() {
                         )}
                         Generar con IA
                       </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={useNasaImage}
+                        disabled={genImgLoading || uploadingImg}
+                        className="gap-1.5"
+                        title="Imagen astronómica del día (NASA APOD)"
+                      >
+                        <Telescope className="h-3.5 w-3.5 text-biosensor" />
+                        Fondo NASA
+                      </Button>
                       {editing.image_url && (
                         <Button
                           type="button"
