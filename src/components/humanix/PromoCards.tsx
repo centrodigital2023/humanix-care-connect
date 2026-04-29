@@ -1001,6 +1001,19 @@ export function PromoCards({ origin }: { origin: string }) {
                     ↗ {shareCounts[tpl.id]}
                   </span>
                 )}
+                {tpl.dynamic && (
+                  <span className="absolute top-2 right-2 text-[9px] bg-fuchsia-neural/90 text-white rounded-full px-1.5 py-0.5 font-semibold uppercase tracking-wide">
+                    {tpl.dynamic.kind === "professional" ? "Pro" : "Oferta"}
+                  </span>
+                )}
+                {tpl.dynamic?.avatarUrl && (
+                  <img
+                    src={tpl.dynamic.avatarUrl}
+                    alt=""
+                    crossOrigin="anonymous"
+                    className="absolute bottom-3 right-3 h-10 w-10 rounded-full border-2 border-white object-cover shadow-lg"
+                  />
+                )}
               </button>
             );
           })}
