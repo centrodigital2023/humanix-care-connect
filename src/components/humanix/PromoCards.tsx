@@ -22,6 +22,8 @@ import {
   Loader2,
   Trash2,
   Info,
+  Images,
+  FileArchive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -220,6 +222,7 @@ export function PromoCards({ origin }: { origin: string }) {
   const [generating, setGenerating] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [sharingNative, setSharingNative] = useState(false);
+  const [carouselBusy, setCarouselBusy] = useState(false);
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -332,6 +335,92 @@ export function PromoCards({ origin }: { origin: string }) {
     [],
   );
 
+  // Renderizar TODAS las tarjetas como blobs PNG (carrusel)
+  const renderAllBlobs = useCallback(async (): Promise<{ name: string; blob: Blob }[]> => {
+    const html2canvas = (await import("html2canvas")).default;
+    const out: { name: string; blob: Blob }[] = [];
+    for (let i = 0; i < TEMPLATES.length; i++) {
+      const tpl = TEMPLATES[i];
+      const node = cardRefs.current[tpl.id];
+      if (!node) continue;
+      const canvas = await html2canvas(node, {
+        scale: 2,
+        backgroundColor: null,
+        useCORS: true,
+      });
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png"),
+      );
+      if (blob) {
+        const idx = String(i + 1).padStart(2, "0");
+        out.push({ name: `humanix-${idx}-${tpl.id}.png`, blob });
+      }
+    }
+    return out;
+  }, []);
+
+  // Descargar carrusel completo como ZIP
+  const handleDownloadCarousel = useCallback(async () => {
+    setCarouselBusy(true);
+    try {
+      const blobs = await renderAllBlobs();
+      if (!blobs.length) throw new Error("No se pudo renderizar");
+      const JSZip = (await import("jszip")).default;
+      const zip = new JSZip();
+      blobs.forEach(({ name, blob }) => zip.file(name, blob));
+      zip.file(
+        "README.txt",
+        `Carrusel Humanix · ${blobs.length} tarjetas listas para Instagram, Facebook y LinkedIn.\n\nSube las imágenes en orden numérico para mantener la secuencia narrativa.\n\n${origin}`,
+      );
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `humanix-carrusel-${blobs.length}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Carrusel descargado (${blobs.length} imágenes)`);
+    } catch (e) {
+      toast.error("No se pudo crear el carrusel: " + (e as Error).message);
+    } finally {
+      setCarouselBusy(false);
+    }
+  }, [renderAllBlobs, origin]);
+
+  // Compartir carrusel completo (Web Share API multi-archivo)
+  const handleShareCarousel = useCallback(async () => {
+    setCarouselBusy(true);
+    try {
+      const blobs = await renderAllBlobs();
+      if (!blobs.length) throw new Error("No se pudo renderizar");
+      const files = blobs.map(
+        ({ name, blob }) => new File([blob], name, { type: "image/png" }),
+      );
+      const shareText = `Carrusel Humanix · ${TEMPLATES.length} tarjetas\n\n${origin}\n\n#HumanixCo #SaludDigital #IAenSalud`;
+      const nav = navigator as Navigator & {
+        canShare?: (data: ShareData) => boolean;
+      };
+      if (nav.canShare && nav.canShare({ files })) {
+        await navigator.share({
+          files,
+          title: "Carrusel Humanix",
+          text: shareText,
+        });
+        toast.success("Carrusel compartido");
+      } else {
+        // Fallback: descargar ZIP
+        toast.info("Tu navegador no soporta compartir carrusel. Descargando ZIP.");
+        await handleDownloadCarousel();
+      }
+    } catch (e) {
+      if ((e as Error).name !== "AbortError") {
+        toast.error("No se pudo compartir: " + (e as Error).message);
+      }
+    } finally {
+      setCarouselBusy(false);
+    }
+  }, [renderAllBlobs, origin, handleDownloadCarousel]);
+
   // Generar imagen con IA
   const handleGenerateImage = useCallback(
     async (tpl: PromoTemplate) => {
@@ -388,6 +477,39 @@ export function PromoCards({ origin }: { origin: string }) {
 
   return (
     <div className="space-y-5">
+      {/* Off-screen render de TODAS las tarjetas (para carrusel/ZIP) */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          left: "-10000px",
+          top: 0,
+          width: 540,
+          pointerEvents: "none",
+          opacity: 0,
+        }}
+      >
+        {TEMPLATES.map((tpl) => {
+          const s = VARIANT_STYLES[tpl.variant];
+          if (tpl.id === active.id) return null; // active ya tiene ref
+          return (
+            <div
+              key={`hidden-${tpl.id}`}
+              ref={(el) => {
+                cardRefs.current[tpl.id] = el;
+              }}
+              className={cn(
+                "w-[540px] aspect-square rounded-2xl overflow-hidden",
+                s.bg,
+                s.text,
+              )}
+            >
+              <CardContent tpl={tpl} styles={s} bgImage={bgImages[tpl.id]} large />
+            </div>
+          );
+        })}
+      </div>
+
       {/* ── Header ─────────────────────────────────────────────── */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -556,6 +678,45 @@ export function PromoCards({ origin }: { origin: string }) {
             )}
             Compartir imagen (Instagram, FB, WhatsApp)
           </Button>
+
+          {/* Carrusel completo */}
+          <div className="rounded-xl border border-fuchsia-neural/30 bg-gradient-to-br from-fuchsia-neural/5 to-biosensor/5 p-3 space-y-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <Images className="h-3.5 w-3.5 text-fuchsia-neural" />
+              Carrusel completo ({TEMPLATES.length} tarjetas)
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Comparte o descarga las {TEMPLATES.length} tarjetas como un carrusel listo para
+              Instagram, Facebook o LinkedIn.
+            </p>
+            <Button
+              size="sm"
+              className="w-full gap-1.5 bg-gradient-to-r from-fuchsia-neural to-biosensor text-white"
+              disabled={carouselBusy}
+              onClick={() => void handleShareCarousel()}
+            >
+              {carouselBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Share2 className="h-3.5 w-3.5" />
+              )}
+              Compartir carrusel
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full gap-1.5"
+              disabled={carouselBusy}
+              onClick={() => void handleDownloadCarousel()}
+            >
+              {carouselBusy ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <FileArchive className="h-3.5 w-3.5" />
+              )}
+              Descargar ZIP
+            </Button>
+          </div>
 
           {/* Bloque imagen: subir o generar con IA */}
           <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
