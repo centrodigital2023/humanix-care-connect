@@ -301,7 +301,7 @@ function ContactoPage() {
               Humanix, tenemos un proceso de registro especial para ti.
             </p>
             <a
-              href="#"
+              href="/auth?role=professional&mode=signup"
               className="inline-flex items-center gap-2 px-6 py-3 bg-biosensor text-white rounded-lg font-medium hover:bg-biosensor/90 transition-colors"
             >
               Registrarme como Profesional
