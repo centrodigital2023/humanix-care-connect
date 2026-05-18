@@ -378,13 +378,13 @@ function buildSearchUrl(
     case "google_news":
       return `https://www.google.com/search?q=${enc}&tbm=nws`;
     case "linkedin":
-      return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(name)}`;
+      return `https://www.google.com/search?q=${encodeURIComponent(`site:linkedin.com/in "${name}" ${city ?? ""}`)}`;
     case "facebook":
-      return `https://www.facebook.com/search/people/?q=${encodeURIComponent(name)}`;
+      return `https://www.google.com/search?q=${encodeURIComponent(`site:facebook.com "${name}" ${city ?? ""}`)}`;
     case "instagram":
-      return `https://www.instagram.com/explore/search/keyword/?q=${encodeURIComponent(name)}`;
+      return `https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${name}"`)}`;
     case "x":
-      return `https://x.com/search?q=${encodeURIComponent(name)}&src=typed_query&f=user`;
+      return `https://www.google.com/search?q=${encodeURIComponent(`(site:twitter.com OR site:x.com) "${name}"`)}`;
     case "youtube":
       return `https://www.youtube.com/results?search_query=${encodeURIComponent(name)}`;
     case "scholar":
