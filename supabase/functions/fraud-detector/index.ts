@@ -181,8 +181,11 @@ Deno.serve(async (req) => {
       ...(parsed.flags ?? []),
     ];
 
-    // Guardar flags activas (reemplaza las no resueltas)
-    await admin.from("fraud_flags").delete().eq("user_id", target).eq("resolved", false);
+    // Guardar flags activas. Sólo staff puede eliminar flags previas no resueltas
+    // (evita que un usuario marcado por fraude limpie sus propias señales).
+    if (isStaff) {
+      await admin.from("fraud_flags").delete().eq("user_id", target).eq("resolved", false);
+    }
     if (allFlags.length) {
       await admin.from("fraud_flags").insert(
         allFlags.map((f) => ({
