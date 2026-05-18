@@ -6,10 +6,10 @@ import { buildSeo } from "@/lib/seo";
 export const Route = createFileRoute("/cumplimiento")({
   head: () =>
     buildSeo({
-      title: "Cumplimiento Min. Salud · Colombia",
+      title: "Cumplimiento Normativo · Colombia",
       path: "/cumplimiento",
       description:
-        "Cómo Humanix cumple con la normatividad del Ministerio de Salud y Protección Social de Colombia: RETHUS, Resolución 3100, habilitación y más.",
+        "Marco normativo de Humanix.lat como portal de contacto en Colombia: Ley 1480, Ley 527, Ley 1341, Ley 1636, Decreto 1072, Ley 1258 y más.",
     }),
   component: CumplimientoPage,
 });
@@ -20,72 +20,103 @@ function CumplimientoPage() {
       <BreadcrumbJsonLd
         items={[
           { name: "Inicio", path: "/" },
-          { name: "Cumplimiento Min. Salud", path: "/cumplimiento" },
+          { name: "Cumplimiento Normativo", path: "/cumplimiento" },
         ]}
       />
       <LegalPage
-        badge="Min. Salud"
+        badge="Compliance"
         title={
           <>
-            Cumplimiento <span className="text-gradient-bio">Min. Salud</span>
+            Cumplimiento <span className="text-gradient-bio">Normativo</span>
           </>
         }
-        updatedAt="21 de abril de 2026"
-        intro="Humanix opera bajo el marco normativo del Sistema General de Seguridad Social en Salud (SGSSS) de Colombia y promueve la práctica segura del talento humano en salud."
+        updatedAt="18 de mayo de 2026"
+        intro="Humanix.lat fundamenta su operación en un estricto marco de legalidad corporativa y digital dentro de la República de Colombia. Nuestro modelo de negocio se alinea transversalmente con las siguientes normas vigentes."
       >
-        <LegalSection title="1. RETHUS — Resolución 3030 de 2014">
+        <LegalSection title="Estatuto del Consumidor (Ley 1480 de 2011)">
           <p>
-            Todo profesional de la salud que ofrece servicios en Humanix debe estar inscrito y
-            vigente en el{" "}
-            <strong>Registro Único Nacional del Talento Humano en Salud (RETHUS)</strong>. La
-            plataforma cruza automáticamente el número RETHUS con la base oficial del Ministerio de
-            Salud y Protección Social.
+            Cumplimos con el régimen de protección al consumidor electrónico, transparencia
+            informativa, mitigación de la asimetría informativa y la definición y exenciones
+            operativas de los <strong>portales de contacto (Art. 53)</strong>.
           </p>
         </LegalSection>
-        <LegalSection title="2. Ley 911 de 2004 — Ética en Enfermería">
+
+        <LegalSection title="Comercio Electrónico y Mensajes de Datos (Ley 527 de 1999)">
           <p>
-            Los profesionales de enfermería que usan Humanix se obligan a cumplir la Ley 911 de 2004
-            (Código Deontológico) y son responsables disciplinariamente ante el Tribunal Nacional
-            Ético de Enfermería.
+            Reconocemos la validez jurídica, fuerza vinculante y eficacia probatoria de los mensajes
+            de datos, contratos electrónicos, firmas electrónicas o digitales y las transacciones
+            desmaterializadas efectuadas en la Plataforma.
           </p>
         </LegalSection>
-        <LegalSection title="3. Resolución 3100 de 2019 — Habilitación">
+
+        <LegalSection title="Marco TIC (Ley 1341 de 2009)">
           <p>
-            Cuando Humanix opere con clínicas o IPS, exige verificación del Registro Especial de
-            Prestadores de Servicios de Salud (REPS) y el cumplimiento de los estándares de
-            habilitación de la Resolución 3100 de 2019.
+            Operamos bajo los principios de libre competencia, masificación de las TIC, protección
+            al usuario del sector tecnológico y promoción del acceso a la sociedad de la información.
           </p>
         </LegalSection>
-        <LegalSection title="4. Resolución 2003 de 2014 y atención domiciliaria">
+
+        <LegalSection title="Servicio Público de Empleo (Ley 1636 de 2013 y Decreto 1072 de 2015)">
           <p>
-            Para servicios de atención en casa, los profesionales se ajustan a las recomendaciones
-            de atención domiciliaria del Ministerio y a los protocolos de bioseguridad vigentes.
+            El modelo de Humanix se enfoca en el contacto civil/comercial autónomo de servicios
+            prestados por profesionales independientes. Si alguna funcionalidad fuese calificada
+            técnicamente como intermediación o colocación laboral, Humanix gestionará o se adaptará
+            ante la <strong>UAESPE</strong>, adscrita al Ministerio del Trabajo, para operar en
+            estricta legalidad.
           </p>
         </LegalSection>
-        <LegalSection title="5. Seguridad del paciente">
+
+        <LegalSection title="Régimen Corporativo (Ley 1258 de 2008)">
           <p>
-            Adoptamos los lineamientos de la <strong>Política de Seguridad del Paciente</strong> y
-            mantenemos un canal de reporte de eventos adversos accesible 24/7 desde la app.
+            Humanix está constituida legalmente como <strong>Sociedad por Acciones Simplificada
+            (S.A.S.)</strong>, con formalidad comercial e institucional ante la Cámara de Comercio
+            correspondiente, limitando la responsabilidad de sus accionistas al monto de sus
+            aportes.
           </p>
         </LegalSection>
-        <LegalSection title="6. Facturación electrónica">
+
+        <LegalSection title="Protección de Datos Personales (Ley 1581 de 2012 y Decreto 1074 de 2015)">
           <p>
-            Todos los pagos generan factura electrónica conforme a la{" "}
-            <strong>Resolución 000042 de 2020</strong> de la DIAN. Los profesionales independientes
-            pueden delegar en Humanix la emisión de documento equivalente.
+            Cumplimos íntegramente con el régimen general de protección de datos personales y la
+            Circular 002 de 2015 de la SIC. Consulta la{" "}
+            <a href="/privacidad" className="text-foreground underline underline-offset-4">
+              Política de Privacidad
+            </a>{" "}
+            y la{" "}
+            <a href="/habeas-data" className="text-foreground underline underline-offset-4">
+              Política de Habeas Data
+            </a>.
           </p>
         </LegalSection>
-        <LegalSection title="7. SST y aportes">
+
+        <LegalSection title="Delitos Informáticos y Propiedad Intelectual (Ley 1273 de 2009 · Ley 23 de 1982)">
           <p>
-            Humanix promueve la afiliación al Sistema de Seguridad Social Integral. Los
-            profesionales independientes son responsables del pago de salud, pensión y ARL conforme
-            a la Ley 100 de 1993 y el Decreto 1273 de 2018.
+            El uso no autorizado del software, marcas, bases de datos o algoritmos de la Plataforma,
+            así como prácticas de web scraping, ingeniería inversa o suplantación, se denuncia ante
+            la Fiscalía General de la Nación bajo el régimen de delitos informáticos y derechos de
+            autor.
           </p>
         </LegalSection>
-        <LegalSection title="8. Reporte y auditoría">
+
+        <LegalSection title="Verificación de Oferentes en Salud (cuando aplica)">
           <p>
-            Mantenemos trazabilidad auditable de cada servicio, valoración y pago, disponible para
-            requerimientos de la Superintendencia Nacional de Salud y demás autoridades competentes.
+            Cuando la naturaleza del servicio autónomo lo exija, verificamos la inscripción del
+            profesional en el <strong>REPS</strong> conforme a la <strong>Resolución 3100 de 2019</strong>{" "}
+            y la <strong>Resolución 226 de 2015</strong>, así como su tarjeta profesional vigente
+            ante la autoridad competente. Humanix.lat no presta servicios de salud directamente.
+          </p>
+        </LegalSection>
+
+        <LegalSection title="Contacto Compliance">
+          <p>
+            Notificaciones legales y soporte normativo:{" "}
+            <a href="mailto:soporte@humanix.lat" className="text-foreground underline underline-offset-4">soporte@humanix.lat</a>{" "}
+            ·{" "}
+            <a href="mailto:hola@humanix.lat" className="text-foreground underline underline-offset-4">hola@humanix.lat</a>{" "}
+            · respaldo:{" "}
+            <a href="mailto:centrodigital2023@gmail.com" className="text-foreground underline underline-offset-4">centrodigital2023@gmail.com</a>{" "}
+            · teléfono <strong>+57 314 744 4715</strong> · domicilio: <strong>Pasto, Nariño,
+            Colombia</strong>.
           </p>
         </LegalSection>
       </LegalPage>
