@@ -29,6 +29,7 @@ import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { SITE_URL } from "@/lib/seo";
+import { buildSeo } from "@/lib/seo";
 
 type SearchParams = {
   tab?: "profesionales" | "ofertas";
@@ -71,17 +72,13 @@ export const Route = createFileRoute("/buscar")({
       verified: search.verified === true || search.verified === "true" ? true : undefined,
     };
   },
-  head: () => ({
-    meta: [
-      { title: "Buscar profesionales y ofertas · Humanix" },
-      {
-        name: "description",
-        content:
-          "Marketplace inteligente de talento humano en salud en Colombia. Filtra por especialidad, ciudad, tarifa y rating.",
-      },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/buscar` }],
-  }),
+  head: () =>
+    buildSeo({
+      title: "Buscar profesionales y ofertas de salud",
+      path: "/buscar",
+      description:
+        "Marketplace de talento humano en salud en Colombia. Filtra por especialidad, ciudad, tarifa y rating en tiempo real.",
+    }),
   component: BuscarPage,
 });
 
