@@ -24,6 +24,9 @@ type Link = {
   type?: string;
   hrefLang?: string;
   crossOrigin?: "anonymous" | "use-credentials" | "";
+  as?: string;
+  fetchpriority?: "high" | "low" | "auto";
+  media?: string;
 };
 
 export type SeoOptions = {
