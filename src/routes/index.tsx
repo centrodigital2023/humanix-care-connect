@@ -12,6 +12,7 @@ import { LaunchBar } from "@/components/humanix/LaunchBar";
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
 const { buildSeo, faqLd, SITE_NAME } = seo;
+import heroImage from "@/assets/hero-humanix.webp";
 
 // Below-the-fold: lazy to mejorar FCP/LCP
 const TechSection = lazy(() =>
@@ -41,6 +42,13 @@ export const Route = createFileRoute("/")({
       title: `${SITE_NAME} · Talento humano en salud para Colombia`,
       path: "/",
       appendSiteName: false,
+      extraLinks: [
+        { rel: "preload", href: heroImage, as: "image", type: "image/webp", fetchpriority: "high" } as unknown as {
+          rel: string;
+          href: string;
+          type?: string;
+        },
+      ],
     }),
   component: Index,
 });
