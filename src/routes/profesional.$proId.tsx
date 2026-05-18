@@ -22,24 +22,87 @@ import { Button } from "@/components/ui/button";
 import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { AgendaViewer } from "@/components/humanix/AgendaViewer";
 import { useAppUser } from "@/hooks/use-app-user";
+import { buildSeo, jsonLdString, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/profesional/$proId")({
-  head: ({ params }) => ({
-    meta: [
-      { title: `Perfil profesional verificado · Humanix` },
-      {
-        name: "description",
-        content: `Conoce el perfil verificado del profesional ${params.proId} en Humanix: especialidad, experiencia, RETHUS, rating y disponibilidad.`,
+  loader: async ({ params }) => {
+    try {
+      const [profRes, proRes] = await Promise.all([
+        supabase
+          .from("public_profiles_safe")
+          .select("full_name, avatar_url, city, bio")
+          .eq("user_id", params.proId)
+          .maybeSingle(),
+        supabase
+          .from("professional_profiles")
+          .select("specialty, ai_summary, service_cities, rethus_verified, avg_rating, total_jobs")
+          .eq("user_id", params.proId)
+          .maybeSingle(),
+      ]);
+      return {
+        seo: {
+          name: profRes.data?.full_name ?? null,
+          avatar: profRes.data?.avatar_url ?? null,
+          city: profRes.data?.city ?? proRes.data?.service_cities?.[0] ?? "Colombia",
+          bio: profRes.data?.bio ?? null,
+          specialty: proRes.data?.specialty ?? "profesional de salud",
+          summary: proRes.data?.ai_summary ?? null,
+          rethus: !!proRes.data?.rethus_verified,
+          rating: Number(proRes.data?.avg_rating ?? 0),
+          jobs: Number(proRes.data?.total_jobs ?? 0),
+        },
+      };
+    } catch {
+      return { seo: null };
+    }
+  },
+  head: ({ params, loaderData }) => {
+    const s = loaderData?.seo;
+    const name = s?.name ?? "Profesional verificado";
+    const specialty = s?.specialty ?? "profesional de salud";
+    const city = s?.city ?? "Colombia";
+    const title = `${name} · ${specialty} en ${city}`;
+    const description =
+      s?.summary ??
+      s?.bio ??
+      `${name}, ${specialty} con verificación${s?.rethus ? " RETHUS" : ""} en ${city}. Agenda en línea y contratación segura en Humanix.`;
+    const built = buildSeo({
+      title,
+      path: `/profesional/${params.proId}`,
+      description: description.slice(0, 160),
+      image: s?.avatar ?? SOCIAL_IMAGE_URL,
+      imageAlt: `${name} — ${specialty}`,
+      type: "profile",
+    });
+    const personLd = {
+      "@context": "https://schema.org",
+      "@type": "ProfilePage",
+      mainEntity: {
+        "@type": "Person",
+        name,
+        jobTitle: specialty,
+        description,
+        image: s?.avatar ?? undefined,
+        url: `${SITE_URL}/profesional/${params.proId}`,
+        address: { "@type": "PostalAddress", addressLocality: city, addressCountry: "CO" },
+        ...(s && s.rating > 0
+          ? {
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: s.rating.toFixed(1),
+                reviewCount: Math.max(s.jobs, 1),
+              },
+            }
+          : {}),
       },
-      { property: "og:type", content: "profile" },
-      { property: "og:title", content: "Perfil profesional verificado · Humanix" },
-      {
-        property: "og:description",
-        content: "Profesional de salud verificado con RETHUS y Trust Score. Contrata en minutos.",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+    };
+    return {
+      ...built,
+      scripts: [
+        { type: "application/ld+json", children: jsonLdString(personLd) },
+      ],
+    };
+  },
   component: ProfessionalPublicPage,
 });
 
@@ -141,18 +204,6 @@ function ProfessionalPublicPage() {
       active = false;
     };
   }, [proId]);
-
-  // Dynamic SEO: ajusta <title> y descripción una vez que sabemos el nombre real
-  useEffect(() => {
-    if (!pro || !profile) return;
-    const nm = profile.full_name ?? "Profesional verificado";
-    const sp = pro.specialty ?? "profesional de salud";
-    const cy = profile.city ?? pro.service_cities?.[0] ?? "Colombia";
-    document.title = `${nm} · ${sp} en ${cy} · Humanix`;
-    const desc = `${nm}, ${sp} con verificación RETHUS${pro.rethus_verified ? " ✅" : ""} en ${cy}. Agenda en línea, calificaciones reales y contratación segura en Humanix.`;
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", desc);
-  }, [pro, profile]);
 
   if (loading) {
     return (

@@ -26,7 +26,8 @@ export function Hero() {
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
-              centrodigital2023@gmail.com
+              Enfermeras, auxiliares y cuidadores verificados con RETHUS, GPS en vivo y pago seguro.
+              Match en minutos, atención humana 24/7 en todo Colombia.
             </p>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">

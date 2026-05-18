@@ -1,0 +1,51 @@
+# Humanix
+
+> Plataforma colombiana que conecta familias, clínicas e instituciones con enfermeras, auxiliares, cuidadores y profesionales de salud verificados con RETHUS. Match con IA, GPS en vivo y pago seguro.
+
+Humanix opera en Colombia (Bogotá, Medellín, Cali, Barranquilla, Cartagena, Bucaramanga, Pereira y más). Todos los profesionales pasan verificación RETHUS, evaluación documental y Trust Score social. La comisión es transparente (3% sobre cada contratación).
+
+## Pages
+
+- [Inicio](/): Match en tiempo real entre familias/clínicas y talento humano en salud verificado.
+- [Buscar](/buscar): Marketplace con filtros por especialidad, ciudad, tarifa y rating.
+- [Familias](/familias): Cómo contratar cuidadores y enfermeras a domicilio paso a paso.
+- [Profesionales](/profesionales): Cómo registrarse, verificarse y recibir ofertas.
+- [Talento humano](/talento-humano): Soluciones para clínicas e instituciones.
+- [Planes](/planes): Planes y precios.
+- [Tecnología](/tecnologia): IA, verificación, GPS y seguridad de la plataforma.
+- [Recursos](/recursos): Guías sobre cuidado en casa, RETHUS y costos.
+- [Sobre Humanix](/sobre): Misión, equipo y propósito.
+- [Contacto](/contacto): Atención al cliente, prensa, soporte y alianzas.
+
+## Servicios y especialidades
+
+- [Enfermería domiciliaria](/enfermeria-domiciliaria): Atención de enfermería profesional en casa.
+- [Cuidado adulto mayor](/cuidado-adulto-mayor): Acompañamiento y cuidado integral para personas mayores.
+- [Cuidado postoperatorio](/cuidado-postoperatorio): Recuperación en casa tras cirugía.
+- [Cuidado pediátrico](/cuidado-pediatrico): Enfermería y cuidado especializado para niños.
+- [Cuidado paliativo](/cuidado-paliativo): Acompañamiento humano en enfermedades avanzadas.
+- [Cuidador a domicilio](/cuidador-domicilio): Cuidadores capacitados verificados.
+- [Auxiliar de enfermería](/auxiliar-enfermeria): Auxiliares con certificación.
+
+## Ciudades
+
+- [Bogotá](/enfermeria-bogota)
+- [Medellín](/enfermeria-medellin)
+- [Cali](/enfermeria-cali)
+- [Barranquilla](/enfermeria-barranquilla)
+- [Cartagena](/enfermeria-cartagena)
+- [Bucaramanga](/enfermeria-bucaramanga)
+- [Pereira](/enfermeria-pereira)
+
+## Legal
+
+- [Términos](/terminos)
+- [Privacidad](/privacidad)
+- [Habeas Data](/habeas-data)
+- [Cumplimiento](/cumplimiento)
+
+## Optional
+
+- [Prensa](/prensa): Kit de prensa y contacto para medios.
+- [Carreras](/carreras): Oportunidades para trabajar en Humanix.
+- [Cosmos](/cosmos): Imagen astronómica diaria de NASA traducida al español.
