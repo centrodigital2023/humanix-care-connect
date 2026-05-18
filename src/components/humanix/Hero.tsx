@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, Sparkles, MapPin, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import heroImage from "@/assets/hero-humanix.jpg";
+import heroImage from "@/assets/hero-humanix.webp";
 import { RoleGate } from "./RoleGate";
 
 export function Hero() {
