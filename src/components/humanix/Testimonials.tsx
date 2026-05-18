@@ -1,8 +1,8 @@
 import { Star, Quote } from "lucide-react";
-import t1 from "@/assets/testimonial-1.jpg";
-import t2 from "@/assets/testimonial-2.jpg";
-import t3 from "@/assets/testimonial-3.jpg";
-import t4 from "@/assets/testimonial-4.jpg";
+import t1 from "@/assets/testimonial-1.webp";
+import t2 from "@/assets/testimonial-2.webp";
+import t3 from "@/assets/testimonial-3.webp";
+import t4 from "@/assets/testimonial-4.webp";
 
 type Testimonial = {
   name: string;
