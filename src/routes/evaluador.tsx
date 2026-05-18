@@ -61,6 +61,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
+import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
 
 export const Route = createFileRoute("/evaluador")({
   head: () => ({
@@ -1694,8 +1695,15 @@ function ProfessionalDetailDialog({
                 {docs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
                 ) : (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {docs.map((d) => {
+                  <>
+                    <div className="flex items-center justify-between mb-2 text-[10px] text-muted-foreground">
+                      <span>{docs.length} documento{docs.length === 1 ? "" : "s"} adjunto{docs.length === 1 ? "" : "s"}</span>
+                      <span className="md:hidden">← desliza →</span>
+                      <span className="hidden md:inline">Usa las flechas o arrastra para ver todo</span>
+                    </div>
+                    <HScrollCarousel step={300} className="-mx-1 px-1">
+                      <div className="flex gap-3 snap-x snap-mandatory">
+                        {docs.map((d) => {
                       const extra = docExtras[d.id];
                       const extracted = extra?.ai_extracted as
                         | Record<string, unknown>
@@ -1707,7 +1715,7 @@ function ProfessionalDetailDialog({
                       return (
                         <div
                           key={d.id}
-                          className={`rounded-xl border flex flex-col overflow-hidden ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}
+                          className={`shrink-0 snap-start w-[280px] rounded-xl border flex flex-col overflow-hidden bg-card ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}
                         >
                           {/* Doc type header */}
                           <div
@@ -1823,8 +1831,10 @@ function ProfessionalDetailDialog({
                           )}
                         </div>
                       );
-                    })}
-                  </div>
+                        })}
+                      </div>
+                    </HScrollCarousel>
+                  </>
                 )}
               </Card>
 
