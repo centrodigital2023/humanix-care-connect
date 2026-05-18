@@ -28,7 +28,6 @@ import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
-import { SITE_URL } from "@/lib/seo";
 import { buildSeo } from "@/lib/seo";
 
 type SearchParams = {
