@@ -46,21 +46,21 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Determinar si el caller es staff
+    const { data: roles } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId);
+    const isStaff = (roles ?? []).some((r) =>
+      ["superadmin", "hr_staff", "evaluator"].includes(r.role),
+    );
+
     // Si el target no es el caller, exigir staff
-    if (target !== auth.userId) {
-      const { data: roles } = await admin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", auth.userId);
-      const isStaff = (roles ?? []).some((r) =>
-        ["superadmin", "hr_staff", "evaluator"].includes(r.role),
-      );
-      if (!isStaff) {
-        return new Response(JSON.stringify({ error: "No autorizado" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (target !== auth.userId && !isStaff) {
+      return new Response(JSON.stringify({ error: "No autorizado" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const [{ data: pro }, { data: docs }, { data: profile }] = await Promise.all([
