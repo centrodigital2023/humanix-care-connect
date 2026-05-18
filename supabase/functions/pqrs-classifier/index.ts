@@ -48,6 +48,22 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Autorización: solo el dueño del ticket o staff puede clasificar.
+    const { data: staffRow } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId)
+      .in("role", ["superadmin", "hr_staff", "evaluator"])
+      .maybeSingle();
+    const isStaff = !!staffRow;
+    const isOwner = ticket.user_id && ticket.user_id === auth.userId;
+    if (!isOwner && !isStaff) {
+      return new Response(JSON.stringify({ error: "No autorizado" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
