@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Stethoscope, Building2, Crown, Loader2, Heart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +53,7 @@ function PlansPage() {
   } = usePlan(user?.id ?? null);
   const loading = userLoading || planLoading;
   const [acting, setActing] = useState<PlanKey | null>(null);
+  const autoTriggered = useRef(false);
 
   const isCurrent = (key: PlanKey) => {
     if (!user) return false;
