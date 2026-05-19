@@ -119,6 +119,22 @@ function PlansPage() {
     }
   };
 
+  // Auto-reanudar checkout cuando el usuario vuelve de /auth con ?plan=...
+  useEffect(() => {
+    if (autoTriggered.current || loading || !user) return;
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const requested = url.searchParams.get("plan") as PlanKey | null;
+    if (!requested || !(requested in PLAN_CATALOG)) return;
+    if (requested === "free" || requested === "institution_monthly") return;
+    if (currentPlan === requested && !cancelAtPeriodEnd) return;
+    autoTriggered.current = true;
+    url.searchParams.delete("plan");
+    window.history.replaceState({}, "", url.toString());
+    void choose(requested);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, currentPlan, cancelAtPeriodEnd]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
