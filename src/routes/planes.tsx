@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Stethoscope, Building2, Crown, Loader2, Heart, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,14 +27,13 @@ type DisplayPlan = {
   key: PlanKey;
   icon: typeof Stethoscope;
   tone: "bio" | "fuchsia" | "copper" | "muted";
-  cta: string;
 };
 
 const DISPLAY: DisplayPlan[] = [
-  { key: "free", icon: Heart, tone: "muted", cta: "Empezar gratis" },
-  { key: "essential_monthly", icon: Sparkles, tone: "copper", cta: "Suscribirme por $9.000" },
-  { key: "pro_monthly", icon: Stethoscope, tone: "bio", cta: "Activar Pro" },
-  { key: "institution_monthly", icon: Building2, tone: "fuchsia", cta: "Hablar con ventas" },
+  { key: "free", icon: Heart, tone: "muted" },
+  { key: "essential_monthly", icon: Sparkles, tone: "copper" },
+  { key: "pro_monthly", icon: Stethoscope, tone: "bio" },
+  { key: "institution_monthly", icon: Building2, tone: "fuchsia" },
 ];
 
 const TONE: Record<string, string> = {
@@ -46,14 +45,39 @@ const TONE: Record<string, string> = {
 
 function PlansPage() {
   const { user, loading: userLoading } = useAppUser({ requireAuth: false });
-  const { plan: currentPlan, loading: planLoading } = usePlan(user?.id ?? null);
+  const {
+    plan: currentPlan,
+    tier: currentTier,
+    cancelAtPeriodEnd,
+    loading: planLoading,
+  } = usePlan(user?.id ?? null);
   const loading = userLoading || planLoading;
   const [acting, setActing] = useState<PlanKey | null>(null);
+  const autoTriggered = useRef(false);
 
   const isCurrent = (key: PlanKey) => {
     if (!user) return false;
     if (key === "free") return currentPlan === "free";
     return currentPlan === key;
+  };
+
+  // Smart CTA label — depende de sesión, plan actual y dirección (upgrade/downgrade).
+  const ctaLabel = (key: PlanKey): string => {
+    const def = PLAN_CATALOG[key];
+    if (!user) {
+      if (key === "free") return "Crear cuenta gratis";
+      if (key === "institution_monthly") return "Hablar con ventas";
+      return `Empezar con ${def.label}`;
+    }
+    if (isCurrent(key)) {
+      return cancelAtPeriodEnd && key !== "free" ? "Reactivar renovación" : "Tu plan actual";
+    }
+    if (key === "free") {
+      return currentTier > 0 ? "Bajar a Free" : "Ir al panel";
+    }
+    if (key === "institution_monthly") return "Hablar con ventas";
+    if (def.tier > currentTier) return `Mejorar a ${def.label}`;
+    return `Cambiar a ${def.label}`;
   };
 
   const choose = async (key: PlanKey) => {
@@ -67,7 +91,13 @@ function PlansPage() {
     }
     if (!user) {
       toast("Inicia sesión para activar tu plan", { description: "Te llevamos al login." });
-      window.location.href = `/auth?redirect=${encodeURIComponent("/planes")}`;
+      // Tras autenticarse, regresar a /planes y reanudar el checkout del plan elegido.
+      const next = `/planes?plan=${encodeURIComponent(key)}`;
+      window.location.href = `/auth?redirect=${encodeURIComponent(next)}`;
+      return;
+    }
+    if (isCurrent(key) && !cancelAtPeriodEnd) {
+      toast.info("Ya tienes este plan activo.");
       return;
     }
     setActing(key);
@@ -88,6 +118,22 @@ function PlansPage() {
       setActing(null);
     }
   };
+
+  // Auto-reanudar checkout cuando el usuario vuelve de /auth con ?plan=...
+  useEffect(() => {
+    if (autoTriggered.current || loading || !user) return;
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const requested = url.searchParams.get("plan") as PlanKey | null;
+    if (!requested || !(requested in PLAN_CATALOG)) return;
+    if (requested === "free" || requested === "institution_monthly") return;
+    if (currentPlan === requested && !cancelAtPeriodEnd) return;
+    autoTriggered.current = true;
+    url.searchParams.delete("plan");
+    window.history.replaceState({}, "", url.toString());
+    void choose(requested);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, user, currentPlan, cancelAtPeriodEnd]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -152,11 +198,15 @@ function PlansPage() {
                 <Button
                   className="mt-6 w-full"
                   variant={def.highlight ? "copper" : d.tone === "fuchsia" ? "hero" : "outline"}
-                  disabled={loading || acting === d.key || current}
+                  disabled={
+                    loading ||
+                    acting === d.key ||
+                    (current && !(cancelAtPeriodEnd && d.key !== "free"))
+                  }
                   onClick={() => choose(d.key)}
                 >
                   {acting === d.key && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  {current ? "Tu plan actual" : d.cta}
+                  {ctaLabel(d.key)}
                 </Button>
               </Card>
             );

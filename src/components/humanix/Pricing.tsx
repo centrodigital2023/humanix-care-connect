@@ -1,74 +1,50 @@
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PLAN_CATALOG, type PlanKey } from "@/lib/plans";
+import { usePlan } from "@/hooks/use-plan";
+import { useAppUser } from "@/hooks/use-app-user";
 
-const plans = [
-  {
-    name: "Free",
-    price: "COP 0",
-    sub: "siempre",
-    desc: "Para conocer Humanix sin compromiso.",
-    features: [
-      "Crear perfil profesional o familiar",
-      "Buscar y aplicar a ofertas abiertas",
-      "Asistente IA básico (preguntas generales)",
-      "Mensajería 1:1 cuando se acepta una aplicación",
-    ],
-    cta: "Tu plan actual",
-    variant: "glass" as const,
-    highlight: false,
-  },
-  {
-    name: "Esencial",
-    price: "COP 9.000",
-    sub: "/mes",
-    desc: "Familias y profesionales que quieren todo activo.",
-    features: [
-      "Match IA en menos de 150 ms",
-      "Buzón de postulaciones ilimitado",
-      "Contacto directo por WhatsApp con la otra parte",
-      "Geolocalización en vivo y ETA",
-      "Verificación RETHUS y anti-fraude IA incluida",
-      "Sin comisión: el profesional cobra directo al cliente",
-    ],
-    cta: "Suscribirme por $9.000",
-    variant: "hero" as const,
-    highlight: true,
-  },
-  {
-    name: "Pro Profesional",
-    price: "COP 29.000",
-    sub: "/mes",
-    desc: "Profesionales que quieren visibilidad máxima.",
-    features: [
-      "Todo lo del Esencial",
-      "Boost de visibilidad en búsquedas",
-      "Coach de carrera 24/7 (mejorar perfil y Trust Score)",
-      "Sugerencias IA en cada mensaje",
-      "Validación anti-fraude IA prioritaria",
-    ],
-    cta: "Activar Pro",
-    variant: "glass" as const,
-    highlight: false,
-  },
-  {
-    name: "Institución (IPS)",
-    price: "Desde COP 99.000",
-    sub: "/mes",
-    desc: "Clínicas, hospitales y agencias de cuidado.",
-    features: [
-      "Bolsa de créditos IA mensual",
-      "Multi-usuario con roles (HR, evaluador, admin)",
-      "Pipeline de candidatos con scoring IA",
-      "Detección de inconsistencias en CVs y RETHUS",
-      "Soporte prioritario y onboarding asistido",
-    ],
-    cta: "Hablar con ventas",
-    variant: "copper" as const,
-    highlight: false,
-  },
+const DISPLAY: { key: PlanKey; variant: "glass" | "hero" | "copper" }[] = [
+  { key: "free", variant: "glass" },
+  { key: "essential_monthly", variant: "hero" },
+  { key: "pro_monthly", variant: "glass" },
+  { key: "institution_monthly", variant: "copper" },
 ];
 
 export function Pricing() {
+  const { user } = useAppUser({ requireAuth: false });
+  const { plan: currentPlan, tier: currentTier, cancelAtPeriodEnd } = usePlan(user?.id ?? null);
+
+  const ctaFor = (key: PlanKey) => {
+    const def = PLAN_CATALOG[key];
+    const isCurrent = user ? currentPlan === key : false;
+    let label: string;
+    if (isCurrent) {
+      label = cancelAtPeriodEnd && key !== "free" ? "Reactivar renovación" : "Tu plan actual";
+    } else if (key === "institution_monthly") {
+      label = "Hablar con ventas";
+    } else if (key === "free") {
+      label = user ? (currentTier > 0 ? "Bajar a Free" : "Ir al panel") : "Crear cuenta gratis";
+    } else if (!user) {
+      label = `Empezar con ${def.label}`;
+    } else if (def.tier > currentTier) {
+      label = `Mejorar a ${def.label}`;
+    } else {
+      label = `Cambiar a ${def.label}`;
+    }
+    let href: string;
+    if (key === "institution_monthly") {
+      href = "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
+    } else if (key === "free") {
+      href = user ? "/dashboard" : "/auth";
+    } else if (!user) {
+      href = `/auth?redirect=${encodeURIComponent(`/planes?plan=${key}`)}`;
+    } else {
+      href = `/planes?plan=${key}`;
+    }
+    return { label, href, disabled: isCurrent && !(cancelAtPeriodEnd && key !== "free") };
+  };
+
   return (
     <section id="planes" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
@@ -85,9 +61,12 @@ export function Pricing() {
         </div>
 
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {plans.map((p) => (
+          {DISPLAY.map((d) => {
+            const p = PLAN_CATALOG[d.key];
+            const cta = ctaFor(d.key);
+            return (
             <div
-              key={p.name}
+              key={p.key}
               className={`relative rounded-3xl border p-8 flex flex-col ${
                 p.highlight
                   ? "border-biosensor/40 bg-card shadow-[var(--shadow-glow-bio)]"
@@ -99,15 +78,15 @@ export function Pricing() {
                   Más elegido
                 </div>
               )}
-              <h3 className="font-display text-xl font-bold">{p.name}</h3>
+              <h3 className="font-display text-xl font-bold">{p.label}</h3>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="font-display text-4xl font-bold">{p.price}</span>
-                <span className="text-sm text-muted-foreground">{p.sub}</span>
+                <span className="font-display text-4xl font-bold">{p.priceLabel}</span>
+                <span className="text-sm text-muted-foreground">{p.priceNote}</span>
               </div>
-              <p className="mt-3 text-sm text-muted-foreground">{p.desc}</p>
+              <p className="mt-3 text-sm text-muted-foreground">{p.audience}</p>
 
               <ul className="mt-6 space-y-3 flex-1">
-                {p.features.map((f) => (
+                {p.featuresLabel.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm">
                     <Check className="h-4 w-4 text-biosensor mt-0.5 shrink-0" />
                     <span>{f}</span>
@@ -115,11 +94,18 @@ export function Pricing() {
                 ))}
               </ul>
 
-              <Button variant={p.variant} size="lg" className="mt-8 w-full">
-                {p.cta}
+              <Button
+                variant={d.variant}
+                size="lg"
+                className="mt-8 w-full"
+                disabled={cta.disabled}
+                asChild={!cta.disabled}
+              >
+                {cta.disabled ? <span>{cta.label}</span> : <a href={cta.href}>{cta.label}</a>}
               </Button>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
