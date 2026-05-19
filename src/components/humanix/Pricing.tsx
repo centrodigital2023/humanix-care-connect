@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PLAN_CATALOG, type PlanKey } from "@/lib/plans";
 import { usePlan } from "@/hooks/use-plan";
 import { useAppUser } from "@/hooks/use-app-user";
+import { computeCta, type CtaAction } from "@/lib/planCta";
 
 const DISPLAY: { key: PlanKey; variant: "glass" | "hero" | "copper" }[] = [
   { key: "free", variant: "glass" },
@@ -13,36 +14,23 @@ const DISPLAY: { key: PlanKey; variant: "glass" | "hero" | "copper" }[] = [
 
 export function Pricing() {
   const { user } = useAppUser({ requireAuth: false });
-  const { plan: currentPlan, tier: currentTier, cancelAtPeriodEnd } = usePlan(user?.id ?? null);
+  const { plan: currentPlan, cancelAtPeriodEnd } = usePlan(user?.id ?? null);
 
-  const ctaFor = (key: PlanKey) => {
-    const def = PLAN_CATALOG[key];
-    const isCurrent = user ? currentPlan === key : false;
-    let label: string;
-    if (isCurrent) {
-      label = cancelAtPeriodEnd && key !== "free" ? "Reactivar renovación" : "Tu plan actual";
-    } else if (key === "institution_monthly") {
-      label = "Hablar con ventas";
-    } else if (key === "free") {
-      label = user ? (currentTier > 0 ? "Bajar a Free" : "Ir al panel") : "Crear cuenta gratis";
-    } else if (!user) {
-      label = `Empezar con ${def.label}`;
-    } else if (def.tier > currentTier) {
-      label = `Mejorar a ${def.label}`;
-    } else {
-      label = `Cambiar a ${def.label}`;
+  const hrefFor = (key: PlanKey, action: CtaAction): string => {
+    switch (action.kind) {
+      case "sales":
+        return "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
+      case "free":
+        return user ? "/dashboard" : "/auth";
+      case "login":
+        return `/auth?redirect=${encodeURIComponent(action.redirectTo)}`;
+      case "checkout":
+      case "reactivate":
+        return `/planes?plan=${key}`;
+      case "current":
+      default:
+        return "/planes";
     }
-    let href: string;
-    if (key === "institution_monthly") {
-      href = "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
-    } else if (key === "free") {
-      href = user ? "/dashboard" : "/auth";
-    } else if (!user) {
-      href = `/auth?redirect=${encodeURIComponent(`/planes?plan=${key}`)}`;
-    } else {
-      href = `/planes?plan=${key}`;
-    }
-    return { label, href, disabled: isCurrent && !(cancelAtPeriodEnd && key !== "free") };
   };
 
   return (
@@ -63,7 +51,12 @@ export function Pricing() {
         <div className="mt-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {DISPLAY.map((d) => {
             const p = PLAN_CATALOG[d.key];
-            const cta = ctaFor(d.key);
+            const cta = computeCta(d.key, {
+              userId: user?.id ?? null,
+              currentPlan,
+              cancelAtPeriodEnd,
+            });
+            const href = hrefFor(d.key, cta.action);
             return (
             <div
               key={p.key}
@@ -101,7 +94,7 @@ export function Pricing() {
                 disabled={cta.disabled}
                 asChild={!cta.disabled}
               >
-                {cta.disabled ? <span>{cta.label}</span> : <a href={cta.href}>{cta.label}</a>}
+                {cta.disabled ? <span>{cta.label}</span> : <a href={href}>{cta.label}</a>}
               </Button>
             </div>
             );

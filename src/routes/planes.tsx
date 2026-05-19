@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { PLAN_CATALOG, type PlanKey } from "@/lib/plans";
 import { usePlan } from "@/hooks/use-plan";
 import { useAppUser } from "@/hooks/use-app-user";
+import { computeCta } from "@/lib/planCta";
 
 export const Route = createFileRoute("/planes")({
   head: () =>
@@ -47,7 +48,6 @@ function PlansPage() {
   const { user, loading: userLoading } = useAppUser({ requireAuth: false });
   const {
     plan: currentPlan,
-    tier: currentTier,
     cancelAtPeriodEnd,
     loading: planLoading,
   } = usePlan(user?.id ?? null);
@@ -55,56 +55,33 @@ function PlansPage() {
   const [acting, setActing] = useState<PlanKey | null>(null);
   const autoTriggered = useRef(false);
 
-  const isCurrent = (key: PlanKey) => {
-    if (!user) return false;
-    if (key === "free") return currentPlan === "free";
-    return currentPlan === key;
-  };
-
-  // Smart CTA label — depende de sesión, plan actual y dirección (upgrade/downgrade).
-  const ctaLabel = (key: PlanKey): string => {
-    const def = PLAN_CATALOG[key];
-    if (!user) {
-      if (key === "free") return "Crear cuenta gratis";
-      if (key === "institution_monthly") return "Hablar con ventas";
-      return `Empezar con ${def.label}`;
-    }
-    if (isCurrent(key)) {
-      return cancelAtPeriodEnd && key !== "free" ? "Reactivar renovación" : "Tu plan actual";
-    }
-    if (key === "free") {
-      return currentTier > 0 ? "Bajar a Free" : "Ir al panel";
-    }
-    if (key === "institution_monthly") return "Hablar con ventas";
-    if (def.tier > currentTier) return `Mejorar a ${def.label}`;
-    return `Cambiar a ${def.label}`;
-  };
+  const ctx = { userId: user?.id ?? null, currentPlan, cancelAtPeriodEnd };
 
   const choose = async (key: PlanKey) => {
-    if (key === "free") {
+    const cta = computeCta(key, ctx);
+    if (cta.action.kind === "free") {
       window.location.href = user ? "/dashboard" : "/auth";
       return;
     }
-    if (key === "institution_monthly") {
+    if (cta.action.kind === "sales") {
       window.location.href = "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
       return;
     }
-    if (!user) {
+    if (cta.action.kind === "login") {
       toast("Inicia sesión para activar tu plan", { description: "Te llevamos al login." });
-      // Tras autenticarse, regresar a /planes y reanudar el checkout del plan elegido.
-      const next = `/planes?plan=${encodeURIComponent(key)}`;
-      window.location.href = `/auth?redirect=${encodeURIComponent(next)}`;
+      window.location.href = `/auth?redirect=${encodeURIComponent(cta.action.redirectTo)}`;
       return;
     }
-    if (isCurrent(key) && !cancelAtPeriodEnd) {
+    if (cta.action.kind === "current") {
       toast.info("Ya tienes este plan activo.");
       return;
     }
+    // checkout or reactivate → invoke MP
     setActing(key);
     try {
       const def = PLAN_CATALOG[key];
       const { data, error } = await supabase.functions.invoke("mp-create-subscription", {
-        body: { plan: key, amount: def.amountCOP, email: user.email },
+        body: { plan: key, amount: def.amountCOP, email: user?.email },
       });
       if (error) throw error;
       const url =
@@ -157,7 +134,7 @@ function PlansPage() {
           {DISPLAY.map((d) => {
             const def = PLAN_CATALOG[d.key];
             const Icon = d.icon;
-            const current = isCurrent(d.key);
+            const cta = computeCta(d.key, ctx);
             return (
               <Card
                 key={d.key}
@@ -198,15 +175,11 @@ function PlansPage() {
                 <Button
                   className="mt-6 w-full"
                   variant={def.highlight ? "copper" : d.tone === "fuchsia" ? "hero" : "outline"}
-                  disabled={
-                    loading ||
-                    acting === d.key ||
-                    (current && !(cancelAtPeriodEnd && d.key !== "free"))
-                  }
+                  disabled={loading || acting === d.key || cta.disabled}
                   onClick={() => choose(d.key)}
                 >
                   {acting === d.key && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                  {ctaLabel(d.key)}
+                  {cta.label}
                 </Button>
               </Card>
             );
