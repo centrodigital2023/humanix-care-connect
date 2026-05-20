@@ -18,7 +18,12 @@ const APP_SECRET = Deno.env.get("WHATSAPP_APP_SECRET") ?? "";
 // Valida la firma HMAC-SHA256 que Meta envía en X-Hub-Signature-256.
 // Si WHATSAPP_APP_SECRET no está configurado, omite la validación (modo dev).
 async function verifyMetaSignature(req: Request, rawBody: string): Promise<boolean> {
-  if (!APP_SECRET) return true;
+  if (!APP_SECRET) {
+    console.error(
+      "[wa] WHATSAPP_APP_SECRET no está configurado: rechazando webhook (fail-closed).",
+    );
+    return false;
+  }
   const header = req.headers.get("x-hub-signature-256");
   if (!header || !header.startsWith("sha256=")) return false;
   const expected = header.slice("sha256=".length);
