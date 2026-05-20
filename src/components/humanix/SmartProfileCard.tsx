@@ -118,14 +118,6 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           done: has("id_document"),
           hint: "Foto frente y reverso — la IA valida que sea real.",
         },
-        {
-          key: "utility_bill",
-          label: "Recibo de servicios",
-          short: "Recibo",
-          icon: FileText,
-          done: has("utility_bill"),
-          hint: "Reciente (≤60 días) para confirmar tu dirección.",
-        },
       ];
       setReqs(list);
       setLoading(false);
