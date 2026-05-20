@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   IdCard,
-  Receipt,
-  HeartPulse,
-  FileSignature,
-  ShieldCheck,
-  Baby,
   UploadCloud,
   Loader2,
   Trash2,
@@ -55,36 +50,6 @@ const TYPES: {
     icon: <IdCard className="h-4 w-4" />,
     hint: "Frente y reverso. La IA valida que sea real.",
     required: true,
-  },
-  {
-    value: "utility_bill",
-    label: "Recibo de servicios",
-    icon: <Receipt className="h-4 w-4" />,
-    hint: "Opcional · Reciente (últimos 60 días). Si no lo tienes, puedes llenar la dirección manualmente.",
-  },
-  {
-    value: "patient_id",
-    label: "Cédula del paciente",
-    icon: <Baby className="h-4 w-4" />,
-    hint: "Si el cuidado es para otra persona.",
-  },
-  {
-    value: "medical_history",
-    label: "Historia clínica / receta",
-    icon: <HeartPulse className="h-4 w-4" />,
-    hint: "Diagnóstico, alergias o medicamentos.",
-  },
-  {
-    value: "authorization",
-    label: "Autorización / poder",
-    icon: <FileSignature className="h-4 w-4" />,
-    hint: "Si actúas en representación del paciente.",
-  },
-  {
-    value: "insurance",
-    label: "Carnet EPS / seguro",
-    icon: <ShieldCheck className="h-4 w-4" />,
-    hint: "Para coordinar coberturas. También puedes llenar la información básica del paciente manualmente.",
   },
 ];
 
