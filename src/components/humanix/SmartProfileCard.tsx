@@ -29,7 +29,7 @@ type Props = {
   avatarUrl: string | null;
 };
 
-type RequirementKey = "avatar" | "id_number" | "address" | "emergency" | "id_document" | "utility_bill";
+type RequirementKey = "avatar" | "id_number" | "address" | "emergency" | "id_document";
 
 type Requirement = {
   key: RequirementKey;
