@@ -948,13 +948,7 @@ function PublicidadPage() {
               const shareUrl = ctaHref ?? `${origin}/?banner=${current.id}`;
               const isMobile = previewDevice === "mobile";
               return (
-                <div
-                  className={
-                    isMobile
-                      ? "grid md:grid-cols-[1fr_280px] min-h-[220px]"
-                      : "grid md:grid-cols-[1fr_280px] min-h-[220px]"
-                  }
-                >
+                <div className="grid lg:grid-cols-[1fr_300px] min-h-[220px]">
                   {/* Banner visual */}
                   <div
                     className={
@@ -1093,7 +1087,7 @@ function PublicidadPage() {
                   </div>
 
                   {/* Right panel: stats + share */}
-                  <div className="border-l border-border p-4 space-y-4 bg-muted/20">
+                  <div className="border-t lg:border-t-0 lg:border-l border-border p-4 space-y-4 bg-muted/20">
                     {/* KPI mini */}
                     <div>
                       <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-2 flex items-center gap-1">
