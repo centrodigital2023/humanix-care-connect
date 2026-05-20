@@ -346,19 +346,36 @@ export function PromoCards({ origin }: { origin: string }) {
     async (tpl: PromoTemplate, networkId: string) => {
       const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}`;
       const url = shareUrlFor(tpl);
-      if (networkId === "copy") {
-        await navigator.clipboard.writeText(`${shareText}\n${url}`);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        toast.success("Texto y enlace copiados");
-      } else {
-        window.open(
-          buildShareUrl(networkId, url, `${tpl.emoji} ${tpl.headline}`, shareText),
-          "_blank",
-          "noopener,noreferrer,width=640,height=560",
-        );
+      if (!url || url.includes("undefined")) {
+        toast.error("URL no válida para compartir");
+        return;
       }
-      setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
+      try {
+        if (networkId === "copy") {
+          try {
+            await navigator.clipboard.writeText(`${shareText}\n${url}`);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+            toast.success("Texto y enlace copiados");
+          } catch {
+            toast.error("No se pudo copiar. Selecciona y copia manualmente.");
+            return;
+          }
+        } else {
+          const win = window.open(
+            buildShareUrl(networkId, url, `${tpl.emoji} ${tpl.headline}`, shareText),
+            "_blank",
+            "noopener,noreferrer,width=640,height=560",
+          );
+          if (!win) {
+            toast.error("Bloqueador de pop-ups activo. Permite ventanas emergentes.");
+            return;
+          }
+        }
+        setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
+      } catch (e) {
+        toast.error("No se pudo compartir: " + (e as Error).message);
+      }
     },
     [shareUrlFor],
   );
