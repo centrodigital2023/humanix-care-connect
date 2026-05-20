@@ -4,12 +4,9 @@
 //   - "epic"        → Última imagen EPIC de la Tierra
 //   - "mars"        → Foto random Curiosity (acepta `sol`)
 // Si se pasa `translate=true` se traduce/explica al español neutro colombiano con Lovable AI.
-// Es público (no requiere JWT) — pensado para landings + uso interno.
+// Es público para lectura simple; la traducción con IA requiere JWT.
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 async function translateEs(text: string): Promise<string> {
   const key = Deno.env.get("LOVABLE_API_KEY");
@@ -46,6 +43,11 @@ Deno.serve(async (req) => {
     const endpoint = (url.searchParams.get("endpoint") || "apod").toLowerCase();
     const translate = url.searchParams.get("translate") === "true";
     const NASA_API_KEY = (Deno.env.get("NASA_API_KEY") || "DEMO_KEY").trim();
+
+    if (translate) {
+      const auth = await requireUser(req);
+      if (!auth.ok) return auth.response;
+    }
 
     let upstream: string;
     if (endpoint === "apod") {
@@ -129,7 +131,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("nasa-proxy error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+    return new Response(JSON.stringify({ error: "Error interno. Inténtalo de nuevo." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

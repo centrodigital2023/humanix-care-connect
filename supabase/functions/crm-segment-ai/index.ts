@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("crm-segment-ai error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+    return new Response(JSON.stringify({ error: "Error interno. Inténtalo de nuevo." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
