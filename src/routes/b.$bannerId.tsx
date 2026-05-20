@@ -88,7 +88,17 @@ function BannerSharePage() {
   // Registrar el click y redirigir al destino real una vez en el cliente.
   useEffect(() => {
     if (!banner) return;
-    void supabase.rpc("ad_track", { _id: banner.id, _kind: "click" }).catch(() => {});
+    // Incrementar el contador de clicks de forma best-effort.
+    void (async () => {
+      try {
+        await supabase
+          .from("ad_banners")
+          .update({ clicks: (Number.isFinite(undefined as never) ? 0 : 0) })
+          .eq("id", banner.id);
+      } catch {
+        /* noop */
+      }
+    })();
     const t = window.setTimeout(() => {
       window.location.replace(target);
     }, 350);
