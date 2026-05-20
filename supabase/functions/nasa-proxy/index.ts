@@ -126,7 +126,8 @@ Deno.serve(async (req) => {
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=1800",
+        // Auth-gated translated responses must never hit a shared cache.
+        "Cache-Control": translate ? "private, no-store" : "public, max-age=1800",
       },
     });
   } catch (e) {
