@@ -1979,6 +1979,7 @@ export type Database = {
       }
     }
     Functions: {
+      ad_track: { Args: { _id: string; _kind: string }; Returns: undefined }
       get_my_profile: {
         Args: never
         Returns: {
