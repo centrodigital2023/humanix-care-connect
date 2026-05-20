@@ -99,16 +99,20 @@ function BannerSharePage() {
     // al usuario si el backend está lento. Si el RPC termina antes,
     // redirigimos inmediatamente.
     const safety = window.setTimeout(go, 800);
-    void supabase
-      .rpc("ad_track", { _id: banner.id, _kind: "click" })
-      .then(({ error }) => {
+    (async () => {
+      try {
+        const { error } = await supabase.rpc("ad_track", {
+          _id: banner.id,
+          _kind: "click",
+        });
         if (error) console.warn("ad_track click failed", error.message);
-      })
-      .catch((e) => console.warn("ad_track click error", e))
-      .finally(() => {
+      } catch (e) {
+        console.warn("ad_track click error", e);
+      } finally {
         window.clearTimeout(safety);
         go();
-      });
+      }
+    })();
     return () => {
       cancelled = true;
       window.clearTimeout(safety);
