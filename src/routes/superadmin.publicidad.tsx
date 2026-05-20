@@ -222,6 +222,14 @@ function PublicidadPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.lat";
+  // Canonical public origin used for SHARE URLs (Facebook, LinkedIn, X…).
+  // Las redes sociales (especialmente Facebook) requieren URLs públicamente
+  // accesibles para hacer crawling de las OG tags. Usar `window.location.origin`
+  // rompe el share en preview/localhost (lovable.app de preview o id-preview…).
+  const PUBLIC_ORIGIN = "https://humanix.lat";
+  const shareOrigin = /^https?:\/\/(localhost|.*lovable\.app)/i.test(origin)
+    ? PUBLIC_ORIGIN
+    : origin;
 
   useEffect(() => {
     if (!user) return;
@@ -945,7 +953,12 @@ function PublicidadPage() {
                   ? ((current.clicks / current.impressions) * 100).toFixed(1)
                   : "0.0";
               const ctaHref = normalizeUrl(current.link_url, origin);
-              const shareUrl = ctaHref ?? `${origin}/?banner=${current.id}`;
+              // Para compartir en redes sociales usamos siempre el dominio
+              // público canónico, de modo que Facebook/LinkedIn puedan leer
+              // las OG tags. Si la URL del CTA es una ruta interna, la
+              // re-resolvemos contra el origen público.
+              const shareCtaHref = normalizeUrl(current.link_url, shareOrigin);
+              const shareUrl = shareCtaHref ?? `${shareOrigin}/?banner=${current.id}`;
               const isMobile = previewDevice === "mobile";
               return (
                 <div className="grid lg:grid-cols-[1fr_300px] min-h-[220px]">
