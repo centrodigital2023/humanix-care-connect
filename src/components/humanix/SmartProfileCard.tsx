@@ -29,7 +29,7 @@ type Props = {
   avatarUrl: string | null;
 };
 
-type RequirementKey = "avatar" | "id_number" | "address" | "emergency" | "id_document" | "utility_bill";
+type RequirementKey = "avatar" | "id_number" | "address" | "emergency" | "id_document";
 
 type Requirement = {
   key: RequirementKey;
@@ -117,14 +117,6 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           icon: FileText,
           done: has("id_document"),
           hint: "Foto frente y reverso — la IA valida que sea real.",
-        },
-        {
-          key: "utility_bill",
-          label: "Recibo de servicios",
-          short: "Recibo",
-          icon: FileText,
-          done: has("utility_bill"),
-          hint: "Reciente (≤60 días) para confirmar tu dirección.",
         },
       ];
       setReqs(list);
