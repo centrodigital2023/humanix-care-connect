@@ -60,8 +60,7 @@ const TYPES: {
     value: "utility_bill",
     label: "Recibo de servicios",
     icon: <Receipt className="h-4 w-4" />,
-    hint: "Reciente (últimos 60 días). Verifica tu dirección.",
-    required: true,
+    hint: "Opcional · Reciente (últimos 60 días). Si no lo tienes, puedes llenar la dirección manualmente.",
   },
   {
     value: "patient_id",
@@ -85,7 +84,7 @@ const TYPES: {
     value: "insurance",
     label: "Carnet EPS / seguro",
     icon: <ShieldCheck className="h-4 w-4" />,
-    hint: "Para coordinar coberturas.",
+    hint: "Para coordinar coberturas. También puedes llenar la información básica del paciente manualmente.",
   },
 ];
 
