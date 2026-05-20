@@ -3,9 +3,29 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+// Allowlist of trusted origins for browser-side calls. Server-to-server callers
+// (no Origin header) get the canonical site origin, which is harmless for them.
+const ALLOWED_ORIGIN = /^https:\/\/([a-z0-9-]+\.)?(humanix\.lat|lovable\.app|lovableproject\.com)$/i;
+const DEFAULT_ORIGIN = "https://humanix.lat";
+
+export function buildCorsHeaders(req?: Request): Record<string, string> {
+  const origin = req?.headers.get("origin") ?? "";
+  const allowed = origin && ALLOWED_ORIGIN.test(origin) ? origin : DEFAULT_ORIGIN;
+  return {
+    "Access-Control-Allow-Origin": allowed,
+    "Vary": "Origin",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  };
+}
+
+// Backwards-compatible export: callers that still use `corsHeaders` get the
+// default safe origin. New code should call buildCorsHeaders(req) per-request.
+export const corsHeaders: Record<string, string> = {
+  "Access-Control-Allow-Origin": DEFAULT_ORIGIN,
+  "Vary": "Origin",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
 };
 
 export type AuthResult =
