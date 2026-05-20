@@ -346,19 +346,36 @@ export function PromoCards({ origin }: { origin: string }) {
     async (tpl: PromoTemplate, networkId: string) => {
       const shareText = `${tpl.emoji} ${tpl.headline}\n\n${tpl.subline}\n\n${tpl.hashtags}`;
       const url = shareUrlFor(tpl);
-      if (networkId === "copy") {
-        await navigator.clipboard.writeText(`${shareText}\n${url}`);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-        toast.success("Texto y enlace copiados");
-      } else {
-        window.open(
-          buildShareUrl(networkId, url, `${tpl.emoji} ${tpl.headline}`, shareText),
-          "_blank",
-          "noopener,noreferrer,width=640,height=560",
-        );
+      if (!url || url.includes("undefined")) {
+        toast.error("URL no válida para compartir");
+        return;
       }
-      setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
+      try {
+        if (networkId === "copy") {
+          try {
+            await navigator.clipboard.writeText(`${shareText}\n${url}`);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+            toast.success("Texto y enlace copiados");
+          } catch {
+            toast.error("No se pudo copiar. Selecciona y copia manualmente.");
+            return;
+          }
+        } else {
+          const win = window.open(
+            buildShareUrl(networkId, url, `${tpl.emoji} ${tpl.headline}`, shareText),
+            "_blank",
+            "noopener,noreferrer,width=640,height=560",
+          );
+          if (!win) {
+            toast.error("Bloqueador de pop-ups activo. Permite ventanas emergentes.");
+            return;
+          }
+        }
+        setShareCounts((p) => ({ ...p, [tpl.id]: (p[tpl.id] ?? 0) + 1 }));
+      } catch (e) {
+        toast.error("No se pudo compartir: " + (e as Error).message);
+      }
     },
     [shareUrlFor],
   );
@@ -696,6 +713,7 @@ export function PromoCards({ origin }: { origin: string }) {
           <div
             className={cn(
               "w-full max-w-sm mx-auto rounded-2xl overflow-hidden cursor-zoom-in select-none transition-transform hover:scale-[1.01]",
+              aspect === "9:16" && "max-h-[70vh] max-w-[min(100%,calc(70vh*9/16))]",
               aspectConfig.cls,
               activeStyles.bg,
               activeStyles.text,
@@ -1127,25 +1145,27 @@ export function PromoCards({ origin }: { origin: string }) {
           <div className="relative max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setLightbox(false)}
-              className="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors flex items-center gap-1 text-sm"
+              className="absolute -top-10 right-0 text-white/70 hover:text-white transition-colors flex items-center gap-1 text-sm z-10"
             >
               <X className="h-4 w-4" /> Cerrar
             </button>
             <button
               onClick={() => setActiveIdx((i) => (i - 1 + TEMPLATES.length) % TEMPLATES.length)}
-              className="absolute left-[-48px] top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              className="absolute left-2 sm:-left-12 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/50 sm:bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
+              aria-label="Anterior"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={() => setActiveIdx((i) => (i + 1) % TEMPLATES.length)}
-              className="absolute right-[-48px] top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              className="absolute right-2 sm:-right-12 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/50 sm:bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
+              aria-label="Siguiente"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
             <div
               className={cn(
-                "w-full aspect-square rounded-2xl overflow-hidden",
+                "w-full aspect-square rounded-2xl overflow-hidden max-h-[85vh]",
                 activeStyles.bg,
                 activeStyles.text,
                 activeStyles.glow,
