@@ -953,12 +953,11 @@ function PublicidadPage() {
                   ? ((current.clicks / current.impressions) * 100).toFixed(1)
                   : "0.0";
               const ctaHref = normalizeUrl(current.link_url, origin);
-              // Para compartir en redes sociales usamos siempre el dominio
-              // público canónico, de modo que Facebook/LinkedIn puedan leer
-              // las OG tags. Si la URL del CTA es una ruta interna, la
-              // re-resolvemos contra el origen público.
-              const shareCtaHref = normalizeUrl(current.link_url, shareOrigin);
-              const shareUrl = shareCtaHref ?? `${shareOrigin}/?banner=${current.id}`;
+              // URL pública canónica del banner: una página puente
+              // `/b/{id}` que emite OG tags dinámicas (título, descripción
+              // e imagen del banner) y redirige al CTA real. Así Facebook,
+              // LinkedIn y X muestran un preview específico de cada banner.
+              const shareUrl = `${shareOrigin}/b/${current.id}`;
               const isMobile = previewDevice === "mobile";
               return (
                 <div className="grid lg:grid-cols-[1fr_300px] min-h-[220px]">

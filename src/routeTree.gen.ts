@@ -63,6 +63,7 @@ import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsa
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
+import { Route as BBannerIdRouteImport } from './routes/b.$bannerId'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
 const TerminosRoute = TerminosRouteImport.update({
@@ -335,6 +336,11 @@ const DashboardFamiliaRoute = DashboardFamiliaRouteImport.update({
   path: '/familia',
   getParentRoute: () => DashboardRoute,
 } as any)
+const BBannerIdRoute = BBannerIdRouteImport.update({
+  id: '/b/$bannerId',
+  path: '/b/$bannerId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardFamiliaOnboardingRoute =
   DashboardFamiliaOnboardingRouteImport.update({
     id: '/onboarding',
@@ -381,6 +387,7 @@ export interface FileRoutesByFullPath {
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
   '/terminos': typeof TerminosRoute
+  '/b/$bannerId': typeof BBannerIdRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -436,6 +443,7 @@ export interface FileRoutesByTo {
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
   '/terminos': typeof TerminosRoute
+  '/b/$bannerId': typeof BBannerIdRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -494,6 +502,7 @@ export interface FileRoutesById {
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
   '/terminos': typeof TerminosRoute
+  '/b/$bannerId': typeof BBannerIdRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/talento-humano'
     | '/tecnologia'
     | '/terminos'
+    | '/b/$bannerId'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -608,6 +618,7 @@ export interface FileRouteTypes {
     | '/talento-humano'
     | '/tecnologia'
     | '/terminos'
+    | '/b/$bannerId'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -665,6 +676,7 @@ export interface FileRouteTypes {
     | '/talento-humano'
     | '/tecnologia'
     | '/terminos'
+    | '/b/$bannerId'
     | '/dashboard/familia'
     | '/dashboard/institucion'
     | '/dashboard/profesional'
@@ -723,6 +735,7 @@ export interface RootRouteChildren {
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
   TerminosRoute: typeof TerminosRoute
+  BBannerIdRoute: typeof BBannerIdRoute
   OfertaOfferIdRoute: typeof OfertaOfferIdRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
@@ -1108,6 +1121,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardFamiliaRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/b/$bannerId': {
+      id: '/b/$bannerId'
+      path: '/b/$bannerId'
+      fullPath: '/b/$bannerId'
+      preLoaderRoute: typeof BBannerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/familia/onboarding': {
       id: '/dashboard/familia/onboarding'
       path: '/onboarding'
@@ -1224,6 +1244,7 @@ const rootRouteChildren: RootRouteChildren = {
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
   TerminosRoute: TerminosRoute,
+  BBannerIdRoute: BBannerIdRoute,
   OfertaOfferIdRoute: OfertaOfferIdRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
