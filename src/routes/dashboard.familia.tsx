@@ -753,11 +753,14 @@ function FamilyDashboard() {
               <Heart className="h-8 w-8 text-copper mx-auto mb-3" />
               <p className="font-semibold">Aún no has publicado solicitudes</p>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-                Empieza con una búsqueda directa o usa el copiloto IA para publicar.
+                Publicar una solicitud es <span className="font-semibold text-emerald-600">gratis</span>. Empieza con una búsqueda directa o usa el copiloto IA.
               </p>
-              <Button variant="hero" className="mt-4" asChild>
-                <Link to="/buscar">Buscar ahora</Link>
-              </Button>
+              <div className="mt-4 flex flex-wrap gap-2 justify-center">
+                <HiringCopilot />
+                <Button variant="outline" asChild>
+                  <Link to="/buscar">Buscar ahora</Link>
+                </Button>
+              </div>
             </Card>
           ) : (
             <div className="grid gap-3">
