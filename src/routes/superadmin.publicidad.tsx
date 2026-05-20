@@ -222,6 +222,14 @@ function PublicidadPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const carouselTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const origin = typeof window !== "undefined" ? window.location.origin : "https://humanix.lat";
+  // Canonical public origin used for SHARE URLs (Facebook, LinkedIn, X…).
+  // Las redes sociales (especialmente Facebook) requieren URLs públicamente
+  // accesibles para hacer crawling de las OG tags. Usar `window.location.origin`
+  // rompe el share en preview/localhost (lovable.app de preview o id-preview…).
+  const PUBLIC_ORIGIN = "https://humanix.lat";
+  const shareOrigin = /^https?:\/\/(localhost|.*lovable\.app)/i.test(origin)
+    ? PUBLIC_ORIGIN
+    : origin;
 
   useEffect(() => {
     if (!user) return;
