@@ -1961,20 +1961,6 @@ export type Database = {
           full_name: string | null
           user_id: string | null
         }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          city?: string | null
-          full_name?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          city?: string | null
-          full_name?: string | null
-          user_id?: string | null
-        }
         Relationships: []
       }
     }
@@ -2041,6 +2027,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      publish_profile: { Args: { _validation_id?: string }; Returns: Json }
       redeem_staff_invitation: {
         Args: { _token: string }
         Returns: {
