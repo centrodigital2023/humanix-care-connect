@@ -1,7 +1,7 @@
 // Humanix Assistant — chat IA con streaming (SSE) usando Lovable AI Gateway.
 // Acepta { messages, persona } y devuelve un stream OpenAI-compat.
 
-import { corsHeaders } from "../_shared/auth.ts";
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 // Simple in-memory IP rate limiter (per edge function instance).
 // Protege de abuso anónimo que dispararía costos del Lovable AI gateway.
@@ -46,11 +46,12 @@ const SYSTEM_BY_PERSONA: Record<string, string> = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("cf-connecting-ip") ??
-    "anon";
-  if (rateLimited(ip)) {
+  // Require authenticated Supabase user — evita abuso anónimo del gateway IA.
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
+
+  // Rate limit por user_id (estable y no spoofable como x-forwarded-for).
+  if (rateLimited(auth.userId)) {
     return new Response(
       JSON.stringify({ error: "Demasiadas solicitudes. Intenta en un minuto." }),
       { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },

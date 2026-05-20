@@ -96,16 +96,23 @@ export function PublishGate({
 
       if (publish && v.is_publishable) {
         setPublishing(true);
-        await supabase
-          .from("professional_profiles")
-          .update({
-            published: true,
-            published_at: new Date().toISOString(),
-            last_validation_id: vrow?.id,
-          } as never)
-          .eq("user_id", userId);
-        toast.success("🎉 Tu perfil está publicado y visible.");
-        await onPublished();
+        const { data: pubData, error: pubErr } = await (
+          supabase as unknown as {
+            rpc: (
+              fn: string,
+              args: Record<string, unknown>,
+            ) => Promise<{ data: { ok: boolean; errors?: string[] } | null; error: unknown }>;
+          }
+        ).rpc("publish_profile", { _validation_id: vrow?.id ?? null });
+        if (pubErr || !pubData?.ok) {
+          const msg =
+            pubData?.errors?.join(" ") ??
+            (pubErr instanceof Error ? pubErr.message : "No se pudo publicar.");
+          toast.error(msg);
+        } else {
+          toast.success("🎉 Tu perfil está publicado y visible.");
+          await onPublished();
+        }
       } else if (publish) {
         toast.error("No puedes publicar aún. Corrige los errores marcados.");
       } else {
