@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("nasa-proxy error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Error" }), {
+    return new Response(JSON.stringify({ error: "Error interno. Inténtalo de nuevo." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
