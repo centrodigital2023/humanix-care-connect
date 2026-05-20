@@ -84,7 +84,18 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
         );
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error del copiloto IA");
+      // Fallback: si la IA falla, abrimos el borrador manual con el brief
+      // como descripción para que la familia/IPS pueda publicar igualmente.
+      toast.warning("La IA no respondió. Puedes publicar tu oferta manualmente.");
+      setDraft({
+        title: "",
+        description: brief,
+        specialty_required: "",
+        modality: "hour",
+        suggested_amount_cop: 0,
+        city: city || defaultCity || "",
+        requirements: [],
+      });
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 // hiring-copilot — la familia/IPS describe en lenguaje natural lo que necesita
 // y la IA devuelve: { offer_draft, suggested_amount_cop, candidates: [{user_id, reason}] }
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { corsHeaders, requireUser } from "../_shared/auth.ts";
+import { buildCorsHeaders, requireUser } from "../_shared/auth.ts";
 
 const TOOL = {
   type: "function",
@@ -92,6 +92,7 @@ function cosine(a: number[], b: number[]) {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const auth = await requireUser(req);
   if (!auth.ok) return auth.response;
