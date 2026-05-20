@@ -85,20 +85,11 @@ function BannerSharePage() {
   const { banner } = Route.useLoaderData();
   const target = normalizeHref(banner?.link_url) || "/";
 
-  // Registrar el click y redirigir al destino real una vez en el cliente.
+  // Redirigir al destino real una vez en el cliente. Los crawlers de
+  // redes sociales no ejecutan JS, así que solo leen las OG tags y no
+  // siguen esta redirección.
   useEffect(() => {
     if (!banner) return;
-    // Incrementar el contador de clicks de forma best-effort.
-    void (async () => {
-      try {
-        await supabase
-          .from("ad_banners")
-          .update({ clicks: (Number.isFinite(undefined as never) ? 0 : 0) })
-          .eq("id", banner.id);
-      } catch {
-        /* noop */
-      }
-    })();
     const t = window.setTimeout(() => {
       window.location.replace(target);
     }, 350);
