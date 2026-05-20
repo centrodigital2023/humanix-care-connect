@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
   Building2,
-  Plus,
   LayoutDashboard,
   Briefcase,
   Users,
