@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
   Building2,
-  Plus,
   LayoutDashboard,
   Briefcase,
   Users,
@@ -22,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/institucion")({
@@ -203,9 +203,7 @@ function InstitutionDashboard() {
               <Search className="h-4 w-4 mr-1.5" /> Buscar talento
             </Link>
           </Button>
-          <Button variant="hero">
-            <Plus className="h-4 w-4 mr-1.5" /> Nueva oferta
-          </Button>
+          <HiringCopilot />
         </>
       }
     >
@@ -335,11 +333,11 @@ function InstitutionDashboard() {
               <Building2 className="h-8 w-8 text-fuchsia-neural mx-auto mb-3" />
               <p className="font-semibold">Sin ofertas activas</p>
               <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                Publica tu primera oferta y la IA distribuirá a los profesionales que mejor encajan.
+                Publica tu primera oferta <span className="font-semibold text-emerald-600">gratis</span> y la IA la distribuirá a los profesionales que mejor encajan.
               </p>
-              <Button variant="hero" className="mt-4">
-                <Plus className="h-4 w-4 mr-1.5" /> Crear oferta
-              </Button>
+              <div className="mt-4 flex justify-center">
+                <HiringCopilot />
+              </div>
             </Card>
           ) : (
             <div className="grid gap-3">

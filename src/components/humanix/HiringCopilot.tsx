@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sparkles, Loader2, MapPin, Star, ShieldCheck, Wand2, X, Pencil } from "lucide-react";
+import { Sparkles, Loader2, MapPin, Star, ShieldCheck, Wand2, X, Pencil, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -49,6 +49,19 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
   const [draft, setDraft] = useState<OfferDraft | null>(null);
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [publishing, setPublishing] = useState(false);
+
+  const startManual = () => {
+    setDraft({
+      title: "",
+      description: "",
+      specialty_required: "",
+      modality: "hour",
+      suggested_amount_cop: 0,
+      city: city || defaultCity || "",
+      requirements: [],
+    });
+    setCandidates([]);
+  };
 
   const run = async () => {
     if (brief.trim().length < 15) {
@@ -122,7 +135,7 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
     <>
       <Button variant="hero" onClick={() => setOpen(true)}>
         <Wand2 className="h-4 w-4 mr-1.5" />
-        Copiloto IA de contratación
+        Publicar oferta gratis
       </Button>
 
       {open && (
@@ -133,8 +146,11 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                 <div className="flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-biosensor" />
                   <h2 className="font-display text-lg font-semibold">
-                    Copiloto IA de contratación
+                    Publicar oferta — gratis
                   </h2>
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/30">
+                    <Gift className="h-3 w-3" /> Sin costo
+                  </span>
                 </div>
                 <button
                   onClick={() => setOpen(false)}
@@ -168,6 +184,13 @@ export function HiringCopilot({ defaultCity }: { defaultCity?: string }) {
                     )}
                     Generar oferta y candidatos
                   </Button>
+                  <button
+                    type="button"
+                    onClick={startManual}
+                    className="w-full text-xs text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
+                  >
+                    O publicar manualmente sin IA →
+                  </button>
                 </div>
 
                 {draft && (
