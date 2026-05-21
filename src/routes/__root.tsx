@@ -93,9 +93,16 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "preconnect", href: "https://rwllmouomrytejtbpxvn.supabase.co" },
+      // Preload (non-blocking) then attach as stylesheet on load — mejora FCP/LCP
+      {
+        rel: "preload",
+        as: "style",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap",
+        media: "print",
       },
       { rel: "sitemap", type: "application/xml", href: "/sitemap.xml" },
     ],
@@ -110,9 +117,16 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="es-CO">
       <head>
         <HeadContent />
+        {/* Swap font stylesheet to all media once loaded (non-blocking) */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','2544561375984277');fbq('track','PageView');`,
+            __html: `document.addEventListener('DOMContentLoaded',function(){var l=document.querySelector('link[rel=stylesheet][href*="fonts.googleapis.com"][media="print"]');if(l)l.media='all';});`,
+          }}
+        />
+        {/* Defer Meta Pixel hasta idle para no bloquear el hilo principal */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){function load(){if(window.fbq)return;!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','2544561375984277');fbq('track','PageView');}if('requestIdleCallback' in window){requestIdleCallback(load,{timeout:3500})}else{setTimeout(load,2500)}})();`,
           }}
         />
         <script
