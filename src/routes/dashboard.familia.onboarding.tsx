@@ -99,6 +99,7 @@ function FamilyOnboarding() {
   // IA
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [aiHints, setAiHints] = useState<string[]>([]);
   const [aiSpecialty, setAiSpecialty] = useState<string>("");
   const [aiRate, setAiRate] = useState<number | null>(null);
