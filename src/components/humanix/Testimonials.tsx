@@ -1,10 +1,17 @@
-import { Star, Quote } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Star, Quote, ShieldCheck, Clock } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { TestimonialComposer } from "./TestimonialComposer";
 import t1 from "@/assets/testimonial-1.webp";
 import t2 from "@/assets/testimonial-2.webp";
 import t3 from "@/assets/testimonial-3.webp";
 import t4 from "@/assets/testimonial-4.webp";
 
+const sb = supabase as unknown as SupabaseClient;
+
 type Testimonial = {
+  id: string;
   name: string;
   role: string;
   city: string;
@@ -12,10 +19,12 @@ type Testimonial = {
   rating: number;
   quote: string;
   badge?: string;
+  trustScore?: number;
 };
 
-const testimonials: Testimonial[] = [
+const fallback: Testimonial[] = [
   {
+    id: "static-1",
     name: "Laura Mendoza",
     role: "Enfermera Jefe · 7 años de experiencia",
     city: "Bogotá",
@@ -26,6 +35,7 @@ const testimonials: Testimonial[] = [
       "Antes pasaba semanas buscando turnos. Con Humanix recibo ofertas a 2 km de mi casa y me pagan en Nequi al terminar. Mi ingreso mensual subió 38%.",
   },
   {
+    id: "static-2",
     name: "Carlos Restrepo",
     role: "Hijo de paciente · cuida a su mamá",
     city: "Medellín",
@@ -36,6 +46,7 @@ const testimonials: Testimonial[] = [
       "Mi mamá necesitaba cuidado nocturno urgente. En 14 minutos llegó Diana, una auxiliar verificada por RETHUS. La tranquilidad de ver su Trust Score de 96 no tiene precio.",
   },
   {
+    id: "static-3",
     name: "Andrés Quintero",
     role: "Auxiliar de enfermería · UCI",
     city: "Cali",
@@ -46,6 +57,7 @@ const testimonials: Testimonial[] = [
       "El asistente de IA me ayudó a estructurar mi hoja de vida y a prepararme para entrevistas. Conseguí un contrato fijo en una clínica top en menos de un mes.",
   },
   {
+    id: "static-4",
     name: "Marta Herrera",
     role: "Cuidadora de adulto mayor",
     city: "Barranquilla",
