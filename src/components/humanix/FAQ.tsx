@@ -4,27 +4,27 @@ import { ChevronDown } from "lucide-react";
 export const faqs = [
   {
     q: "¿Cómo verifica Humanix a los profesionales?",
-    a: "Cruzamos datos con RETHUS, validamos cédula con biometría facial y nuestro motor de IA calcula un Trust Score. Un evaluador humano confirma cada perfil pre-aprobado antes de publicarlo.",
+    a: "Cruzamos datos en tiempo real con el RETHUS, validamos documentos mediante IA y aplicamos un Trust Score. Cada perfil es aprobado manualmente por nuestro equipo antes de ser publicado.",
   },
   {
     q: "¿Cuánto tarda en llegar un cuidador a mi casa?",
-    a: "El match promedio es de 38 minutos. Para urgencias UCI o nocturnas hemos llegado en menos de 14 minutos en Bogotá, Medellín y Cali.",
+    a: "El sistema está diseñado para conectar familias y profesionales de forma inmediata. Dependiendo de la disponibilidad en tu zona, la asignación se confirma en minutos.",
   },
   {
     q: "¿Cómo se realizan los pagos a profesionales?",
-    a: "Inmediatos vía Nequi, PSE o RappiPay (próximamente). El smart-contract libera el pago al confirmar geolocalización de llegada y firma digital del turno completado.",
+    a: "El pago es directo y transparente entre la familia y el profesional al finalizar el turno, facilitado a través de Nequi, PSE o efectivo.",
   },
   {
     q: "¿Qué cobertura tienen los seguros incluidos?",
-    a: "Las familias en plan estándar reciben respaldo Sura por accidentes durante el turno. El plan Enterprise incluye póliza Colsanitas extendida y cobertura para enfermedades preexistentes documentadas.",
+    a: "Plan Estándar: priorizamos la selección rigurosa de profesionales para brindar tranquilidad y bienestar en cada visita. Plan Enterprise: contamos con el respaldo de profesionales que poseen su propio seguro de responsabilidad civil, garantizando mayor protección para tu familia.",
   },
   {
     q: "¿Funciona en ciudades intermedias?",
-    a: "Hoy operamos al 100% en Bogotá, Medellín, Cali y Barranquilla. Bucaramanga y Pereira están en piloto. Si nos pides cobertura en tu ciudad activamos el corredor en menos de 30 días.",
+    a: "Operamos al 100% en Bogotá, Medellín, Cali y Barranquilla. Bucaramanga y Pereira se encuentran actualmente en fase piloto.",
   },
   {
     q: "¿Cómo cumplen con la ley de Habeas Data?",
-    a: "Datos cifrados en AWS São Paulo, consentimiento granular firmado en onboarding, derecho de portabilidad y eliminación 24/7, y auditoría trimestral según resolución 1995 del Min. Salud.",
+    a: "Datos cifrados en servidores AWS, consentimiento granular en el registro y herramientas 24/7 para que el usuario gestione, porte o elimine su información de manera autónoma.",
   },
 ];
 
