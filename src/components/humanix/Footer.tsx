@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { SocialIcons } from "./SocialIcons";
-import { CONTACT, SOCIAL_LINKS } from "@/lib/social";
+import { CONTACT } from "@/lib/social";
 
 type FooterLink = { label: string; to?: string; href?: string };
 
