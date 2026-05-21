@@ -237,6 +237,63 @@ export type Database = {
           },
         ]
       }
+      community_testimonials: {
+        Row: {
+          author_avatar_url: string | null
+          author_city: string | null
+          author_name: string
+          author_role: Database["public"]["Enums"]["testimonial_role"]
+          content: string
+          created_at: string
+          id: string
+          moderated_at: string | null
+          moderated_by: string | null
+          moderation_note: string | null
+          plan_snapshot: string | null
+          rating: number
+          status: Database["public"]["Enums"]["testimonial_status"]
+          trust_score_snapshot: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_avatar_url?: string | null
+          author_city?: string | null
+          author_name: string
+          author_role: Database["public"]["Enums"]["testimonial_role"]
+          content: string
+          created_at?: string
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_note?: string | null
+          plan_snapshot?: string | null
+          rating?: number
+          status?: Database["public"]["Enums"]["testimonial_status"]
+          trust_score_snapshot?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_avatar_url?: string | null
+          author_city?: string | null
+          author_name?: string
+          author_role?: Database["public"]["Enums"]["testimonial_role"]
+          content?: string
+          created_at?: string
+          id?: string
+          moderated_at?: string | null
+          moderated_by?: string | null
+          moderation_note?: string | null
+          plan_snapshot?: string | null
+          rating?: number
+          status?: Database["public"]["Enums"]["testimonial_status"]
+          trust_score_snapshot?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           application_id: string
@@ -2103,6 +2160,8 @@ export type Database = {
       poster_type: "family" | "institution"
       subscription_plan: "free" | "pro" | "family" | "institution"
       subscription_status: "active" | "cancelled" | "past_due" | "trialing"
+      testimonial_role: "professional" | "family" | "institution"
+      testimonial_status: "pending" | "published" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2274,6 +2333,8 @@ export const Constants = {
       poster_type: ["family", "institution"],
       subscription_plan: ["free", "pro", "family", "institution"],
       subscription_status: ["active", "cancelled", "past_due", "trialing"],
+      testimonial_role: ["professional", "family", "institution"],
+      testimonial_status: ["pending", "published", "rejected"],
     },
   },
 } as const
