@@ -666,6 +666,48 @@ export type Database = {
         }
         Relationships: []
       }
+      family_needs: {
+        Row: {
+          care_type: string | null
+          created_at: string
+          ends_at: string
+          family_user_id: string
+          hourly_rate: number
+          id: string
+          notes: string | null
+          service_address: string | null
+          starts_at: string
+          status: Database["public"]["Enums"]["family_need_status"]
+          updated_at: string
+        }
+        Insert: {
+          care_type?: string | null
+          created_at?: string
+          ends_at: string
+          family_user_id: string
+          hourly_rate?: number
+          id?: string
+          notes?: string | null
+          service_address?: string | null
+          starts_at: string
+          status?: Database["public"]["Enums"]["family_need_status"]
+          updated_at?: string
+        }
+        Update: {
+          care_type?: string | null
+          created_at?: string
+          ends_at?: string
+          family_user_id?: string
+          hourly_rate?: number
+          id?: string
+          notes?: string | null
+          service_address?: string | null
+          starts_at?: string
+          status?: Database["public"]["Enums"]["family_need_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       family_profiles: {
         Row: {
           created_at: string
@@ -1662,6 +1704,75 @@ export type Database = {
           },
         ]
       }
+      slot_proposals: {
+        Row: {
+          availability_slot_id: string | null
+          booking_id: string | null
+          created_at: string
+          decision_note: string | null
+          ends_at: string
+          family_need_id: string | null
+          family_user_id: string
+          hourly_rate: number
+          id: string
+          message: string | null
+          professional_id: string
+          proposed_by: Database["public"]["Enums"]["slot_proposal_proposed_by"]
+          starts_at: string
+          status: Database["public"]["Enums"]["slot_proposal_status"]
+          updated_at: string
+        }
+        Insert: {
+          availability_slot_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          decision_note?: string | null
+          ends_at: string
+          family_need_id?: string | null
+          family_user_id: string
+          hourly_rate?: number
+          id?: string
+          message?: string | null
+          professional_id: string
+          proposed_by: Database["public"]["Enums"]["slot_proposal_proposed_by"]
+          starts_at: string
+          status?: Database["public"]["Enums"]["slot_proposal_status"]
+          updated_at?: string
+        }
+        Update: {
+          availability_slot_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          decision_note?: string | null
+          ends_at?: string
+          family_need_id?: string | null
+          family_user_id?: string
+          hourly_rate?: number
+          id?: string
+          message?: string | null
+          professional_id?: string
+          proposed_by?: Database["public"]["Enums"]["slot_proposal_proposed_by"]
+          starts_at?: string
+          status?: Database["public"]["Enums"]["slot_proposal_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_proposals_availability_slot_id_fkey"
+            columns: ["availability_slot_id"]
+            isOneToOne: false
+            referencedRelation: "availability_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_proposals_family_need_id_fkey"
+            columns: ["family_need_id"]
+            isOneToOne: false
+            referencedRelation: "family_needs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_invitations: {
         Row: {
           created_at: string
@@ -2147,6 +2258,7 @@ export type Database = {
         | "authorization"
         | "insurance"
         | "other"
+      family_need_status: "open" | "matched" | "cancelled" | "expired"
       fraud_severity: "low" | "medium" | "high" | "critical"
       mp_payment_status:
         | "pending"
@@ -2158,6 +2270,13 @@ export type Database = {
       offer_modality: "hour" | "shift" | "month" | "package"
       offer_status: "open" | "closed" | "filled"
       poster_type: "family" | "institution"
+      slot_proposal_proposed_by: "family" | "professional"
+      slot_proposal_status:
+        | "pending"
+        | "accepted"
+        | "rejected"
+        | "cancelled"
+        | "expired"
       subscription_plan: "free" | "pro" | "family" | "institution"
       subscription_status: "active" | "cancelled" | "past_due" | "trialing"
       testimonial_role: "professional" | "family" | "institution"
@@ -2319,6 +2438,7 @@ export const Constants = {
         "insurance",
         "other",
       ],
+      family_need_status: ["open", "matched", "cancelled", "expired"],
       fraud_severity: ["low", "medium", "high", "critical"],
       mp_payment_status: [
         "pending",
@@ -2331,6 +2451,14 @@ export const Constants = {
       offer_modality: ["hour", "shift", "month", "package"],
       offer_status: ["open", "closed", "filled"],
       poster_type: ["family", "institution"],
+      slot_proposal_proposed_by: ["family", "professional"],
+      slot_proposal_status: [
+        "pending",
+        "accepted",
+        "rejected",
+        "cancelled",
+        "expired",
+      ],
       subscription_plan: ["free", "pro", "family", "institution"],
       subscription_status: ["active", "cancelled", "past_due", "trialing"],
       testimonial_role: ["professional", "family", "institution"],
