@@ -31,16 +31,16 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Página no encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          La página que buscas no existe o fue movida. Vuelve al inicio para seguir explorando Humanix.
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            Volver al inicio
           </Link>
         </div>
       </div>
@@ -83,14 +83,6 @@ export const Route = createRootRoute({
       { property: "og:image:height", content: SOCIAL_IMAGE_HEIGHT },
       { name: "twitter:image", content: SOCIAL_IMAGE_URL },
       { name: "twitter:image:alt", content: SOCIAL_IMAGE_ALT },
-      { title: "Lovable App" },
-      { property: "og:title", content: "Lovable App" },
-      { name: "twitter:title", content: "Lovable App" },
-      { name: "description", content: "Humanix Connect es una plataforma premium de talento para el sector salud en Colombia, que utiliza IA para una contratación eficiente y una gestión de servicios" },
-      { property: "og:description", content: "Humanix Connect es una plataforma premium de talento para el sector salud en Colombia, que utiliza IA para una contratación eficiente y una gestión de servicios" },
-      { name: "twitter:description", content: "Humanix Connect es una plataforma premium de talento para el sector salud en Colombia, que utiliza IA para una contratación eficiente y una gestión de servicios" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4595d0a1-79a1-4a47-9535-f70ce48e455c/id-preview-1e84d168--ea6fc079-e3d3-421b-9a3b-b62e3ddcdc44.lovable.app-1779196797092.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4595d0a1-79a1-4a47-9535-f70ce48e455c/id-preview-1e84d168--ea6fc079-e3d3-421b-9a3b-b62e3ddcdc44.lovable.app-1779196797092.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
