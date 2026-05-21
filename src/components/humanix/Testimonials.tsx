@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Star, Quote, ShieldCheck, Clock } from "lucide-react";
+import { Star, Quote, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TestimonialComposer } from "./TestimonialComposer";
