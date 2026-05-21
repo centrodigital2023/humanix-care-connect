@@ -444,9 +444,10 @@ function FamilyOnboarding() {
           <h1 className="mt-4 font-display text-3xl sm:text-4xl font-bold leading-tight">
             Completa tu perfil familiar
           </h1>
-          <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-            Cuéntale a nuestra IA tu situación en una frase y completaremos el formulario por ti. En
-            menos de 2 minutos estarás conectada con cuidadores verificados.
+          <p className="mt-2 text-muted-foreground max-w-lg mx-auto text-sm sm:text-base">
+            Cuéntale a la IA tu situación en una frase: ella llena tus datos y arma un resumen
+            breve del paciente (nombre · diagnóstico · necesidad · recomendación). Menos de 2
+            minutos.
           </p>
         </div>
 
