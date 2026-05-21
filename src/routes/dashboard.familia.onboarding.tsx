@@ -501,7 +501,7 @@ function FamilyOnboarding() {
                       ? "border-biosensor/40 bg-biosensor/5 text-biosensor"
                       : "border-border bg-card text-muted-foreground hover:border-muted-foreground/40"
                 }`}
-                onClick={() => i <= step + 1 && setStep(i)}
+                onClick={() => setStep(i)}
               >
                 {done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                 <span className="hidden sm:inline">{s.label}</span>
@@ -512,8 +512,8 @@ function FamilyOnboarding() {
 
         <Card className="mt-6 p-6 sm:p-8">
           {/* Foto + identidad rápida */}
-          <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 mb-6 border-b border-border">
+            <div className="relative shrink-0 mx-auto sm:mx-0">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -525,29 +525,64 @@ function FamilyOnboarding() {
                   {form.fullName ? form.fullName.charAt(0).toUpperCase() : "F"}
                 </div>
               )}
-              <label className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-copper text-copper-foreground flex items-center justify-center cursor-pointer shadow-md hover:scale-105 transition">
-                {avatarUploading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Camera className="h-3.5 w-3.5" />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) uploadAvatar(f);
-                  }}
-                />
-              </label>
+              {avatarUploading && (
+                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                </div>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-center sm:text-left">
               <p className="font-semibold truncate">{form.fullName || "Tu nombre"}</p>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Foto opcional pero recomendada — genera confianza con el cuidador.
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Foto de perfil — genera confianza con el cuidador.
               </p>
+              <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="h-8 text-xs"
+                >
+                  <Camera className="h-3.5 w-3.5 mr-1.5" /> Tomar foto
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="h-8 text-xs"
+                >
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  {avatarUrl ? "Cambiar foto" : "Adjuntar foto"}
+                </Button>
+              </div>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadAvatar(f);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadAvatar(f);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </div>
 
