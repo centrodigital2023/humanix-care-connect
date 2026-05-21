@@ -744,6 +744,49 @@ function FamilyOnboarding() {
                     />
                   </Field>
                 </div>
+
+                <div className="mt-4 rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-3.5">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" />
+                        Resumen del paciente
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Un párrafo breve: nombre · diagnóstico · necesidad · recomendación. Lo usa
+                        el cuidador para llegar preparado.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={regeneratePatientSummary}
+                      disabled={summaryLoading}
+                      className="shrink-0 h-8 text-xs"
+                    >
+                      {summaryLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      {form.patientSummary ? "Regenerar" : "Generar con IA"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={form.patientSummary}
+                    onChange={(e) => set("patientSummary", e.target.value.slice(0, 280))}
+                    rows={3}
+                    maxLength={280}
+                    placeholder="Ej: Pedro, 78 años · Alzheimer leve. Necesita auxiliar de enfermería 4h/día en las mañanas. Recomendado: experiencia en adulto mayor y manejo de medicación."
+                    className="resize-none text-sm bg-background"
+                  />
+                  <div className="flex items-center justify-end mt-1">
+                    <span className="text-[10px] text-muted-foreground">
+                      {form.patientSummary.length}/280
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="rounded-xl border border-border bg-card p-4 mt-4">
