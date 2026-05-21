@@ -43,7 +43,7 @@ export const Route = createFileRoute("/")({
       path: "/",
       appendSiteName: false,
       extraLinks: [
-        { rel: "preload", href: heroImage, as: "image", type: "image/webp", fetchpriority: "high" },
+        { rel: "preload", href: heroImage, as: "image", type: "image/webp", fetchPriority: "high" },
       ],
     }),
   component: Index,

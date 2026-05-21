@@ -25,7 +25,7 @@ type Link = {
   hrefLang?: string;
   crossOrigin?: "anonymous" | "use-credentials" | "";
   as?: string;
-  fetchpriority?: "high" | "low" | "auto";
+  fetchPriority?: "high" | "low" | "auto";
   media?: string;
 };
 
