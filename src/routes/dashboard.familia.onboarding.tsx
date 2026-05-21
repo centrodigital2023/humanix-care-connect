@@ -20,6 +20,7 @@ import {
   Wand2,
   Lightbulb,
   Search,
+  Upload,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,6 +40,9 @@ import { z } from "zod";
 export const Route = createFileRoute("/dashboard/familia/onboarding")({
   head: () => ({
     meta: [{ title: "Completa tu perfil familiar · Humanix" }],
+  }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    step: typeof s.step === "string" ? s.step : undefined,
   }),
   component: FamilyOnboarding,
 });
@@ -90,11 +94,14 @@ type AIResult = {
 function FamilyOnboarding() {
   const { user, loading } = useAppUser({ allow: ["family", "superadmin"] });
   const navigate = useNavigate();
+  const searchParams = Route.useSearch();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [habeasOk, setHabeasOk] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // IA
   const [aiText, setAiText] = useState("");
@@ -106,6 +113,23 @@ function FamilyOnboarding() {
   const [aiNext, setAiNext] = useState<string>("");
   const [listening, setListening] = useState(false);
   const recogRef = useRef<unknown>(null);
+
+  // Deep-link: ?step=avatar|id|address|emergency|docs
+  useEffect(() => {
+    const s = searchParams?.step;
+    if (!s) return;
+    const map: Record<string, number> = {
+      avatar: 1,
+      id: 1,
+      identity: 1,
+      address: 2,
+      docs: 2,
+      patient: 2,
+      emergency: 3,
+      consent: 4,
+    };
+    if (map[s] != null) setStep(map[s]);
+  }, [searchParams]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -476,7 +500,7 @@ function FamilyOnboarding() {
                       ? "border-biosensor/40 bg-biosensor/5 text-biosensor"
                       : "border-border bg-card text-muted-foreground hover:border-muted-foreground/40"
                 }`}
-                onClick={() => i <= step + 1 && setStep(i)}
+                onClick={() => setStep(i)}
               >
                 {done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                 <span className="hidden sm:inline">{s.label}</span>
@@ -487,8 +511,8 @@ function FamilyOnboarding() {
 
         <Card className="mt-6 p-6 sm:p-8">
           {/* Foto + identidad rápida */}
-          <div className="flex items-center gap-4 pb-6 mb-6 border-b border-border">
-            <div className="relative">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pb-6 mb-6 border-b border-border">
+            <div className="relative shrink-0 mx-auto sm:mx-0">
               {avatarUrl ? (
                 <img
                   src={avatarUrl}
@@ -500,29 +524,64 @@ function FamilyOnboarding() {
                   {form.fullName ? form.fullName.charAt(0).toUpperCase() : "F"}
                 </div>
               )}
-              <label className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-copper text-copper-foreground flex items-center justify-center cursor-pointer shadow-md hover:scale-105 transition">
-                {avatarUploading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Camera className="h-3.5 w-3.5" />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="sr-only"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) uploadAvatar(f);
-                  }}
-                />
-              </label>
+              {avatarUploading && (
+                <div className="absolute inset-0 rounded-2xl bg-black/40 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                </div>
+              )}
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 text-center sm:text-left">
               <p className="font-semibold truncate">{form.fullName || "Tu nombre"}</p>
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Foto opcional pero recomendada — genera confianza con el cuidador.
+              <p className="text-[11px] text-muted-foreground mt-1">
+                Foto de perfil — genera confianza con el cuidador.
               </p>
+              <div className="mt-2 flex flex-wrap gap-2 justify-center sm:justify-start">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="h-8 text-xs"
+                >
+                  <Camera className="h-3.5 w-3.5 mr-1.5" /> Tomar foto
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="h-8 text-xs"
+                >
+                  <Upload className="h-3.5 w-3.5 mr-1.5" />
+                  {avatarUrl ? "Cambiar foto" : "Adjuntar foto"}
+                </Button>
+              </div>
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadAvatar(f);
+                  e.target.value = "";
+                }}
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="sr-only"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) uploadAvatar(f);
+                  e.target.value = "";
+                }}
+              />
             </div>
           </div>
 
@@ -754,8 +813,8 @@ function FamilyOnboarding() {
                         Resumen del paciente
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Un párrafo breve: nombre · diagnóstico · necesidad · recomendación. Lo usa
-                        el cuidador para llegar preparado.
+                        Pocas palabras: nombre, diagnóstico, necesidad y recomendación. La IA lo
+                        redacta en menos de 200 caracteres.
                       </p>
                     </div>
                     <Button
@@ -776,15 +835,15 @@ function FamilyOnboarding() {
                   </div>
                   <Textarea
                     value={form.patientSummary}
-                    onChange={(e) => set("patientSummary", e.target.value.slice(0, 280))}
+                    onChange={(e) => set("patientSummary", e.target.value.slice(0, 200))}
                     rows={3}
-                    maxLength={280}
-                    placeholder="Ej: Pedro, 78 años · Alzheimer leve. Necesita auxiliar de enfermería 4h/día en las mañanas. Recomendado: experiencia en adulto mayor y manejo de medicación."
+                    maxLength={200}
+                    placeholder="Ej: Pedro, 78 · Alzheimer leve. Necesita auxiliar 4h/día en las mañanas. Recomendado: experiencia adulto mayor."
                     className="resize-none text-sm bg-background"
                   />
                   <div className="flex items-center justify-end mt-1">
                     <span className="text-[10px] text-muted-foreground">
-                      {form.patientSummary.length}/280
+                      {form.patientSummary.length}/200
                     </span>
                   </div>
                 </div>

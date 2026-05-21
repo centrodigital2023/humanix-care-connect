@@ -35,6 +35,7 @@ type Requirement = {
   icon: typeof ShieldCheck;
   done: boolean;
   hint: string;
+  step: "avatar" | "id" | "address" | "emergency" | "docs";
 };
 
 /**
@@ -82,6 +83,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           icon: Camera,
           done: !!avatarUrl,
           hint: "Tu cara ayuda a que los profesionales confíen en ti.",
+          step: "avatar",
         },
         {
           key: "id_number",
@@ -90,6 +92,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           icon: IdCard,
           done: !!fam?.id_number,
           hint: "Número de identificación oficial.",
+          step: "id",
         },
         {
           key: "address",
@@ -98,6 +101,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           icon: MapPin,
           done: !!fam?.default_address,
           hint: "Dónde recibirás el servicio.",
+          step: "address",
         },
         {
           key: "emergency",
@@ -106,6 +110,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           icon: Phone,
           done: !!fam?.emergency_contact_phone,
           hint: "Un familiar que pueda responder en caso de urgencia.",
+          step: "emergency",
         },
         {
           key: "id_document",
@@ -114,6 +119,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           icon: FileText,
           done: has("id_document"),
           hint: "Foto frente y reverso — la IA valida que sea real.",
+          step: "docs",
         },
       ];
       setReqs(list);
@@ -228,22 +234,28 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
                 title={`${r.label} — ${r.hint}`}
                 className={`group flex-1 flex flex-col items-center gap-1.5`}
               >
-                <span
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
-                    r.done
-                      ? "border-biosensor/40 bg-biosensor/10 text-biosensor"
-                      : "border-border bg-background text-muted-foreground"
-                  }`}
+                <Link
+                  to="/dashboard/familia/onboarding"
+                  search={{ step: r.step } as never}
+                  className="flex flex-col items-center gap-1.5 w-full"
                 >
-                  {r.done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3.5 w-3.5" />}
-                </span>
-                <span
-                  className={`text-[10px] sm:text-[11px] truncate max-w-full ${
-                    r.done ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                >
-                  {r.short}
-                </span>
+                  <span
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all hover:scale-110 ${
+                      r.done
+                        ? "border-biosensor/40 bg-biosensor/10 text-biosensor"
+                        : "border-border bg-background text-muted-foreground hover:border-fuchsia-neural/50 hover:text-fuchsia-neural"
+                    }`}
+                  >
+                    {r.done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3.5 w-3.5" />}
+                  </span>
+                  <span
+                    className={`text-[10px] sm:text-[11px] truncate max-w-full ${
+                      r.done ? "text-foreground font-medium" : "text-muted-foreground"
+                    }`}
+                  >
+                    {r.short}
+                  </span>
+                </Link>
               </li>
             );
           })}
