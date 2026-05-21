@@ -80,6 +80,7 @@ type AIResult = {
   patientName?: string;
   patientRelation?: string;
   patientAge?: number;
+  patientSummary?: string;
   careHints?: string[];
   suggestedSpecialty?: string;
   suggestedHourlyRateCop?: number;
@@ -98,6 +99,7 @@ function FamilyOnboarding() {
   // IA
   const [aiText, setAiText] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
   const [aiHints, setAiHints] = useState<string[]>([]);
   const [aiSpecialty, setAiSpecialty] = useState<string>("");
   const [aiRate, setAiRate] = useState<number | null>(null);
@@ -116,6 +118,7 @@ function FamilyOnboarding() {
     patientName: "",
     patientRelation: "",
     patientAge: "",
+    patientSummary: "",
   });
   const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({
     lat: null,
@@ -136,7 +139,7 @@ function FamilyOnboarding() {
         supabase
           .from("family_profiles")
           .select(
-            "id_number, default_address, default_lat, default_lng, emergency_contact_name, emergency_contact_phone, patient_name, patient_relation, patient_age, habeas_data_accepted",
+            "id_number, default_address, default_lat, default_lng, emergency_contact_name, emergency_contact_phone, patient_name, patient_relation, patient_age, patient_summary, habeas_data_accepted",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -160,6 +163,7 @@ function FamilyOnboarding() {
         patientName: fam?.patient_name ?? "",
         patientRelation: fam?.patient_relation ?? "",
         patientAge: fam?.patient_age != null ? String(fam.patient_age) : "",
+        patientSummary: (fam as { patient_summary?: string | null } | null)?.patient_summary ?? "",
       }));
     })();
     return () => {
@@ -260,6 +264,7 @@ function FamilyOnboarding() {
           r.patientAge != null && Number.isFinite(r.patientAge)
             ? String(r.patientAge)
             : f.patientAge,
+        patientSummary: r.patientSummary?.trim() || f.patientSummary,
       }));
       setAiHints(Array.isArray(r.careHints) ? r.careHints.slice(0, 5) : []);
       setAiSpecialty(r.suggestedSpecialty?.trim() || "");
@@ -275,6 +280,30 @@ function FamilyOnboarding() {
     }
   };
 
+  async function regeneratePatientSummary() {
+    if (!form.patientName.trim() && !aiText.trim()) {
+      toast.error("Agrega al menos el nombre del paciente o describe su situación.");
+      return;
+    }
+    setSummaryLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("family-onboarding-ai", {
+        body: { freeText: aiText.trim(), partial: form },
+      });
+      if (error) throw error;
+      const r: AIResult = data?.data ?? {};
+      if (r.patientSummary?.trim()) {
+        setForm((f) => ({ ...f, patientSummary: r.patientSummary!.trim() }));
+        toast.success("Resumen generado por IA");
+      } else {
+        toast.error("La IA no pudo generar un resumen con la info actual.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error generando resumen");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }
   const uploadAvatar = async (file: File) => {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) {
@@ -357,6 +386,7 @@ function FamilyOnboarding() {
           patient_name: v.patientName || null,
           patient_relation: v.patientRelation || null,
           patient_age: v.patientAge ?? null,
+          patient_summary: form.patientSummary?.trim() || null,
           habeas_data_accepted: true,
           habeas_data_accepted_at: new Date().toISOString(),
         },
@@ -414,9 +444,10 @@ function FamilyOnboarding() {
           <h1 className="mt-4 font-display text-3xl sm:text-4xl font-bold leading-tight">
             Completa tu perfil familiar
           </h1>
-          <p className="mt-2 text-muted-foreground max-w-lg mx-auto">
-            Cuéntale a nuestra IA tu situación en una frase y completaremos el formulario por ti. En
-            menos de 2 minutos estarás conectada con cuidadores verificados.
+          <p className="mt-2 text-muted-foreground max-w-lg mx-auto text-sm sm:text-base">
+            Cuéntale a la IA tu situación en una frase: ella llena tus datos y arma un resumen
+            breve del paciente (nombre · diagnóstico · necesidad · recomendación). Menos de 2
+            minutos.
           </p>
         </div>
 
@@ -713,6 +744,49 @@ function FamilyOnboarding() {
                       placeholder="78"
                     />
                   </Field>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-3.5">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-fuchsia-neural" />
+                        Resumen del paciente
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Un párrafo breve: nombre · diagnóstico · necesidad · recomendación. Lo usa
+                        el cuidador para llegar preparado.
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={regeneratePatientSummary}
+                      disabled={summaryLoading}
+                      className="shrink-0 h-8 text-xs"
+                    >
+                      {summaryLoading ? (
+                        <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3.5 w-3.5 mr-1" />
+                      )}
+                      {form.patientSummary ? "Regenerar" : "Generar con IA"}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={form.patientSummary}
+                    onChange={(e) => set("patientSummary", e.target.value.slice(0, 280))}
+                    rows={3}
+                    maxLength={280}
+                    placeholder="Ej: Pedro, 78 años · Alzheimer leve. Necesita auxiliar de enfermería 4h/día en las mañanas. Recomendado: experiencia en adulto mayor y manejo de medicación."
+                    className="resize-none text-sm bg-background"
+                  />
+                  <div className="flex items-center justify-end mt-1">
+                    <span className="text-[10px] text-muted-foreground">
+                      {form.patientSummary.length}/280
+                    </span>
+                  </div>
                 </div>
               </div>
 
