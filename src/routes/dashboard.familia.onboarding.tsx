@@ -280,10 +280,6 @@ function FamilyOnboarding() {
     }
   };
 
-  const uploadAvatar = async (file: File) => {
-    void 0;
-    return _uploadAvatar(file);
-  };
   async function regeneratePatientSummary() {
     if (!form.patientName.trim() && !aiText.trim()) {
       toast.error("Agrega al menos el nombre del paciente o describe su situación.");
@@ -308,7 +304,7 @@ function FamilyOnboarding() {
       setSummaryLoading(false);
     }
   }
-  async function _uploadAvatar(file: File) {
+  const uploadAvatar = async (file: File) => {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) {
       toast.error("La imagen debe pesar menos de 5MB");
