@@ -27,6 +27,7 @@ Reglas:
 - Edad del paciente: número entero entre 0 y 120.
 - careHints: 2 a 5 frases CORTAS (max 60 chars) con tips o señales útiles deducidas del texto (ej: "Paciente requiere movilidad asistida", "Buscar enfermero/a con experiencia en adulto mayor").
 - nextStepHint: una frase de menos de 100 chars con la siguiente acción recomendada para la familia.
+- patientSummary: un párrafo MUY breve (máx 240 chars) que describa al paciente y su situación con la estructura: "<Nombre>, <edad> años · <diagnóstico/condición>. Necesita <necesidad principal>. Recomendado: <1 recomendación clave>." Si faltan datos, usa lo que tengas y omite lo demás de forma natural.
 - Si un campo no se puede inferir, devuélvelo como string vacío "" (no null).
 `;
 
@@ -50,6 +51,11 @@ const TOOL = {
         patientRelation: { type: "string" },
         patientAge: { type: "integer", minimum: 0, maximum: 120 },
         careHints: { type: "array", items: { type: "string" }, maxItems: 5 },
+        patientSummary: {
+          type: "string",
+          description:
+            "Resumen muy breve del paciente (máx 240 chars): nombre, edad, diagnóstico, necesidad, recomendación.",
+        },
         suggestedSpecialty: {
           type: "string",
           description:
