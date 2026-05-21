@@ -724,6 +724,7 @@ export type Database = {
           patient_age: number | null
           patient_name: string | null
           patient_relation: string | null
+          patient_summary: string | null
           updated_at: string
           user_id: string
         }
@@ -742,6 +743,7 @@ export type Database = {
           patient_age?: number | null
           patient_name?: string | null
           patient_relation?: string | null
+          patient_summary?: string | null
           updated_at?: string
           user_id: string
         }
@@ -760,6 +762,7 @@ export type Database = {
           patient_age?: number | null
           patient_name?: string | null
           patient_relation?: string | null
+          patient_summary?: string | null
           updated_at?: string
           user_id?: string
         }
