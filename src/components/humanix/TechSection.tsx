@@ -9,7 +9,7 @@ const features = [
   },
   {
     icon: Fingerprint,
-    title: "Verificación biométrica",
+    title: "\n",
     desc: "Cédula colombiana + reconocimiento facial + cruce con RETHUS y Registraduría.",
     color: "text-copper",
   },
