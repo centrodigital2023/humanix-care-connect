@@ -84,11 +84,75 @@ function Stars({ value }: { value: number }) {
   );
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  professional: "Profesional Humanix",
+  family: "Familia Humanix",
+  institution: "Institución aliada",
+};
+
+type DbRow = {
+  id: string;
+  author_name: string;
+  author_role: "professional" | "family" | "institution";
+  author_city: string | null;
+  author_avatar_url: string | null;
+  content: string;
+  rating: number;
+  trust_score_snapshot: number;
+  created_at: string;
+};
+
 export function Testimonials() {
+  const [live, setLive] = useState<Testimonial[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const { data } = await sb
+        .from("community_testimonials")
+        .select(
+          "id, author_name, author_role, author_city, author_avatar_url, content, rating, trust_score_snapshot, created_at",
+        )
+        .eq("status", "published")
+        .order("created_at", { ascending: false })
+        .limit(8);
+      if (!active) return;
+      setLive(
+        ((data ?? []) as DbRow[]).map((r) => ({
+          id: r.id,
+          name: r.author_name,
+          role: ROLE_LABEL[r.author_role] ?? "Comunidad Humanix",
+          city: r.author_city ?? "Colombia",
+          avatar: r.author_avatar_url ?? t1,
+          rating: r.rating,
+          quote: r.content,
+          badge: r.trust_score_snapshot >= 70 ? "Trust verificado" : undefined,
+          trustScore: r.trust_score_snapshot,
+        })),
+      );
+    };
+    void load();
+    const ch = sb
+      .channel("community_testimonials_pub")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "community_testimonials" },
+        () => void load(),
+      )
+      .subscribe();
+    return () => {
+      active = false;
+      sb.removeChannel(ch);
+    };
+  }, []);
+
+  const list = live.length >= 2 ? live : [...live, ...fallback].slice(0, 6);
+
   return (
     <section id="testimonios" className="py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="max-w-2xl">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+          <div className="max-w-2xl">
           <span className="text-xs uppercase tracking-[0.2em] text-fuchsia-neural font-semibold">
             Casos reales
           </span>
@@ -100,12 +164,14 @@ export function Testimonials() {
             Profesionales y familias que ya transformaron su forma de cuidar y de trabajar con
             Humanix.
           </p>
+          </div>
+          <TestimonialComposer />
         </div>
 
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-2 gap-5">
-          {testimonials.map((t) => (
+          {list.map((t) => (
             <article
-              key={t.name}
+              key={t.id}
               className="group relative rounded-3xl border border-border bg-card p-6 sm:p-7 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elegant)] hover:-translate-y-1 transition-all duration-300"
             >
               <Quote className="absolute top-5 right-5 h-8 w-8 text-biosensor/20" />
@@ -132,6 +198,11 @@ export function Testimonials() {
                   <div className="mt-2 flex items-center gap-3">
                     <Stars value={t.rating} />
                     <span className="text-xs text-muted-foreground">· {t.city}</span>
+                    {typeof t.trustScore === "number" && t.trustScore > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-biosensor">
+                        <ShieldCheck className="h-3 w-3" /> {t.trustScore}
+                      </span>
+                    ) : null}
                   </div>
                 </div>
               </div>
