@@ -11,15 +11,12 @@ import {
   ArrowRight,
   Loader2,
   Sparkles,
-  AlertTriangle,
   UploadCloud,
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { FamilyDocumentsManager } from "@/components/humanix/FamilyDocumentsManager";
 
@@ -155,164 +152,146 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
   const done = reqs.filter((r) => r.done).length;
   const total = reqs.length;
   const percent = total > 0 ? Math.round((done / total) * 100) : 0;
-  const missing = reqs.filter((r) => !r.done);
   const complete = done === total;
+  const nextReq = reqs.find((r) => !r.done);
+  const firstName = fullName.split(" ")[0] || "Hola";
+
+  // Tono cromático segun progreso
+  const tone = complete
+    ? { ring: "stroke-biosensor", text: "text-biosensor", soft: "bg-biosensor/10", border: "border-biosensor/30" }
+    : percent >= 50
+      ? { ring: "stroke-copper", text: "text-copper", soft: "bg-copper/10", border: "border-copper/30" }
+      : { ring: "stroke-fuchsia-neural", text: "text-fuchsia-neural", soft: "bg-fuchsia-neural/10", border: "border-fuchsia-neural/30" };
+
+  const circumference = 2 * Math.PI * 28;
+  const dash = (percent / 100) * circumference;
 
   return (
-    <Card
-      className={`overflow-hidden border-2 transition-colors ${
-        complete
-          ? "border-biosensor/40 bg-gradient-to-br from-biosensor/10 via-biosensor/5 to-transparent"
-          : percent >= 50
-            ? "border-copper/40 bg-gradient-to-br from-copper/10 via-copper/5 to-transparent"
-            : "border-fuchsia-neural/40 bg-gradient-to-br from-fuchsia-neural/10 via-fuchsia-neural/5 to-transparent"
-      }`}
-    >
-      {/* Cabecera */}
-      <div className="p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <Card className="overflow-hidden border border-border/60 bg-card/80 backdrop-blur-sm">
+      {/* Hero: anillo de progreso + copy */}
+      <div className="relative p-5 sm:p-6">
         <div
-          className={`inline-flex h-12 w-12 items-center justify-center rounded-xl shrink-0 ${
-            complete
-              ? "bg-biosensor/20 text-biosensor"
-              : percent >= 50
-                ? "bg-copper/20 text-copper"
-                : "bg-fuchsia-neural/20 text-fuchsia-neural"
-          }`}
-        >
-          {complete ? (
-            <ShieldCheck className="h-6 w-6" />
-          ) : (
-            <Sparkles className="h-6 w-6" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0 w-full">
-          <div className="flex items-start justify-between gap-3 flex-wrap">
-            <div className="min-w-0">
-              <p className="font-display text-base sm:text-lg font-semibold leading-tight">
-                {complete
-                  ? `${fullName.split(" ")[0]}, tu perfil está listo 🎉`
-                  : "Completa tu perfil para contratar de forma segura"}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {complete
-                  ? "Cumples con todos los requisitos. Los profesionales verán tu perfil con máxima confianza."
-                  : "Te tomará menos de 2 minutos: foto, cédula, dirección y contacto de emergencia."}
-              </p>
+          className={`pointer-events-none absolute inset-x-0 top-0 h-32 ${tone.soft} opacity-60 blur-2xl`}
+          aria-hidden
+        />
+        <div className="relative flex items-center gap-4 sm:gap-5">
+          {/* Anillo SVG */}
+          <div className="relative shrink-0">
+            <svg width="72" height="72" viewBox="0 0 72 72" className="-rotate-90">
+              <circle cx="36" cy="36" r="28" className="stroke-muted/40" strokeWidth="6" fill="none" />
+              <circle
+                cx="36"
+                cy="36"
+                r="28"
+                className={`${tone.ring} transition-all duration-700`}
+                strokeWidth="6"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray={`${dash} ${circumference}`}
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              {complete ? (
+                <ShieldCheck className={`h-6 w-6 ${tone.text}`} />
+              ) : (
+                <span className={`text-base font-semibold ${tone.text}`}>{percent}%</span>
+              )}
             </div>
-            <Badge
-              variant="outline"
-              className={`text-xs shrink-0 ${
-                complete
-                  ? "bg-biosensor/15 text-biosensor border-biosensor/40"
-                  : percent >= 50
-                    ? "bg-copper/15 text-copper border-copper/40"
-                    : "bg-fuchsia-neural/15 text-fuchsia-neural border-fuchsia-neural/40"
-              }`}
-            >
-              {done}/{total} · {percent}%
-            </Badge>
           </div>
 
-          {/* Progress bar */}
-          <div className="mt-3">
-            <Progress
-              value={percent}
-              className={`h-2 ${
-                complete
-                  ? "[&>div]:bg-biosensor"
-                  : percent >= 50
-                    ? "[&>div]:bg-copper"
-                    : "[&>div]:bg-fuchsia-neural"
-              }`}
-            />
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
+              {complete ? "Perfil verificado" : `Paso ${done + 1} de ${total}`}
+            </p>
+            <h3 className="mt-0.5 font-display text-lg sm:text-xl font-semibold leading-tight">
+              {complete
+                ? `${firstName}, tu perfil está listo`
+                : "Completa tu perfil"}
+            </h3>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
+              {complete
+                ? "Los profesionales verán tu perfil con máxima confianza."
+                : nextReq
+                  ? <>Siguiente: <span className="font-medium text-foreground">{nextReq.label}</span> · {nextReq.hint}</>
+                  : "Menos de 2 minutos."}
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Grid de requisitos */}
-      <div className="px-5 sm:px-6 pb-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {/* Track horizontal de requisitos */}
+        <ol className="relative mt-5 flex items-center gap-1.5">
           {reqs.map((r) => {
             const Icon = r.icon;
             return (
-              <div
+              <li
                 key={r.key}
-                className={`flex items-center gap-2 rounded-lg border px-2.5 py-2 text-xs transition-colors ${
-                  r.done
-                    ? "border-biosensor/30 bg-biosensor/5 text-biosensor"
-                    : "border-border bg-muted/20 text-muted-foreground"
-                }`}
-                title={r.hint}
+                title={`${r.label} — ${r.hint}`}
+                className={`group flex-1 flex flex-col items-center gap-1.5`}
               >
-                {r.done ? (
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                )}
-                <span className="font-medium truncate">{r.short}</span>
-              </div>
+                <span
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all ${
+                    r.done
+                      ? "border-biosensor/40 bg-biosensor/10 text-biosensor"
+                      : "border-border bg-background text-muted-foreground"
+                  }`}
+                >
+                  {r.done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3.5 w-3.5" />}
+                </span>
+                <span
+                  className={`text-[10px] sm:text-[11px] truncate max-w-full ${
+                    r.done ? "text-foreground font-medium" : "text-muted-foreground"
+                  }`}
+                >
+                  {r.short}
+                </span>
+              </li>
             );
           })}
-        </div>
-      </div>
+        </ol>
 
-      {/* Alerta de faltantes + CTA */}
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 flex flex-col sm:flex-row sm:items-center gap-3">
-        {missing.length > 0 ? (
-          <div className="flex items-start gap-2 rounded-lg bg-background/60 border border-copper/20 p-3 flex-1">
-            <AlertTriangle className="h-4 w-4 text-copper mt-0.5 shrink-0" />
-            <div className="min-w-0 text-xs">
-              <p className="font-semibold text-foreground">
-                Te falta{missing.length > 1 ? "n" : ""}:
-              </p>
-              <p className="text-muted-foreground mt-0.5 line-clamp-2">
-                {missing.map((m) => m.label).join(" · ")}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex items-start gap-2 rounded-lg bg-biosensor/5 border border-biosensor/20 p-3 flex-1">
-            <CheckCircle2 className="h-4 w-4 text-biosensor mt-0.5 shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Verificado por IA · RETHUS cruzado · Documentos auditados.
-            </p>
-          </div>
-        )}
-        <Button variant={complete ? "outline" : "hero"} asChild className="w-full sm:w-auto">
-          <Link to="/dashboard/familia/onboarding">
-            {complete ? "Editar perfil" : "Completar ahora"}
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Link>
-        </Button>
-      </div>
-
-      {/* Adjuntar documentos sin salir del dashboard */}
-      <div className="px-5 sm:px-6 pb-5 sm:pb-6 -mt-2">
-        <button
-          type="button"
-          onClick={() => setDocsOpen((v) => !v)}
-          className="w-full flex items-center justify-between gap-2 rounded-lg border border-border bg-background/60 hover:bg-muted/40 px-3 py-2.5 text-sm font-medium transition-colors"
-          aria-expanded={docsOpen}
-        >
-          <span className="inline-flex items-center gap-2">
-            <UploadCloud className="h-4 w-4 text-fuchsia-neural" />
-            Adjuntar documentos ahora
-            <span className="text-[11px] text-muted-foreground font-normal hidden sm:inline">
-              · cédula, recibo, historia clínica…
+        {/* Acciones */}
+        <div className="mt-5 flex flex-col sm:flex-row gap-2">
+          <Button variant={complete ? "outline" : "hero"} asChild className="flex-1 sm:flex-none">
+            <Link to="/dashboard/familia/onboarding">
+              <Sparkles className="h-4 w-4 mr-1.5" />
+              {complete ? "Editar perfil" : "Completar ahora"}
+              <ArrowRight className="h-4 w-4 ml-1" />
+            </Link>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setDocsOpen((v) => !v)}
+            className="flex-1 sm:flex-none justify-between sm:justify-start text-sm"
+            aria-expanded={docsOpen}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <UploadCloud className="h-4 w-4" />
+              Adjuntar documentos
             </span>
-          </span>
-          {docsOpen ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-        {docsOpen && (
-          <div className="mt-3 rounded-xl border border-border bg-background/40 p-3 sm:p-4">
-            <FamilyDocumentsManager userId={userId} />
-          </div>
+            {docsOpen ? (
+              <ChevronUp className="h-4 w-4 ml-1 text-muted-foreground" />
+            ) : (
+              <ChevronDown className="h-4 w-4 ml-1 text-muted-foreground" />
+            )}
+          </Button>
+        </div>
+
+        {/* Trust line — sutil */}
+        {complete && (
+          <p className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <CheckCircle2 className="h-3 w-3 text-biosensor" />
+            Verificado por IA · RETHUS cruzado · Documentos auditados
+          </p>
         )}
       </div>
+
+      {/* Documentos colapsable */}
+      {docsOpen && (
+        <div className="border-t border-border/60 bg-muted/20 p-4 sm:p-5">
+          <FamilyDocumentsManager userId={userId} />
+        </div>
+      )}
     </Card>
   );
 }
