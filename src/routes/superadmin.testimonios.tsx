@@ -25,6 +25,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
+import { useAppUser } from "@/hooks/use-app-user";
 
 const sb = supabase as unknown as SupabaseClient;
 
@@ -61,6 +62,7 @@ export const Route = createFileRoute("/superadmin/testimonios")({
 });
 
 function ModeracionPage() {
+  const { user, logout } = useAppUser({ allow: ["superadmin"] });
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"pending" | "published" | "rejected">("pending");
@@ -116,8 +118,16 @@ function ModeracionPage() {
 
   const visible = rows.filter((r) => r.status === tab);
 
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Verificando…
+      </div>
+    );
+  }
+
   return (
-    <AppShell nav={NAV} title="Moderación de testimonios">
+    <AppShell nav={NAV} title="Moderación de testimonios" user={user} onLogout={logout}>
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           {(["pending", "published", "rejected"] as const).map((s) => {
