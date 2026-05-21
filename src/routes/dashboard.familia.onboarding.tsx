@@ -814,8 +814,8 @@ function FamilyOnboarding() {
                         Resumen del paciente
                       </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        Un párrafo breve: nombre · diagnóstico · necesidad · recomendación. Lo usa
-                        el cuidador para llegar preparado.
+                        Pocas palabras: nombre, diagnóstico, necesidad y recomendación. La IA lo
+                        redacta en menos de 200 caracteres.
                       </p>
                     </div>
                     <Button
@@ -836,15 +836,15 @@ function FamilyOnboarding() {
                   </div>
                   <Textarea
                     value={form.patientSummary}
-                    onChange={(e) => set("patientSummary", e.target.value.slice(0, 280))}
+                    onChange={(e) => set("patientSummary", e.target.value.slice(0, 200))}
                     rows={3}
-                    maxLength={280}
-                    placeholder="Ej: Pedro, 78 años · Alzheimer leve. Necesita auxiliar de enfermería 4h/día en las mañanas. Recomendado: experiencia en adulto mayor y manejo de medicación."
+                    maxLength={200}
+                    placeholder="Ej: Pedro, 78 · Alzheimer leve. Necesita auxiliar 4h/día en las mañanas. Recomendado: experiencia adulto mayor."
                     className="resize-none text-sm bg-background"
                   />
                   <div className="flex items-center justify-end mt-1">
                     <span className="text-[10px] text-muted-foreground">
-                      {form.patientSummary.length}/280
+                      {form.patientSummary.length}/200
                     </span>
                   </div>
                 </div>
