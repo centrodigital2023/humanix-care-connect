@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { SocialIcons } from "./SocialIcons";
-import { CONTACT, SOCIAL_LINKS } from "@/lib/social";
+import { CONTACT } from "@/lib/social";
 
 type FooterLink = { label: string; to?: string; href?: string };
 
@@ -125,32 +125,7 @@ export function Footer() {
           ))}
         </div>
 
-        <div className="mt-8 sm:mt-10 pt-6 border-t border-border">
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-            {SOCIAL_LINKS.map((s) => (
-              <a
-                key={s.key}
-                href={s.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${s.label}${s.handle ? ` ${s.handle}` : ""}`}
-                className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/40"
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ backgroundColor: s.brandColor }}
-                  aria-hidden="true"
-                />
-                <span className="font-medium text-foreground/80">{s.label}</span>
-                {s.handle ? (
-                  <span className="hidden sm:inline text-muted-foreground/80">{s.handle}</span>
-                ) : null}
-              </a>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-6 pt-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <div className="mt-8 sm:mt-10 pt-6 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Humanix Colombia · humanix.lat · Todos los derechos reservados.
           </p>
