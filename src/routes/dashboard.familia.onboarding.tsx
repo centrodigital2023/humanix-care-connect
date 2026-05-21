@@ -80,6 +80,7 @@ type AIResult = {
   patientName?: string;
   patientRelation?: string;
   patientAge?: number;
+  patientSummary?: string;
   careHints?: string[];
   suggestedSpecialty?: string;
   suggestedHourlyRateCop?: number;
@@ -116,6 +117,7 @@ function FamilyOnboarding() {
     patientName: "",
     patientRelation: "",
     patientAge: "",
+    patientSummary: "",
   });
   const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>({
     lat: null,
@@ -136,7 +138,7 @@ function FamilyOnboarding() {
         supabase
           .from("family_profiles")
           .select(
-            "id_number, default_address, default_lat, default_lng, emergency_contact_name, emergency_contact_phone, patient_name, patient_relation, patient_age, habeas_data_accepted",
+            "id_number, default_address, default_lat, default_lng, emergency_contact_name, emergency_contact_phone, patient_name, patient_relation, patient_age, patient_summary, habeas_data_accepted",
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -160,6 +162,7 @@ function FamilyOnboarding() {
         patientName: fam?.patient_name ?? "",
         patientRelation: fam?.patient_relation ?? "",
         patientAge: fam?.patient_age != null ? String(fam.patient_age) : "",
+        patientSummary: (fam as { patient_summary?: string | null } | null)?.patient_summary ?? "",
       }));
     })();
     return () => {
@@ -260,6 +263,7 @@ function FamilyOnboarding() {
           r.patientAge != null && Number.isFinite(r.patientAge)
             ? String(r.patientAge)
             : f.patientAge,
+        patientSummary: r.patientSummary?.trim() || f.patientSummary,
       }));
       setAiHints(Array.isArray(r.careHints) ? r.careHints.slice(0, 5) : []);
       setAiSpecialty(r.suggestedSpecialty?.trim() || "");
@@ -357,6 +361,7 @@ function FamilyOnboarding() {
           patient_name: v.patientName || null,
           patient_relation: v.patientRelation || null,
           patient_age: v.patientAge ?? null,
+          patient_summary: form.patientSummary?.trim() || null,
           habeas_data_accepted: true,
           habeas_data_accepted_at: new Date().toISOString(),
         },
