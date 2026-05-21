@@ -19,9 +19,16 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
+import {
+  BulkOffersModule,
+  PatientsModule,
+  AgendaModule,
+  ReportsModule,
+} from "@/components/humanix/InstitutionModules";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/institucion")({
@@ -215,6 +222,16 @@ function InstitutionDashboard() {
           <Kpi icon={CheckCircle2} label="Cubiertas" value={filled} tone="bio" />
         </section>
 
+        <Tabs defaultValue="resumen" className="w-full">
+          <TabsList className="flex flex-wrap h-auto">
+            <TabsTrigger value="resumen">Resumen</TabsTrigger>
+            <TabsTrigger value="bulk">Ofertas masivas + IA</TabsTrigger>
+            <TabsTrigger value="pacientes">Pacientes</TabsTrigger>
+            <TabsTrigger value="agenda">Agenda</TabsTrigger>
+            <TabsTrigger value="reportes">Reportes</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="resumen" className="space-y-8 mt-4">
         {/* Buzón */}
         <section>
           <div className="flex items-center justify-between mb-3">
@@ -374,6 +391,21 @@ function InstitutionDashboard() {
             />
           </section>
         )}
+          </TabsContent>
+
+          <TabsContent value="bulk" className="mt-4">
+            <BulkOffersModule userId={user.id} />
+          </TabsContent>
+          <TabsContent value="pacientes" className="mt-4">
+            <PatientsModule userId={user.id} />
+          </TabsContent>
+          <TabsContent value="agenda" className="mt-4">
+            <AgendaModule userId={user.id} />
+          </TabsContent>
+          <TabsContent value="reportes" className="mt-4">
+            <ReportsModule userId={user.id} />
+          </TabsContent>
+        </Tabs>
       </div>
     </AppShell>
   );
