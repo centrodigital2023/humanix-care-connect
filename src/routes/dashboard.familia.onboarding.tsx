@@ -20,6 +20,8 @@ import {
   Wand2,
   Lightbulb,
   Search,
+  Upload,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,6 +41,9 @@ import { z } from "zod";
 export const Route = createFileRoute("/dashboard/familia/onboarding")({
   head: () => ({
     meta: [{ title: "Completa tu perfil familiar · Humanix" }],
+  }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    step: typeof s.step === "string" ? s.step : undefined,
   }),
   component: FamilyOnboarding,
 });
@@ -90,11 +95,14 @@ type AIResult = {
 function FamilyOnboarding() {
   const { user, loading } = useAppUser({ allow: ["family", "superadmin"] });
   const navigate = useNavigate();
+  const searchParams = Route.useSearch();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [habeasOk, setHabeasOk] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // IA
   const [aiText, setAiText] = useState("");
@@ -106,6 +114,23 @@ function FamilyOnboarding() {
   const [aiNext, setAiNext] = useState<string>("");
   const [listening, setListening] = useState(false);
   const recogRef = useRef<unknown>(null);
+
+  // Deep-link: ?step=avatar|id|address|emergency|docs
+  useEffect(() => {
+    const s = searchParams?.step;
+    if (!s) return;
+    const map: Record<string, number> = {
+      avatar: 1,
+      id: 1,
+      identity: 1,
+      address: 2,
+      docs: 2,
+      patient: 2,
+      emergency: 3,
+      consent: 4,
+    };
+    if (map[s] != null) setStep(map[s]);
+  }, [searchParams]);
 
   const [form, setForm] = useState({
     fullName: "",
