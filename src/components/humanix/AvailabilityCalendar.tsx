@@ -482,7 +482,7 @@ export function AvailabilityCalendar({
                           type="button"
                           disabled={!editable || slot?.status === "reserved"}
                           onClick={() => toggleSlot(d, h)}
-                          className={`w-full h-9 rounded-md border ${cls} transition-colors`}
+                          className={`w-full h-10 sm:h-9 rounded-md border ${cls} transition-all active:scale-95 focus-visible:ring-2 focus-visible:ring-fuchsia-neural/50`}
                           title={
                             slot
                               ? slot.status === "free"
@@ -507,6 +507,11 @@ export function AvailabilityCalendar({
         <Legend color="bg-biosensor/40 border-biosensor/60" label="Disponible" />
         <Legend color="bg-cyber/40 border-cyber/60" label="Reservado (15 días)" />
         <Legend color="bg-muted border-border" label="Ocupado" />
+        {editable && (
+          <span className="ml-auto inline-flex items-center gap-1 text-fuchsia-neural">
+            <Check className="h-3 w-3" /> Auto-match activo al marcar
+          </span>
+        )}
       </div>
     </div>
   );
