@@ -119,8 +119,12 @@ export function usePlan(userId: string | null | undefined): UserPlanState {
   // we pick it up without a page reload.
   useEffect(() => {
     if (!userId) return;
+    // Unique channel name per mount to avoid "add callbacks after subscribe()"
+    // errors when StrictMode/HMR re-runs the effect before the previous
+    // removeChannel resolves.
+    const channelName = `mp_subscriptions:${userId}:${Math.random().toString(36).slice(2, 10)}`;
     const channel = supabase
-      .channel(`mp_subscriptions:${userId}`)
+      .channel(channelName)
       .on(
         "postgres_changes",
         {
