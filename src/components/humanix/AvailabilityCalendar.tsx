@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Loader2, Sparkles, Eraser } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Sparkles,
+  Eraser,
+  Brain,
+  TrendingUp,
+  Zap,
+  Check,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
 type Slot = {
@@ -43,6 +54,13 @@ export function AvailabilityCalendar({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [history, setHistory] = useState<Slot[]>([]);
+  const [tariff, setTariff] = useState<{
+    suggested: number | null;
+    market: number | null;
+    city: string | null;
+    specialty: string | null;
+  }>({ suggested: null, market: null, city: null, specialty: null });
 
   const weekEnd = useMemo(() => addDays(weekStart, 7), [weekStart]);
   const days = useMemo(
@@ -74,6 +92,110 @@ export function AvailabilityCalendar({
       active = false;
     };
   }, [userId, weekStart, weekEnd]);
+
+  // Cargar historial (últimas 4 semanas) para sugerencias predictivas
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const since = new Date();
+      since.setDate(since.getDate() - 28);
+      const { data } = await supabase
+        .from("availability_slots")
+        .select("id, user_id, starts_at, ends_at, status, note")
+        .eq("user_id", userId)
+        .gte("starts_at", since.toISOString())
+        .order("starts_at", { ascending: false })
+        .limit(200);
+      if (active) setHistory((data ?? []) as Slot[]);
+    })();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  // Predecir tarifa óptima según especialidad + zona
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data: me } = await supabase
+        .from("professional_profiles")
+        .select("specialty, home_city, hourly_rate")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (!me || !active) return;
+      let q = supabase
+        .from("professional_profiles")
+        .select("hourly_rate")
+        .eq("active", true)
+        .neq("user_id", userId)
+        .not("hourly_rate", "is", null);
+      if (me.specialty) q = q.ilike("specialty", `%${me.specialty}%`);
+      if (me.home_city) q = q.contains("service_cities", [me.home_city]);
+      const { data: market } = await q.limit(60);
+      const rates = (market ?? []).map((m) => m.hourly_rate as number).filter(Boolean);
+      const avg = rates.length ? Math.round(rates.reduce((a, b) => a + b, 0) / rates.length) : null;
+      // Sugerimos 5% sobre el mercado si tienes buen rating, redondeado a 500
+      const suggested = avg ? Math.round((avg * 1.05) / 500) * 500 : null;
+      if (active)
+        setTariff({
+          suggested,
+          market: avg,
+          city: me.home_city,
+          specialty: me.specialty,
+        });
+    })();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+  // Top 3 (dayOfWeek, hour) más usados históricamente
+  const suggestedHours = useMemo(() => {
+    if (history.length < 3) return [] as { dayIdx: number; hour: number; count: number }[];
+    const counts: Record<string, { dayIdx: number; hour: number; count: number }> = {};
+    history.forEach((s) => {
+      const d = new Date(s.starts_at);
+      const dayIdx = (d.getDay() + 6) % 7;
+      const hour = d.getHours();
+      const k = `${dayIdx}-${hour}`;
+      counts[k] ??= { dayIdx, hour, count: 0 };
+      counts[k].count++;
+    });
+    return Object.values(counts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [history]);
+
+  async function applySuggested() {
+    if (!editable || suggestedHours.length === 0) return;
+    setBulkBusy(true);
+    try {
+      const toInsert: { user_id: string; starts_at: string; ends_at: string; status: "free" }[] = [];
+      suggestedHours.forEach(({ dayIdx, hour }) => {
+        const day = days[dayIdx];
+        if (!day || slotAt(day, hour)) return;
+        const start = new Date(day);
+        start.setHours(hour, 0, 0, 0);
+        const end = new Date(start);
+        end.setHours(hour + 1);
+        toInsert.push({
+          user_id: userId,
+          starts_at: start.toISOString(),
+          ends_at: end.toISOString(),
+          status: "free",
+        });
+      });
+      if (toInsert.length) {
+        const { data } = await supabase.from("availability_slots").insert(toInsert).select();
+        if (data) setSlots((s) => [...s, ...((data as Slot[]) ?? [])]);
+        toast.success(`${toInsert.length} horas sugeridas marcadas por IA`);
+      } else {
+        toast.info("Tus sugerencias ya están marcadas esta semana");
+      }
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   const slotAt = (day: Date, hour: number): Slot | undefined =>
     slots.find((s) => {
@@ -178,7 +300,85 @@ export function AvailabilityCalendar({
   const reservedCount = slots.filter((s) => s.status === "reserved").length;
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+      {/* Smart panel: sugerencias IA + tarifa óptima */}
+      {editable && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 border-b border-border bg-gradient-to-r from-fuchsia-neural/5 via-biosensor/5 to-cyber/5">
+          <div className="rounded-xl border border-fuchsia-neural/20 bg-card/80 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="h-4 w-4 text-fuchsia-neural" />
+              <p className="text-xs font-semibold uppercase tracking-wider">Sugerencias IA</p>
+              <Badge variant="outline" className="ml-auto text-[10px]">
+                {history.length} h analizadas
+              </Badge>
+            </div>
+            {suggestedHours.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Marca tu primera semana — luego la IA aprenderá tu patrón y lo pre-marcará por ti.
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {suggestedHours.map((s) => (
+                    <Badge
+                      key={`${s.dayIdx}-${s.hour}`}
+                      variant="outline"
+                      className="text-[10px] border-fuchsia-neural/40 text-fuchsia-neural bg-fuchsia-neural/5"
+                    >
+                      {DAY_LABEL[s.dayIdx]} {s.hour}:00
+                    </Badge>
+                  ))}
+                </div>
+                <Button
+                  size="sm"
+                  variant="hero"
+                  onClick={applySuggested}
+                  disabled={bulkBusy}
+                  className="w-full"
+                >
+                  {bulkBusy ? (
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                  ) : (
+                    <Zap className="h-3.5 w-3.5 mr-1.5" />
+                  )}
+                  Aplicar a esta semana
+                </Button>
+              </>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-biosensor/20 bg-card/80 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-4 w-4 text-biosensor" />
+              <p className="text-xs font-semibold uppercase tracking-wider">Tarifa óptima</p>
+              {tariff.city && (
+                <Badge variant="outline" className="ml-auto text-[10px]">
+                  {tariff.city}
+                </Badge>
+              )}
+            </div>
+            {tariff.suggested ? (
+              <>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-2xl font-display font-bold text-biosensor">
+                    ${tariff.suggested.toLocaleString("es-CO")}
+                  </p>
+                  <p className="text-xs text-muted-foreground">/hora</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Mercado {tariff.specialty ?? "tu especialidad"}: $
+                  {tariff.market?.toLocaleString("es-CO")} promedio. Sugerimos +5% por tu perfil.
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Aún no hay suficiente data en tu zona. Completa especialidad y ciudad para predecir.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border-b border-border">
         <div>
