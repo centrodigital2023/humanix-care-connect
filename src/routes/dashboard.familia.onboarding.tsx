@@ -281,6 +281,34 @@ function FamilyOnboarding() {
   };
 
   const uploadAvatar = async (file: File) => {
+    void 0;
+    return _uploadAvatar(file);
+  };
+  async function regeneratePatientSummary() {
+    if (!form.patientName.trim() && !aiText.trim()) {
+      toast.error("Agrega al menos el nombre del paciente o describe su situación.");
+      return;
+    }
+    setSummaryLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("family-onboarding-ai", {
+        body: { freeText: aiText.trim(), partial: form },
+      });
+      if (error) throw error;
+      const r: AIResult = data?.data ?? {};
+      if (r.patientSummary?.trim()) {
+        setForm((f) => ({ ...f, patientSummary: r.patientSummary!.trim() }));
+        toast.success("Resumen generado por IA");
+      } else {
+        toast.error("La IA no pudo generar un resumen con la info actual.");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error generando resumen");
+    } finally {
+      setSummaryLoading(false);
+    }
+  }
+  async function _uploadAvatar(file: File) {
     if (!user) return;
     if (file.size > 5 * 1024 * 1024) {
       toast.error("La imagen debe pesar menos de 5MB");
