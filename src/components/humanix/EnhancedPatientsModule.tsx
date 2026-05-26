@@ -238,16 +238,16 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
     try {
       const { data: bookings } = await supabase
         .from("service_bookings")
-        .select("id, starts_at, created_at, notes")
+        .select("id, scheduled_at, created_at, notes")
         .eq("application_id", applicationId)
-        .order("starts_at", { ascending: false })
+        .order("scheduled_at", { ascending: false })
         .limit(20);
 
       // Convertir a registros de servicio
       const records: ServiceRecord[] = (bookings ?? []).map((b) => ({
         id: b.id,
         booking_id: b.id,
-        service_date: b.starts_at || b.created_at,
+        service_date: b.scheduled_at || b.created_at,
         service_type: "Servicio de cuidado",
         professional_notes: b.notes,
         duration_minutes: null,

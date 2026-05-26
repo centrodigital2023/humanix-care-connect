@@ -110,6 +110,54 @@ export type Database = {
         }
         Relationships: []
       }
+      application_documents: {
+        Row: {
+          ai_notes: string | null
+          ai_score: number | null
+          ai_verified: boolean | null
+          application_id: string
+          created_at: string
+          doc_type: string
+          file_name: string | null
+          file_url: string
+          id: string
+          retention_until: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
+          application_id: string
+          created_at?: string
+          doc_type: string
+          file_name?: string | null
+          file_url: string
+          id?: string
+          retention_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
+          application_id?: string
+          created_at?: string
+          doc_type?: string
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          retention_until?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       applications: {
         Row: {
           created_at: string
@@ -565,6 +613,45 @@ export type Database = {
           },
         ]
       }
+      dynamic_forms: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          fields: Json
+          id: string
+          is_active: boolean
+          name: string
+          target_id: string | null
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          target_id?: string | null
+          target_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          fields?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          target_id?: string | null
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       emergency_incidents: {
         Row: {
           booking_id: string | null
@@ -768,6 +855,38 @@ export type Database = {
         }
         Relationships: []
       }
+      form_responses: {
+        Row: {
+          answers: Json
+          form_id: string
+          id: string
+          respondent_id: string
+          submitted_at: string
+        }
+        Insert: {
+          answers?: Json
+          form_id: string
+          id?: string
+          respondent_id: string
+          submitted_at?: string
+        }
+        Update: {
+          answers?: Json
+          form_id?: string
+          id?: string
+          respondent_id?: string
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fraud_flags: {
         Row: {
           created_at: string
@@ -798,14 +917,75 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_documents: {
+        Row: {
+          ai_extracted: Json | null
+          ai_notes: string | null
+          ai_score: number | null
+          ai_verified: boolean | null
+          created_at: string
+          doc_type: string
+          file_name: string | null
+          file_url: string
+          id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_extracted?: Json | null
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
+          created_at?: string
+          doc_type: string
+          file_name?: string | null
+          file_url: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_extracted?: Json | null
+          ai_notes?: string | null
+          ai_score?: number | null
+          ai_verified?: boolean | null
+          created_at?: string
+          doc_type?: string
+          file_name?: string | null
+          file_url?: string
+          id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       institution_profiles: {
         Row: {
           address: string | null
+          chamber_of_commerce_date: string | null
+          chamber_of_commerce_number: string | null
           city: string | null
+          compliance_fuid: boolean
+          compliance_notes: string | null
           created_at: string
           id: string
           institution_name: string
           institution_type: string | null
+          legal_representative_email: string | null
+          legal_representative_name: string | null
+          legal_representative_phone: string | null
           nit: string | null
           updated_at: string
           user_id: string
@@ -814,11 +994,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          chamber_of_commerce_date?: string | null
+          chamber_of_commerce_number?: string | null
           city?: string | null
+          compliance_fuid?: boolean
+          compliance_notes?: string | null
           created_at?: string
           id?: string
           institution_name: string
           institution_type?: string | null
+          legal_representative_email?: string | null
+          legal_representative_name?: string | null
+          legal_representative_phone?: string | null
           nit?: string | null
           updated_at?: string
           user_id: string
@@ -827,11 +1014,18 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          chamber_of_commerce_date?: string | null
+          chamber_of_commerce_number?: string | null
           city?: string | null
+          compliance_fuid?: boolean
+          compliance_notes?: string | null
           created_at?: string
           id?: string
           institution_name?: string
           institution_type?: string | null
+          legal_representative_email?: string | null
+          legal_representative_name?: string | null
+          legal_representative_phone?: string | null
           nit?: string | null
           updated_at?: string
           user_id?: string
@@ -839,6 +1033,44 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      job_offer_requirements: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_mandatory: boolean
+          job_offer_id: string
+          priority: number
+          requirement_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_mandatory?: boolean
+          job_offer_id: string
+          priority?: number
+          requirement_type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_mandatory?: boolean
+          job_offer_id?: string
+          priority?: number
+          requirement_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_offer_requirements_job_offer_id_fkey"
+            columns: ["job_offer_id"]
+            isOneToOne: false
+            referencedRelation: "job_offers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_offers: {
         Row: {
@@ -1569,6 +1801,7 @@ export type Database = {
       }
       service_bookings: {
         Row: {
+          application_id: string | null
           arrived_at: string | null
           cancel_reason: string | null
           cancelled_at: string | null
@@ -1596,6 +1829,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          application_id?: string | null
           arrived_at?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
@@ -1623,6 +1857,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          application_id?: string | null
           arrived_at?: string | null
           cancel_reason?: string | null
           cancelled_at?: string | null
