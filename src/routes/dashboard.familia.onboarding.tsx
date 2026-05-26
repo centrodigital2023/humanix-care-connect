@@ -484,7 +484,7 @@ function FamilyOnboarding() {
         </div>
 
         {/* Stepper */}
-        <ol className="mt-5 grid grid-cols-5 gap-1.5">
+        <ol className="mt-5 grid grid-cols-4 gap-1.5">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = i < step;
