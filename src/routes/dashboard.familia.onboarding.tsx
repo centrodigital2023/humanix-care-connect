@@ -95,7 +95,7 @@ function FamilyOnboarding() {
   const { user, loading } = useAppUser({ allow: ["family", "superadmin"] });
   const navigate = useNavigate();
   const searchParams = Route.useSearch();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
