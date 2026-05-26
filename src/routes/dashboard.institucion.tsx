@@ -23,12 +23,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
-import {
-  BulkOffersModule,
-  PatientsModule,
-  AgendaModule,
-  ReportsModule,
-} from "@/components/humanix/InstitutionModules";
+import { EnhancedBulkOffersModule } from "@/components/humanix/EnhancedBulkOffersModule";
+import { EnhancedPatientsModule } from "@/components/humanix/EnhancedPatientsModule";
+import { EnhancedAgendaModule } from "@/components/humanix/EnhancedAgendaModule";
+import { EnhancedReportsWithCRMModule } from "@/components/humanix/EnhancedReportsWithCRMModule";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/institucion")({
@@ -394,16 +392,16 @@ function InstitutionDashboard() {
           </TabsContent>
 
           <TabsContent value="bulk" className="mt-4">
-            <BulkOffersModule userId={user.id} />
+            <EnhancedBulkOffersModule userId={user.id} defaultCity={user.city || ""} />
           </TabsContent>
           <TabsContent value="pacientes" className="mt-4">
-            <PatientsModule userId={user.id} />
+            <EnhancedPatientsModule userId={user.id} defaultCity={user.city || ""} />
           </TabsContent>
           <TabsContent value="agenda" className="mt-4">
-            <AgendaModule userId={user.id} />
+            <EnhancedAgendaModule userId={user.id} defaultCity={user.city || ""} />
           </TabsContent>
           <TabsContent value="reportes" className="mt-4">
-            <ReportsModule userId={user.id} />
+            <EnhancedReportsWithCRMModule userId={user.id} defaultCity={user.city || ""} />
           </TabsContent>
         </Tabs>
       </div>
