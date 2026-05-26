@@ -707,7 +707,7 @@ function FamilyOnboarding() {
                     inputMode="numeric"
                     value={form.idNumber}
                     onChange={(e) => set("idNumber", e.target.value.replace(/\D/g, ""))}
-                    placeholder="1020345678"
+                    placeholder="00000000"
                   />
                 </Field>
                 <Field label="Teléfono / WhatsApp" required>
@@ -716,10 +716,23 @@ function FamilyOnboarding() {
                     inputMode="numeric"
                     value={form.phone}
                     onChange={(e) => set("phone", e.target.value.replace(/\D/g, ""))}
-                    placeholder="3001234567"
+                    placeholder="0000000000"
                   />
                 </Field>
               </div>
+              {form.phone.trim().length >= 7 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Contacto WhatsApp:{" "}
+                  <a
+                    href={`https://wa.me/57${form.phone.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-biosensor underline"
+                  >
+                    https://wa.me/57{form.phone.replace(/\D/g, "")}
+                  </a>
+                </p>
+              )}
               <p className="text-[11px] text-muted-foreground">
                 Tus datos viajan cifrados y nunca se comparten con el cuidador hasta que aceptes una
                 contratación.
@@ -744,7 +757,7 @@ function FamilyOnboarding() {
                     <Input
                       value={form.defaultAddress}
                       onChange={(e) => set("defaultAddress", e.target.value)}
-                      placeholder="Cra 15 # 100-25, Apto 502"
+                      placeholder="Cra 11 No 11-32"
                     />
                   </Field>
                 </div>
@@ -891,10 +904,23 @@ function FamilyOnboarding() {
                     inputMode="numeric"
                     value={form.emergencyPhone}
                     onChange={(e) => set("emergencyPhone", e.target.value.replace(/\D/g, ""))}
-                    placeholder="3009876543"
+                    placeholder="0000000000"
                   />
                 </Field>
               </div>
+              {form.emergencyPhone.trim().length >= 7 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Contacto WhatsApp emergencia:{" "}
+                  <a
+                    href={`https://wa.me/57${form.emergencyPhone.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-biosensor underline"
+                  >
+                    https://wa.me/57{form.emergencyPhone.replace(/\D/g, "")}
+                  </a>
+                </p>
+              )}
               <div className="rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-3.5 text-xs text-muted-foreground leading-relaxed">
                 <strong className="text-fuchsia-neural">Botón de pánico 24/7:</strong> en caso de
                 emergencia, Humanix notifica al contacto, comparte la ubicación en vivo y conecta
