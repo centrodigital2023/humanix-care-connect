@@ -66,7 +66,6 @@ const schema = z.object({
 });
 
 const STEPS = [
-  { key: "ai", label: "Asistente IA", icon: Sparkles },
   { key: "identity", label: "Identidad", icon: IdCard },
   { key: "address", label: "Dirección", icon: MapPin },
   { key: "emergency", label: "Emergencia", icon: Phone },
@@ -95,7 +94,7 @@ function FamilyOnboarding() {
   const { user, loading } = useAppUser({ allow: ["family", "superadmin"] });
   const navigate = useNavigate();
   const searchParams = Route.useSearch();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -119,14 +118,14 @@ function FamilyOnboarding() {
     const s = searchParams?.step;
     if (!s) return;
     const map: Record<string, number> = {
-      avatar: 1,
-      id: 1,
-      identity: 1,
-      address: 2,
-      docs: 2,
-      patient: 2,
-      emergency: 3,
-      consent: 4,
+      avatar: 0,
+      id: 0,
+      identity: 0,
+      address: 1,
+      docs: 1,
+      patient: 1,
+      emergency: 2,
+      consent: 3,
     };
     if (map[s] != null) setStep(map[s]);
   }, [searchParams]);
@@ -354,16 +353,16 @@ function FamilyOnboarding() {
   };
 
   const validateStep = (s: number): string | null => {
-    if (s === 1) {
+    if (s === 0) {
       if (form.fullName.trim().length < 3) return "Ingresa tu nombre completo";
       if (form.idNumber.trim().length < 5) return "Ingresa tu número de cédula";
       if (form.phone.trim().length < 7) return "Ingresa un teléfono válido";
     }
-    if (s === 2) {
+    if (s === 1) {
       if (form.city.trim().length < 2) return "Ingresa tu ciudad";
       if (form.defaultAddress.trim().length < 5) return "Ingresa tu dirección";
     }
-    if (s === 3) {
+    if (s === 2) {
       if (form.emergencyName.trim().length < 3) return "Nombre de contacto de emergencia";
       if (form.emergencyPhone.trim().length < 7) return "Teléfono de emergencia";
     }
@@ -485,7 +484,7 @@ function FamilyOnboarding() {
         </div>
 
         {/* Stepper */}
-        <ol className="mt-5 grid grid-cols-5 gap-1.5">
+        <ol className="mt-5 grid grid-cols-4 gap-1.5">
           {STEPS.map((s, i) => {
             const Icon = s.icon;
             const done = i < step;
@@ -585,114 +584,11 @@ function FamilyOnboarding() {
             </div>
           </div>
 
-          {/* Step 0: Asistente IA */}
+          {/* Step 0: Identidad */}
           {step === 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-fuchsia-neural" />
-                <h2 className="font-display text-xl font-semibold">
-                  Cuéntame tu situación, yo lleno el formulario
-                </h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Escribe o dicta en una frase: quién necesita el cuidado, qué condición tiene, dónde
-                vives y cómo contactarte. La IA detecta especialidad ideal, tarifa estimada y
-                completa los pasos.
-              </p>
-
-              <div className="relative">
-                <Textarea
-                  value={aiText}
-                  onChange={(e) => setAiText(e.target.value)}
-                  placeholder="Ej: Soy María García, cédula 1020345678, vivo en Bogotá Cra 15 # 100-25. Mi papá Pedro de 78 años necesita un auxiliar de enfermería en las mañanas porque sufre de Alzheimer. Mi celular es 3001234567 y mi hermano Juan 3009876543 es contacto de emergencia."
-                  rows={5}
-                  className="pr-12 resize-none"
-                />
-                <button
-                  type="button"
-                  onClick={toggleListen}
-                  className={`absolute top-2 right-2 h-9 w-9 rounded-full flex items-center justify-center transition ${
-                    listening
-                      ? "bg-fuchsia-neural text-white animate-pulse"
-                      : "bg-muted hover:bg-muted/70 text-foreground"
-                  }`}
-                  aria-label={listening ? "Detener dictado" : "Dictar por voz"}
-                >
-                  {listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </button>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "Mi mamá de 82 años con Parkinson, vivo en Medellín El Poblado",
-                  "Necesito auxiliar de enfermería 8 horas/día para mi abuelo, Cali",
-                  "Cuidado infantil para mi hijo de 3 años con autismo, Bogotá",
-                ].map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setAiText(s)}
-                    className="text-[11px] rounded-full border border-border px-3 py-1 hover:border-fuchsia-neural/50 hover:text-fuchsia-neural transition"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 pt-2">
-                <Button variant="hero" onClick={runAI} disabled={aiLoading} className="flex-1">
-                  {aiLoading ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Wand2 className="h-4 w-4 mr-2" />
-                  )}
-                  Completar con IA
-                </Button>
-                <Button variant="outline" onClick={() => setStep(1)}>
-                  Llenar manualmente
-                </Button>
-              </div>
-
-              {(aiHints.length > 0 || aiSpecialty || aiRate || aiNext) && (
-                <div className="mt-4 rounded-xl border border-fuchsia-neural/30 bg-fuchsia-neural/5 p-4 space-y-3">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-fuchsia-neural">
-                    <Lightbulb className="h-4 w-4" /> Análisis de la IA
-                  </div>
-                  {aiSpecialty && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Especialidad ideal:</span>
-                      <Badge className="bg-fuchsia-neural text-white">{aiSpecialty}</Badge>
-                      {aiRate && (
-                        <Badge variant="outline">~${aiRate.toLocaleString("es-CO")}/h COP</Badge>
-                      )}
-                    </div>
-                  )}
-                  {aiHints.length > 0 && (
-                    <ul className="space-y-1 text-xs">
-                      {aiHints.map((h, i) => (
-                        <li key={i} className="flex items-start gap-1.5">
-                          <CheckCircle2 className="h-3.5 w-3.5 text-fuchsia-neural shrink-0 mt-0.5" />
-                          <span>{h}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {aiNext && <p className="text-xs text-muted-foreground italic">→ {aiNext}</p>}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 1: Identidad */}
-          {step === 1 && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl font-semibold">Sobre ti</h2>
-                {aiSpecialty && (
-                  <Badge variant="outline" className="text-fuchsia-neural">
-                    <Sparkles className="h-3 w-3 mr-1" /> Asistido por IA
-                  </Badge>
-                )}
               </div>
               <Field label="Nombre completo" required>
                 <Input
@@ -740,8 +636,8 @@ function FamilyOnboarding() {
             </div>
           )}
 
-          {/* Step 2: Dirección y paciente */}
-          {step === 2 && (
+          {/* Step 1: Dirección y paciente */}
+          {step === 1 && (
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold">¿Dónde será el servicio?</h2>
               <div className="grid sm:grid-cols-3 gap-3">
@@ -883,8 +779,8 @@ function FamilyOnboarding() {
             </div>
           )}
 
-          {/* Step 3: Emergencia */}
-          {step === 3 && (
+          {/* Step 2: Emergencia */}
+          {step === 2 && (
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold">Contacto de emergencia</h2>
               <p className="text-sm text-muted-foreground">
@@ -929,8 +825,8 @@ function FamilyOnboarding() {
             </div>
           )}
 
-          {/* Step 4: Consentimiento */}
-          {step === 4 && (
+          {/* Step 3: Consentimiento */}
+          {step === 3 && (
             <div className="space-y-4">
               <h2 className="font-display text-xl font-semibold">Consentimiento y privacidad</h2>
               <div className="rounded-xl border border-border bg-muted/30 p-4 text-sm text-muted-foreground leading-relaxed max-h-56 overflow-auto">
