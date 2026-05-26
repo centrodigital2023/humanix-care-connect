@@ -112,7 +112,7 @@ export function DynamicFormsBuilder({ offerId, userId }: { offerId: string; user
     let active = true;
     (async () => {
       try {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from("dynamic_forms")
           .select("*")
           .eq("target_id", offerId)
@@ -120,7 +120,7 @@ export function DynamicFormsBuilder({ offerId, userId }: { offerId: string; user
 
         if (active) {
           setForms(
-            data?.map((f) => ({
+            data?.map((f: any) => ({
               ...f,
               fields: f.fields || [],
             })) ?? []
@@ -145,7 +145,7 @@ export function DynamicFormsBuilder({ offerId, userId }: { offerId: string; user
     (async () => {
       setLoadingResponses(true);
       try {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from("form_responses")
           .select("*")
           .eq("form_id", selectedForm.id)
@@ -172,7 +172,7 @@ export function DynamicFormsBuilder({ offerId, userId }: { offerId: string; user
     }
 
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("dynamic_forms")
         .insert([
           {
@@ -227,7 +227,7 @@ export function DynamicFormsBuilder({ offerId, userId }: { offerId: string; user
 
   const deleteForm = async (id: string) => {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("dynamic_forms")
         .delete()
         .eq("id", id);

@@ -88,21 +88,21 @@ export function EnhancedAgendaModule({ userId }: { userId: string }) {
     let active = true;
     (async () => {
       try {
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from("service_bookings")
           .select(
-            `id, professional_id, starts_at, created_at, notes, application_id`
+            `id, professional_id, scheduled_at, created_at, notes, job_offer_id`
           )
           .eq("client_id", userId)
-          .gte("starts_at", new Date().toISOString())
-          .order("starts_at", { ascending: true })
+          .gte("scheduled_at", new Date().toISOString())
+          .order("scheduled_at", { ascending: true })
           .limit(100);
 
         if (!active) return;
 
         // Obtener info de profesionales
         const proIds = Array.from(
-          new Set(data?.map((b) => b.professional_id) ?? [])
+          new Set((data ?? []).map((b: any) => b.professional_id))
         );
 
         const [proProfiles, offers, appData] = await Promise.all([
@@ -133,9 +133,8 @@ export function EnhancedAgendaModule({ userId }: { userId: string }) {
         const offerMap = new Map(offers.data?.map((o) => [o.id, o]) ?? []);
         const appMap = new Map(appData.data?.map((a) => [a.id, a]) ?? []);
 
-        const shifts: ShiftEvent[] = (data ?? []).map((b) => {
-          const app = appMap.get(b.id);
-          const offer = app ? offerMap.get(app.job_offer_id) : null;
+        const shifts: ShiftEvent[] = (data ?? []).map((b: any) => {
+          const offer = b.job_offer_id ? offerMap.get(b.job_offer_id) : null;
           const pro = proMap[b.professional_id];
 
           return {
@@ -146,7 +145,7 @@ export function EnhancedAgendaModule({ userId }: { userId: string }) {
             professional_phone: pro?.phone,
             offer_title: offer?.title ?? "Servicio",
             city: offer?.city ?? "—",
-            starts_at: b.starts_at,
+            starts_at: b.scheduled_at,
             duration_hours: null,
             status: "scheduled",
             notes: b.notes,

@@ -235,7 +235,7 @@ export function EnhancedBulkOffersModule({
         });
 
         if (requirementPayload.length > 0) {
-          const { error: reqError } = await supabase
+          const { error: reqError } = await (supabase as any)
             .from("job_offer_requirements")
             .insert(requirementPayload);
           if (reqError) console.warn("Error inserting requirements:", reqError);
@@ -270,7 +270,7 @@ export function EnhancedBulkOffersModule({
 
       const offerIds = offers.map((o) => o.id);
 
-      const { data: docs } = await supabase
+      const { data: docs } = await (supabase as any)
         .from("application_documents")
         .select("*")
         .in(
