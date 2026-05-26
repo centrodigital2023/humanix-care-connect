@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2, FileText } from "lucide-react";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";

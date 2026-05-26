@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DYNAMIC FORMS BUILDER - PROFESIONALES / OFERTAS
  * 

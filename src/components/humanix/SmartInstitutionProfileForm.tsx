@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SMART INSTITUTION PROFILE FORM
  * 

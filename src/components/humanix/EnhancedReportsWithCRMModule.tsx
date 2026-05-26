@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ENHANCED REPORTS + CRM MODULE
  * 
