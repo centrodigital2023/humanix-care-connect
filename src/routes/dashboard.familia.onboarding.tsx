@@ -66,7 +66,6 @@ const schema = z.object({
 });
 
 const STEPS = [
-  { key: "ai", label: "Asistente IA", icon: Sparkles },
   { key: "identity", label: "Identidad", icon: IdCard },
   { key: "address", label: "Dirección", icon: MapPin },
   { key: "emergency", label: "Emergencia", icon: Phone },
@@ -95,7 +94,7 @@ function FamilyOnboarding() {
   const { user, loading } = useAppUser({ allow: ["family", "superadmin"] });
   const navigate = useNavigate();
   const searchParams = Route.useSearch();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -119,14 +118,14 @@ function FamilyOnboarding() {
     const s = searchParams?.step;
     if (!s) return;
     const map: Record<string, number> = {
-      avatar: 1,
-      id: 1,
-      identity: 1,
-      address: 2,
-      docs: 2,
-      patient: 2,
-      emergency: 3,
-      consent: 4,
+      avatar: 0,
+      id: 0,
+      identity: 0,
+      address: 1,
+      docs: 1,
+      patient: 1,
+      emergency: 2,
+      consent: 3,
     };
     if (map[s] != null) setStep(map[s]);
   }, [searchParams]);
@@ -354,16 +353,16 @@ function FamilyOnboarding() {
   };
 
   const validateStep = (s: number): string | null => {
-    if (s === 1) {
+    if (s === 0) {
       if (form.fullName.trim().length < 3) return "Ingresa tu nombre completo";
       if (form.idNumber.trim().length < 5) return "Ingresa tu número de cédula";
       if (form.phone.trim().length < 7) return "Ingresa un teléfono válido";
     }
-    if (s === 2) {
+    if (s === 1) {
       if (form.city.trim().length < 2) return "Ingresa tu ciudad";
       if (form.defaultAddress.trim().length < 5) return "Ingresa tu dirección";
     }
-    if (s === 3) {
+    if (s === 2) {
       if (form.emergencyName.trim().length < 3) return "Nombre de contacto de emergencia";
       if (form.emergencyPhone.trim().length < 7) return "Teléfono de emergencia";
     }
