@@ -35,7 +35,9 @@ async function runChoose(
   if (cta.action.kind === "sales") {
     return {
       kind: "navigate",
-      href: "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)",
+      href: `https://wa.me/573147444715?text=${encodeURIComponent(
+        "Hola Humanix 👋, quiero información del Plan Institución (IPS).",
+      )}`,
     };
   }
   if (cta.action.kind === "login") {
@@ -138,7 +140,7 @@ describe("CTA flow → Mercado Pago checkout", () => {
     expect(result).toEqual({ kind: "noop", reason: "current" });
   });
 
-  it("institution → no invoke, opens mailto", async () => {
+  it("institution → no invoke, opens WhatsApp", async () => {
     const result = await runChoose("institution_monthly", {
       userId: "u1",
       currentPlan: "pro_monthly",
@@ -146,7 +148,8 @@ describe("CTA flow → Mercado Pago checkout", () => {
     });
     expect(invoke).not.toHaveBeenCalled();
     expect(result.kind).toBe("navigate");
-    if (result.kind === "navigate") expect(result.href.startsWith("mailto:")).toBe(true);
+    if (result.kind === "navigate")
+      expect(result.href.startsWith("https://wa.me/")).toBe(true);
   });
 
   it("checkout falls back to sandbox_init_point when init_point missing", async () => {
