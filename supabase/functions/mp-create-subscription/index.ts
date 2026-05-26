@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     if (!r.ok) {
       const t = await r.text();
       console.error("MP preference error:", r.status, t);
-      return new Response(JSON.stringify({ error: "Mercado Pago error", details: t }), {
+      return new Response(JSON.stringify({ error: "Error interno. Inténtalo de nuevo." }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
