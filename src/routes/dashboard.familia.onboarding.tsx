@@ -5,8 +5,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import {
   Loader2,
-  ArrowRight,
-  ArrowLeft,
   Camera,
   IdCard,
   MapPin,
@@ -15,10 +13,6 @@ import {
   CheckCircle2,
   HeartHandshake,
   Sparkles,
-  Mic,
-  MicOff,
-  Wand2,
-  Lightbulb,
   Search,
   Upload,
 } from "lucide-react";
@@ -26,14 +20,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAppUser } from "@/hooks/use-app-user";
 import { Logo } from "@/components/humanix/Logo";
-import { LocationPicker } from "@/components/humanix/LocationPicker";
-import { FamilyDocumentsManager } from "@/components/humanix/FamilyDocumentsManager";
 import { toast } from "sonner";
 import { z } from "zod";
 
