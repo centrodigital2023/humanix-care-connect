@@ -7,12 +7,7 @@
 // defensa en profundidad.
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { requireUser } from "../_shared/auth.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { requireUser, buildCorsHeaders } from "../_shared/auth.ts";
 
 const SYSTEM = `Eres el asistente de onboarding de Humanix Colombia.
 Recibes texto libre y/o un JSON parcial con datos de una familia que necesita
@@ -74,6 +69,7 @@ const TOOL = {
 };
 
 Deno.serve(async (req) => {
+  const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const auth = await requireUser(req);
@@ -137,7 +133,7 @@ Completa lo que puedas inferir con alta confianza y deja en "" lo que no.`;
   } catch (e) {
     console.error("family-onboarding-ai error:", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Error desconocido" }),
+      JSON.stringify({ error: "Error interno. Inténtalo de nuevo." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
