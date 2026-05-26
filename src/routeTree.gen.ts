@@ -60,6 +60,8 @@ import { Route as ServicioBookingIdRouteImport } from './routes/servicio.$bookin
 import { Route as RecursosSlugRouteImport } from './routes/recursos.$slug'
 import { Route as ProfesionalProIdRouteImport } from './routes/profesional.$proId'
 import { Route as OfertaOfferIdRouteImport } from './routes/oferta.$offerId'
+import { Route as InstitutionProfileRouteImport } from './routes/institution.profile'
+import { Route as InstitutionFormsRouteImport } from './routes/institution.forms'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
@@ -322,6 +324,16 @@ const OfertaOfferIdRoute = OfertaOfferIdRouteImport.update({
   path: '/oferta/$offerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InstitutionProfileRoute = InstitutionProfileRouteImport.update({
+  id: '/institution/profile',
+  path: '/institution/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstitutionFormsRoute = InstitutionFormsRouteImport.update({
+  id: '/institution/forms',
+  path: '/institution/forms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardWhatsappRoute = DashboardWhatsappRouteImport.update({
   id: '/whatsapp',
   path: '/whatsapp',
@@ -398,6 +410,8 @@ export interface FileRoutesByFullPath {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/institution/forms': typeof InstitutionFormsRoute
+  '/institution/profile': typeof InstitutionProfileRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/recursos/$slug': typeof RecursosSlugRoute
@@ -455,6 +469,8 @@ export interface FileRoutesByTo {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/institution/forms': typeof InstitutionFormsRoute
+  '/institution/profile': typeof InstitutionProfileRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/recursos/$slug': typeof RecursosSlugRoute
@@ -515,6 +531,8 @@ export interface FileRoutesById {
   '/dashboard/institucion': typeof DashboardInstitucionRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
+  '/institution/forms': typeof InstitutionFormsRoute
+  '/institution/profile': typeof InstitutionProfileRoute
   '/oferta/$offerId': typeof OfertaOfferIdRoute
   '/profesional/$proId': typeof ProfesionalProIdRoute
   '/recursos/$slug': typeof RecursosSlugRoute
@@ -576,6 +594,8 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/institution/forms'
+    | '/institution/profile'
     | '/oferta/$offerId'
     | '/profesional/$proId'
     | '/recursos/$slug'
@@ -633,6 +653,8 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/institution/forms'
+    | '/institution/profile'
     | '/oferta/$offerId'
     | '/profesional/$proId'
     | '/recursos/$slug'
@@ -692,6 +714,8 @@ export interface FileRouteTypes {
     | '/dashboard/institucion'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
+    | '/institution/forms'
+    | '/institution/profile'
     | '/oferta/$offerId'
     | '/profesional/$proId'
     | '/recursos/$slug'
@@ -748,6 +772,8 @@ export interface RootRouteChildren {
   TecnologiaRoute: typeof TecnologiaRoute
   TerminosRoute: typeof TerminosRoute
   BBannerIdRoute: typeof BBannerIdRoute
+  InstitutionFormsRoute: typeof InstitutionFormsRoute
+  InstitutionProfileRoute: typeof InstitutionProfileRoute
   OfertaOfferIdRoute: typeof OfertaOfferIdRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
@@ -1112,6 +1138,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OfertaOfferIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/institution/profile': {
+      id: '/institution/profile'
+      path: '/institution/profile'
+      fullPath: '/institution/profile'
+      preLoaderRoute: typeof InstitutionProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/institution/forms': {
+      id: '/institution/forms'
+      path: '/institution/forms'
+      fullPath: '/institution/forms'
+      preLoaderRoute: typeof InstitutionFormsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/whatsapp': {
       id: '/dashboard/whatsapp'
       path: '/whatsapp'
@@ -1266,6 +1306,8 @@ const rootRouteChildren: RootRouteChildren = {
   TecnologiaRoute: TecnologiaRoute,
   TerminosRoute: TerminosRoute,
   BBannerIdRoute: BBannerIdRoute,
+  InstitutionFormsRoute: InstitutionFormsRoute,
+  InstitutionProfileRoute: InstitutionProfileRoute,
   OfertaOfferIdRoute: OfertaOfferIdRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,

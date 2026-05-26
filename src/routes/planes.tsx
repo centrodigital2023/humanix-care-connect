@@ -64,7 +64,10 @@ function PlansPage() {
       return;
     }
     if (cta.action.kind === "sales") {
-      window.location.href = "mailto:hola@humanix.lat?subject=Plan Institución Humanix (IPS)";
+      const msg = encodeURIComponent(
+        "Hola Humanix 👋, quiero información del Plan Institución (IPS).",
+      );
+      window.open(`https://wa.me/573147444715?text=${msg}`, "_blank", "noopener,noreferrer");
       return;
     }
     if (cta.action.kind === "login") {
