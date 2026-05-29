@@ -24,7 +24,6 @@ import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
-import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
 
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
@@ -515,12 +514,28 @@ function FamilyDashboard() {
         {user && (
           <section className="rounded-2xl border border-border bg-card/95 p-6">
             <div className="mb-4">
-              <h2 className="font-semibold">Mapa en vivo · Profesionales disponibles</h2>
+              <h2 className="font-semibold">Mapa en vivo · Profesionales y tu ubicación</h2>
               <p className="text-sm text-muted-foreground">
-                Puntos azules = profesionales conectados. Apaga tu visibilidad para ocultarte del mapa.
+                Puntos azules = profesionales conectados. Marca tu ubicación (toca el mapa o usa GPS)
+                para calcular la distancia exacta a cada profesional.
               </p>
             </div>
-            <LiveMarketplaceMap role="family" userId={user.id} height={460} />
+            <LiveMarketplaceMap
+              role="family"
+              userId={user.id}
+              height={520}
+              pickLocation={{
+                lat: familyCoords.lat,
+                lng: familyCoords.lng,
+                defaultCity: familyCity,
+                onChange: (lat, lng, address) => void saveLocation(lat, lng, address),
+              }}
+            />
+            {savingLoc && (
+              <p className="text-[11px] text-muted-foreground mt-2">
+                <Loader2 className="h-3 w-3 animate-spin inline mr-1" /> Guardando ubicación…
+              </p>
+            )}
           </section>
         )}
 
