@@ -210,6 +210,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
               {complete ? "Perfil verificado ✓" : "Tu perfil familiar"}
             </p>
           </div>
+        </div>
 
         {/* Acciones */}
         <div className="mt-5 flex flex-col sm:flex-row gap-2">
