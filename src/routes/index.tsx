@@ -4,6 +4,7 @@ import { Navbar } from "@/components/humanix/Navbar";
 import { Hero } from "@/components/humanix/Hero";
 import { LiveSocialProof } from "@/components/humanix/LiveSocialProof";
 import { TrustBar } from "@/components/humanix/TrustBar";
+import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { AudienceSection } from "@/components/humanix/AudienceSection";
 import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
@@ -69,6 +70,26 @@ function Index() {
         </section>
         <LiveSocialProof />
         <TrustBar />
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
+          <div className="mb-4 flex items-end justify-between gap-4 flex-wrap">
+            <div>
+              <h2 className="font-display text-2xl sm:text-3xl font-bold">
+                Mapa en vivo · Talento humano en salud
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+                Profesionales (azul), familias (amarillo) e instituciones (fucsia) conectados ahora mismo.
+                Toca un punto para ver el perfil. Regístrate para contactar.
+              </p>
+            </div>
+            <a
+              href="/auth"
+              className="text-sm font-semibold text-biosensor hover:underline"
+            >
+              Crear cuenta gratis →
+            </a>
+          </div>
+          <LiveMarketplaceMap preview height={360} />
+        </section>
         <HealthMarketplaceViz />
         <FourModalitiesShowcase />
         <AudienceSection />
