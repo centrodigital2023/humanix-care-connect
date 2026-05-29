@@ -9,6 +9,8 @@ import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { HealthMarketplaceViz } from "@/components/humanix/HealthMarketplaceViz";
+import { FourModalitiesShowcase } from "@/components/humanix/FourModalitiesShowcase";
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
 const { buildSeo, faqLd, SITE_NAME } = seo;
@@ -42,6 +44,8 @@ export const Route = createFileRoute("/")({
       title: `${SITE_NAME} · Talento humano en salud para Colombia`,
       path: "/",
       appendSiteName: false,
+      description:
+        "Humanix conecta enfermeros, auxiliares y cuidadores con familias y clínicas de Colombia. Uber de salud con IA en tiempo real, verificación RETHUS y pagos inmediatos en Nequi y PSE.",
       extraLinks: [
         { rel: "preload", href: heroImage, as: "image", type: "image/webp", fetchPriority: "high" },
       ],
@@ -65,6 +69,8 @@ function Index() {
         </section>
         <LiveSocialProof />
         <TrustBar />
+        <HealthMarketplaceViz />
+        <FourModalitiesShowcase />
         <AudienceSection />
         <Suspense fallback={<div className="min-h-[200px]" />}>
           <TechSection />
