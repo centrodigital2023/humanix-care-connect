@@ -28,7 +28,7 @@ import { EnhancedBulkOffersModule } from "@/components/humanix/EnhancedBulkOffer
 import { EnhancedPatientsModule } from "@/components/humanix/EnhancedPatientsModule";
 import { EnhancedAgendaModule } from "@/components/humanix/EnhancedAgendaModule";
 import { EnhancedReportsWithCRMModule } from "@/components/humanix/EnhancedReportsWithCRMModule";
-import { RealTimeProfessionalsMap } from "@/components/humanix/RealTimeProfessionalsMap";
+import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { EnhancedInstitutionOperations } from "@/components/humanix/EnhancedInstitutionOperations";
 import { useAppUser } from "@/hooks/use-app-user";
 
@@ -401,7 +401,7 @@ function InstitutionDashboard() {
           </TabsContent>
 
           <TabsContent value="profesionales" className="mt-4">
-            <RealTimeProfessionalsMap institutionCity={user.city || ""} userId={user.id} />
+            <LiveMarketplaceMap role="institution" userId={user.id} height={520} />
           </TabsContent>
 
           <TabsContent value="bulk" className="mt-4">
