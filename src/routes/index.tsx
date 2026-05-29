@@ -15,6 +15,8 @@ import { StickyCTA } from "@/components/humanix/StickyCTA";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { HealthMarketplaceViz } from "@/components/humanix/HealthMarketplaceViz";
+import { FourModalitiesShowcase } from "@/components/humanix/FourModalitiesShowcase";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,13 +25,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Humanix conecta enfermeros, auxiliares y cuidadores con familias y clínicas de Colombia. IA en tiempo real, verificación RETHUS y pagos inmediatos en Nequi y PSE.",
+          "Humanix conecta enfermeros, auxiliares y cuidadores con familias y clínicas de Colombia. Uber de salud con IA en tiempo real, verificación RETHUS y pagos inmediatos en Nequi y PSE.",
       },
       { property: "og:title", content: "Humanix · Talento humano en salud para Colombia" },
       {
         property: "og:description",
         content:
-          "Plataforma premium de salud con IA en tiempo real. Match en menos de 150 ms, geolocalización en vivo y pagos inmediatos.",
+          "Plataforma premium de salud: Uber-like marketplace de talento humano. Match en menos de 150 ms, geolocalización en vivo y pagos inmediatos.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -50,6 +52,8 @@ function Index() {
         </section>
         <LiveSocialProof />
         <TrustBar />
+        <HealthMarketplaceViz />
+        <FourModalitiesShowcase />
         <AudienceSection />
         <TechSection />
         <Testimonials />

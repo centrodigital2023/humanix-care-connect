@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Sparkles, MapPin, Activity } from "lucide-react";
+import { ArrowRight, Sparkles, MapPin, Activity, Zap, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import heroImage from "@/assets/hero-humanix.jpg";
 import { RoleGate } from "./RoleGate";
@@ -16,21 +16,38 @@ export function Hero() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-biosensor/30 bg-biosensor/10 px-3.5 py-1.5 text-xs font-medium text-biosensor">
-              <Sparkles className="h-3.5 w-3.5" />
-              IA en tiempo real · Hecho en Colombia
+              <Zap className="h-3.5 w-3.5 animate-pulse" />
+              Uber-like marketplace de salud • IA en tiempo real
             </div>
 
             <h1 className="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-              Talento humano en salud,{" "}
-              <span className="text-gradient-bio">conectado al instante</span>.
+              <span className="text-gradient-bio">Talento en salud</span>,{" "}
+              conectado al instante.
             </h1>
 
             <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              Humanix es la plataforma premium que conecta enfermeros, auxiliares
-              y cuidadores con las familias, clínicas y agencias de Colombia —
-              con verificación por IA, geolocalización en vivo y pago directo
-              al profesional.
+              Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;150ms. Pagos directos.
             </p>
+
+            {/* Key Stats */}
+            <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 pb-8">
+              <div className="space-y-1">
+                <p className="text-2xl sm:text-3xl font-black text-white">847+</p>
+                <p className="text-xs text-muted-foreground">Profesionales verificados RETHUS</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl sm:text-3xl font-black text-biosensor">&lt;150ms</p>
+                <p className="text-xs text-muted-foreground">Match automático</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl sm:text-3xl font-black text-copper">3</p>
+                <p className="text-xs text-muted-foreground">Actores en el marketplace</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-2xl sm:text-3xl font-black text-emerald-400">4</p>
+                <p className="text-xs text-muted-foreground">Modalidades de pago</p>
+              </div>
+            </div>
 
             <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <Button
@@ -38,25 +55,25 @@ export function Hero() {
                 size="xl"
                 onClick={() => setGateOpen(true)}
               >
-                Buscar cuidador <ArrowRight className="ml-1 h-5 w-5" />
+                Explorar plataforma <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
               <Button variant="glass" size="xl" asChild>
                 <a href="/profesionales">Soy profesional de salud</a>
               </Button>
             </div>
 
-            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 text-sm text-muted-foreground">
+            <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4 text-sm text-muted-foreground border-t border-border/40 pt-6">
               <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-biosensor animate-pulse-ring" />
-                847 profesionales verificados
+                <span className="h-2 w-2 rounded-full bg-biosensor animate-pulse" />
+                Geolocalización en vivo
               </div>
               <div className="flex items-center gap-2">
-                <Activity className="h-4 w-4 text-biosensor" />
-                Match en &lt;150 ms
+                <TrendingUp className="h-4 w-4 text-biosensor" />
+                Oferta y demanda
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-copper" />
-                Bogotá · Medellín · Cali
+                Pago inmediato
               </div>
             </div>
           </div>
@@ -65,7 +82,7 @@ export function Hero() {
             <div className="relative rounded-3xl overflow-hidden border border-border shadow-[var(--shadow-elegant)] animate-float">
               <img
                 src={heroImage}
-                alt="Profesional de la salud usando Humanix con interfaz de IA en tiempo real"
+                alt="Profesional de la salud usando Humanix - Marketplace Uber-like"
                 width={1536}
                 height={1024}
                 className="w-full h-auto"
@@ -73,24 +90,26 @@ export function Hero() {
               <div className="absolute inset-0 bg-gradient-to-t from-cyber/40 via-transparent to-transparent" />
             </div>
 
-            <div className="hidden sm:flex absolute -left-4 bottom-10 items-center gap-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-3.5 pr-5 shadow-[var(--shadow-card)]">
+            {/* Live Match Animation Card */}
+            <div className="hidden sm:flex absolute -left-4 bottom-10 items-center gap-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-3.5 pr-5 shadow-[var(--shadow-card)] animate-in slide-in-from-left">
               <div className="h-10 w-10 rounded-xl bg-biosensor/15 flex items-center justify-center">
-                <Activity className="h-5 w-5 text-biosensor" />
+                <Activity className="h-5 w-5 text-biosensor animate-pulse" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Match urgente</p>
-                <p className="text-sm font-semibold">Engativá · 2h · $45.000</p>
+                <p className="text-xs text-muted-foreground">Match en vivo</p>
+                <p className="text-sm font-semibold">Engativá • 2.4 km • 12 min</p>
               </div>
-              <span className="ml-2 h-2.5 w-2.5 rounded-full bg-biosensor animate-pulse-ring" />
+              <span className="ml-2 h-2.5 w-2.5 rounded-full bg-biosensor animate-pulse" />
             </div>
 
-            <div className="hidden sm:flex absolute -right-2 top-8 items-center gap-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-3.5 pr-5 shadow-[var(--shadow-card)]">
-              <div className="h-10 w-10 rounded-xl bg-copper/15 flex items-center justify-center text-copper font-bold">
-                98
+            {/* Trust Score Card */}
+            <div className="hidden sm:flex absolute -right-2 top-8 items-center gap-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-3.5 pr-5 shadow-[var(--shadow-card)] animate-in slide-in-from-right">
+              <div className="h-10 w-10 rounded-xl bg-copper/15 flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-copper" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Social Trust Score</p>
-                <p className="text-sm font-semibold">Verificado RETHUS</p>
+                <p className="text-sm font-semibold">4.9 · RETHUS ✓</p>
               </div>
             </div>
           </div>
