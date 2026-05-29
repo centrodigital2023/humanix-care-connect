@@ -511,14 +511,6 @@ function FamilyDashboard() {
       }
     >
       <div className="space-y-8">
-        {/* Tarjeta inteligente de completitud de perfil */}
-        {!dataLoading && user && (
-          <SmartProfileCard
-            userId={user.id}
-            fullName={user.fullName}
-            avatarUrl={user.avatarUrl ?? null}
-          />
-        )}
 
         {user && (
           <section className="rounded-2xl border border-border bg-card/95 p-6">
