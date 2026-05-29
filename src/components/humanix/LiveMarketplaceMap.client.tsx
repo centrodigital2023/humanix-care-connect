@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo";
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
 
-type Role = "professional" | "family" | "institution";
+type Role = "professional" | "family" | "institution" | "guest";
 
 type Point = {
   id: string;
@@ -102,10 +102,12 @@ export function LiveMarketplaceMap({
   userId,
   height = 480,
   pickLocation,
+  preview = false,
 }: {
-  role: Role;
-  userId: string;
+  role?: Role;
+  userId?: string;
   height?: number;
+  preview?: boolean;
   pickLocation?: {
     lat: number | null;
     lng: number | null;
@@ -113,6 +115,8 @@ export function LiveMarketplaceMap({
     defaultCity?: string;
   };
 }) {
+  const effectiveRole: Role = role ?? "guest";
+  const isGuest = preview || effectiveRole === "guest" || !userId;
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [available, setAvailable] = useState(true);
@@ -131,16 +135,17 @@ export function LiveMarketplaceMap({
 
   // Load own availability
   useEffect(() => {
+    if (isGuest) return;
     (async () => {
       try {
-        if (role === "professional") {
+        if (effectiveRole === "professional") {
           const { data } = await supabase
             .from("professional_profiles")
             .select("available")
             .eq("user_id", userId)
             .maybeSingle();
           setAvailable(data?.available ?? true);
-        } else if (role === "family") {
+        } else if (effectiveRole === "family") {
           const { data } = await supabase
             .from("family_profiles")
             .select("visible_on_map")
@@ -159,7 +164,7 @@ export function LiveMarketplaceMap({
         console.warn("[LiveMap] could not load availability", e);
       }
     })();
-  }, [role, userId]);
+  }, [effectiveRole, userId, isGuest]);
 
   const loadAll = async () => {
     try {
@@ -258,16 +263,17 @@ export function LiveMarketplaceMap({
   }, []);
 
   const toggleAvailability = async () => {
+    if (isGuest || !userId) return;
     setToggling(true);
     try {
       const next = !available;
       let error: any = null;
-      if (role === "professional") {
+      if (effectiveRole === "professional") {
         ({ error } = await supabase
           .from("professional_profiles")
           .update({ available: next })
           .eq("user_id", userId));
-      } else if (role === "family") {
+      } else if (effectiveRole === "family") {
         ({ error } = await supabase
           .from("family_profiles")
           .update({ visible_on_map: next })
@@ -294,9 +300,10 @@ export function LiveMarketplaceMap({
   // - professional sees families (yellow) + institutions (fuchsia) = offers
   // - family / institution sees professionals (blue)
   const visiblePoints = useMemo<Point[]>(() => {
-    if (role === "professional") return [...families, ...institutions];
+    if (effectiveRole === "professional") return [...families, ...institutions];
+    if (effectiveRole === "guest") return [...pros, ...families, ...institutions];
     return pros;
-  }, [role, pros, families, institutions]);
+  }, [effectiveRole, pros, families, institutions]);
 
   const center =
     meCoords.lat != null && meCoords.lng != null
@@ -325,6 +332,7 @@ export function LiveMarketplaceMap({
 
   return (
     <div className="space-y-3">
+      {!isGuest && (
       <Card className="p-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
@@ -335,9 +343,9 @@ export function LiveMarketplaceMap({
               {available ? "Visible en el mapa" : "Oculto del mapa"}
             </p>
             <p className="text-xs text-muted-foreground">
-              {role === "professional"
+              {effectiveRole === "professional"
                 ? "Apaga para no recibir ofertas en tiempo real"
-                : role === "family"
+                : effectiveRole === "family"
                   ? "Apaga para que profesionales no vean tu ubicación"
                   : "Apaga para que profesionales no vean tu institución"}
             </p>
@@ -379,15 +387,16 @@ export function LiveMarketplaceMap({
           </Button>
         </div>
       </Card>
+      )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        {role !== "professional" && (
+        {effectiveRole !== "professional" && (
           <Badge variant="outline" className="gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.professional }} />
             Profesionales disponibles ({pros.length})
           </Badge>
         )}
-        {role === "professional" && (
+        {(effectiveRole === "professional" || effectiveRole === "guest") && (
           <>
             <Badge variant="outline" className="gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.family }} />
