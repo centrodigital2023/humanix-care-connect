@@ -25,6 +25,7 @@ import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
+import { SmartFamilyProfileForm } from "@/components/humanix/SmartFamilyProfileForm";
 
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
@@ -510,6 +511,8 @@ function FamilyDashboard() {
       }
     >
       <div className="space-y-8">
+
+        {user && <SmartFamilyProfileForm userId={user.id} />}
 
         {user && (
           <section className="rounded-2xl border border-border bg-card/95 p-6">
