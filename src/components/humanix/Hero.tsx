@@ -20,7 +20,6 @@ export function Hero() {
               Uber-like marketplace de salud • IA en tiempo real
             </div>
 
-<<<<<<< HEAD
             <h1 className="mt-6 font-display text-[clamp(2rem,6vw,3.75rem)] font-bold leading-[1.05] tracking-tight">
               <span className="text-gradient-bio">Talento en salud</span>,{" "}
               conectado al instante.
@@ -28,15 +27,6 @@ export function Hero() {
 
             <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
               Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;150ms. Pagos directos.
-=======
-            <h1 className="mt-6 font-display text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.05] tracking-tight">
-              <span className="text-gradient-bio">Talento en salud</span>,{" "}
-              conectado al instante.
-            </h1>
-
-            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-              Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;150ms. Pagos directos.
->>>>>>> 4ec3e06 (feat: redesign homepage with Uber-like healthcare marketplace concept)
             </p>
 
             {/* Key Stats */}
@@ -80,9 +70,6 @@ export function Hero() {
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-copper" />
                 Pago inmediato
-              </div>
-            </div>
->>>>>>> 4ec3e06 (feat: redesign homepage with Uber-like healthcare marketplace concept)
               </div>
             </div>
           </div>
