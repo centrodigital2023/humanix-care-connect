@@ -596,6 +596,25 @@ export function LiveMarketplaceMap({
                       </div>
 
                       <div className="flex gap-1.5 mt-3">
+                        {isGuest ? (
+                          <a
+                            href="/auth"
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              background: accent,
+                              color: "white",
+                              padding: "8px 10px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 700,
+                              textDecoration: "none",
+                            }}
+                          >
+                            Regístrate para contactar →
+                          </a>
+                        ) : (
+                          <>
                         {waHref && (
                           <a
                             href={waHref}
@@ -665,9 +684,11 @@ export function LiveMarketplaceMap({
                             <UserIcon className="h-3 w-3" /> Perfil
                           </a>
                         )}
+                          </>
+                        )}
                       </div>
 
-                      {!p.phone && !profileHref && (
+                      {!isGuest && !p.phone && !profileHref && (
                         <p
                           className="text-xs text-muted-foreground"
                           style={{ marginTop: 8, textAlign: "center" }}
