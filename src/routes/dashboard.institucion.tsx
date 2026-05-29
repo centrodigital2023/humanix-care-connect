@@ -28,6 +28,8 @@ import { EnhancedBulkOffersModule } from "@/components/humanix/EnhancedBulkOffer
 import { EnhancedPatientsModule } from "@/components/humanix/EnhancedPatientsModule";
 import { EnhancedAgendaModule } from "@/components/humanix/EnhancedAgendaModule";
 import { EnhancedReportsWithCRMModule } from "@/components/humanix/EnhancedReportsWithCRMModule";
+import { RealTimeProfessionalsMap } from "@/components/humanix/RealTimeProfessionalsMap";
+import { EnhancedInstitutionOperations } from "@/components/humanix/EnhancedInstitutionOperations";
 import { useAppUser } from "@/hooks/use-app-user";
 
 export const Route = createFileRoute("/dashboard/institucion")({
@@ -224,6 +226,8 @@ function InstitutionDashboard() {
         <Tabs defaultValue="resumen" className="w-full">
           <TabsList className="flex flex-wrap h-auto">
             <TabsTrigger value="resumen">Resumen</TabsTrigger>
+            <TabsTrigger value="metricas">📊 Métricas operativas</TabsTrigger>
+            <TabsTrigger value="profesionales">🗺️ Profesionales disponibles</TabsTrigger>
             <TabsTrigger value="bulk">Ofertas masivas + IA</TabsTrigger>
             <TabsTrigger value="pacientes">Pacientes</TabsTrigger>
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
@@ -390,6 +394,14 @@ function InstitutionDashboard() {
             />
           </section>
         )}
+          </TabsContent>
+
+          <TabsContent value="metricas" className="mt-4">
+            <EnhancedInstitutionOperations userId={user.id} />
+          </TabsContent>
+
+          <TabsContent value="profesionales" className="mt-4">
+            <RealTimeProfessionalsMap institutionCity={user.city || ""} userId={user.id} />
           </TabsContent>
 
           <TabsContent value="bulk" className="mt-4">
