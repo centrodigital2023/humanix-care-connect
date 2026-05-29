@@ -814,6 +814,7 @@ export type Database = {
           patient_summary: string | null
           updated_at: string
           user_id: string
+          visible_on_map: boolean
         }
         Insert: {
           created_at?: string
@@ -833,6 +834,7 @@ export type Database = {
           patient_summary?: string | null
           updated_at?: string
           user_id: string
+          visible_on_map?: boolean
         }
         Update: {
           created_at?: string
@@ -852,6 +854,7 @@ export type Database = {
           patient_summary?: string | null
           updated_at?: string
           user_id?: string
+          visible_on_map?: boolean
         }
         Relationships: []
       }
@@ -983,13 +986,16 @@ export type Database = {
           id: string
           institution_name: string
           institution_type: string | null
+          lat: number | null
           legal_representative_email: string | null
           legal_representative_name: string | null
           legal_representative_phone: string | null
+          lng: number | null
           nit: string | null
           updated_at: string
           user_id: string
           verified: boolean | null
+          visible_on_map: boolean
           website: string | null
         }
         Insert: {
@@ -1003,13 +1009,16 @@ export type Database = {
           id?: string
           institution_name: string
           institution_type?: string | null
+          lat?: number | null
           legal_representative_email?: string | null
           legal_representative_name?: string | null
           legal_representative_phone?: string | null
+          lng?: number | null
           nit?: string | null
           updated_at?: string
           user_id: string
           verified?: boolean | null
+          visible_on_map?: boolean
           website?: string | null
         }
         Update: {
@@ -1023,13 +1032,16 @@ export type Database = {
           id?: string
           institution_name?: string
           institution_type?: string | null
+          lat?: number | null
           legal_representative_email?: string | null
           legal_representative_name?: string | null
           legal_representative_phone?: string | null
+          lng?: number | null
           nit?: string | null
           updated_at?: string
           user_id?: string
           verified?: boolean | null
+          visible_on_map?: boolean
           website?: string | null
         }
         Relationships: []

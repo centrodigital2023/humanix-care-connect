@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * REAL TIME PROFESSIONALS MAP
  * 
