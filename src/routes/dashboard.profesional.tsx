@@ -32,6 +32,7 @@ import { MatchingOffers } from "@/components/humanix/MatchingOffers";
 import { OnboardingTour } from "@/components/humanix/OnboardingTour";
 import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
 import { SemanticOffers } from "@/components/humanix/SemanticOffers";
+import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { ReferencesManager } from "@/components/humanix/ReferencesManager";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
@@ -906,6 +907,18 @@ function ProDashboard() {
           </div>
           {userId && <SemanticOffers userId={userId} appliedIds={appliedIds} onApply={apply} />}
         </section>
+
+        {userId && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <div className="mb-4">
+              <h2 className="font-semibold">Mapa en vivo · Ofertas cerca de ti</h2>
+              <p className="text-sm text-muted-foreground">
+                Familias en amarillo, instituciones en fucsia. Apaga tu disponibilidad para no aparecer en el mapa.
+              </p>
+            </div>
+            <LiveMarketplaceMap role="professional" userId={userId} height={460} />
+          </section>
+        )}
 
         {/* Agenda virtual */}
         {userId && (
