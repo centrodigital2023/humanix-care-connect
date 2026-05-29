@@ -2,9 +2,10 @@ import { lazy, Suspense } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 
 export type LiveMarketplaceMapProps = {
-  role: "professional" | "family" | "institution";
-  userId: string;
+  role?: "professional" | "family" | "institution" | "guest";
+  userId?: string;
   height?: number;
+  preview?: boolean;
   pickLocation?: {
     lat: number | null;
     lng: number | null;
