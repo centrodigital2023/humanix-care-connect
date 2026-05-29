@@ -1,14 +1,15 @@
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Power, PowerOff, Loader2, Users, Building2, HeartPulse } from "lucide-react";
+import { Power, PowerOff, Loader2, Users, Building2, HeartPulse, MapPin, Crosshair } from "lucide-react";
 import { toast } from "sonner";
+import { geocodeCity, getBrowserLocation } from "@/lib/geo";
 
 type Role = "professional" | "family" | "institution";
 
@@ -49,6 +50,13 @@ const ICONS = {
       iconSize: [24, 24],
       iconAnchor: [12, 12],
     }),
+  me: () =>
+    L.divIcon({
+      className: "live-marker-me",
+      html: `<div style="width:26px;height:26px;border-radius:9999px;background:oklch(0.78 0.18 165);border:4px solid white;box-shadow:0 0 0 5px oklch(0.78 0.18 165 / .35), 0 6px 18px rgba(0,0,0,.4)"></div>`,
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+    }),
 };
 
 function FitBounds({ points }: { points: Point[] }) {
@@ -61,14 +69,40 @@ function FitBounds({ points }: { points: Point[] }) {
   return null;
 }
 
+function ClickToPick({ onPick }: { onPick: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e: any) {
+      onPick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+function RecenterOn({ lat, lng }: { lat: number | null; lng: number | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (lat != null && lng != null) {
+      map.setView([lat, lng], Math.max(map.getZoom(), 13));
+    }
+  }, [lat, lng]);
+  return null;
+}
+
 export function LiveMarketplaceMap({
   role,
   userId,
   height = 480,
+  pickLocation,
 }: {
   role: Role;
   userId: string;
   height?: number;
+  pickLocation?: {
+    lat: number | null;
+    lng: number | null;
+    onChange: (lat: number, lng: number, address?: string) => void;
+    defaultCity?: string;
+  };
 }) {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
@@ -76,6 +110,15 @@ export function LiveMarketplaceMap({
   const [pros, setPros] = useState<Point[]>([]);
   const [families, setFamilies] = useState<Point[]>([]);
   const [institutions, setInstitutions] = useState<Point[]>([]);
+  const [picking, setPicking] = useState(false);
+  const [meCoords, setMeCoords] = useState<{ lat: number | null; lng: number | null }>({
+    lat: pickLocation?.lat ?? null,
+    lng: pickLocation?.lng ?? null,
+  });
+
+  useEffect(() => {
+    setMeCoords({ lat: pickLocation?.lat ?? null, lng: pickLocation?.lng ?? null });
+  }, [pickLocation?.lat, pickLocation?.lng]);
 
   // Load own availability
   useEffect(() => {
@@ -227,7 +270,30 @@ export function LiveMarketplaceMap({
     return pros;
   }, [role, pros, families, institutions]);
 
-  const center = { lat: 4.6097, lng: -74.0817 }; // Bogotá fallback
+  const center =
+    meCoords.lat != null && meCoords.lng != null
+      ? { lat: meCoords.lat, lng: meCoords.lng }
+      : { lat: 4.6097, lng: -74.0817 }; // Bogotá fallback
+
+  const handlePick = (lat: number, lng: number) => {
+    setMeCoords({ lat, lng });
+    pickLocation?.onChange(lat, lng);
+    setPicking(false);
+  };
+
+  const useGps = async () => {
+    setPicking(true);
+    const loc = await getBrowserLocation();
+    if (loc) {
+      handlePick(loc.lat, loc.lng);
+      toast.success("📍 Ubicación detectada");
+    } else {
+      const fb = await geocodeCity(pickLocation?.defaultCity || "Bogotá");
+      if (fb) handlePick(fb.lat, fb.lng);
+      else toast.error("No se pudo obtener tu ubicación");
+    }
+    setPicking(false);
+  };
 
   return (
     <div className="space-y-3">
@@ -249,24 +315,41 @@ export function LiveMarketplaceMap({
             </p>
           </div>
         </div>
-        <Button
-          variant={available ? "destructive" : "hero"}
-          size="sm"
-          onClick={toggleAvailability}
-          disabled={toggling}
-        >
-          {toggling ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : available ? (
+        <div className="flex items-center gap-2">
+          {pickLocation && (
             <>
-              <PowerOff className="h-4 w-4 mr-1" /> Apagar
-            </>
-          ) : (
-            <>
-              <Power className="h-4 w-4 mr-1" /> Encender
+              <Button
+                variant={picking ? "hero" : "outline"}
+                size="sm"
+                onClick={() => setPicking((v) => !v)}
+              >
+                <MapPin className="h-4 w-4 mr-1" />
+                {picking ? "Toca el mapa…" : "Marcar ubicación"}
+              </Button>
+              <Button variant="outline" size="sm" onClick={useGps}>
+                <Crosshair className="h-4 w-4 mr-1" /> GPS
+              </Button>
             </>
           )}
-        </Button>
+          <Button
+            variant={available ? "destructive" : "hero"}
+            size="sm"
+            onClick={toggleAvailability}
+            disabled={toggling}
+          >
+            {toggling ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : available ? (
+              <>
+                <PowerOff className="h-4 w-4 mr-1" /> Apagar
+              </>
+            ) : (
+              <>
+                <Power className="h-4 w-4 mr-1" /> Encender
+              </>
+            )}
+          </Button>
+        </div>
       </Card>
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -288,6 +371,12 @@ export function LiveMarketplaceMap({
             </Badge>
           </>
         )}
+        {pickLocation && (
+          <Badge variant="outline" className="gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-full bg-biosensor" />
+            Tu ubicación
+          </Badge>
+        )}
       </div>
 
       <div
@@ -303,12 +392,44 @@ export function LiveMarketplaceMap({
             center={[center.lat, center.lng]}
             zoom={11}
             scrollWheelZoom
-            style={{ height: "100%", width: "100%" }}
+            style={{ height: "100%", width: "100%", cursor: picking ? "crosshair" : undefined }}
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            {picking && <ClickToPick onPick={handlePick} />}
+            {meCoords.lat != null && meCoords.lng != null && (
+              <>
+                <Marker
+                  position={[meCoords.lat, meCoords.lng]}
+                  icon={ICONS.me()}
+                  draggable={!!pickLocation}
+                  eventHandlers={
+                    pickLocation
+                      ? {
+                          dragend: (e: any) => {
+                            const ll = e.target.getLatLng();
+                            handlePick(ll.lat, ll.lng);
+                          },
+                        }
+                      : undefined
+                  }
+                >
+                  <Popup>
+                    <div className="text-sm">
+                      <p className="font-semibold">Tu ubicación de servicio</p>
+                      {pickLocation && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Arrastra el marcador para ajustar
+                        </p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+                <RecenterOn lat={meCoords.lat} lng={meCoords.lng} />
+              </>
+            )}
             {visiblePoints.map((p) => {
               const icon =
                 p.kind === "professional"

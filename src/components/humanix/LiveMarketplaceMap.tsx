@@ -5,6 +5,12 @@ export type LiveMarketplaceMapProps = {
   role: "professional" | "family" | "institution";
   userId: string;
   height?: number;
+  pickLocation?: {
+    lat: number | null;
+    lng: number | null;
+    onChange: (lat: number, lng: number, address?: string) => void;
+    defaultCity?: string;
+  };
 };
 
 const LazyMap = lazy(() =>
