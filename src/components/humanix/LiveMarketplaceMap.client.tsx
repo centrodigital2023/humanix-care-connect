@@ -9,7 +9,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Power, PowerOff, Loader2, Users, Building2, HeartPulse, MapPin, Crosshair } from "lucide-react";
 import { toast } from "sonner";
-import { geocodeCity, getBrowserLocation } from "@/lib/geo";
+import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo";
+import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
 
 type Role = "professional" | "family" | "institution";
 
@@ -20,6 +21,14 @@ type Point = {
   title: string;
   subtitle?: string;
   kind: "professional" | "family" | "institution";
+  userId?: string;
+  avatarUrl?: string | null;
+  fullName?: string | null;
+  rating?: number | null;
+  hourlyRate?: number | null;
+  phone?: string | null;
+  city?: string | null;
+  meta?: string | null;
 };
 
 const COLORS = {
@@ -157,21 +166,21 @@ export function LiveMarketplaceMap({
       const [proRes, famRes, instRes] = await Promise.all([
         supabase
           .from("professional_profiles")
-          .select("user_id, lat, lng, specialty, home_city, hourly_rate, avg_rating, available")
+          .select("user_id, lat, lng, specialty, home_city, hourly_rate, avg_rating, available, profiles:user_id(full_name, avatar_url, phone)")
           .eq("available", true)
           .not("lat", "is", null)
           .not("lng", "is", null)
           .limit(200),
         supabase
           .from("family_profiles")
-          .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map")
+          .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp, profiles:user_id(full_name, avatar_url, phone)")
           .eq("visible_on_map", true)
           .not("default_lat", "is", null)
           .not("default_lng", "is", null)
           .limit(200),
         supabase
           .from("institution_profiles")
-          .select("user_id, lat, lng, institution_name, city, institution_type, visible_on_map")
+          .select("user_id, lat, lng, institution_name, city, institution_type, visible_on_map, profiles:user_id(full_name, avatar_url, phone)")
           .eq("visible_on_map", true)
           .not("lat", "is", null)
           .not("lng", "is", null)
@@ -186,6 +195,14 @@ export function LiveMarketplaceMap({
           kind: "professional" as const,
           title: p.specialty || "Profesional disponible",
           subtitle: `${p.home_city ?? ""}${p.hourly_rate ? ` · $${Number(p.hourly_rate).toLocaleString("es-CO")}/h` : ""}`,
+          userId: p.user_id,
+          avatarUrl: p.profiles?.avatar_url ?? null,
+          fullName: p.profiles?.full_name ?? null,
+          rating: p.avg_rating ?? null,
+          hourlyRate: p.hourly_rate ?? null,
+          phone: p.profiles?.phone ?? null,
+          city: p.home_city ?? null,
+          meta: p.specialty ?? null,
         })),
       );
       setFamilies(
@@ -196,6 +213,11 @@ export function LiveMarketplaceMap({
           kind: "family" as const,
           title: p.patient_name ? `Familia · ${p.patient_name}` : "Familia",
           subtitle: p.default_address ?? undefined,
+          userId: p.user_id,
+          avatarUrl: p.profiles?.avatar_url ?? null,
+          fullName: p.profiles?.full_name ?? null,
+          phone: p.whatsapp ?? p.profiles?.phone ?? null,
+          meta: p.default_address ?? null,
         })),
       );
       setInstitutions(
@@ -206,6 +228,12 @@ export function LiveMarketplaceMap({
           kind: "institution" as const,
           title: p.institution_name || "Institución",
           subtitle: `${p.institution_type ?? ""}${p.city ? ` · ${p.city}` : ""}`,
+          userId: p.user_id,
+          avatarUrl: p.profiles?.avatar_url ?? null,
+          fullName: p.institution_name ?? p.profiles?.full_name ?? null,
+          phone: p.profiles?.phone ?? null,
+          city: p.city ?? null,
+          meta: p.institution_type ?? null,
         })),
       );
     } catch (e) {
@@ -439,16 +467,204 @@ export function LiveMarketplaceMap({
                     : ICONS.institution();
               const Icon =
                 p.kind === "professional" ? HeartPulse : p.kind === "family" ? Users : Building2;
+              const dist =
+                meCoords.lat != null && meCoords.lng != null
+                  ? distanceKm({ lat: meCoords.lat, lng: meCoords.lng }, { lat: p.lat, lng: p.lng })
+                  : null;
+              const kindLabel =
+                p.kind === "professional" ? "Profesional" : p.kind === "family" ? "Familia" : "Institución";
+              const accent = COLORS[p.kind];
+              const waHref = p.phone
+                ? `https://wa.me/${String(p.phone).replace(/\D/g, "")}`
+                : null;
+              const telHref = p.phone ? `tel:${p.phone}` : null;
+              const profileHref =
+                p.kind === "professional" && p.userId
+                  ? `/profesional/${p.userId}`
+                  : null;
               return (
                 <Marker key={p.id} position={[p.lat, p.lng]} icon={icon}>
-                  <Popup>
-                    <div className="text-sm">
-                      <p className="font-semibold flex items-center gap-1.5">
-                        <Icon className="h-3.5 w-3.5" />
-                        {p.title}
-                      </p>
-                      {p.subtitle && (
-                        <p className="text-muted-foreground text-xs mt-0.5">{p.subtitle}</p>
+                  <Popup minWidth={260} maxWidth={300}>
+                    <div className="text-sm" style={{ minWidth: 240 }}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {p.avatarUrl ? (
+                          <img
+                            src={p.avatarUrl}
+                            alt={p.fullName || p.title}
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 9999,
+                              objectFit: "cover",
+                              border: `2px solid ${accent}`,
+                            }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 9999,
+                              background: `${accent}22`,
+                              color: accent,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 700,
+                              border: `2px solid ${accent}`,
+                            }}
+                          >
+                            {(p.fullName || p.title || "?").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <p className="font-semibold truncate" style={{ margin: 0 }}>
+                            {p.fullName || p.title}
+                          </p>
+                          <p
+                            className="text-xs flex items-center gap-1"
+                            style={{ margin: 0, color: accent, fontWeight: 600 }}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {kindLabel}
+                          </p>
+                        </div>
+                      </div>
+
+                      {p.meta && (
+                        <p className="text-xs text-muted-foreground" style={{ margin: "2px 0" }}>
+                          {p.meta}
+                          {p.city ? ` · ${p.city}` : ""}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {dist != null && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              padding: "2px 8px",
+                              borderRadius: 9999,
+                              background: "oklch(0.78 0.18 165 / .15)",
+                              color: "oklch(0.45 0.18 165)",
+                              fontWeight: 600,
+                            }}
+                          >
+                            📍 {formatKm(dist)}
+                          </span>
+                        )}
+                        {p.rating != null && Number(p.rating) > 0 && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              padding: "2px 8px",
+                              borderRadius: 9999,
+                              background: "oklch(0.85 0.15 85 / .2)",
+                              color: "oklch(0.5 0.18 75)",
+                              fontWeight: 600,
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 2,
+                            }}
+                          >
+                            ★ {Number(p.rating).toFixed(1)}
+                          </span>
+                        )}
+                        {p.hourlyRate != null && Number(p.hourlyRate) > 0 && (
+                          <span
+                            style={{
+                              fontSize: 11,
+                              padding: "2px 8px",
+                              borderRadius: 9999,
+                              background: "#f3f4f6",
+                              color: "#111827",
+                              fontWeight: 600,
+                            }}
+                          >
+                            ${Number(p.hourlyRate).toLocaleString("es-CO")}/h
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex gap-1.5 mt-3">
+                        {waHref && (
+                          <a
+                            href={waHref}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              background: "#25D366",
+                              color: "white",
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <MessageCircle className="h-3 w-3" /> WhatsApp
+                          </a>
+                        )}
+                        {telHref && (
+                          <a
+                            href={telHref}
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              background: accent,
+                              color: "white",
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <Phone className="h-3 w-3" /> Llamar
+                          </a>
+                        )}
+                        {profileHref && (
+                          <a
+                            href={profileHref}
+                            style={{
+                              flex: 1,
+                              textAlign: "center",
+                              background: "white",
+                              border: `1px solid ${accent}`,
+                              color: accent,
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              fontSize: 12,
+                              fontWeight: 600,
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <UserIcon className="h-3 w-3" /> Perfil
+                          </a>
+                        )}
+                      </div>
+
+                      {!p.phone && !profileHref && (
+                        <p
+                          className="text-xs text-muted-foreground"
+                          style={{ marginTop: 8, textAlign: "center" }}
+                        >
+                          Contacto no disponible
+                        </p>
                       )}
                     </div>
                   </Popup>
