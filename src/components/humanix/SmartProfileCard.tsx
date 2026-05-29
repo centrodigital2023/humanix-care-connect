@@ -206,60 +206,10 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">
-              {complete ? "Perfil verificado" : `Paso ${done + 1} de ${total}`}
-            </p>
-            <h3 className="mt-0.5 font-display text-lg sm:text-xl font-semibold leading-tight">
-              {complete
-                ? `${firstName}, tu perfil está listo`
-                : "Completa tu perfil"}
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2">
-              {complete
-                ? "Los profesionales verán tu perfil con máxima confianza."
-                : nextReq
-                  ? <>Siguiente: <span className="font-medium text-foreground">{nextReq.label}</span> · {nextReq.hint}</>
-                  : "Menos de 2 minutos."}
+            <p className={`text-sm font-semibold ${tone.text}`}>
+              {complete ? "Perfil verificado ✓" : "Tu perfil familiar"}
             </p>
           </div>
-        </div>
-
-        {/* Track horizontal de requisitos */}
-        <ol className="relative mt-5 flex items-center gap-1.5">
-          {reqs.map((r) => {
-            const Icon = r.icon;
-            return (
-              <li
-                key={r.key}
-                title={`${r.label} — ${r.hint}`}
-                className={`group flex-1 flex flex-col items-center gap-1.5`}
-              >
-                <Link
-                  to="/dashboard/familia/onboarding"
-                  search={{ step: r.step } as never}
-                  className="flex flex-col items-center gap-1.5 w-full"
-                >
-                  <span
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-all hover:scale-110 ${
-                      r.done
-                        ? "border-biosensor/40 bg-biosensor/10 text-biosensor"
-                        : "border-border bg-background text-muted-foreground hover:border-fuchsia-neural/50 hover:text-fuchsia-neural"
-                    }`}
-                  >
-                    {r.done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3.5 w-3.5" />}
-                  </span>
-                  <span
-                    className={`text-[10px] sm:text-[11px] truncate max-w-full ${
-                      r.done ? "text-foreground font-medium" : "text-muted-foreground"
-                    }`}
-                  >
-                    {r.short}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
-        </ol>
 
         {/* Acciones */}
         <div className="mt-5 flex flex-col sm:flex-row gap-2">
