@@ -23,6 +23,7 @@ import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
 import { SmartProfileCard } from "@/components/humanix/SmartProfileCard";
@@ -517,6 +518,18 @@ function FamilyDashboard() {
             fullName={user.fullName}
             avatarUrl={user.avatarUrl ?? null}
           />
+        )}
+
+        {user && (
+          <section className="rounded-2xl border border-border bg-card/95 p-6">
+            <div className="mb-4">
+              <h2 className="font-semibold">Mapa en vivo · Profesionales disponibles</h2>
+              <p className="text-sm text-muted-foreground">
+                Puntos azules = profesionales conectados. Apaga tu visibilidad para ocultarte del mapa.
+              </p>
+            </div>
+            <LiveMarketplaceMap role="family" userId={user.id} height={460} />
+          </section>
         )}
 
         {/* KPIs */}
