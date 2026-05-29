@@ -653,30 +653,8 @@ function FamilyDashboard() {
           )}
         </section>
 
-        {/* Mi ubicación + profesionales cercanos */}
-        <section className="grid lg:grid-cols-2 gap-6">
-          <div>
-            <h2 className="font-display text-lg font-semibold flex items-center gap-2 mb-2">
-              <MapPin className="h-5 w-5 text-biosensor" />
-              Tu ubicación de servicio
-            </h2>
-            <p className="text-xs text-muted-foreground mb-3">
-              Marca dónde necesitas el servicio para que calculemos la distancia exacta a cada
-              profesional. Toca el mapa o usa GPS.
-            </p>
-            <LocationPicker
-              lat={familyCoords.lat}
-              lng={familyCoords.lng}
-              defaultCity={familyCity}
-              height={300}
-              onChange={(lat, lng, address) => void saveLocation(lat, lng, address)}
-            />
-            {savingLoc && (
-              <p className="text-[11px] text-muted-foreground mt-2">
-                <Loader2 className="h-3 w-3 animate-spin inline mr-1" /> Guardando…
-              </p>
-            )}
-          </div>
+        {/* Profesionales cercanos */}
+        <section>
           <div>
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-display text-lg font-semibold flex items-center gap-2">
