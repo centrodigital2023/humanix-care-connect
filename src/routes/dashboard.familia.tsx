@@ -26,7 +26,7 @@ import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
-import { SmartProfileCard } from "@/components/humanix/SmartProfileCard";
+
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { FamilyNeedsCalendar } from "@/components/humanix/FamilyNeedsCalendar";
