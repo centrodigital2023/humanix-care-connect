@@ -26,7 +26,7 @@ import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
-import { SmartProfileCard } from "@/components/humanix/SmartProfileCard";
+
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { FamilyNeedsCalendar } from "@/components/humanix/FamilyNeedsCalendar";
@@ -511,14 +511,6 @@ function FamilyDashboard() {
       }
     >
       <div className="space-y-8">
-        {/* Tarjeta inteligente de completitud de perfil */}
-        {!dataLoading && user && (
-          <SmartProfileCard
-            userId={user.id}
-            fullName={user.fullName}
-            avatarUrl={user.avatarUrl ?? null}
-          />
-        )}
 
         {user && (
           <section className="rounded-2xl border border-border bg-card/95 p-6">
