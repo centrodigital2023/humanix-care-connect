@@ -44,7 +44,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PromoCarousel } from "@/components/humanix/PromoCarousel";
+import { PromoCarousel, type PromoContext } from "@/components/humanix/PromoCarousel";
 
 const COP = (n: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n || 0);
@@ -163,6 +163,40 @@ export function EnhancedBulkOffersModule({
   const [showDocFolder, setShowDocFolder] = useState(false);
   const [folderDocs, setFolderDocs] = useState<ApplicationDocumentRow[]>([]);
   const [folderLoading, setFolderLoading] = useState(false);
+  const [institutionName, setInstitutionName] = useState<string>("");
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data } = await supabase
+        .from("institution_profiles")
+        .select("institution_name, city")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (active && data?.institution_name) setInstitutionName(data.institution_name);
+    })();
+    return () => { active = false; };
+  }, [userId]);
+
+  const promoContext: PromoContext = useMemo(() => {
+    const validRows = rows.filter((r) => r.title.trim() || r.specialty_required.trim());
+    const specialties = Array.from(
+      new Set(validRows.map((r) => r.specialty_required).filter(Boolean)),
+    );
+    const reqIds = Array.from(
+      new Set(validRows.flatMap((r) => r.requirements.map((q) => q.type))),
+    );
+    const reqLabels = reqIds
+      .map((id) => REQUIREMENT_OPTIONS.find((o) => o.id === id)?.label.replace(/^Anexo\s*/i, "").replace(/\.pdf$/i, ""))
+      .filter(Boolean) as string[];
+    return {
+      institutionName: institutionName || undefined,
+      city: defaultCity || validRows[0]?.city || undefined,
+      offersCount: validRows.length || published,
+      specialties,
+      requirements: reqLabels,
+    };
+  }, [rows, institutionName, defaultCity, published]);
 
   const updateRow = (id: string, patch: Partial<BulkRow>) =>
     setRows((r) => r.map((row) => (row.id === id ? { ...row, ...patch } : row)));
@@ -537,7 +571,10 @@ export function EnhancedBulkOffersModule({
         </div>
       </Card>
 
-      <PromoCarousel shareTitle="Ofertas Humanix · Talento en salud" />
+      <PromoCarousel
+        shareTitle="Ofertas Humanix · Talento en salud"
+        context={promoContext}
+      />
 
       {/* Dialog Requisitos */}
       <Dialog open={showRequirementsDialog !== null} onOpenChange={() => setShowRequirementsDialog(null)}>
