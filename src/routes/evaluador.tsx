@@ -1016,6 +1016,7 @@ function ProfessionalDetailDialog({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [docExtras, setDocExtras] = useState<Record<string, DocAI>>({});
   const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
+  const [analyzingAll, setAnalyzingAll] = useState(false);
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [holistic, setHolistic] = useState<HolisticValidation | null>(null);
   const [holisticBusy, setHolisticBusy] = useState(false);
