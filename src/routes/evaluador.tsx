@@ -62,6 +62,8 @@ import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
 import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
+import { InterviewActions } from "@/components/humanix/InterviewActions";
+import { VitalSignsMonitor } from "@/components/humanix/VitalSignsMonitor";
 
 export const Route = createFileRoute("/evaluador")({
   head: () => ({
