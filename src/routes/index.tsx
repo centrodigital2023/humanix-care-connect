@@ -89,7 +89,6 @@ function Index() {
           </div>
           <LiveMarketplaceMap preview height={360} />
         </section>
-        <AudienceSection />
         <Suspense fallback={<div className="min-h-[200px]" />}>
           <TechSection />
           <Testimonials />
