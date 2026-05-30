@@ -62,6 +62,8 @@ import { toast } from "sonner";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { useAppUser } from "@/hooks/use-app-user";
 import { HScrollCarousel } from "@/components/humanix/HScrollCarousel";
+import { InterviewActions } from "@/components/humanix/InterviewActions";
+import { VitalSignsMonitor } from "@/components/humanix/VitalSignsMonitor";
 
 export const Route = createFileRoute("/evaluador")({
   head: () => ({
@@ -1014,6 +1016,7 @@ function ProfessionalDetailDialog({
   const [previewLoading, setPreviewLoading] = useState(false);
   const [docExtras, setDocExtras] = useState<Record<string, DocAI>>({});
   const [analyzingDoc, setAnalyzingDoc] = useState<string | null>(null);
+  const [analyzingAll, setAnalyzingAll] = useState(false);
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [holistic, setHolistic] = useState<HolisticValidation | null>(null);
   const [holisticBusy, setHolisticBusy] = useState(false);
@@ -1319,6 +1322,25 @@ function ProfessionalDetailDialog({
       toast.error(e instanceof Error ? e.message : "Error en análisis");
     } finally {
       setHolisticBusy(false);
+    }
+  };
+
+  const analyzeAllDocs = async () => {
+    if (!docs.length) return;
+    setAnalyzingAll(true);
+    try {
+      let ok = 0;
+      for (const d of docs) {
+        try {
+          await analyzeDoc(d);
+          ok++;
+        } catch {
+          /* continue */
+        }
+      }
+      toast.success(`IA aplicada a ${ok}/${docs.length} documentos`);
+    } finally {
+      setAnalyzingAll(false);
     }
   };
 
@@ -1682,6 +1704,24 @@ function ProfessionalDetailDialog({
                 }))}
                 onScoreUpdated={() => onChanged()}
               />
+
+              {/* ── Programar entrevista + descargar carpeta + analizar todos ── */}
+              <InterviewActions
+                proName={pro.profile?.full_name ?? "Profesional"}
+                proEmail={pro.profile?.email ?? null}
+                proPhone={pro.profile?.phone ?? null}
+                docs={docs.map((d) => ({
+                  id: d.id,
+                  doc_type: d.doc_type,
+                  file_name: d.file_name,
+                  file_url: d.file_url,
+                }))}
+                onAnalyzeAll={analyzeAllDocs}
+                analyzingAll={analyzingAll}
+              />
+
+              {/* ── Tarea 2: seguimiento en casa · signos vitales ──────────── */}
+              <VitalSignsMonitor patientName={pro.profile?.full_name ?? undefined} />
 
               {/* ── Documentos en grid ──────────────────────────────────────── */}
               <Card className="p-4">
