@@ -1513,6 +1513,7 @@ export type Database = {
           blocked_reason: string | null
           certifications: Json | null
           created_at: string
+          gender: string | null
           home_city: string | null
           hourly_rate: number | null
           id: string
@@ -1558,6 +1559,7 @@ export type Database = {
           blocked_reason?: string | null
           certifications?: Json | null
           created_at?: string
+          gender?: string | null
           home_city?: string | null
           hourly_rate?: number | null
           id?: string
@@ -1603,6 +1605,7 @@ export type Database = {
           blocked_reason?: string | null
           certifications?: Json | null
           created_at?: string
+          gender?: string | null
           home_city?: string | null
           hourly_rate?: number | null
           id?: string
