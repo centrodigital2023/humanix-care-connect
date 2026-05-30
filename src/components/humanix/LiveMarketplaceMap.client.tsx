@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Power, PowerOff, Loader2, Users, Building2, HeartPulse, MapPin, Crosshair } from "lucide-react";
+import { Power, PowerOff, Loader2, Users, Building2, HeartPulse, MapPin, Crosshair, SlidersHorizontal, X } from "lucide-react";
 import { toast } from "sonner";
 import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo";
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Role = "professional" | "family" | "institution" | "guest";
 
@@ -29,6 +31,10 @@ type Point = {
   phone?: string | null;
   city?: string | null;
   meta?: string | null;
+  specialty?: string | null;
+  gender?: string | null;
+  yearsExperience?: number | null;
+  subSpecialties?: string[] | null;
 };
 
 const COLORS = {
@@ -128,10 +134,52 @@ export function LiveMarketplaceMap({
     lat: pickLocation?.lat ?? null,
     lng: pickLocation?.lng ?? null,
   });
+  // Self location persistence for family/institution roles (no external pickLocation prop)
+  const selfPersist = !pickLocation && !isGuest && (effectiveRole === "family" || effectiveRole === "institution");
+  // Filters (visible to family/institution/guest looking for professionals)
+  const showFilters = effectiveRole !== "professional";
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filterSpecialty, setFilterSpecialty] = useState("");
+  const [filterGender, setFilterGender] = useState<string>("any");
+  const [filterMinYears, setFilterMinYears] = useState<string>("");
+  const [filterMinRating, setFilterMinRating] = useState<string>("any");
+  const [filterMaxKm, setFilterMaxKm] = useState<string>("");
+  const [filterRequirement, setFilterRequirement] = useState("");
+  const [filterSortBy, setFilterSortBy] = useState<"distance" | "rating" | "experience">("distance");
 
   useEffect(() => {
     setMeCoords({ lat: pickLocation?.lat ?? null, lng: pickLocation?.lng ?? null });
   }, [pickLocation?.lat, pickLocation?.lng]);
+
+  // Hydrate self coords from DB for family/institution when no external pickLocation
+  useEffect(() => {
+    if (!selfPersist || !userId) return;
+    (async () => {
+      try {
+        if (effectiveRole === "institution") {
+          const { data } = await supabase
+            .from("institution_profiles")
+            .select("lat, lng")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (data?.lat != null && data?.lng != null) {
+            setMeCoords({ lat: Number(data.lat), lng: Number(data.lng) });
+          }
+        } else if (effectiveRole === "family") {
+          const { data } = await supabase
+            .from("family_profiles")
+            .select("default_lat, default_lng")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (data?.default_lat != null && data?.default_lng != null) {
+            setMeCoords({ lat: Number(data.default_lat), lng: Number(data.default_lng) });
+          }
+        }
+      } catch (e) {
+        console.warn("[LiveMap] could not hydrate self coords", e);
+      }
+    })();
+  }, [selfPersist, userId, effectiveRole]);
 
   // Load own availability
   useEffect(() => {
@@ -171,7 +219,7 @@ export function LiveMarketplaceMap({
       const [proRes, famRes, instRes] = await Promise.all([
         supabase
           .from("professional_profiles")
-          .select("user_id, lat, lng, specialty, home_city, hourly_rate, avg_rating, available, profiles:user_id(full_name, avatar_url, phone)")
+          .select("user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, profiles:user_id(full_name, avatar_url, phone)")
           .eq("available", true)
           .not("lat", "is", null)
           .not("lng", "is", null)
@@ -208,6 +256,10 @@ export function LiveMarketplaceMap({
           phone: p.profiles?.phone ?? null,
           city: p.home_city ?? null,
           meta: p.specialty ?? null,
+          specialty: p.specialty ?? null,
+          gender: p.gender ?? null,
+          yearsExperience: p.years_experience ?? null,
+          subSpecialties: p.sub_specialties ?? null,
         })),
       );
       setFamilies(
@@ -296,14 +348,64 @@ export function LiveMarketplaceMap({
     }
   };
 
+  // Apply filters to professionals
+  const filteredPros = useMemo<Point[]>(() => {
+    let list = pros.slice();
+    const q = filterSpecialty.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) => {
+        const hay = `${p.specialty ?? ""} ${(p.subSpecialties ?? []).join(" ")}`.toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    if (filterGender !== "any") {
+      list = list.filter((p) => (p.gender ?? "").toLowerCase() === filterGender);
+    }
+    const minY = parseInt(filterMinYears, 10);
+    if (!Number.isNaN(minY) && minY > 0) {
+      list = list.filter((p) => Number(p.yearsExperience ?? 0) >= minY);
+    }
+    if (filterMinRating !== "any") {
+      const r = parseFloat(filterMinRating);
+      list = list.filter((p) => Number(p.rating ?? 0) >= r);
+    }
+    const req = filterRequirement.trim().toLowerCase();
+    if (req) {
+      list = list.filter((p) => {
+        const hay = `${p.specialty ?? ""} ${(p.subSpecialties ?? []).join(" ")} ${p.city ?? ""}`.toLowerCase();
+        return hay.includes(req);
+      });
+    }
+    const maxKm = parseFloat(filterMaxKm);
+    if (!Number.isNaN(maxKm) && maxKm > 0 && meCoords.lat != null && meCoords.lng != null) {
+      list = list.filter((p) => {
+        const d = distanceKm({ lat: meCoords.lat!, lng: meCoords.lng! }, { lat: p.lat, lng: p.lng });
+        return d <= maxKm;
+      });
+    }
+    // Sort
+    if (filterSortBy === "rating") {
+      list.sort((a, b) => Number(b.rating ?? 0) - Number(a.rating ?? 0));
+    } else if (filterSortBy === "experience") {
+      list.sort((a, b) => Number(b.yearsExperience ?? 0) - Number(a.yearsExperience ?? 0));
+    } else if (meCoords.lat != null && meCoords.lng != null) {
+      list.sort((a, b) => {
+        const da = distanceKm({ lat: meCoords.lat!, lng: meCoords.lng! }, { lat: a.lat, lng: a.lng });
+        const db = distanceKm({ lat: meCoords.lat!, lng: meCoords.lng! }, { lat: b.lat, lng: b.lng });
+        return da - db;
+      });
+    }
+    return list;
+  }, [pros, filterSpecialty, filterGender, filterMinYears, filterMinRating, filterRequirement, filterMaxKm, filterSortBy, meCoords.lat, meCoords.lng]);
+
   // Visible layers depend on role:
   // - professional sees families (yellow) + institutions (fuchsia) = offers
   // - family / institution sees professionals (blue)
   const visiblePoints = useMemo<Point[]>(() => {
     if (effectiveRole === "professional") return [...families, ...institutions];
-    if (effectiveRole === "guest") return [...pros, ...families, ...institutions];
-    return pros;
-  }, [effectiveRole, pros, families, institutions]);
+    if (effectiveRole === "guest") return [...filteredPros, ...families, ...institutions];
+    return filteredPros;
+  }, [effectiveRole, filteredPros, families, institutions]);
 
   const center =
     meCoords.lat != null && meCoords.lng != null
@@ -313,6 +415,27 @@ export function LiveMarketplaceMap({
   const handlePick = (lat: number, lng: number) => {
     setMeCoords({ lat, lng });
     pickLocation?.onChange(lat, lng);
+    if (selfPersist && userId) {
+      (async () => {
+        try {
+          if (effectiveRole === "institution") {
+            await supabase
+              .from("institution_profiles")
+              .update({ lat, lng })
+              .eq("user_id", userId);
+          } else if (effectiveRole === "family") {
+            await supabase
+              .from("family_profiles")
+              .update({ default_lat: lat, default_lng: lng })
+              .eq("user_id", userId);
+          }
+          toast.success("📍 Ubicación guardada");
+        } catch (e) {
+          console.error("[LiveMap] could not persist location", e);
+          toast.error("No se pudo guardar la ubicación");
+        }
+      })();
+    }
     setPicking(false);
   };
 
@@ -352,7 +475,7 @@ export function LiveMarketplaceMap({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {pickLocation && (
+          {(pickLocation || selfPersist) && (
             <>
               <Button
                 variant={picking ? "hero" : "outline"}
@@ -393,7 +516,8 @@ export function LiveMarketplaceMap({
         {effectiveRole !== "professional" && (
           <Badge variant="outline" className="gap-1.5">
             <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.professional }} />
-            Profesionales disponibles ({pros.length})
+            Profesionales disponibles ({filteredPros.length}
+            {filteredPros.length !== pros.length ? ` / ${pros.length}` : ""})
           </Badge>
         )}
         {(effectiveRole === "professional" || effectiveRole === "guest") && (
@@ -414,7 +538,120 @@ export function LiveMarketplaceMap({
             Tu ubicación
           </Badge>
         )}
+        {showFilters && !isGuest && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto h-7 px-2 text-xs"
+            onClick={() => setFiltersOpen((v) => !v)}
+          >
+            <SlidersHorizontal className="h-3 w-3 mr-1" />
+            {filtersOpen ? "Ocultar filtros" : "Filtros inteligentes"}
+          </Button>
+        )}
       </div>
+
+      {showFilters && !isGuest && filtersOpen && (
+        <Card className="p-3 space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Especialidad</label>
+              <Input
+                value={filterSpecialty}
+                onChange={(e) => setFilterSpecialty(e.target.value)}
+                placeholder="enfermera, terapeuta…"
+                className="h-8 text-xs"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Género</label>
+              <Select value={filterGender} onValueChange={setFilterGender}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Cualquiera</SelectItem>
+                  <SelectItem value="femenino">Femenino</SelectItem>
+                  <SelectItem value="masculino">Masculino</SelectItem>
+                  <SelectItem value="otro">Otro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Años exp. mín.</label>
+              <Input
+                type="number"
+                min={0}
+                value={filterMinYears}
+                onChange={(e) => setFilterMinYears(e.target.value)}
+                placeholder="0"
+                className="h-8 text-xs"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estrellas mín.</label>
+              <Select value={filterMinRating} onValueChange={setFilterMinRating}>
+                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="any">Todas</SelectItem>
+                  <SelectItem value="3">★ 3+</SelectItem>
+                  <SelectItem value="4">★ 4+</SelectItem>
+                  <SelectItem value="4.5">★ 4.5+</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Distancia máx. (km)</label>
+              <Input
+                type="number"
+                min={0}
+                value={filterMaxKm}
+                onChange={(e) => setFilterMaxKm(e.target.value)}
+                placeholder="sin límite"
+                className="h-8 text-xs"
+                disabled={meCoords.lat == null}
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Requisito / palabra</label>
+              <Input
+                value={filterRequirement}
+                onChange={(e) => setFilterRequirement(e.target.value)}
+                placeholder="UCI, postop…"
+                className="h-8 text-xs"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Ordenar por</span>
+            <Select value={filterSortBy} onValueChange={(v: any) => setFilterSortBy(v)}>
+              <SelectTrigger className="h-7 w-40 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="distance">Distancia</SelectItem>
+                <SelectItem value="rating">Mejor calificados</SelectItem>
+                <SelectItem value="experience">Más experiencia</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs ml-auto"
+              onClick={() => {
+                setFilterSpecialty("");
+                setFilterGender("any");
+                setFilterMinYears("");
+                setFilterMinRating("any");
+                setFilterMaxKm("");
+                setFilterRequirement("");
+                setFilterSortBy("distance");
+              }}
+            >
+              <X className="h-3 w-3 mr-1" /> Limpiar
+            </Button>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Sincronización en vivo de profesionales, familias e instituciones activas.
+          </p>
+        </Card>
+      )}
 
       <div
         className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)]"
