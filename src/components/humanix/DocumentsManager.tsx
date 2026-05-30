@@ -14,6 +14,19 @@ import {
   Receipt,
   Briefcase,
   ShieldAlert,
+  Stethoscope,
+  Scale,
+  Gavel,
+  Fingerprint,
+  AlertTriangle,
+  HeartPulse,
+  PiggyBank,
+  HardHat,
+  Ban,
+  FileBadge,
+  Landmark,
+  FileSpreadsheet,
+  FilePlus2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,6 +39,19 @@ type DocType =
   | "id_document"
   | "utility_bill"
   | "work_experience"
+  | "public_function_cv"
+  | "medical_exam"
+  | "contraloria"
+  | "procuraduria"
+  | "criminal_record"
+  | "corrective_measures"
+  | "health_affiliation"
+  | "pension_affiliation"
+  | "arl_affiliation"
+  | "redam"
+  | "disqualifications"
+  | "assets_declaration"
+  | "bank_account"
   | "other";
 type DocStatus = "pending" | "approved" | "rejected";
 
@@ -92,6 +118,96 @@ const TYPES: {
     label: "Certificado de experiencia laboral",
     icon: <Briefcase className="h-4 w-4" />,
     hint: "Constancia de empleos previos en salud.",
+  },
+  {
+    value: "public_function_cv",
+    label: "Hoja de vida Función Pública",
+    icon: <FileText className="h-4 w-4" />,
+    hint: "Formato SIGEP / Función Pública. PDF.",
+  },
+  {
+    value: "medical_exam",
+    label: "Examen médico ocupacional",
+    icon: <Stethoscope className="h-4 w-4" />,
+    hint: "Vigencia recomendada 3 años. PDF o foto.",
+  },
+  {
+    value: "rethus",
+    label: "RETHUS",
+    icon: <ShieldCheck className="h-4 w-4" />,
+    hint: "Certificado vigente del Registro Único de Talento Humano en Salud.",
+  },
+  {
+    value: "contraloria",
+    label: "Antecedentes Contraloría",
+    icon: <Landmark className="h-4 w-4" />,
+    hint: "Certificado de responsabilidad fiscal.",
+  },
+  {
+    value: "procuraduria",
+    label: "Antecedentes Procuraduría",
+    icon: <Scale className="h-4 w-4" />,
+    hint: "Certificado de antecedentes disciplinarios.",
+  },
+  {
+    value: "criminal_record",
+    label: "Antecedentes Penales / Judiciales",
+    icon: <Gavel className="h-4 w-4" />,
+    hint: "Policía Nacional · requerimientos judiciales.",
+  },
+  {
+    value: "corrective_measures",
+    label: "Antecedentes Medidas Correctivas",
+    icon: <AlertTriangle className="h-4 w-4" />,
+    hint: "RNMC · Policía Nacional.",
+  },
+  {
+    value: "redam",
+    label: "REDAM",
+    icon: <Ban className="h-4 w-4" />,
+    hint: "Registro de Deudores Alimentarios Morosos.",
+  },
+  {
+    value: "disqualifications",
+    label: "Consulta de inhabilidades",
+    icon: <Fingerprint className="h-4 w-4" />,
+    hint: "Inhabilidades por delitos sexuales contra menores.",
+  },
+  {
+    value: "health_affiliation",
+    label: "Afiliación Salud (EPS)",
+    icon: <HeartPulse className="h-4 w-4" />,
+    hint: "Certificado de afiliación vigente.",
+  },
+  {
+    value: "pension_affiliation",
+    label: "Afiliación Pensión",
+    icon: <PiggyBank className="h-4 w-4" />,
+    hint: "Fondo de pensiones · certificado vigente.",
+  },
+  {
+    value: "arl_affiliation",
+    label: "Afiliación ARL",
+    icon: <HardHat className="h-4 w-4" />,
+    hint: "Riesgos laborales · certificado vigente.",
+  },
+  {
+    value: "assets_declaration",
+    label: "Declaración de bienes y rentas",
+    icon: <FileSpreadsheet className="h-4 w-4" />,
+    hint: "Formato SIGEP de bienes y rentas.",
+  },
+  {
+    value: "bank_account",
+    label: "Certificación cuenta bancaria",
+    icon: <FileBadge className="h-4 w-4" />,
+    hint: "Certificado bancario para pagos.",
+  },
+  {
+    value: "other",
+    label: "Otro anexo",
+    icon: <FilePlus2 className="h-4 w-4" />,
+    hint: "Cualquier otro documento de soporte (manual).",
   },
 ];
 
