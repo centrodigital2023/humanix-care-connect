@@ -1008,6 +1008,8 @@ function ProfessionalDetailDialog({
   const [blockReason, setBlockReason] = useState(pro.blocked_reason ?? "");
   const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [wipeAccount, setWipeAccount] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
   const [previewDoc, setPreviewDoc] = useState<{
     doc: Doc;
     url: string;
@@ -1113,27 +1115,32 @@ function ProfessionalDetailDialog({
   };
 
   const hardDelete = async () => {
+    if (confirmText.trim().toUpperCase() !== "ELIMINAR") {
+      toast.error("Escribe ELIMINAR para confirmar");
+      return;
+    }
     setBusy(true);
-    // Delete profile-related rows. Auth user stays alive.
-    const { error } = await supabase
-      .from("professional_profiles")
-      .delete()
-      .eq("user_id", pro.user_id);
-    // Also remove related professional data (docs + refs) — best effort
-    await supabase.from("professional_documents").delete().eq("user_id", pro.user_id);
-    await supabase.from("professional_references").delete().eq("user_id", pro.user_id);
-    // Remove professional role if present
-    await supabase
-      .from("user_roles")
-      .delete()
-      .eq("user_id", pro.user_id)
-      .eq("role", "professional");
-    setBusy(false);
-    setConfirmDelete(false);
-    if (error) return toast.error(error.message);
-    toast.success("Perfil profesional eliminado");
-    onChanged();
-    onClose();
+    try {
+      const { data, error } = await supabase.functions.invoke("delete-professional", {
+        body: { user_id: pro.user_id, wipe_account: wipeAccount },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(
+        wipeAccount
+          ? "Cuenta y email eliminados por completo"
+          : "Perfil profesional eliminado",
+      );
+      setConfirmDelete(false);
+      setConfirmText("");
+      setWipeAccount(false);
+      onChanged();
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "No se pudo eliminar");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const deleteDoc = async (d: Doc) => {
