@@ -1274,7 +1274,6 @@ function ProfessionalDetailDialog({
   };
 
   const runHolisticAnalysis = async () => {
-    // placeholder anchor for analyzeAllDocs insertion
     setHolisticBusy(true);
     setHolistic(null);
     try {
