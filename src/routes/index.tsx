@@ -10,7 +10,6 @@ import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
-import { HealthMarketplaceViz } from "@/components/humanix/HealthMarketplaceViz";
 import { FourModalitiesShowcase } from "@/components/humanix/FourModalitiesShowcase";
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
@@ -90,7 +89,6 @@ function Index() {
           </div>
           <LiveMarketplaceMap preview height={360} />
         </section>
-        <HealthMarketplaceViz />
         <FourModalitiesShowcase />
         <AudienceSection />
         <Suspense fallback={<div className="min-h-[200px]" />}>
