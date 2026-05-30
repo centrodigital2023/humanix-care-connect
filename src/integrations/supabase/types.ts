@@ -2503,6 +2503,19 @@ export type Database = {
         | "work_reference"
         | "family_reference"
         | "work_experience"
+        | "public_function_cv"
+        | "medical_exam"
+        | "contraloria"
+        | "procuraduria"
+        | "criminal_record"
+        | "corrective_measures"
+        | "health_affiliation"
+        | "pension_affiliation"
+        | "arl_affiliation"
+        | "redam"
+        | "disqualifications"
+        | "assets_declaration"
+        | "bank_account"
       family_doc_type:
         | "id_document"
         | "utility_bill"
@@ -2681,6 +2694,19 @@ export const Constants = {
         "work_reference",
         "family_reference",
         "work_experience",
+        "public_function_cv",
+        "medical_exam",
+        "contraloria",
+        "procuraduria",
+        "criminal_record",
+        "corrective_measures",
+        "health_affiliation",
+        "pension_affiliation",
+        "arl_affiliation",
+        "redam",
+        "disqualifications",
+        "assets_declaration",
+        "bank_account",
       ],
       family_doc_type: [
         "id_document",
