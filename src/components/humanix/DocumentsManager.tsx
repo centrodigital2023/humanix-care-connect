@@ -138,6 +138,12 @@ const TYPES: {
     hint: "Certificado vigente del Registro Único de Talento Humano en Salud.",
   },
   {
+    value: "rethus",
+    label: "RETHUS",
+    icon: <ShieldCheck className="h-4 w-4" />,
+    hint: "Certificado vigente del Registro Único de Talento Humano en Salud.",
+  },
+  {
     value: "contraloria",
     label: "Antecedentes Contraloría",
     icon: <Landmark className="h-4 w-4" />,
