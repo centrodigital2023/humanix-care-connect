@@ -537,6 +537,8 @@ export function EnhancedBulkOffersModule({
         </div>
       </Card>
 
+      <PromoCarousel shareTitle="Ofertas Humanix · Talento en salud" />
+
       {/* Dialog Requisitos */}
       <Dialog open={showRequirementsDialog !== null} onOpenChange={() => setShowRequirementsDialog(null)}>
         <DialogContent>
