@@ -44,6 +44,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
+import { PromoCarousel } from "@/components/humanix/PromoCarousel";
 
 const COP = (n: number) =>
   new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n || 0);
@@ -535,6 +536,8 @@ export function EnhancedBulkOffersModule({
           </Button>
         </div>
       </Card>
+
+      <PromoCarousel shareTitle="Ofertas Humanix · Talento en salud" />
 
       {/* Dialog Requisitos */}
       <Dialog open={showRequirementsDialog !== null} onOpenChange={() => setShowRequirementsDialog(null)}>
