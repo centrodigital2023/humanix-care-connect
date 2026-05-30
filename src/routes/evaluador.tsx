@@ -2035,23 +2035,91 @@ function ProfessionalDetailDialog({
             </div>
           </DialogFooter>
 
-          <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <AlertDialog
+            open={confirmDelete}
+            onOpenChange={(o) => {
+              setConfirmDelete(o);
+              if (!o) {
+                setConfirmText("");
+                setWipeAccount(false);
+              }
+            }}
+          >
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>¿Eliminar perfil profesional?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Se borrará el perfil profesional, documentos y referencias de{" "}
-                  <span className="font-medium">{pro.profile?.full_name}</span>. La cuenta de
-                  usuario quedará viva pero sin rol profesional. Esta acción no se puede deshacer.
+                <AlertDialogTitle className="flex items-center gap-2">
+                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                  ¿Eliminar a {pro.profile?.full_name || "este profesional"}?
+                </AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      Se borrarán perfil, documentos, referencias y archivos en
+                      almacenamiento. Esta acción no se puede deshacer.
+                    </p>
+                    {pro.profile?.email && (
+                      <p className="text-xs text-muted-foreground">
+                        Email registrado:{" "}
+                        <span className="font-mono">{pro.profile.email}</span>
+                      </p>
+                    )}
+                  </div>
                 </AlertDialogDescription>
               </AlertDialogHeader>
+
+              <label className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={wipeAccount}
+                  onChange={(e) => setWipeAccount(e.target.checked)}
+                  className="mt-0.5 accent-destructive"
+                />
+                <div className="text-xs">
+                  <p className="font-semibold text-destructive">
+                    Eliminar también la cuenta y el email de inscripción
+                  </p>
+                  <p className="text-muted-foreground mt-0.5">
+                    Borra el usuario de autenticación. El email quedará libre para volver
+                    a registrarse desde cero.
+                  </p>
+                </div>
+              </label>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                  Escribe <span className="font-semibold">ELIMINAR</span> para confirmar
+                </label>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="ELIMINAR"
+                  autoFocus
+                />
+              </div>
+
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogCancel disabled={busy}>Cancelar</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={hardDelete}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    hardDelete();
+                  }}
+                  disabled={busy || confirmText.trim().toUpperCase() !== "ELIMINAR"}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Eliminar
+                  {busy ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" /> Eliminando…
+                    </>
+                  ) : wipeAccount ? (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-1" /> Eliminar cuenta completa
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-1" /> Eliminar perfil
+                    </>
+                  )}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
