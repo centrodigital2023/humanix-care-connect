@@ -1325,6 +1325,25 @@ function ProfessionalDetailDialog({
     }
   };
 
+  const analyzeAllDocs = async () => {
+    if (!docs.length) return;
+    setAnalyzingAll(true);
+    try {
+      let ok = 0;
+      for (const d of docs) {
+        try {
+          await analyzeDoc(d);
+          ok++;
+        } catch {
+          /* continue */
+        }
+      }
+      toast.success(`IA aplicada a ${ok}/${docs.length} documentos`);
+    } finally {
+      setAnalyzingAll(false);
+    }
+  };
+
   return (
     <>
       <Dialog open onOpenChange={(o) => !o && onClose()}>
