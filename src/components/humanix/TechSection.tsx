@@ -4,13 +4,13 @@ const features = [
   {
     icon: Brain,
     title: "Matchmaking predictivo",
-     desc: "LightGBM + embeddings que aprenden de cada contratación exitosa. Match en menos de 1 km.",
+     desc: "LightGBM + embeddings que aprenden de cada contratación exitosa. Match en menos de 10 km.",
     color: "text-biosensor",
   },
   {
     icon: Fingerprint,
-    title: "\n",
-    desc: "Cédula colombiana + reconocimiento facial + cruce con RETHUS y Registraduría.",
+    title: "Verificación de Identidad",
+    desc: "Cédula colombiana + cruce con RETHUS y verificación de documentos",
     color: "text-copper",
   },
   {
@@ -55,8 +55,7 @@ export function TechSection() {
             IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
           </h2>
           <p className="mt-5 text-lg text-cyber-foreground/70 leading-relaxed">
-            Construido sobre Kafka, Redis y SageMaker en AWS São Paulo — con smart contracts que
-            liberan pagos al confirmar la geolocalización de llegada.
+            {"\n"}
           </p>
         </div>
 
@@ -82,7 +81,7 @@ export function TechSection() {
         {/* KPI strip */}
         <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-cyber-foreground/10 bg-cyber-foreground/10">
           {[
-             { v: "<1 km", l: "Match en vivo" },
+             { v: "<10 km", l: "Match en vivo" },
              { v: "89+", l: "Profesionales" },
             { v: "99.2%", l: "Trust Score" },
             { v: "24/7", l: "Soporte IA" },

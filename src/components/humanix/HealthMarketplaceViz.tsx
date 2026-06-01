@@ -202,7 +202,7 @@ export function HealthMarketplaceViz() {
               style={{ minHeight: "384px" }}
             />
             <p className="text-xs text-slate-500 mt-3 text-center">
-              Geolocalización en vivo • Matching en &lt;150ms • Pagos directos inmediatos
+              Geolocalización en vivo • Matching en &lt;10km • Pagos directos inmediatos
             </p>
           </div>
 
@@ -271,7 +271,7 @@ export function HealthMarketplaceViz() {
               {
                 step: "3",
                 title: "Match en tiempo real",
-                desc: "Profesional más cercano recibe alerta en <150ms",
+                desc: "Profesional más cercano recibe alerta en <10km",
               },
               {
                 step: "4",

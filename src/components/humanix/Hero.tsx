@@ -26,7 +26,7 @@ export function Hero() {
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;150ms. Pagos directos.
+              Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;10km. Pagos directos.
             </p>
 
             {/* Key Stats */}
@@ -36,7 +36,7 @@ export function Hero() {
                 <p className="text-xs text-muted-foreground">Profesionales verificados RETHUS</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-biosensor">&lt;150ms</p>
+                <p className="text-2xl sm:text-3xl font-black text-biosensor">&lt;10km</p>
                 <p className="text-xs text-muted-foreground">Match automático</p>
               </div>
               <div className="space-y-1">

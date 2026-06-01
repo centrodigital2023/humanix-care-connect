@@ -23,7 +23,7 @@ const pro = [
 ];
 
 const fam = [
-  { icon: Search, title: "Encuentra en minutos", desc: "Selecciona especialidad, fecha, hora y zona. Match automático en <150ms." },
+  { icon: Search, title: "Encuentra en minutos", desc: "Selecciona especialidad, fecha, hora y zona. Match automático en <10Km." },
   { icon: ShieldCheck, title: "100% verificados", desc: "Cédula, RETHUS y biometría facial validados con IA. Transparencia total." },
   { icon: Heart, title: "Monitoreo en vivo", desc: "Geolocalización GPS del profesional, signos vitales y botón de emergencia 24/7." },
   { icon: PhoneCall, title: "Soporte inmediato", desc: "WhatsApp directo al profesional. Respaldo de pólizas Sura y Colsanitas." },
@@ -79,7 +79,7 @@ export function AudienceSection() {
               <span className="text-gradient-bio">sin fricción</span>.
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              Activa disponibilidad, recibe alertas en tiempo real, completa turnos de 4 modalidades diferentes y cobra al instante a tu billetera. Construye reputación verificable con cada servicio.
+              Activa disponibilidad, recibe alertas en tiempo real y cobra al instante a tu billetera. Construye reputación verificable con cada servicio.
             </p>
             <Button variant="hero" size="lg" className="mt-6">
               Crear perfil profesional
