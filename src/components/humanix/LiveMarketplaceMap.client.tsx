@@ -13,6 +13,8 @@ import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { clusterMarkers, isCluster } from "@/lib/marker-clustering";
+import { useThrottle } from "@/hooks/use-throttle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,6 +106,35 @@ function ClickToPick({ onPick }: { onPick: (lat: number, lng: number) => void })
   return null;
 }
 
+function ZoomTracker({ onZoom }: { onZoom: (z: number) => void }) {
+  const map = useMap();
+  const throttled = useThrottle((z: number) => onZoom(z), 250);
+  useEffect(() => {
+    onZoom(map.getZoom());
+  }, []);
+  useMapEvents({
+    zoomend() {
+      throttled(map.getZoom());
+    },
+  });
+  return null;
+}
+
+function makeClusterIcon(counts: { professional: number; family: number; institution: number }) {
+  const total = counts.professional + counts.family + counts.institution;
+  const size = total > 100 ? 56 : total > 25 ? 48 : total > 8 ? 42 : 36;
+  const seg = (color: string, n: number) =>
+    n > 0
+      ? `<span style="display:inline-flex;align-items:center;gap:2px;color:${color};font-weight:700">●${n}</span>`
+      : "";
+  return L.divIcon({
+    className: "live-cluster",
+    html: `<div style="width:${size}px;height:${size}px;border-radius:9999px;background:linear-gradient(135deg,#1f2937,#0f172a);border:3px solid white;box-shadow:0 0 0 4px rgba(59,130,246,.25),0 6px 18px rgba(0,0,0,.35);display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;font-weight:800;font-size:${size > 44 ? 15 : 13}px;line-height:1">${total}<span style="font-size:8px;font-weight:600;opacity:.75;margin-top:1px">en zona</span></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
 function RecenterOn({ lat, lng }: { lat: number | null; lng: number | null }) {
   const map = useMap();
   useEffect(() => {
@@ -150,6 +181,7 @@ export function LiveMarketplaceMap({
   const [families, setFamilies] = useState<Point[]>([]);
   const [institutions, setInstitutions] = useState<Point[]>([]);
   const [picking, setPicking] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(11);
   const [meCoords, setMeCoords] = useState<{ lat: number | null; lng: number | null }>({
     lat: pickLocation?.lat ?? null,
     lng: pickLocation?.lng ?? null,
@@ -427,6 +459,26 @@ export function LiveMarketplaceMap({
     return filteredPros;
   }, [effectiveRole, filteredPros, families, institutions]);
 
+  // Cluster by proximity when zoomed out; radius shrinks as user zooms in.
+  const clusterRadiusKm = zoomLevel >= 14 ? 0 : zoomLevel >= 12 ? 0.4 : zoomLevel >= 10 ? 1.2 : 3.5;
+  const clusteredVisible = useMemo(() => {
+    if (clusterRadiusKm <= 0) return visiblePoints;
+    return clusterMarkers(visiblePoints, clusterRadiusKm);
+  }, [visiblePoints, clusterRadiusKm]);
+
+  // Zone summary: top 4 clusters by count (only when there's something to summarize).
+  const zoneSummary = useMemo(() => {
+    const clusters = clusteredVisible.filter((c: any) => isCluster(c)) as any[];
+    return clusters
+      .map((c) => {
+        const counts = { professional: 0, family: 0, institution: 0 };
+        for (const it of c.items) counts[(it as Point).kind]++;
+        return { id: c.id, lat: c.lat, lng: c.lng, total: c.count, counts };
+      })
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 4);
+  }, [clusteredVisible]);
+
   const center =
     meCoords.lat != null && meCoords.lng != null
       ? { lat: meCoords.lat, lng: meCoords.lng }
@@ -590,6 +642,36 @@ export function LiveMarketplaceMap({
         )}
       </div>
 
+      {zoneSummary.length > 0 && (
+        <Card className="p-2.5 flex flex-wrap items-center gap-2 text-xs">
+          <span className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px] mr-1">
+            Zonas con más actividad
+          </span>
+          {zoneSummary.map((z, i) => (
+            <Badge
+              key={z.id}
+              variant="secondary"
+              className="gap-1.5 font-semibold"
+              title={`Pro ${z.counts.professional} · Fam ${z.counts.family} · Inst ${z.counts.institution}`}
+            >
+              #{i + 1} · {z.total}
+              {z.counts.professional > 0 && (
+                <span style={{ color: COLORS.professional }}>●{z.counts.professional}</span>
+              )}
+              {z.counts.family > 0 && (
+                <span style={{ color: COLORS.family }}>●{z.counts.family}</span>
+              )}
+              {z.counts.institution > 0 && (
+                <span style={{ color: COLORS.institution }}>■{z.counts.institution}</span>
+              )}
+            </Badge>
+          ))}
+          <span className="text-[10px] text-muted-foreground ml-auto">
+            Acerca el mapa para ver detalles individuales
+          </span>
+        </Card>
+      )}
+
       {showFilters && !isGuest && filtersOpen && (
         <Card className="p-3 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -711,6 +793,7 @@ export function LiveMarketplaceMap({
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <ZoomTracker onZoom={setZoomLevel} />
             {picking && <ClickToPick onPick={handlePick} />}
             {meCoords.lat != null && meCoords.lng != null && (
               <>
@@ -743,7 +826,56 @@ export function LiveMarketplaceMap({
                 <RecenterOn lat={meCoords.lat} lng={meCoords.lng} />
               </>
             )}
-            {visiblePoints.map((p) => {
+            {clusteredVisible.map((item: any) => {
+              if (isCluster(item)) {
+                const counts = { professional: 0, family: 0, institution: 0 };
+                for (const it of item.items) counts[(it as Point).kind]++;
+                return (
+                  <Marker
+                    key={item.id}
+                    position={[item.lat, item.lng]}
+                    icon={makeClusterIcon(counts)}
+                    eventHandlers={{
+                      click: (e: any) => {
+                        const map = e.target._map;
+                        if (map) map.setView([item.lat, item.lng], Math.min(16, map.getZoom() + 2));
+                      },
+                    }}
+                  >
+                    <Popup>
+                      <div className="text-sm" style={{ minWidth: 180 }}>
+                        <p className="font-semibold" style={{ margin: 0 }}>
+                          {item.count} en esta zona
+                        </p>
+                        <div className="mt-2 space-y-1 text-xs">
+                          {counts.professional > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.professional }} />
+                              {counts.professional} profesional{counts.professional !== 1 ? "es" : ""}
+                            </div>
+                          )}
+                          {counts.family > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.family }} />
+                              {counts.family} familia{counts.family !== 1 ? "s" : ""}
+                            </div>
+                          )}
+                          {counts.institution > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: COLORS.institution }} />
+                              {counts.institution} institución/es
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-2">
+                          Toca para acercar y ver detalles.
+                        </p>
+                      </div>
+                    </Popup>
+                  </Marker>
+                );
+              }
+              const p = item as Point;
               const icon =
                 p.kind === "professional"
                   ? ICONS.professional()
