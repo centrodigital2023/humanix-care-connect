@@ -51,7 +51,7 @@ function FitBounds({ points }: { points: MapPoint[] }) {
 
 export function OffersMap({
   points,
-  height = 420,
+  height = 320,
   center = { lat: 4.6097, lng: -74.0817 }, // Bogotá
   zoom = 11,
 }: {
@@ -66,7 +66,7 @@ export function OffersMap({
     return (
       <div
         className="rounded-2xl border border-border bg-muted/30 animate-pulse"
-        style={{ height }}
+        style={{ height: `clamp(200px, 50vh, ${height}px)` }}
       />
     );
   }
@@ -74,7 +74,7 @@ export function OffersMap({
   return (
     <div
       className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)]"
-      style={{ height }}
+      style={{ height: `clamp(200px, 50vh, ${height}px)` }}
     >
       <MapContainer
         center={[center.lat, center.lng]}

@@ -19,10 +19,10 @@ const LazyMap = lazy(() =>
 );
 
 export function LiveMarketplaceMap(props: LiveMarketplaceMapProps) {
-  const height = props.height ?? 480;
+  const height = props.height ?? 360;
   const placeholder = (
     <div
-      style={{ height }}
+      style={{ height: `clamp(220px, 55vh, ${height}px)` }}
       className="w-full rounded-2xl bg-muted/30 animate-pulse"
       aria-label="Cargando mapa en vivo"
     />
