@@ -980,6 +980,31 @@ export function LiveMarketplaceMap({
       </div>
 
       <style>{`@keyframes livePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}`}</style>
+
+      <AlertDialog open={guestPromptOpen} onOpenChange={setGuestPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Crea tu cuenta para continuar</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para marcar tu ubicación, activar tu visibilidad en el mapa y usar
+              los filtros inteligentes necesitas una cuenta. Es gratis y solo
+              toma 1 minuto. Al registrarte sincronizas en tiempo real con
+              profesionales, familias e instituciones cercanas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Ahora no</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setGuestPromptOpen(false);
+                navigate({ to: "/auth" });
+              }}
+            >
+              Registrarme gratis
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
