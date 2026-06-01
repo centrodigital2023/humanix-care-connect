@@ -248,20 +248,20 @@ function AuthPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground bg-aurora">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-10">
-        <div className="flex items-center justify-between">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-10">
+        <div className="flex items-center justify-between gap-3">
           <Logo />
-          <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Volver al inicio
+          <Link to="/" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
+            ← Inicio
           </Link>
         </div>
 
-        <div className="mt-10 grid lg:grid-cols-2 gap-10 items-start">
+        <div className="mt-6 sm:mt-10 grid lg:grid-cols-2 gap-8 lg:gap-10 items-start">
           <div className="hidden lg:block sticky top-10">
             <span className="text-xs uppercase tracking-[0.2em] text-biosensor font-semibold">
               Humanix
             </span>
-            <h1 className="mt-3 font-display text-4xl font-bold leading-tight">
+            <h1 className="mt-3 font-display text-3xl xl:text-4xl font-bold leading-tight text-balance">
               Crea tu cuenta y empieza a conectar{" "}
               <span className="text-gradient-bio">en minutos</span>.
             </h1>
@@ -286,7 +286,7 @@ function AuthPage() {
             </ul>
           </div>
 
-          <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elegant)] p-6 sm:p-8">
+          <div className="rounded-2xl sm:rounded-3xl border border-border bg-card/95 backdrop-blur-xl shadow-[var(--shadow-elegant)] p-5 sm:p-8">
             {forgotMode ? (
               <div>
                 <div className="mb-6 text-center">

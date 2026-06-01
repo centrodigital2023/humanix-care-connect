@@ -69,20 +69,20 @@ function Index() {
         </section>
         <LiveSocialProof />
         <TrustBar />
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10">
-          <div className="mb-4 flex items-end justify-between gap-4 flex-wrap">
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10">
+          <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
             <div>
-              <h2 className="font-display text-2xl sm:text-3xl font-bold">
+              <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">
                 Mapa en vivo · Talento humano en salud
               </h2>
-              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
                 Profesionales (azul), familias (amarillo) e instituciones (fucsia) conectados ahora mismo.
                 Toca un punto para ver el perfil. Regístrate para contactar.
               </p>
             </div>
             <a
               href="/auth"
-              className="text-sm font-semibold text-biosensor hover:underline"
+              className="text-sm font-semibold text-biosensor hover:underline shrink-0"
             >
               Crear cuenta gratis →
             </a>

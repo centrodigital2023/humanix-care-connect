@@ -475,16 +475,16 @@ export function LiveMarketplaceMap({
 
   return (
     <div className="space-y-3">
-      <Card className="p-3 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <Card className="p-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <div
-            className={`h-3 w-3 rounded-full ${available ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
+            className={`h-3 w-3 shrink-0 rounded-full ${available ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
           />
-          <div>
+          <div className="min-w-0">
             <p className="text-sm font-semibold">
               {available ? "Visible en el mapa" : "Oculto del mapa"}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground leading-snug">
               {isGuest
                 ? "Regístrate para activar tu presencia en tiempo real"
                 : effectiveRole === "professional"
@@ -495,23 +495,25 @@ export function LiveMarketplaceMap({
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {(pickLocation || selfPersist || isGuest) && (
             <>
               <Button
                 variant={picking ? "hero" : "outline"}
                 size="sm"
+                className="flex-1 sm:flex-initial"
                 onClick={() => {
                   if (requireAuth()) return;
                   setPicking((v) => !v);
                 }}
               >
                 <MapPin className="h-4 w-4 mr-1" />
-                {picking ? "Toca el mapa…" : "Marcar ubicación"}
+                <span className="truncate">{picking ? "Toca el mapa…" : "Marcar"}</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
+                className="flex-1 sm:flex-initial"
                 onClick={() => {
                   if (requireAuth()) return;
                   useGps();
@@ -524,6 +526,7 @@ export function LiveMarketplaceMap({
           <Button
             variant={available ? "destructive" : "hero"}
             size="sm"
+            className="flex-1 sm:flex-initial"
             onClick={() => {
               if (requireAuth()) return;
               toggleAvailability();
@@ -589,7 +592,7 @@ export function LiveMarketplaceMap({
 
       {showFilters && !isGuest && filtersOpen && (
         <Card className="p-3 space-y-3">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <div>
               <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Especialidad</label>
               <Input
