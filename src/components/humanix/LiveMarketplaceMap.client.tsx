@@ -117,7 +117,7 @@ function RecenterOn({ lat, lng }: { lat: number | null; lng: number | null }) {
 export function LiveMarketplaceMap({
   role,
   userId,
-  height = 480,
+  height = 360,
   pickLocation,
   preview = false,
 }: {
@@ -694,7 +694,7 @@ export function LiveMarketplaceMap({
 
       <div
         className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)]"
-        style={{ height }}
+        style={{ height: `clamp(220px, 55vh, ${height}px)` }}
       >
         {loading ? (
           <div className="h-full flex items-center justify-center bg-muted/30">

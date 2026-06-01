@@ -34,7 +34,7 @@ export function LocationPicker({
   lat,
   lng,
   onChange,
-  height = 150,
+  height = 160,
   defaultCity = "Bogotá",
 }: {
   lat: number | null;
@@ -118,7 +118,7 @@ export function LocationPicker({
     return (
       <div
         className="rounded-xl border border-border bg-muted/30 animate-pulse"
-        style={{ height }}
+        style={{ height: `clamp(140px, 28vh, ${height}px)` }}
       />
     );
   }
@@ -158,7 +158,7 @@ export function LocationPicker({
       {/* Mapa pequeño */}
       <div
         className="rounded-xl overflow-hidden border border-border shadow-sm relative"
-        style={{ height }}
+        style={{ height: `clamp(140px, 28vh, ${height}px)` }}
       >
         <MapContainer
           center={[center.lat, center.lng]}
