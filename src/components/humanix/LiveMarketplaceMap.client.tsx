@@ -475,7 +475,6 @@ export function LiveMarketplaceMap({
 
   return (
     <div className="space-y-3">
-      {!isGuest && (
       <Card className="p-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
@@ -486,7 +485,9 @@ export function LiveMarketplaceMap({
               {available ? "Visible en el mapa" : "Oculto del mapa"}
             </p>
             <p className="text-xs text-muted-foreground">
-              {effectiveRole === "professional"
+              {isGuest
+                ? "Regístrate para activar tu presencia en tiempo real"
+                : effectiveRole === "professional"
                 ? "Apaga para no recibir ofertas en tiempo real"
                 : effectiveRole === "family"
                   ? "Apaga para que profesionales no vean tu ubicación"
@@ -495,17 +496,27 @@ export function LiveMarketplaceMap({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {(pickLocation || selfPersist) && (
+          {(pickLocation || selfPersist || isGuest) && (
             <>
               <Button
                 variant={picking ? "hero" : "outline"}
                 size="sm"
-                onClick={() => setPicking((v) => !v)}
+                onClick={() => {
+                  if (requireAuth()) return;
+                  setPicking((v) => !v);
+                }}
               >
                 <MapPin className="h-4 w-4 mr-1" />
                 {picking ? "Toca el mapa…" : "Marcar ubicación"}
               </Button>
-              <Button variant="outline" size="sm" onClick={useGps}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (requireAuth()) return;
+                  useGps();
+                }}
+              >
                 <Crosshair className="h-4 w-4 mr-1" /> GPS
               </Button>
             </>
@@ -513,7 +524,10 @@ export function LiveMarketplaceMap({
           <Button
             variant={available ? "destructive" : "hero"}
             size="sm"
-            onClick={toggleAvailability}
+            onClick={() => {
+              if (requireAuth()) return;
+              toggleAvailability();
+            }}
             disabled={toggling}
           >
             {toggling ? (
@@ -530,7 +544,6 @@ export function LiveMarketplaceMap({
           </Button>
         </div>
       </Card>
-      )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
         {effectiveRole !== "professional" && (
@@ -558,12 +571,15 @@ export function LiveMarketplaceMap({
             Tu ubicación
           </Badge>
         )}
-        {showFilters && !isGuest && (
+        {showFilters && (
           <Button
             variant="outline"
             size="sm"
             className="ml-auto h-7 px-2 text-xs"
-            onClick={() => setFiltersOpen((v) => !v)}
+            onClick={() => {
+              if (requireAuth()) return;
+              setFiltersOpen((v) => !v);
+            }}
           >
             <SlidersHorizontal className="h-3 w-3 mr-1" />
             {filtersOpen ? "Ocultar filtros" : "Filtros inteligentes"}
