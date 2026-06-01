@@ -13,6 +13,17 @@ import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useNavigate } from "@tanstack/react-router";
 
 type Role = "professional" | "family" | "institution" | "guest";
 
@@ -123,6 +134,15 @@ export function LiveMarketplaceMap({
 }) {
   const effectiveRole: Role = role ?? "guest";
   const isGuest = preview || effectiveRole === "guest" || !userId;
+  const navigate = useNavigate();
+  const [guestPromptOpen, setGuestPromptOpen] = useState(false);
+  const requireAuth = (): boolean => {
+    if (isGuest) {
+      setGuestPromptOpen(true);
+      return true;
+    }
+    return false;
+  };
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [available, setAvailable] = useState(true);
