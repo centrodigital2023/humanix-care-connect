@@ -613,6 +613,54 @@ export type Database = {
           },
         ]
       }
+      document_ai_analyses: {
+        Row: {
+          analyzed_by: string | null
+          created_at: string
+          document_id: string
+          document_owner_id: string
+          document_table: string
+          findings: Json | null
+          id: string
+          model: string | null
+          model_version: string | null
+          raw_response: Json | null
+          score: number | null
+          summary: string | null
+          verdict: string | null
+        }
+        Insert: {
+          analyzed_by?: string | null
+          created_at?: string
+          document_id: string
+          document_owner_id: string
+          document_table: string
+          findings?: Json | null
+          id?: string
+          model?: string | null
+          model_version?: string | null
+          raw_response?: Json | null
+          score?: number | null
+          summary?: string | null
+          verdict?: string | null
+        }
+        Update: {
+          analyzed_by?: string | null
+          created_at?: string
+          document_id?: string
+          document_owner_id?: string
+          document_table?: string
+          findings?: Json | null
+          id?: string
+          model?: string | null
+          model_version?: string | null
+          raw_response?: Json | null
+          score?: number | null
+          summary?: string | null
+          verdict?: string | null
+        }
+        Relationships: []
+      }
       dynamic_forms: {
         Row: {
           created_at: string
@@ -1049,6 +1097,57 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_schedules: {
+        Row: {
+          channel: string
+          created_at: string
+          duration_minutes: number
+          id: string
+          location: string | null
+          message: string | null
+          outcome: string | null
+          outcome_notes: string | null
+          professional_id: string
+          scheduled_at: string
+          scheduled_by: string
+          sent_via: string[] | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          message?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          professional_id: string
+          scheduled_at: string
+          scheduled_by: string
+          sent_via?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          location?: string | null
+          message?: string | null
+          outcome?: string | null
+          outcome_notes?: string | null
+          professional_id?: string
+          scheduled_at?: string
+          scheduled_by?: string
+          sent_via?: string[] | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       job_offer_requirements: {
         Row: {
           created_at: string
@@ -1438,6 +1537,42 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      professional_deletion_log: {
+        Row: {
+          created_at: string
+          deleted_by: string
+          deleted_by_email: string | null
+          deleted_email: string | null
+          deleted_full_name: string | null
+          deleted_user_id: string
+          id: string
+          reason: string | null
+          snapshot: Json | null
+        }
+        Insert: {
+          created_at?: string
+          deleted_by: string
+          deleted_by_email?: string | null
+          deleted_email?: string | null
+          deleted_full_name?: string | null
+          deleted_user_id: string
+          id?: string
+          reason?: string | null
+          snapshot?: Json | null
+        }
+        Update: {
+          created_at?: string
+          deleted_by?: string
+          deleted_by_email?: string | null
+          deleted_email?: string | null
+          deleted_full_name?: string | null
+          deleted_user_id?: string
+          id?: string
+          reason?: string | null
+          snapshot?: Json | null
         }
         Relationships: []
       }
@@ -2193,6 +2328,54 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vital_signs_readings: {
+        Row: {
+          created_at: string
+          family_user_id: string
+          id: string
+          notes: string | null
+          patient_label: string | null
+          reading_type: string
+          recorded_at: string
+          recorded_by: string | null
+          severity: string
+          source: string
+          unit: string | null
+          value: number
+          value_secondary: number | null
+        }
+        Insert: {
+          created_at?: string
+          family_user_id: string
+          id?: string
+          notes?: string | null
+          patient_label?: string | null
+          reading_type: string
+          recorded_at?: string
+          recorded_by?: string | null
+          severity?: string
+          source?: string
+          unit?: string | null
+          value: number
+          value_secondary?: number | null
+        }
+        Update: {
+          created_at?: string
+          family_user_id?: string
+          id?: string
+          notes?: string | null
+          patient_label?: string | null
+          reading_type?: string
+          recorded_at?: string
+          recorded_by?: string | null
+          severity?: string
+          source?: string
+          unit?: string | null
+          value?: number
+          value_secondary?: number | null
         }
         Relationships: []
       }
