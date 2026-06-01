@@ -25,11 +25,11 @@ export type OffersMapProps = {
 const LazyMap = lazy(() => import("./OffersMap.client").then((m) => ({ default: m.OffersMap })));
 
 export function OffersMap(props: OffersMapProps) {
-  const height = props.height ?? 320;
+  const height = props.height ?? 120;
   const placeholder = (
     <div
-      style={{ height: `clamp(200px, 50vh, ${height}px)` }}
-      className="w-full rounded-xl bg-muted/30 animate-pulse"
+      style={{ height }}
+      className="w-full rounded-2xl bg-muted/30 animate-pulse"
       aria-label="Cargando mapa"
     />
   );

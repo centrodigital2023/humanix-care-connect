@@ -14,10 +14,10 @@ const LazyPicker = lazy(() =>
 );
 
 export function LocationPicker(props: LocationPickerProps) {
-  const height = props.height ?? 150;
+  const height = props.height ?? 120;
   const placeholder = (
     <div
-      className="rounded-2xl border border-border bg-muted/30 animate-pulse"
+      className="rounded-xl border border-border bg-muted/30 animate-pulse"
       style={{ height }}
     />
   );

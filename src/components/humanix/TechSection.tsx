@@ -1,16 +1,17 @@
 import { Brain, MapPinned, Fingerprint, Radio, MessageSquare, BarChart3 } from "lucide-react";
+import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 
 const features = [
   {
     icon: Brain,
     title: "Matchmaking predictivo",
-     desc: "LightGBM + embeddings que aprenden de cada contratación exitosa. Match en menos de 10 km.",
+     desc: "LightGBM + embeddings que aprenden de cada contratación exitosa. Match en menos de 1 km.",
     color: "text-biosensor",
   },
   {
     icon: Fingerprint,
-    title: "Verificación de Identidad",
-    desc: "Cédula colombiana + cruce con RETHUS y verificación de documentos",
+    title: "\n",
+    desc: "Cédula colombiana + reconocimiento facial + cruce con RETHUS y Registraduría.",
     color: "text-copper",
   },
   {
@@ -40,6 +41,8 @@ const features = [
 ];
 
 export function TechSection() {
+  const { professionals } = useActiveUsersCount();
+
   return (
     <section id="tecnologia" className="relative py-24 sm:py-32 overflow-hidden">
       <div className="absolute inset-0 bg-cyber" />
@@ -55,7 +58,8 @@ export function TechSection() {
             IA en tiempo real, <span className="text-gradient-bio">arquitectura de élite</span>.
           </h2>
           <p className="mt-5 text-lg text-cyber-foreground/70 leading-relaxed">
-            {"\n"}
+            Construido sobre Kafka, Redis y SageMaker en AWS São Paulo — con smart contracts que
+            liberan pagos al confirmar la geolocalización de llegada.
           </p>
         </div>
 
@@ -81,8 +85,8 @@ export function TechSection() {
         {/* KPI strip */}
         <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-px rounded-2xl overflow-hidden border border-cyber-foreground/10 bg-cyber-foreground/10">
           {[
-             { v: "<10 km", l: "Match en vivo" },
-             { v: "89+", l: "Profesionales" },
+             { v: "<1 km", l: "Match en vivo" },
+             { v: `${professionals}+`, l: "Profesionales" },
             { v: "99.2%", l: "Trust Score" },
             { v: "24/7", l: "Soporte IA" },
           ].map((k) => (

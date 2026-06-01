@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Activity } from "lucide-react";
+import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 
 const events = [
   "Laura aceptó un turno en Engativá hace 2 min",
@@ -12,18 +13,11 @@ const events = [
 
 export function LiveSocialProof() {
   const [i, setI] = useState(0);
-   const [online, setOnline] = useState(89);
+  const { professionals } = useActiveUsersCount();
 
   useEffect(() => {
     const t = setInterval(() => setI((x) => (x + 1) % events.length), 4000);
-     const o = setInterval(
-       () => setOnline((n) => Math.max(85, Math.min(95, n + (Math.random() > 0.5 ? 1 : -1)))),
-       6000,
-     );
-    return () => {
-      clearInterval(t);
-      clearInterval(o);
-    };
+    return () => clearInterval(t);
   }, []);
 
   return (
@@ -31,7 +25,7 @@ export function LiveSocialProof() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-biosensor">
           <span className="h-1.5 w-1.5 rounded-full bg-biosensor animate-pulse-ring" />
-          {online} online
+          {professionals} profesionales online
         </span>
         <span className="hidden sm:inline-block h-3 w-px bg-border" />
         <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0 flex-1">

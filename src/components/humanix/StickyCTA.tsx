@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, Sparkles, X } from "lucide-react";
 import { RoleGate } from "./RoleGate";
+import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 
 export function StickyCTA() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
+  const { professionals } = useActiveUsersCount();
 
   useEffect(() => {
     try {
@@ -40,7 +42,7 @@ export function StickyCTA() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold leading-tight">Encuentra cuidador hoy</p>
             <p className="text-[11px] text-muted-foreground leading-tight">
-              847 profesionales online · plan desde $9.000/mes
+              {professionals} profesionales online · plan desde $9.000/mes
             </p>
           </div>
           <button

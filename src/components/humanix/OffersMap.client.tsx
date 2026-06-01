@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { MapModal } from "./MapModal";
+import { Button } from "@/components/ui/button";
+import { Maximize2 } from "lucide-react";
 
 // Fix iconos rotos al bundlear
 const defaultIcon = L.icon({
@@ -51,7 +54,7 @@ function FitBounds({ points }: { points: MapPoint[] }) {
 
 export function OffersMap({
   points,
-  height = 320,
+  height = 120,
   center = { lat: 4.6097, lng: -74.0817 }, // Bogotá
   zoom = 11,
 }: {
@@ -61,52 +64,84 @@ export function OffersMap({
   zoom?: number;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  
   useEffect(() => setMounted(true), []);
+  
   if (!mounted) {
     return (
       <div
         className="rounded-2xl border border-border bg-muted/30 animate-pulse"
-        style={{ height: `clamp(200px, 50vh, ${height}px)` }}
+        style={{ height }}
       />
     );
   }
+  
   const valid = points.filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
-  return (
-    <div
-      className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)]"
-      style={{ height: `clamp(200px, 50vh, ${height}px)` }}
+  
+  const mapContent = (
+    <MapContainer
+      center={[center.lat, center.lng]}
+      zoom={zoom}
+      scrollWheelZoom
+      style={{ height: "100%", width: "100%" }}
     >
-      <MapContainer
-        center={[center.lat, center.lng]}
-        zoom={zoom}
-        scrollWheelZoom
-        style={{ height: "100%", width: "100%" }}
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {valid.map((p) => (
+        <Marker
+          key={p.id}
+          position={[p.lat, p.lng]}
+          icon={p.status === "reserved" ? blueIcon : greenIcon}
+        >
+          <Popup>
+            <div className="text-sm">
+              <p className="font-semibold">{p.title}</p>
+              {p.subtitle && <p className="text-muted-foreground text-xs mt-0.5">{p.subtitle}</p>}
+              {p.href && (
+                <a href={p.href} className="text-biosensor text-xs font-medium mt-2 inline-block">
+                  Ver detalles →
+                </a>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+      {valid.length > 1 && <FitBounds points={valid} />}
+    </MapContainer>
+  );
+  
+  return (
+    <>
+      <div
+        className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)] relative group cursor-pointer"
+        style={{ height }}
+        onClick={() => setExpanded(true)}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {valid.map((p) => (
-          <Marker
-            key={p.id}
-            position={[p.lat, p.lng]}
-            icon={p.status === "reserved" ? blueIcon : greenIcon}
-          >
-            <Popup>
-              <div className="text-sm">
-                <p className="font-semibold">{p.title}</p>
-                {p.subtitle && <p className="text-muted-foreground text-xs mt-0.5">{p.subtitle}</p>}
-                {p.href && (
-                  <a href={p.href} className="text-biosensor text-xs font-medium mt-2 inline-block">
-                    Ver detalles →
-                  </a>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        {valid.length > 1 && <FitBounds points={valid} />}
-      </MapContainer>
-    </div>
+        {mapContent}
+        <Button
+          variant="secondary"
+          size="sm"
+          className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded(true);
+          }}
+        >
+          <Maximize2 className="h-4 w-4 mr-1" />
+          Expandir
+        </Button>
+      </div>
+      
+      <MapModal
+        open={expanded}
+        onOpenChange={setExpanded}
+        title="Mapa de ofertas"
+      >
+        {mapContent}
+      </MapModal>
+    </>
   );
 }

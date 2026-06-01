@@ -10,10 +10,12 @@ import {
   Sparkles,
   Star,
   User as UserIcon,
+  Maximize2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { Badge } from "@/components/ui/badge";
+import { MapModal } from "./MapModal";
 
 const sb = supabase as unknown as SupabaseClient;
 
@@ -107,26 +109,52 @@ function MapPreview({
   lng: number | null;
   address: string | null;
 }) {
+  const [expanded, setExpanded] = useState(false);
+
   if (lat != null && lng != null) {
     const d = 0.006;
     const bbox = `${lng - d}%2C${lat - d}%2C${lng + d}%2C${lat + d}`;
     const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
+    
     return (
-      <div className="rounded-xl overflow-hidden border border-border bg-muted">
-        <iframe
-          title="Ubicación del servicio"
-          src={src}
-          className="w-full h-40"
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-        <div className="px-3 py-2 text-[11px] text-muted-foreground flex items-start gap-1.5">
-          <MapPin className="h-3 w-3 text-fuchsia-neural mt-0.5 shrink-0" />
-          <span className="line-clamp-2">{address ?? "Ubicación aproximada"}</span>
+      <>
+        <div
+          className="rounded-xl overflow-hidden border border-border bg-muted group cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => setExpanded(true)}
+        >
+          <iframe
+            title="Ubicación del servicio"
+            src={src}
+            className="w-full h-24"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+          <div className="px-3 py-2 text-[11px] text-muted-foreground flex items-start justify-between gap-1.5 bg-card">
+            <div className="flex items-start gap-1.5">
+              <MapPin className="h-3 w-3 text-fuchsia-neural mt-0.5 shrink-0" />
+              <span className="line-clamp-1">{address ?? "Ubicación aproximada"}</span>
+            </div>
+            <Maximize2 className="h-3 w-3 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </div>
-      </div>
+
+        <MapModal
+          open={expanded}
+          onOpenChange={setExpanded}
+          title="Ubicación del servicio"
+        >
+          <iframe
+            title="Ubicación del servicio - expandido"
+            src={src}
+            className="w-full h-full"
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </MapModal>
+      </>
     );
   }
+  
   return (
     <div className="rounded-xl border border-dashed border-border bg-muted/40 h-28 flex flex-col items-center justify-center p-3 text-center">
       <MapPin className="h-5 w-5 text-muted-foreground mb-1" />
