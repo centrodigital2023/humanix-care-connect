@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -6,6 +6,7 @@ import { MapPin, Loader2, Crosshair, Navigation, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button";
 import { MapModal } from "./MapModal";
 import { toast } from "sonner";
+import { useThrottle } from "@/hooks/use-throttle";
 
 const pinIcon = L.divIcon({
   className: "humanix-pin",
@@ -23,9 +24,12 @@ function Recenter({ lat, lng }: { lat: number; lng: number }) {
 }
 
 function ClickToSet({ onPick }: { onPick: (lat: number, lng: number) => void }) {
+  // Throttle click events to prevent rapid consecutive picks
+  const throttledPick = useThrottle(onPick, 300);
+
   useMapEvents({
     click(e) {
-      onPick(e.latlng.lat, e.latlng.lng);
+      throttledPick(e.latlng.lat, e.latlng.lng);
     },
   });
   return null;
@@ -50,6 +54,9 @@ export function LocationPicker({
   const [expanded, setExpanded] = useState(false);
   const watchIdRef = useRef<number | null>(null);
 
+  // Throttle onChange to prevent excessive updates (especially during watch)
+  const throttledOnChange = useThrottle(onChange, 1000); // Update max once per second during watch
+
   useEffect(() => {
     setMounted(true);
     // Auto-detect GPS on mount silently
@@ -64,7 +71,7 @@ export function LocationPicker({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function useGps() {
+  const useGps = useCallback(() => {
     if (!navigator.geolocation) {
       toast.error("Tu navegador no soporta geolocalización");
       return;
@@ -82,9 +89,9 @@ export function LocationPicker({
       },
       { enableHighAccuracy: true, timeout: 10_000 },
     );
-  }
+  }, [onChange]);
 
-  function toggleWatch() {
+  const toggleWatch = useCallback(() => {
     if (watching) {
       if (watchIdRef.current != null) navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -97,15 +104,16 @@ export function LocationPicker({
       }
       setWatching(true);
       toast.success("Rastreando tu ubicación en tiempo real");
+      // Use throttled onChange during watch to reduce CPU usage
       watchIdRef.current = navigator.geolocation.watchPosition(
-        (pos) => onChange(pos.coords.latitude, pos.coords.longitude),
+        (pos) => throttledOnChange(pos.coords.latitude, pos.coords.longitude),
         () => {
           setWatching(false);
         },
         { enableHighAccuracy: true, maximumAge: 5_000 },
       );
     }
-  }
+  }, [watching, throttledOnChange]);
 
   // Cleanup watcher on unmount
   useEffect(() => {
@@ -132,10 +140,18 @@ export function LocationPicker({
       scrollWheelZoom={expanded}
       zoomControl={expanded}
       style={{ height: "100%", width: "100%" }}
+      // Performance optimizations
+      markerZoomAnimation={expanded}
+      preferCanvas={true}
     >
       <TileLayer
         attribution="&copy; OpenStreetMap"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        // Performance tuning for mobile
+        maxZoom={19}
+        minZoom={2}
+        updateWhenZooming={false}
+        updateWhenIdle={true}
       />
       {lat != null && lng != null && (
         <>
