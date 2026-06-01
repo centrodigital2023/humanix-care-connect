@@ -1,7 +1,7 @@
 // @ts-nocheck
 /**
  * ENHANCED PATIENTS MODULE
- * 
+ *
  * Features:
  * - Visualización inteligente de pacientes/casos activos
  * - Historial médico y notas de coordinación
@@ -11,7 +11,7 @@
  * - Integración con calendario
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Loader2,
   ClipboardList,
@@ -38,9 +38,19 @@ import { supabase as _sb } from "@/integrations/supabase/client";
 const supabase: any = _sb;
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import {
   Dialog,
   DialogContent,
@@ -52,9 +62,16 @@ import {
 
 type PatientCase = {
   application_id: string;
+  source: "application" | "manual";
   offer_id: string;
   offer_title: string;
   city: string;
+  patient_name: string | null;
+  patient_age: number | null;
+  patient_relation: string | null;
+  service_address: string | null;
+  care_type: string | null;
+  acuity_level: string | null;
   professional_id: string;
   professional_name: string | null;
   professional_avatar: string | null;
@@ -88,6 +105,8 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
   const [patients, setPatients] = useState<PatientCase[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<PatientCase | null>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [savingPatient, setSavingPatient] = useState(false);
   const [editingNotes, setEditingNotes] = useState(false);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [serviceHistory, setServiceHistory] = useState<ServiceRecord[]>([]);
@@ -95,6 +114,19 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
   const [coordinators, setCoordinators] = useState<
     Array<{ id: string; name: string; email: string }>
   >([]);
+  const [newPatient, setNewPatient] = useState({
+    patient_name: "",
+    patient_age: "",
+    patient_relation: "",
+    city: "",
+    service_address: "",
+    care_type: "Cuidado domiciliario",
+    acuity_level: "medium",
+    health_conditions: "",
+    emergency_contact_name: "",
+    emergency_contact_phone: "",
+    case_notes: "",
+  });
 
   // Cargar coordinadores (staff de talento humano)
   useEffect(() => {
@@ -106,12 +138,9 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
           .select("user_id, full_name, email")
           .in(
             "user_id",
-            (
-              await supabase
-                .from("user_roles")
-                .select("user_id")
-                .eq("role", "hr_staff")
-            ).data?.map((r) => r.user_id) ?? []
+            (await supabase.from("user_roles").select("user_id").eq("role", "hr_staff")).data?.map(
+              (r) => r.user_id,
+            ) ?? [],
           )
           .limit(20);
 
@@ -121,7 +150,7 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
               id: p.user_id,
               name: p.full_name || "Staff",
               email: p.email || "",
-            }))
+            })),
           );
         }
       } catch (e) {
@@ -133,10 +162,8 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
     };
   }, []);
 
-  // Cargar pacientes/casos
-  useEffect(() => {
-    let active = true;
-    (async () => {
+  const loadPatients = useCallback(
+    async (isActive = () => true) => {
       try {
         // Obtener todas las ofertas de esta institución
         const { data: offers } = await supabase
@@ -144,39 +171,38 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
           .select("id, title, city")
           .eq("posted_by", userId);
 
-        if (!offers || offers.length === 0) {
-          if (active) setLoading(false);
-          return;
-        }
-
-        const offerMap = new Map(offers.map((o) => [o.id, o]));
+        const offerMap = new Map((offers ?? []).map((o) => [o.id, o]));
         const offerIds = Array.from(offerMap.keys());
 
         // Obtener aplicaciones aceptadas
-        const { data: apps } = await supabase
-          .from("applications")
-          .select("id, status, created_at, professional_id, job_offer_id")
-          .in("job_offer_id", offerIds)
-          .in("status", ["accepted", "pending"])
-          .order("created_at", { ascending: false });
+        const { data: apps } =
+          offerIds.length > 0
+            ? await supabase
+                .from("applications")
+                .select("id, status, created_at, professional_id, job_offer_id")
+                .in("job_offer_id", offerIds)
+                .in("status", ["accepted", "pending"])
+                .order("created_at", { ascending: false })
+            : { data: [] };
 
-        if (!active) return;
+        if (!isActive()) return;
 
         // Obtener datos de profesionales
-        const proIds = Array.from(
-          new Set(apps?.map((a) => a.professional_id) ?? [])
-        );
+        const proIds = Array.from(new Set(apps?.map((a) => a.professional_id) ?? []));
 
-        const [proProfiles, profiles] = await Promise.all([
-          supabase
-            .from("professional_profiles")
-            .select("user_id, specialty")
-            .in("user_id", proIds),
-          supabase
-            .from("profiles")
-            .select("user_id, full_name, avatar_url, email, phone, city")
-            .in("user_id", proIds),
-        ]);
+        const [proProfiles, profiles] =
+          proIds.length > 0
+            ? await Promise.all([
+                supabase
+                  .from("professional_profiles")
+                  .select("user_id, specialty")
+                  .in("user_id", proIds),
+                supabase
+                  .from("profiles")
+                  .select("user_id, full_name, avatar_url, email, phone, city")
+                  .in("user_id", proIds),
+              ])
+            : [{ data: [] }, { data: [] }];
 
         const proMap: Record<string, any> = {};
         proProfiles.data?.forEach((p) => {
@@ -198,9 +224,16 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
           const pro = proMap[a.professional_id];
           return {
             application_id: a.id,
+            source: "application",
             offer_id: a.job_offer_id,
             offer_title: offer?.title ?? "Caso",
             city: offer?.city ?? "—",
+            patient_name: null,
+            patient_age: null,
+            patient_relation: null,
+            service_address: null,
+            care_type: null,
+            acuity_level: null,
             professional_id: a.professional_id,
             professional_name: pro?.full_name,
             professional_avatar: pro?.avatar_url,
@@ -220,18 +253,82 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
           };
         });
 
-        setPatients(cases);
+        const { data: manualRows, error: manualError } = await supabase
+          .from("institution_patient_cases")
+          .select("*")
+          .eq("institution_user_id", userId)
+          .order("created_at", { ascending: false });
+
+        if (manualError) {
+          console.warn("[institution patients] manual cases unavailable:", manualError.message);
+        }
+
+        const manualCases: PatientCase[] = (manualRows ?? []).map((row) => ({
+          application_id: row.id,
+          source: "manual",
+          offer_id: row.id,
+          offer_title: row.care_type || "Caso institucional",
+          city: row.city || "—",
+          patient_name: row.patient_name,
+          patient_age: row.patient_age,
+          patient_relation: row.patient_relation,
+          service_address: row.service_address,
+          care_type: row.care_type,
+          acuity_level: row.acuity_level,
+          professional_id: "",
+          professional_name: null,
+          professional_avatar: null,
+          professional_phone: null,
+          professional_email: null,
+          professional_specialty: null,
+          status: row.status,
+          created_at: row.created_at,
+          case_notes: row.case_notes,
+          coordinator_id: row.coordinator_id,
+          coordinator_name:
+            coordinators.find((coordinator) => coordinator.id === row.coordinator_id)?.name ?? null,
+          last_service: null,
+          service_count: 0,
+          patient_status: row.status,
+          health_conditions: row.health_conditions,
+          emergency_contact:
+            [row.emergency_contact_name, row.emergency_contact_phone].filter(Boolean).join(" · ") ||
+            null,
+        }));
+
+        if (isActive()) setPatients([...manualCases, ...cases]);
       } catch (e) {
         console.error("[patients] load failed", e);
       } finally {
-        if (active) setLoading(false);
+        if (isActive()) setLoading(false);
       }
-    })();
+    },
+    [coordinators, userId],
+  );
+
+  // Cargar pacientes/casos
+  useEffect(() => {
+    let active = true;
+    loadPatients(() => active);
 
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [loadPatients]);
+
+  useRealtimeRefresh(
+    `institution-patients-${userId}`,
+    [
+      {
+        table: "institution_patient_cases",
+        filter: `institution_user_id=eq.${userId}`,
+      },
+      { table: "applications" },
+      { table: "service_bookings" },
+    ],
+    () => loadPatients(),
+    Boolean(userId),
+  );
 
   const loadServiceHistory = async (applicationId: string) => {
     setHistoryLoading(true);
@@ -270,22 +367,144 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
     setShowDetailsDialog(true);
   };
 
+  const updateNewPatient = (field: string, value: string) => {
+    setNewPatient((current) => {
+      const next = { ...current, [field]: value };
+      if (field !== "case_notes" && !current.case_notes.trim()) {
+        const parts = [
+          next.care_type,
+          next.acuity_level === "high"
+            ? "prioridad alta"
+            : next.acuity_level === "low"
+              ? "prioridad baja"
+              : "prioridad media",
+          next.health_conditions ? `condiciones: ${next.health_conditions}` : "",
+          next.service_address ? `atención en ${next.service_address}` : "",
+        ].filter(Boolean);
+        next.case_notes = parts.join(". ");
+      }
+      return next;
+    });
+  };
+
+  const addPatient = async () => {
+    const patientName = newPatient.patient_name.trim();
+    if (!patientName) {
+      toast.error("Ingresa el nombre del paciente");
+      return;
+    }
+
+    setSavingPatient(true);
+    try {
+      const healthConditions = newPatient.health_conditions
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      const payload = {
+        institution_user_id: userId,
+        patient_name: patientName,
+        patient_age: newPatient.patient_age ? Number(newPatient.patient_age) : null,
+        patient_relation: newPatient.patient_relation || null,
+        city: newPatient.city || null,
+        service_address: newPatient.service_address || null,
+        care_type: newPatient.care_type || "Cuidado domiciliario",
+        acuity_level: newPatient.acuity_level || "medium",
+        status: "active",
+        case_notes: newPatient.case_notes || null,
+        health_conditions: healthConditions,
+        emergency_contact_name: newPatient.emergency_contact_name || null,
+        emergency_contact_phone: newPatient.emergency_contact_phone || null,
+      };
+
+      const { data, error } = await supabase
+        .from("institution_patient_cases")
+        .insert(payload)
+        .select("*")
+        .single();
+
+      if (error) throw error;
+
+      const created: PatientCase = {
+        application_id: data.id,
+        source: "manual",
+        offer_id: data.id,
+        offer_title: data.care_type || "Caso institucional",
+        city: data.city || "—",
+        patient_name: data.patient_name,
+        patient_age: data.patient_age,
+        patient_relation: data.patient_relation,
+        service_address: data.service_address,
+        care_type: data.care_type,
+        acuity_level: data.acuity_level,
+        professional_id: "",
+        professional_name: null,
+        professional_avatar: null,
+        professional_phone: null,
+        professional_email: null,
+        professional_specialty: null,
+        status: data.status,
+        created_at: data.created_at,
+        case_notes: data.case_notes,
+        coordinator_id: data.coordinator_id,
+        coordinator_name: null,
+        last_service: null,
+        service_count: 0,
+        patient_status: data.status,
+        health_conditions: data.health_conditions,
+        emergency_contact:
+          [data.emergency_contact_name, data.emergency_contact_phone].filter(Boolean).join(" · ") ||
+          null,
+      };
+
+      setPatients((prev) => [created, ...prev]);
+      setShowAddDialog(false);
+      setNewPatient({
+        patient_name: "",
+        patient_age: "",
+        patient_relation: "",
+        city: "",
+        service_address: "",
+        care_type: "Cuidado domiciliario",
+        acuity_level: "medium",
+        health_conditions: "",
+        emergency_contact_name: "",
+        emergency_contact_phone: "",
+        case_notes: "",
+      });
+      toast.success("Paciente agregado al panel de coordinación");
+    } catch (e: any) {
+      console.error("[patients] add failed", e);
+      toast.error(e?.message || "No se pudo agregar el paciente");
+    } finally {
+      setSavingPatient(false);
+    }
+  };
+
   const saveNotes = async () => {
     if (!selectedPatient) return;
 
     try {
-      // En una aplicación real, guardar en una tabla de notas
       const noteText = notes[selectedPatient.application_id] || "";
+      if (selectedPatient.source === "manual") {
+        const { error } = await supabase
+          .from("institution_patient_cases")
+          .update({ case_notes: noteText })
+          .eq("id", selectedPatient.application_id)
+          .eq("institution_user_id", userId);
+
+        if (error) throw error;
+      }
+
       toast.success("Notas guardadas exitosamente");
       setEditingNotes(false);
+      setSelectedPatient({ ...selectedPatient, case_notes: noteText });
 
       // Actualizar paciente local
       setPatients((prev) =>
         prev.map((p) =>
-          p.application_id === selectedPatient.application_id
-            ? { ...p, case_notes: noteText }
-            : p
-        )
+          p.application_id === selectedPatient.application_id ? { ...p, case_notes: noteText } : p,
+        ),
       );
     } catch (e: any) {
       console.error(e);
@@ -324,6 +543,9 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
               Gestión integral de casos, historial de servicios y notas médicas.
             </p>
           </div>
+          <Button variant="hero" onClick={() => setShowAddDialog(true)}>
+            <Plus className="h-4 w-4 mr-1.5" /> Agregar paciente
+          </Button>
         </div>
 
         {/* KPIs */}
@@ -356,8 +578,11 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
             <ClipboardList className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
             <p className="font-semibold">Sin pacientes activos</p>
             <p className="text-sm text-muted-foreground mt-1">
-              Cuando aceptes una postulación, el caso aparecerá aquí.
+              Agrega un paciente manualmente o acepta una postulación para iniciar coordinación.
             </p>
+            <Button className="mt-4" variant="outline" onClick={() => setShowAddDialog(true)}>
+              <Plus className="h-4 w-4 mr-1.5" /> Crear primer caso
+            </Button>
           </div>
         ) : (
           <div className="space-y-2">
@@ -382,7 +607,9 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-sm">{patient.professional_name || "Profesional"}</p>
+                      <p className="font-semibold text-sm">
+                        {patient.patient_name || patient.professional_name || "Paciente"}
+                      </p>
                       <Badge
                         className={
                           patient.patient_status === "active"
@@ -396,16 +623,18 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {patient.professional_specialty} · {patient.city}
+                      {patient.care_type ||
+                        patient.professional_specialty ||
+                        "Coordinación de cuidado"}{" "}
+                      · {patient.city}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      📋 {patient.offer_title}
-                      {patient.service_count > 0 && (
-                        <>
-                          {" "}
-                          · {patient.service_count} servicios
-                        </>
-                      )}
+                      {patient.patient_age ? `${patient.patient_age} años · ` : ""}
+                      {patient.patient_relation ? `${patient.patient_relation} · ` : ""}
+                      {patient.source === "manual"
+                        ? "Caso creado por IPS"
+                        : `Postulación: ${patient.offer_title}`}
+                      {patient.service_count > 0 && <> · {patient.service_count} servicios</>}
                     </p>
                   </div>
 
@@ -421,22 +650,199 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
         )}
       </Card>
 
+      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+        <DialogContent className="max-w-2xl max-h-[640px] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Agregar paciente</DialogTitle>
+            <DialogDescription>
+              Crea un caso de coordinación para seguimiento clínico, notas y servicios.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="patient_name">Nombre del paciente</Label>
+              <Input
+                id="patient_name"
+                value={newPatient.patient_name}
+                onChange={(event) => updateNewPatient("patient_name", event.target.value)}
+                placeholder="Ej. María Rodríguez"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient_age">Edad</Label>
+              <Input
+                id="patient_age"
+                type="number"
+                min="0"
+                value={newPatient.patient_age}
+                onChange={(event) => updateNewPatient("patient_age", event.target.value)}
+                placeholder="72"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="patient_relation">Relación / responsable</Label>
+              <Input
+                id="patient_relation"
+                value={newPatient.patient_relation}
+                onChange={(event) => updateNewPatient("patient_relation", event.target.value)}
+                placeholder="Hija, acudiente, institución"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">Ciudad</Label>
+              <Input
+                id="city"
+                value={newPatient.city}
+                onChange={(event) => updateNewPatient("city", event.target.value)}
+                placeholder="Bogotá"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de cuidado</Label>
+              <Select
+                value={newPatient.care_type}
+                onValueChange={(value) => updateNewPatient("care_type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cuidado domiciliario">Cuidado domiciliario</SelectItem>
+                  <SelectItem value="Enfermería">Enfermería</SelectItem>
+                  <SelectItem value="Postoperatorio">Postoperatorio</SelectItem>
+                  <SelectItem value="Adulto mayor">Adulto mayor</SelectItem>
+                  <SelectItem value="Paliativo">Paliativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Prioridad clínica</Label>
+              <Select
+                value={newPatient.acuity_level}
+                onValueChange={(value) => updateNewPatient("acuity_level", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baja</SelectItem>
+                  <SelectItem value="medium">Media</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="service_address">Dirección de atención</Label>
+              <Input
+                id="service_address"
+                value={newPatient.service_address}
+                onChange={(event) => updateNewPatient("service_address", event.target.value)}
+                placeholder="Dirección o sede donde se prestará el servicio"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="health_conditions">Condiciones de salud</Label>
+              <Input
+                id="health_conditions"
+                value={newPatient.health_conditions}
+                onChange={(event) => updateNewPatient("health_conditions", event.target.value)}
+                placeholder="Hipertensión, movilidad reducida, diabetes"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emergency_contact_name">Contacto de emergencia</Label>
+              <Input
+                id="emergency_contact_name"
+                value={newPatient.emergency_contact_name}
+                onChange={(event) => updateNewPatient("emergency_contact_name", event.target.value)}
+                placeholder="Nombre"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="emergency_contact_phone">Teléfono</Label>
+              <Input
+                id="emergency_contact_phone"
+                value={newPatient.emergency_contact_phone}
+                onChange={(event) =>
+                  updateNewPatient("emergency_contact_phone", event.target.value)
+                }
+                placeholder="+57 300 000 0000"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="case_notes">Resumen inteligente del caso</Label>
+              <Textarea
+                id="case_notes"
+                rows={4}
+                value={newPatient.case_notes}
+                onChange={(event) => updateNewPatient("case_notes", event.target.value)}
+                placeholder="Plan inicial, restricciones, medicación, frecuencia sugerida..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddDialog(false)}>
+              Cancelar
+            </Button>
+            <Button variant="hero" onClick={addPatient} disabled={savingPatient}>
+              {savingPatient ? (
+                <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-1.5" />
+              )}
+              Guardar paciente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Dialog detalles del paciente */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
         <DialogContent className="max-w-2xl max-h-[600px] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Caso: {selectedPatient?.offer_title}</DialogTitle>
+            <DialogTitle>
+              Caso: {selectedPatient?.patient_name || selectedPatient?.offer_title}
+            </DialogTitle>
             <DialogDescription>
-              Profesional: {selectedPatient?.professional_name}
+              {selectedPatient?.professional_name
+                ? `Profesional: ${selectedPatient.professional_name}`
+                : "Paciente agregado por la institución"}
             </DialogDescription>
           </DialogHeader>
 
           {selectedPatient && (
             <div className="space-y-4">
-              {/* Info profesional */}
+              {/* Info del caso */}
               <div className="bg-muted p-3 rounded-lg space-y-2">
-                <h4 className="font-semibold text-sm">Profesional asignado</h4>
+                <h4 className="font-semibold text-sm">
+                  {selectedPatient.professional_name
+                    ? "Profesional asignado"
+                    : "Datos del paciente"}
+                </h4>
                 <div className="space-y-1 text-sm">
+                  {selectedPatient.patient_age && (
+                    <p className="flex items-center gap-2">
+                      <Users className="h-3.5 w-3.5" />
+                      {selectedPatient.patient_age} años
+                      {selectedPatient.patient_relation
+                        ? ` · ${selectedPatient.patient_relation}`
+                        : ""}
+                    </p>
+                  )}
+                  {selectedPatient.service_address && (
+                    <p className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {selectedPatient.service_address}
+                    </p>
+                  )}
+                  {selectedPatient.emergency_contact && (
+                    <p className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5" />
+                      {selectedPatient.emergency_contact}
+                    </p>
+                  )}
                   {selectedPatient.professional_phone && (
                     <p className="flex items-center gap-2">
                       <Phone className="h-3.5 w-3.5" />
@@ -463,11 +869,7 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold text-sm">Notas del caso</h4>
                   {!editingNotes ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingNotes(true)}
-                    >
+                    <Button size="sm" variant="outline" onClick={() => setEditingNotes(true)}>
                       <Edit className="h-3.5 w-3.5 mr-1" /> Editar
                     </Button>
                   ) : (
@@ -475,11 +877,7 @@ export function EnhancedPatientsModule({ userId }: { userId: string }) {
                       <Button size="sm" variant="hero" onClick={saveNotes}>
                         <Save className="h-3.5 w-3.5 mr-1" /> Guardar
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setEditingNotes(false)}
-                      >
+                      <Button size="sm" variant="outline" onClick={() => setEditingNotes(false)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
