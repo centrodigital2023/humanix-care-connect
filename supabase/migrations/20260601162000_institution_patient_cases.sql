@@ -66,3 +66,6 @@ CREATE INDEX IF NOT EXISTS idx_institution_patient_cases_institution
 CREATE TRIGGER trg_institution_patient_cases_updated_at
   BEFORE UPDATE ON public.institution_patient_cases
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+ALTER PUBLICATION supabase_realtime
+  ADD TABLE public.institution_patient_cases;
