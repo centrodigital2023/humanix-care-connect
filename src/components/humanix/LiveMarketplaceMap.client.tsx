@@ -13,6 +13,17 @@ import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useNavigate } from "@tanstack/react-router";
 
 type Role = "professional" | "family" | "institution" | "guest";
 
@@ -123,6 +134,15 @@ export function LiveMarketplaceMap({
 }) {
   const effectiveRole: Role = role ?? "guest";
   const isGuest = preview || effectiveRole === "guest" || !userId;
+  const navigate = useNavigate();
+  const [guestPromptOpen, setGuestPromptOpen] = useState(false);
+  const requireAuth = (): boolean => {
+    if (isGuest) {
+      setGuestPromptOpen(true);
+      return true;
+    }
+    return false;
+  };
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [available, setAvailable] = useState(true);
@@ -455,7 +475,6 @@ export function LiveMarketplaceMap({
 
   return (
     <div className="space-y-3">
-      {!isGuest && (
       <Card className="p-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div
@@ -466,7 +485,9 @@ export function LiveMarketplaceMap({
               {available ? "Visible en el mapa" : "Oculto del mapa"}
             </p>
             <p className="text-xs text-muted-foreground">
-              {effectiveRole === "professional"
+              {isGuest
+                ? "Regístrate para activar tu presencia en tiempo real"
+                : effectiveRole === "professional"
                 ? "Apaga para no recibir ofertas en tiempo real"
                 : effectiveRole === "family"
                   ? "Apaga para que profesionales no vean tu ubicación"
@@ -475,17 +496,27 @@ export function LiveMarketplaceMap({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {(pickLocation || selfPersist) && (
+          {(pickLocation || selfPersist || isGuest) && (
             <>
               <Button
                 variant={picking ? "hero" : "outline"}
                 size="sm"
-                onClick={() => setPicking((v) => !v)}
+                onClick={() => {
+                  if (requireAuth()) return;
+                  setPicking((v) => !v);
+                }}
               >
                 <MapPin className="h-4 w-4 mr-1" />
                 {picking ? "Toca el mapa…" : "Marcar ubicación"}
               </Button>
-              <Button variant="outline" size="sm" onClick={useGps}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  if (requireAuth()) return;
+                  useGps();
+                }}
+              >
                 <Crosshair className="h-4 w-4 mr-1" /> GPS
               </Button>
             </>
@@ -493,7 +524,10 @@ export function LiveMarketplaceMap({
           <Button
             variant={available ? "destructive" : "hero"}
             size="sm"
-            onClick={toggleAvailability}
+            onClick={() => {
+              if (requireAuth()) return;
+              toggleAvailability();
+            }}
             disabled={toggling}
           >
             {toggling ? (
@@ -510,7 +544,6 @@ export function LiveMarketplaceMap({
           </Button>
         </div>
       </Card>
-      )}
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
         {effectiveRole !== "professional" && (
@@ -538,12 +571,15 @@ export function LiveMarketplaceMap({
             Tu ubicación
           </Badge>
         )}
-        {showFilters && !isGuest && (
+        {showFilters && (
           <Button
             variant="outline"
             size="sm"
             className="ml-auto h-7 px-2 text-xs"
-            onClick={() => setFiltersOpen((v) => !v)}
+            onClick={() => {
+              if (requireAuth()) return;
+              setFiltersOpen((v) => !v);
+            }}
           >
             <SlidersHorizontal className="h-3 w-3 mr-1" />
             {filtersOpen ? "Ocultar filtros" : "Filtros inteligentes"}
@@ -944,6 +980,31 @@ export function LiveMarketplaceMap({
       </div>
 
       <style>{`@keyframes livePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}`}</style>
+
+      <AlertDialog open={guestPromptOpen} onOpenChange={setGuestPromptOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Crea tu cuenta para continuar</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para marcar tu ubicación, activar tu visibilidad en el mapa y usar
+              los filtros inteligentes necesitas una cuenta. Es gratis y solo
+              toma 1 minuto. Al registrarte sincronizas en tiempo real con
+              profesionales, familias e instituciones cercanas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Ahora no</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                setGuestPromptOpen(false);
+                navigate({ to: "/auth" });
+              }}
+            >
+              Registrarme gratis
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
