@@ -20,19 +20,19 @@ export function useActiveUsersCount(role?: UserRole) {
         const { count: proCount } = await supabase
           .from("professional_profiles")
           .select("*", { count: "exact", head: true })
-          .eq("availability_status", "available");
+          .eq("available", true);
 
         // Obtener conteo de familias activas
         const { count: famCount } = await supabase
           .from("family_profiles")
           .select("*", { count: "exact", head: true })
-          .eq("active", true);
+          .eq("visible_on_map", true);
 
         // Obtener conteo de instituciones activas
         const { count: instCount } = await supabase
           .from("institution_profiles")
           .select("*", { count: "exact", head: true })
-          .eq("active", true);
+          .eq("visible_on_map", true);
 
         if (active) {
           setCounts({
@@ -60,7 +60,7 @@ export function useActiveUsersCount(role?: UserRole) {
             event: "*",
             schema: "public",
             table: "professional_profiles",
-            filter: "availability_status=eq.available",
+            filter: "available=eq.true",
           },
           () => fetchCounts()
         )
@@ -74,7 +74,7 @@ export function useActiveUsersCount(role?: UserRole) {
             event: "*",
             schema: "public",
             table: "family_profiles",
-            filter: "active=eq.true",
+            filter: "visible_on_map=eq.true",
           },
           () => fetchCounts()
         )
@@ -88,7 +88,7 @@ export function useActiveUsersCount(role?: UserRole) {
             event: "*",
             schema: "public",
             table: "institution_profiles",
-            filter: "active=eq.true",
+            filter: "visible_on_map=eq.true",
           },
           () => fetchCounts()
         )

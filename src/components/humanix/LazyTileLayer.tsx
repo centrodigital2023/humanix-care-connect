@@ -25,7 +25,9 @@ export function LazyTileLayer({
     };
 
     map.on('zoom', handleZoom);
-    return () => map.off('zoom', handleZoom);
+    return () => {
+      map.off('zoom', handleZoom);
+    };
   }, [map]);
 
   if (!shouldRender) {
