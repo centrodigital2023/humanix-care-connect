@@ -131,6 +131,8 @@ Deno.serve(async (req) => {
         .from("professional_profiles")
         .select("user_id")
         .eq("active", true)
+        .eq("published", true)
+        .eq("blocked", false)
         .order("avg_rating", { ascending: false })
         .limit(12);
       scored = (fallbackPros ?? []).map((p) => ({ user_id: p.user_id, similarity: 0.5 }));
