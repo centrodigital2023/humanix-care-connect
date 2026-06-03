@@ -43,6 +43,7 @@ import { Route as CuidadoAdultoMayorRouteImport } from './routes/cuidado-adulto-
 import { Route as CosmosRouteImport } from './routes/cosmos'
 import { Route as ContactoRouteImport } from './routes/contacto'
 import { Route as CarrerasRouteImport } from './routes/carreras'
+import { Route as CalculadoraRouteImport } from './routes/calculadora'
 import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuxiliarEnfermeriaRouteImport } from './routes/auxiliar-enfermeria'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -239,6 +240,11 @@ const CarrerasRoute = CarrerasRouteImport.update({
   path: '/carreras',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CalculadoraRoute = CalculadoraRouteImport.update({
+  id: '/calculadora',
+  path: '/calculadora',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BuscarRoute = BuscarRouteImport.update({
   id: '/buscar',
   path: '/buscar',
@@ -371,6 +377,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
+  '/calculadora': typeof CalculadoraRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
   '/cosmos': typeof CosmosRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
+  '/calculadora': typeof CalculadoraRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
   '/cosmos': typeof CosmosRoute
@@ -492,6 +500,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/auxiliar-enfermeria': typeof AuxiliarEnfermeriaRoute
   '/buscar': typeof BuscarRoute
+  '/calculadora': typeof CalculadoraRoute
   '/carreras': typeof CarrerasRoute
   '/contacto': typeof ContactoRoute
   '/cosmos': typeof CosmosRoute
@@ -555,6 +564,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/auxiliar-enfermeria'
     | '/buscar'
+    | '/calculadora'
     | '/carreras'
     | '/contacto'
     | '/cosmos'
@@ -616,6 +626,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/auxiliar-enfermeria'
     | '/buscar'
+    | '/calculadora'
     | '/carreras'
     | '/contacto'
     | '/cosmos'
@@ -675,6 +686,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/auxiliar-enfermeria'
     | '/buscar'
+    | '/calculadora'
     | '/carreras'
     | '/contacto'
     | '/cosmos'
@@ -737,6 +749,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   AuxiliarEnfermeriaRoute: typeof AuxiliarEnfermeriaRoute
   BuscarRoute: typeof BuscarRoute
+  CalculadoraRoute: typeof CalculadoraRoute
   CarrerasRoute: typeof CarrerasRoute
   ContactoRoute: typeof ContactoRoute
   CosmosRoute: typeof CosmosRoute
@@ -1019,6 +1032,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CarrerasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/calculadora': {
+      id: '/calculadora'
+      path: '/calculadora'
+      fullPath: '/calculadora'
+      preLoaderRoute: typeof CalculadoraRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/buscar': {
       id: '/buscar'
       path: '/buscar'
@@ -1271,6 +1291,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   AuxiliarEnfermeriaRoute: AuxiliarEnfermeriaRoute,
   BuscarRoute: BuscarRoute,
+  CalculadoraRoute: CalculadoraRoute,
   CarrerasRoute: CarrerasRoute,
   ContactoRoute: ContactoRoute,
   CosmosRoute: CosmosRoute,
