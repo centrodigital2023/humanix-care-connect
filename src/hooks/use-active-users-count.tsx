@@ -50,10 +50,12 @@ export function useActiveUsersCount(role?: UserRole) {
 
     fetchCounts();
 
-    // Suscribirse a cambios en tiempo real
+    // Suscribirse a cambios en tiempo real (nombres únicos para evitar
+    // "cannot add callbacks after subscribe" en StrictMode/remounts)
+    const suffix = Math.random().toString(36).slice(2, 8);
     const channels = [
       supabase
-        .channel("active_professionals")
+        .channel(`active_professionals_${suffix}`)
         .on(
           "postgres_changes",
           {
@@ -67,7 +69,7 @@ export function useActiveUsersCount(role?: UserRole) {
         .subscribe(),
 
       supabase
-        .channel("active_families")
+        .channel(`active_families_${suffix}`)
         .on(
           "postgres_changes",
           {
@@ -81,7 +83,7 @@ export function useActiveUsersCount(role?: UserRole) {
         .subscribe(),
 
       supabase
-        .channel("active_institutions")
+        .channel(`active_institutions_${suffix}`)
         .on(
           "postgres_changes",
           {
@@ -96,6 +98,7 @@ export function useActiveUsersCount(role?: UserRole) {
     ];
 
     return () => {
+      active = false;
       channels.forEach((ch) => supabase.removeChannel(ch));
     };
   }, []);
