@@ -142,7 +142,10 @@ Deno.serve(async (req) => {
       .select(
         "user_id,specialty,sub_specialties,years_experience,trust_score,avg_rating,hourly_rate,shift_rate,monthly_rate,service_cities,verified,rethus_verified,bio",
       )
-      .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"]);
+      .in("user_id", ids.length ? ids : ["00000000-0000-0000-0000-000000000000"])
+      .eq("active", true)
+      .eq("published", true)
+      .eq("blocked", false);
     const { data: profiles } = await admin
       .from("public_profiles_safe")
       .select("user_id,full_name,city,avatar_url")
