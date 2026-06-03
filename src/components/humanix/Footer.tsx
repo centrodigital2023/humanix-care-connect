@@ -38,6 +38,7 @@ const cols: { title: string; links: FooterLink[] }[] = [
       { label: "Clínicas e IPS", to: "/talento-humano" },
       { label: "Buscar cuidado", to: "/buscar" },
       { label: "Planes", to: "/planes" },
+      { label: "Calculadora de costos", to: "/calculadora" },
       { label: "Tecnología IA", to: "/tecnologia" },
       { label: "Recursos", to: "/recursos" },
       { label: "Sobre Humanix", to: "/sobre" },
