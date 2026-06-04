@@ -277,11 +277,8 @@ export function LiveMarketplaceMap({
           .not("lng", "is", null)
           .limit(200),
         supabase
-          .from("family_profiles")
+          .from("public_family_map_safe")
           .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp, profiles:user_id(full_name, avatar_url, phone)")
-          .eq("visible_on_map", true)
-          .not("default_lat", "is", null)
-          .not("default_lng", "is", null)
           .limit(200),
         supabase
           .from("institution_profiles")
