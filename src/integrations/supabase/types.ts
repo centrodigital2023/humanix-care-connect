@@ -2560,6 +2560,39 @@ export type Database = {
         }
         Relationships: []
       }
+      public_family_map_safe: {
+        Row: {
+          default_address: string | null
+          default_lat: number | null
+          default_lng: number | null
+          patient_name: string | null
+          patient_relation: string | null
+          user_id: string | null
+          visible_on_map: boolean | null
+          whatsapp: string | null
+        }
+        Insert: {
+          default_address?: string | null
+          default_lat?: number | null
+          default_lng?: number | null
+          patient_name?: string | null
+          patient_relation?: string | null
+          user_id?: string | null
+          visible_on_map?: boolean | null
+          whatsapp?: string | null
+        }
+        Update: {
+          default_address?: string | null
+          default_lat?: number | null
+          default_lng?: number | null
+          patient_name?: string | null
+          patient_relation?: string | null
+          user_id?: string | null
+          visible_on_map?: boolean | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
       public_profiles_safe: {
         Row: {
           avatar_url: string | null
