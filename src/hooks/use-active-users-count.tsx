@@ -24,9 +24,8 @@ export function useActiveUsersCount(role?: UserRole) {
 
         // Obtener conteo de familias activas
         const { count: famCount } = await supabase
-          .from("family_profiles")
-          .select("*", { count: "exact", head: true })
-          .eq("visible_on_map", true);
+          .from("public_family_map_safe")
+          .select("*", { count: "exact", head: true });
 
         // Obtener conteo de instituciones activas
         const { count: instCount } = await supabase
