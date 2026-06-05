@@ -69,25 +69,45 @@ function Index() {
         </section>
         <LiveSocialProof />
         <TrustBar />
-        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-10">
-          <div className="mb-4 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 sm:gap-4">
-            <div>
-              <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">
-                Mapa en vivo · Talento humano en salud
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
-                Profesionales (azul), familias (amarillo) e instituciones (fucsia) conectados ahora mismo.
-                Toca un punto para ver el perfil. Regístrate para contactar.
-              </p>
+        <section className="relative overflow-hidden border-y border-foreground/5 bg-gradient-to-b from-card/70 via-background to-background py-8 sm:py-12">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-biosensor/50 to-transparent" />
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <div className="mb-5 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+              <div>
+                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-biosensor/25 bg-biosensor/10 px-3 py-1 text-[11px] font-semibold uppercase text-biosensor">
+                  <span className="h-1.5 w-1.5 rounded-full bg-biosensor animate-pulse" />
+                  Sincronizado en tiempo real
+                </div>
+                <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold leading-tight text-gradient-cyber">
+                  Mapa en vivo · Talento humano en salud
+                </h2>
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
+                  Profesionales activos, familias e instituciones conectados ahora mismo. Toca un
+                  punto para ver perfil, distancia, calificación y canales de contacto.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1">
+                    <span className="h-2 w-2 rounded-full bg-blue-600" /> Profesionales
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-copper/25 bg-copper/10 px-2.5 py-1">
+                    <span className="h-2 w-2 rounded-full bg-copper" /> Familias
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-neural/25 bg-fuchsia-neural/10 px-2.5 py-1">
+                    <span className="h-2 w-2 rounded-sm bg-fuchsia-neural" /> Instituciones
+                  </span>
+                </div>
+                <a
+                  href="/auth"
+                  className="inline-flex h-9 items-center justify-center rounded-md bg-biosensor px-4 text-sm font-semibold text-biosensor-foreground shadow-[var(--shadow-glow-bio)] transition hover:-translate-y-0.5 hover:bg-biosensor/90"
+                >
+                  Crear cuenta gratis →
+                </a>
+              </div>
             </div>
-            <a
-              href="/auth"
-              className="text-sm font-semibold text-biosensor hover:underline shrink-0"
-            >
-              Crear cuenta gratis →
-            </a>
+            <LiveMarketplaceMap preview height={360} />
           </div>
-          <LiveMarketplaceMap preview height={360} />
         </section>
         <AudienceSection />
         <Suspense fallback={<div className="min-h-[200px]" />}>

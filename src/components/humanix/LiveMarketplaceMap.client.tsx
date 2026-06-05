@@ -7,7 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Power, PowerOff, Loader2, Users, Building2, HeartPulse, MapPin, Crosshair, SlidersHorizontal, X } from "lucide-react";
+import {
+  Power,
+  PowerOff,
+  Loader2,
+  Users,
+  Building2,
+  HeartPulse,
+  MapPin,
+  Crosshair,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo";
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
@@ -51,9 +62,9 @@ type Point = {
 };
 
 const COLORS = {
-  professional: "#3b82f6", // blue
-  family: "#eab308", // yellow
-  institution: "#d946ef", // fuchsia
+  professional: "#2563eb", // blue
+  family: "#f2b705", // premium yellow
+  institution: "#d4145a", // fuchsia
 };
 
 const ICONS = {
@@ -67,14 +78,14 @@ const ICONS = {
   family: () =>
     L.divIcon({
       className: "live-marker",
-      html: `<div style="width:22px;height:22px;border-radius:9999px;background:${COLORS.family};border:3px solid white;box-shadow:0 0 0 4px ${COLORS.family}44, 0 4px 14px rgba(0,0,0,.35)"></div>`,
+      html: `<div style="width:22px;height:22px;border-radius:9999px;background:${COLORS.family};border:3px solid white;box-shadow:0 0 0 4px ${COLORS.family}44, 0 4px 14px rgba(0,0,0,.35);animation:livePulse 2.4s infinite"></div>`,
       iconSize: [22, 22],
       iconAnchor: [11, 11],
     }),
   institution: () =>
     L.divIcon({
       className: "live-marker",
-      html: `<div style="width:24px;height:24px;border-radius:6px;background:${COLORS.institution};border:3px solid white;box-shadow:0 0 0 4px ${COLORS.institution}44, 0 4px 14px rgba(0,0,0,.35)"></div>`,
+      html: `<div style="width:24px;height:24px;border-radius:6px;background:${COLORS.institution};border:3px solid white;box-shadow:0 0 0 4px ${COLORS.institution}44, 0 4px 14px rgba(0,0,0,.35);animation:livePulse 2.8s infinite"></div>`,
       iconSize: [24, 24],
       iconAnchor: [12, 12],
     }),
@@ -187,7 +198,8 @@ export function LiveMarketplaceMap({
     lng: pickLocation?.lng ?? null,
   });
   // Self location persistence for family/institution roles (no external pickLocation prop)
-  const selfPersist = !pickLocation && !isGuest && (effectiveRole === "family" || effectiveRole === "institution");
+  const selfPersist =
+    !pickLocation && !isGuest && (effectiveRole === "family" || effectiveRole === "institution");
   // Filters (visible to family/institution/guest looking for professionals)
   const showFilters = effectiveRole !== "professional";
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -197,7 +209,9 @@ export function LiveMarketplaceMap({
   const [filterMinRating, setFilterMinRating] = useState<string>("any");
   const [filterMaxKm, setFilterMaxKm] = useState<string>("");
   const [filterRequirement, setFilterRequirement] = useState("");
-  const [filterSortBy, setFilterSortBy] = useState<"distance" | "rating" | "experience">("distance");
+  const [filterSortBy, setFilterSortBy] = useState<"distance" | "rating" | "experience">(
+    "distance",
+  );
 
   useEffect(() => {
     setMeCoords({ lat: pickLocation?.lat ?? null, lng: pickLocation?.lng ?? null });
@@ -241,10 +255,10 @@ export function LiveMarketplaceMap({
         if (effectiveRole === "professional") {
           const { data } = await supabase
             .from("professional_profiles")
-            .select("available")
+            .select("available, availability_status")
             .eq("user_id", userId)
             .maybeSingle();
-          setAvailable(data?.available ?? true);
+          setAvailable(data?.available === true || data?.availability_status === "available");
         } else if (effectiveRole === "family") {
           const { data } = await supabase
             .from("family_profiles")
@@ -271,8 +285,10 @@ export function LiveMarketplaceMap({
       const [proRes, famRes, instRes] = await Promise.all([
         supabase
           .from("professional_profiles")
-          .select("user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, profiles:user_id(full_name, avatar_url, phone)")
-          .eq("available", true)
+          .select(
+            "user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, profiles:user_id(full_name, avatar_url, phone)",
+          )
+          .or("available.eq.true,availability_status.eq.available")
           .not("lat", "is", null)
           .not("lng", "is", null)
           .limit(200),
@@ -282,7 +298,9 @@ export function LiveMarketplaceMap({
           .limit(200),
         supabase
           .from("institution_profiles")
-          .select("user_id, lat, lng, institution_name, city, institution_type, visible_on_map, profiles:user_id(full_name, avatar_url, phone)")
+          .select(
+            "user_id, lat, lng, institution_name, city, institution_type, visible_on_map, profiles:user_id(full_name, avatar_url, phone)",
+          )
           .eq("visible_on_map", true)
           .not("lat", "is", null)
           .not("lng", "is", null)
@@ -353,14 +371,21 @@ export function LiveMarketplaceMap({
     loadAll();
     const ch = supabase
       .channel("live-marketplace-map")
-      .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, () => loadAll())
-      .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, () => loadAll())
-      .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, () => loadAll())
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "professional_profiles" },
+        () => loadAll(),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, () =>
+        loadAll(),
+      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, () =>
+        loadAll(),
+      )
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toggleAvailability = async () => {
@@ -372,7 +397,10 @@ export function LiveMarketplaceMap({
       if (effectiveRole === "professional") {
         ({ error } = await supabase
           .from("professional_profiles")
-          .update({ available: next })
+          .update({
+            available: next,
+            availability_status: next ? "available" : "unavailable",
+          })
           .eq("user_id", userId));
       } else if (effectiveRole === "family") {
         ({ error } = await supabase
@@ -421,14 +449,18 @@ export function LiveMarketplaceMap({
     const req = filterRequirement.trim().toLowerCase();
     if (req) {
       list = list.filter((p) => {
-        const hay = `${p.specialty ?? ""} ${(p.subSpecialties ?? []).join(" ")} ${p.city ?? ""}`.toLowerCase();
+        const hay =
+          `${p.specialty ?? ""} ${(p.subSpecialties ?? []).join(" ")} ${p.city ?? ""}`.toLowerCase();
         return hay.includes(req);
       });
     }
     const maxKm = parseFloat(filterMaxKm);
     if (!Number.isNaN(maxKm) && maxKm > 0 && meCoords.lat != null && meCoords.lng != null) {
       list = list.filter((p) => {
-        const d = distanceKm({ lat: meCoords.lat!, lng: meCoords.lng! }, { lat: p.lat, lng: p.lng });
+        const d = distanceKm(
+          { lat: meCoords.lat!, lng: meCoords.lng! },
+          { lat: p.lat, lng: p.lng },
+        );
         return d <= maxKm;
       });
     }
@@ -439,13 +471,30 @@ export function LiveMarketplaceMap({
       list.sort((a, b) => Number(b.yearsExperience ?? 0) - Number(a.yearsExperience ?? 0));
     } else if (meCoords.lat != null && meCoords.lng != null) {
       list.sort((a, b) => {
-        const da = distanceKm({ lat: meCoords.lat!, lng: meCoords.lng! }, { lat: a.lat, lng: a.lng });
-        const db = distanceKm({ lat: meCoords.lat!, lng: meCoords.lng! }, { lat: b.lat, lng: b.lng });
+        const da = distanceKm(
+          { lat: meCoords.lat!, lng: meCoords.lng! },
+          { lat: a.lat, lng: a.lng },
+        );
+        const db = distanceKm(
+          { lat: meCoords.lat!, lng: meCoords.lng! },
+          { lat: b.lat, lng: b.lng },
+        );
         return da - db;
       });
     }
     return list;
-  }, [pros, filterSpecialty, filterGender, filterMinYears, filterMinRating, filterRequirement, filterMaxKm, filterSortBy, meCoords.lat, meCoords.lng]);
+  }, [
+    pros,
+    filterSpecialty,
+    filterGender,
+    filterMinYears,
+    filterMinRating,
+    filterRequirement,
+    filterMaxKm,
+    filterSortBy,
+    meCoords.lat,
+    meCoords.lng,
+  ]);
 
   // Visible layers depend on role:
   // - professional sees families (yellow) + institutions (fuchsia) = offers
@@ -488,10 +537,7 @@ export function LiveMarketplaceMap({
       (async () => {
         try {
           if (effectiveRole === "institution") {
-            await supabase
-              .from("institution_profiles")
-              .update({ lat, lng })
-              .eq("user_id", userId);
+            await supabase.from("institution_profiles").update({ lat, lng }).eq("user_id", userId);
           } else if (effectiveRole === "family") {
             await supabase
               .from("family_profiles")
@@ -508,7 +554,7 @@ export function LiveMarketplaceMap({
     setPicking(false);
   };
 
-  const useGps = async () => {
+  const handleGps = async () => {
     setPicking(true);
     const loc = await getBrowserLocation();
     if (loc) {
@@ -524,23 +570,23 @@ export function LiveMarketplaceMap({
 
   return (
     <div className="space-y-3">
-      <Card className="p-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
+      <Card className="p-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3 border-foreground/10 bg-card/95 shadow-[var(--shadow-card)]">
         <div className="flex items-center gap-3 min-w-0">
           <div
             className={`h-3 w-3 shrink-0 rounded-full ${available ? "bg-emerald-500 animate-pulse" : "bg-red-500"}`}
           />
           <div className="min-w-0">
             <p className="text-sm font-semibold">
-              {available ? "Visible en el mapa" : "Oculto del mapa"}
+              {available ? "Presencia en vivo activa" : "Presencia en vivo apagada"}
             </p>
             <p className="text-xs text-muted-foreground leading-snug">
               {isGuest
-                ? "Regístrate para activar tu presencia en tiempo real"
+                ? "Regístrate para aparecer y contactar talento en tiempo real"
                 : effectiveRole === "professional"
-                ? "Apaga para no recibir ofertas en tiempo real"
-                : effectiveRole === "family"
-                  ? "Apaga para que profesionales no vean tu ubicación"
-                  : "Apaga para que profesionales no vean tu institución"}
+                  ? "Tu punto azul aparece ahora para familias e instituciones"
+                  : effectiveRole === "family"
+                    ? "Tu punto amarillo aparece para profesionales disponibles"
+                    : "Tu punto fucsia aparece para profesionales disponibles"}
             </p>
           </div>
         </div>
@@ -565,7 +611,7 @@ export function LiveMarketplaceMap({
                 className="flex-1 sm:flex-initial"
                 onClick={() => {
                   if (requireAuth()) return;
-                  useGps();
+                  handleGps();
                 }}
               >
                 <Crosshair className="h-4 w-4 mr-1" /> GPS
@@ -600,8 +646,11 @@ export function LiveMarketplaceMap({
       <div className="flex flex-wrap items-center gap-2 text-xs">
         {effectiveRole !== "professional" && (
           <Badge variant="outline" className="gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.professional }} />
-            Profesionales disponibles ({filteredPros.length}
+            <span
+              className="h-2.5 w-2.5 rounded-full"
+              style={{ background: COLORS.professional }}
+            />
+            Profesionales activos en tiempo real ({filteredPros.length}
             {filteredPros.length !== pros.length ? ` / ${pros.length}` : ""})
           </Badge>
         )}
@@ -673,7 +722,9 @@ export function LiveMarketplaceMap({
         <Card className="p-3 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Especialidad</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Especialidad
+              </label>
               <Input
                 value={filterSpecialty}
                 onChange={(e) => setFilterSpecialty(e.target.value)}
@@ -682,9 +733,13 @@ export function LiveMarketplaceMap({
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Género</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Género
+              </label>
               <Select value={filterGender} onValueChange={setFilterGender}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="any">Cualquiera</SelectItem>
                   <SelectItem value="femenino">Femenino</SelectItem>
@@ -694,7 +749,9 @@ export function LiveMarketplaceMap({
               </Select>
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Años exp. mín.</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Años exp. mín.
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -705,9 +762,13 @@ export function LiveMarketplaceMap({
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Estrellas mín.</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Estrellas mín.
+              </label>
               <Select value={filterMinRating} onValueChange={setFilterMinRating}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="any">Todas</SelectItem>
                   <SelectItem value="3">★ 3+</SelectItem>
@@ -717,7 +778,9 @@ export function LiveMarketplaceMap({
               </Select>
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Distancia máx. (km)</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Distancia máx. (km)
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -729,7 +792,9 @@ export function LiveMarketplaceMap({
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Requisito / palabra</label>
+              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Requisito / palabra
+              </label>
               <Input
                 value={filterRequirement}
                 onChange={(e) => setFilterRequirement(e.target.value)}
@@ -739,9 +804,13 @@ export function LiveMarketplaceMap({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Ordenar por</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Ordenar por
+            </span>
             <Select value={filterSortBy} onValueChange={(v: any) => setFilterSortBy(v)}>
-              <SelectTrigger className="h-7 w-40 text-xs"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="h-7 w-40 text-xs">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="distance">Distancia</SelectItem>
                 <SelectItem value="rating">Mejor calificados</SelectItem>
@@ -772,7 +841,7 @@ export function LiveMarketplaceMap({
       )}
 
       <div
-        className="rounded-2xl overflow-hidden border border-border shadow-[var(--shadow-card)]"
+        className="rounded-2xl overflow-hidden border border-foreground/10 shadow-[var(--shadow-elegant)]"
         style={{ height: `clamp(220px, 55vh, ${height}px)` }}
       >
         {loading ? (
@@ -886,16 +955,16 @@ export function LiveMarketplaceMap({
                   ? distanceKm({ lat: meCoords.lat, lng: meCoords.lng }, { lat: p.lat, lng: p.lng })
                   : null;
               const kindLabel =
-                p.kind === "professional" ? "Profesional" : p.kind === "family" ? "Familia" : "Institución";
+                p.kind === "professional"
+                  ? "Profesional"
+                  : p.kind === "family"
+                    ? "Familia"
+                    : "Institución";
               const accent = COLORS[p.kind];
-              const waHref = p.phone
-                ? `https://wa.me/${String(p.phone).replace(/\D/g, "")}`
-                : null;
+              const waHref = p.phone ? `https://wa.me/${String(p.phone).replace(/\D/g, "")}` : null;
               const telHref = p.phone ? `tel:${p.phone}` : null;
               const profileHref =
-                p.kind === "professional" && p.userId
-                  ? `/profesional/${p.userId}`
-                  : null;
+                p.kind === "professional" && p.userId ? `/profesional/${p.userId}` : null;
               return (
                 <Marker key={p.id} position={[p.lat, p.lng]} icon={icon}>
                   <Popup minWidth={260} maxWidth={300}>
@@ -1020,75 +1089,75 @@ export function LiveMarketplaceMap({
                           </a>
                         ) : (
                           <>
-                        {waHref && (
-                          <a
-                            href={waHref}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              background: "#25D366",
-                              color: "white",
-                              padding: "6px 10px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              textDecoration: "none",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <MessageCircle className="h-3 w-3" /> WhatsApp
-                          </a>
-                        )}
-                        {telHref && (
-                          <a
-                            href={telHref}
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              background: accent,
-                              color: "white",
-                              padding: "6px 10px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              textDecoration: "none",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <Phone className="h-3 w-3" /> Llamar
-                          </a>
-                        )}
-                        {profileHref && (
-                          <a
-                            href={profileHref}
-                            style={{
-                              flex: 1,
-                              textAlign: "center",
-                              background: "white",
-                              border: `1px solid ${accent}`,
-                              color: accent,
-                              padding: "6px 10px",
-                              borderRadius: 8,
-                              fontSize: 12,
-                              fontWeight: 600,
-                              textDecoration: "none",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: 4,
-                            }}
-                          >
-                            <UserIcon className="h-3 w-3" /> Perfil
-                          </a>
-                        )}
+                            {waHref && (
+                              <a
+                                href={waHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  background: "#25D366",
+                                  color: "white",
+                                  padding: "6px 10px",
+                                  borderRadius: 8,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                <MessageCircle className="h-3 w-3" /> WhatsApp
+                              </a>
+                            )}
+                            {telHref && (
+                              <a
+                                href={telHref}
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  background: accent,
+                                  color: "white",
+                                  padding: "6px 10px",
+                                  borderRadius: 8,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                <Phone className="h-3 w-3" /> Llamar
+                              </a>
+                            )}
+                            {profileHref && (
+                              <a
+                                href={profileHref}
+                                style={{
+                                  flex: 1,
+                                  textAlign: "center",
+                                  background: "white",
+                                  border: `1px solid ${accent}`,
+                                  color: accent,
+                                  padding: "6px 10px",
+                                  borderRadius: 8,
+                                  fontSize: 12,
+                                  fontWeight: 600,
+                                  textDecoration: "none",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  gap: 4,
+                                }}
+                              >
+                                <UserIcon className="h-3 w-3" /> Perfil
+                              </a>
+                            )}
                           </>
                         )}
                       </div>
@@ -1118,10 +1187,9 @@ export function LiveMarketplaceMap({
           <AlertDialogHeader>
             <AlertDialogTitle>Crea tu cuenta para continuar</AlertDialogTitle>
             <AlertDialogDescription>
-              Para marcar tu ubicación, activar tu visibilidad en el mapa y usar
-              los filtros inteligentes necesitas una cuenta. Es gratis y solo
-              toma 1 minuto. Al registrarte sincronizas en tiempo real con
-              profesionales, familias e instituciones cercanas.
+              Para marcar tu ubicación, activar tu visibilidad en el mapa y usar los filtros
+              inteligentes necesitas una cuenta. Es gratis y solo toma 1 minuto. Al registrarte
+              sincronizas en tiempo real con profesionales, familias e instituciones cercanas.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

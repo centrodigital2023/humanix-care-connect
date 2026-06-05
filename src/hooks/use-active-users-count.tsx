@@ -63,7 +63,7 @@ export function useActiveUsersCount(role?: UserRole) {
             table: "professional_profiles",
             filter: "available=eq.true",
           },
-          () => fetchCounts()
+          () => fetchCounts(),
         )
         .subscribe(),
 
@@ -77,7 +77,7 @@ export function useActiveUsersCount(role?: UserRole) {
             table: "family_profiles",
             filter: "visible_on_map=eq.true",
           },
-          () => fetchCounts()
+          () => fetchCounts(),
         )
         .subscribe(),
 
@@ -91,7 +91,7 @@ export function useActiveUsersCount(role?: UserRole) {
             table: "institution_profiles",
             filter: "visible_on_map=eq.true",
           },
-          () => fetchCounts()
+          () => fetchCounts(),
         )
         .subscribe(),
     ];

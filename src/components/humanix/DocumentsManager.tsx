@@ -27,10 +27,14 @@ import {
   Landmark,
   FileSpreadsheet,
   FilePlus2,
+  Building2,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type DocType =
   | "cv"
@@ -53,6 +57,7 @@ type DocType =
   | "assets_declaration"
   | "bank_account"
   | "other";
+
 type DocStatus = "pending" | "approved" | "rejected";
 
 type Doc = {
@@ -68,7 +73,7 @@ type Doc = {
   created_at: string;
 };
 
-const TYPES: {
+type DocDef = {
   value: DocType;
   label: string;
   icon: React.ReactNode;
@@ -76,7 +81,11 @@ const TYPES: {
   cvParse?: boolean;
   required?: boolean;
   group?: string;
-}[] = [
+  publicOnly?: boolean;
+};
+
+// Documentos siempre visibles
+const REGULAR_TYPES: DocDef[] = [
   {
     value: "cv",
     label: "Hoja de vida",
@@ -119,103 +128,111 @@ const TYPES: {
     icon: <Briefcase className="h-4 w-4" />,
     hint: "Constancia de empleos previos en salud.",
   },
+];
+
+// Solo visibles al postularse a institución pública
+const PUBLIC_TYPES: DocDef[] = [
   {
     value: "public_function_cv",
     label: "Hoja de vida Función Pública",
     icon: <FileText className="h-4 w-4" />,
     hint: "Formato SIGEP / Función Pública. PDF.",
+    publicOnly: true,
   },
   {
     value: "medical_exam",
     label: "Examen médico ocupacional",
     icon: <Stethoscope className="h-4 w-4" />,
     hint: "Vigencia recomendada 3 años. PDF o foto.",
-  },
-  {
-    value: "rethus",
-    label: "RETHUS",
-    icon: <ShieldCheck className="h-4 w-4" />,
-    hint: "Certificado vigente del Registro Único de Talento Humano en Salud.",
-  },
-  {
-    value: "rethus",
-    label: "RETHUS",
-    icon: <ShieldCheck className="h-4 w-4" />,
-    hint: "Certificado vigente del Registro Único de Talento Humano en Salud.",
+    publicOnly: true,
   },
   {
     value: "contraloria",
     label: "Antecedentes Contraloría",
     icon: <Landmark className="h-4 w-4" />,
     hint: "Certificado de responsabilidad fiscal.",
+    publicOnly: true,
   },
   {
     value: "procuraduria",
     label: "Antecedentes Procuraduría",
     icon: <Scale className="h-4 w-4" />,
     hint: "Certificado de antecedentes disciplinarios.",
+    publicOnly: true,
   },
   {
     value: "criminal_record",
     label: "Antecedentes Penales / Judiciales",
     icon: <Gavel className="h-4 w-4" />,
     hint: "Policía Nacional · requerimientos judiciales.",
+    publicOnly: true,
   },
   {
     value: "corrective_measures",
     label: "Antecedentes Medidas Correctivas",
     icon: <AlertTriangle className="h-4 w-4" />,
     hint: "RNMC · Policía Nacional.",
+    publicOnly: true,
   },
   {
     value: "redam",
     label: "REDAM",
     icon: <Ban className="h-4 w-4" />,
     hint: "Registro de Deudores Alimentarios Morosos.",
+    publicOnly: true,
   },
   {
     value: "disqualifications",
     label: "Consulta de inhabilidades",
     icon: <Fingerprint className="h-4 w-4" />,
     hint: "Inhabilidades por delitos sexuales contra menores.",
+    publicOnly: true,
   },
   {
     value: "health_affiliation",
     label: "Afiliación Salud (EPS)",
     icon: <HeartPulse className="h-4 w-4" />,
     hint: "Certificado de afiliación vigente.",
+    publicOnly: true,
   },
   {
     value: "pension_affiliation",
     label: "Afiliación Pensión",
     icon: <PiggyBank className="h-4 w-4" />,
     hint: "Fondo de pensiones · certificado vigente.",
+    publicOnly: true,
   },
   {
     value: "arl_affiliation",
     label: "Afiliación ARL",
     icon: <HardHat className="h-4 w-4" />,
     hint: "Riesgos laborales · certificado vigente.",
+    publicOnly: true,
   },
   {
     value: "assets_declaration",
     label: "Declaración de bienes y rentas",
     icon: <FileSpreadsheet className="h-4 w-4" />,
     hint: "Formato SIGEP de bienes y rentas.",
+    publicOnly: true,
   },
   {
     value: "bank_account",
     label: "Certificación cuenta bancaria",
     icon: <FileBadge className="h-4 w-4" />,
     hint: "Certificado bancario para pagos.",
+    publicOnly: true,
   },
   {
     value: "other",
     label: "Otro anexo",
     icon: <FilePlus2 className="h-4 w-4" />,
-    hint: "Cualquier otro documento de soporte (manual).",
+    hint: "Cualquier otro documento de soporte.",
+    publicOnly: true,
   },
 ];
+
+const ALL_TYPES = [...REGULAR_TYPES, ...PUBLIC_TYPES];
 
 export function DocumentsManager({
   userId,
@@ -228,6 +245,8 @@ export function DocumentsManager({
   const [busyType, setBusyType] = useState<DocType | null>(null);
   const [extractingCv, setExtractingCv] = useState(false);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
+  const [showPublic, setShowPublic] = useState(false);
+
   const inputRefs = useRef<Record<DocType, HTMLInputElement | null>>({
     cv: null,
     rethus: null,
@@ -261,16 +280,11 @@ export function DocumentsManager({
         .order("created_at", { ascending: false });
       if (active && data) setDocs(data as unknown as Doc[]);
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [userId]);
 
   const upload = async (type: DocType, file: File) => {
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error("Máximo 15MB");
-      return;
-    }
+    if (file.size > 15 * 1024 * 1024) { toast.error("Máximo 15MB"); return; }
     setBusyType(type);
     try {
       const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -279,18 +293,18 @@ export function DocumentsManager({
         .from("professional-docs")
         .upload(path, file, { upsert: false, contentType: file.type });
       if (upErr) throw upErr;
-      const file_url = path;
+
       const { data: row, error } = await supabase
         .from("professional_documents")
-        .insert({ user_id: userId, doc_type: type, file_url, file_name: file.name })
+        .insert({ user_id: userId, doc_type: type, file_url: path, file_name: file.name })
         .select()
         .single();
       if (error) throw error;
+
       const newDoc = row as unknown as Doc;
       setDocs((prev) => [newDoc, ...prev]);
       toast.success("Documento subido. Verificando con IA…");
 
-      // Generar URL firmada para que la IA pueda leerlo
       const { data: signed } = await supabase.storage
         .from("professional-docs")
         .createSignedUrl(path, 120);
@@ -299,7 +313,7 @@ export function DocumentsManager({
         return;
       }
 
-      // 1) CV → extracción de perfil
+      // CV → extracción de perfil
       if (type === "cv" && onCvExtracted) {
         setExtractingCv(true);
         try {
@@ -318,7 +332,7 @@ export function DocumentsManager({
         }
       }
 
-      // 2) Verificación IA: rechaza si no es real / no coincide
+      // Verificación IA
       setVerifyingId(newDoc.id);
       try {
         const { data: vr, error: ve } = await supabase.functions.invoke("document-verifier", {
@@ -328,14 +342,13 @@ export function DocumentsManager({
         const v = vr?.verification;
         if (!v) throw new Error("Sin respuesta de verificación");
         const isValid = !!v.is_valid && Number(v.confidence ?? 0) >= 60;
-        const newStatus: DocStatus = isValid ? "pending" : "rejected";
         const updates = {
           ai_verified: isValid,
           ai_score: typeof v.confidence === "number" ? v.confidence : null,
           ai_notes: v.reason ?? null,
           ai_extracted: v.extracted ?? null,
           reviewer_note: !isValid ? (v.reason ?? "Documento rechazado por IA") : null,
-          status: newStatus,
+          status: isValid ? "pending" : "rejected",
         };
         const { data: upd } = await supabase
           .from("professional_documents")
@@ -343,20 +356,15 @@ export function DocumentsManager({
           .eq("id", newDoc.id)
           .select()
           .single();
-        if (upd) {
-          setDocs((prev) => prev.map((d) => (d.id === newDoc.id ? (upd as unknown as Doc) : d)));
-        }
+        if (upd) setDocs((prev) => prev.map((d) => (d.id === newDoc.id ? (upd as unknown as Doc) : d)));
         if (isValid) {
           toast.success(`✅ Documento verificado por IA (${Math.round(v.confidence)}%)`);
         } else {
           toast.error(`❌ Rechazado: ${v.reason ?? "no coincide con el tipo declarado"}`);
         }
       } catch (e) {
-        // No bloqueamos si IA falla, queda pendiente para staff
         console.warn("[verify]", e);
-        toast.warning(
-          "Documento subido. La verificación IA no estuvo disponible; quedó pendiente.",
-        );
+        toast.warning("Documento subido. La verificación IA no estuvo disponible; quedó pendiente.");
       } finally {
         setVerifyingId(null);
       }
@@ -371,9 +379,7 @@ export function DocumentsManager({
     try {
       const path = extractPath(doc.file_url);
       if (!path) throw new Error("Ruta no válida");
-      const { data, error } = await supabase.storage
-        .from("professional-docs")
-        .createSignedUrl(path, 60);
+      const { data, error } = await supabase.storage.from("professional-docs").createSignedUrl(path, 60);
       if (error || !data?.signedUrl) throw error ?? new Error("No se pudo abrir");
       window.open(data.signedUrl, "_blank", "noopener,noreferrer");
     } catch (e) {
@@ -395,121 +401,196 @@ export function DocumentsManager({
   };
 
   const docsByType = (t: DocType) => docs.filter((d) => d.doc_type === t);
-
   const hasDoc = (t: DocType) => docs.some((d) => d.doc_type === t && d.status !== "rejected");
-  const requiredMissing = TYPES.filter((t) => t.required && !hasDoc(t.value)).length;
+
+  const requiredMissing = REGULAR_TYPES.filter((t) => t.required && !hasDoc(t.value)).length;
   const credencialMissing = !hasDoc("rethus") && !hasDoc("diploma");
   const totalMissing = requiredMissing + (credencialMissing ? 1 : 0);
 
+  const publicUploaded = PUBLIC_TYPES.filter((t) => hasDoc(t.value)).length;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      {/* Missing docs alert */}
       {totalMissing > 0 && (
-        <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+        <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
           <ShieldAlert className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-amber-700 dark:text-amber-400">
-            Te faltan <strong>{totalMissing}</strong> documento(s) por subir.
+            Te faltan <strong>{totalMissing}</strong> documento(s) obligatorio(s).
             {credencialMissing && (
-              <>
-                {" "}
-                Debes subir <strong>RETHUS</strong> o <strong>diploma</strong> (al menos uno).
-              </>
+              <> Sube <strong>RETHUS</strong> o <strong>diploma</strong> (al menos uno).</>
             )}
           </p>
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {TYPES.map((t) => {
-          const items = docsByType(t.value);
-          const busy = busyType === t.value || (t.cvParse && extractingCv);
-          return (
-            <div key={t.value} className="rounded-xl border border-border bg-background p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center text-foreground">
-                    {t.icon}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold flex items-center gap-1.5">
-                      {t.label}
-                      {t.required && <span className="text-[10px] text-rose-500">*</span>}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">{t.hint}</p>
-                  </div>
-                </div>
-                <Button
-                  size="sm"
-                  variant="glass"
-                  disabled={busy}
-                  onClick={() => inputRefs.current[t.value]?.click()}
-                >
-                  {busy ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <UploadCloud className="h-3.5 w-3.5" />
-                  )}
-                  <span className="ml-1.5 text-xs">Subir</span>
-                </Button>
-                <input
-                  ref={(el) => {
-                    inputRefs.current[t.value] = el;
-                  }}
-                  type="file"
-                  accept=".pdf,image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) void upload(t.value, f);
-                    e.target.value = "";
-                  }}
+
+      {/* Regular documents */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {REGULAR_TYPES.map((t) => (
+          <DocCard
+            key={t.value}
+            def={t}
+            items={docsByType(t.value)}
+            busy={busyType === t.value || (!!t.cvParse && extractingCv)}
+            verifyingId={verifyingId}
+            inputRef={(el) => { inputRefs.current[t.value] = el; }}
+            onUpload={(f) => void upload(t.value, f)}
+            onOpen={openDoc}
+            onRemove={remove}
+          />
+        ))}
+      </div>
+
+      {/* Public institution section — collapsed by default */}
+      <div className="rounded-xl border border-border overflow-hidden">
+        <button
+          type="button"
+          onClick={() => setShowPublic((v) => !v)}
+          className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-muted/30 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center">
+              <Building2 className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">Para instituciones públicas</p>
+              <p className="text-xs text-muted-foreground">
+                Solo cuando te postulas a entidades del Estado.
+                {publicUploaded > 0 && <span className="ml-1 text-biosensor font-medium">{publicUploaded} subidos</span>}
+              </p>
+            </div>
+          </div>
+          {showPublic
+            ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+            : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+          }
+        </button>
+
+        {showPublic && (
+          <div className={cn("border-t border-border p-4 bg-muted/10")}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PUBLIC_TYPES.map((t) => (
+                <DocCard
+                  key={t.value}
+                  def={t}
+                  items={docsByType(t.value)}
+                  busy={busyType === t.value}
+                  verifyingId={verifyingId}
+                  inputRef={(el) => { inputRefs.current[t.value] = el; }}
+                  onUpload={(f) => void upload(t.value, f)}
+                  onOpen={openDoc}
+                  onRemove={remove}
                 />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── DocCard sub-component ──
+function DocCard({
+  def: t,
+  items,
+  busy,
+  verifyingId,
+  inputRef,
+  onUpload,
+  onOpen,
+  onRemove,
+}: {
+  def: DocDef;
+  items: Doc[];
+  busy: boolean;
+  verifyingId: string | null;
+  inputRef: (el: HTMLInputElement | null) => void;
+  onUpload: (f: File) => void;
+  onOpen: (d: Doc) => void;
+  onRemove: (d: Doc) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="h-8 w-8 rounded-lg bg-muted/50 flex items-center justify-center shrink-0 text-foreground">
+            {t.icon}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold flex items-center gap-1.5 flex-wrap">
+              {t.label}
+              {t.required && <span className="text-[10px] text-rose-500 font-bold">*</span>}
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug">{t.hint}</p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="glass"
+          disabled={busy}
+          onClick={() => {
+            const input = document.querySelector<HTMLInputElement>(`input[data-doc="${t.value}"]`);
+            input?.click();
+          }}
+          className="shrink-0"
+        >
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UploadCloud className="h-3.5 w-3.5" />}
+          <span className="ml-1.5 text-xs">Subir</span>
+        </Button>
+        <input
+          ref={inputRef}
+          data-doc={t.value}
+          type="file"
+          accept=".pdf,image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onUpload(f);
+            e.target.value = "";
+          }}
+        />
+      </div>
+
+      {t.cvParse && (
+        <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-fuchsia-neural">
+          <Sparkles className="h-3 w-3" /> Auto-llenado por IA
+        </p>
+      )}
+
+      {items.length > 0 && (
+        <ul className="mt-3 space-y-1.5">
+          {items.map((d) => (
+            <li key={d.id} className="text-xs bg-muted/30 rounded-lg px-2.5 py-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => onOpen(d)}
+                  className="truncate flex-1 text-left hover:underline text-xs"
+                >
+                  {d.file_name || "Documento"}
+                </button>
+                {verifyingId === d.id && (
+                  <Loader2 className="h-3 w-3 animate-spin text-muted-foreground shrink-0" />
+                )}
+                <StatusBadge status={d.status} aiVerified={d.ai_verified ?? false} />
+                <button
+                  onClick={() => onRemove(d)}
+                  className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                  aria-label="Eliminar documento"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
-              {t.value === "cv" && (
-                <p className="mt-2 inline-flex items-center gap-1 text-[11px] text-fuchsia-neural">
-                  <Sparkles className="h-3 w-3" /> Auto-llenado por IA
+              {d.ai_notes && (
+                <p className={cn("mt-1 text-[10.5px]", d.status === "rejected" ? "text-rose-600" : "text-muted-foreground")}>
+                  {d.status === "rejected" ? "❌ " : "🤖 "}{d.ai_notes}
                 </p>
               )}
-              {items.length > 0 && (
-                <ul className="mt-3 space-y-1.5">
-                  {items.map((d) => (
-                    <li key={d.id} className="text-xs bg-muted/30 rounded px-2 py-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openDoc(d)}
-                          className="truncate flex-1 text-left hover:underline"
-                        >
-                          {d.file_name || "Documento"}
-                        </button>
-                        {verifyingId === d.id && (
-                          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-                        )}
-                        <StatusBadge status={d.status} aiVerified={d.ai_verified ?? false} />
-                        <button
-                          onClick={() => remove(d)}
-                          className="text-muted-foreground hover:text-destructive"
-                          aria-label="Eliminar documento"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      {d.ai_notes && (
-                        <p
-                          className={`mt-1 text-[10.5px] ${
-                            d.status === "rejected" ? "text-rose-600" : "text-muted-foreground"
-                          }`}
-                        >
-                          {d.status === "rejected" ? "❌ " : "🤖 "}
-                          {d.ai_notes}
-                        </p>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -518,7 +599,7 @@ function StatusBadge({ status, aiVerified }: { status: DocStatus; aiVerified: bo
   const map = {
     pending: {
       icon: <Clock className="h-3 w-3" />,
-      label: aiVerified ? "IA ✓ pendiente staff" : "Pendiente",
+      label: aiVerified ? "IA ✓" : "Pendiente",
       cls: aiVerified ? "bg-biosensor/10 text-biosensor" : "bg-amber-500/10 text-amber-600",
     },
     approved: {
@@ -534,11 +615,8 @@ function StatusBadge({ status, aiVerified }: { status: DocStatus; aiVerified: bo
   } as const;
   const s = map[status];
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded ${s.cls} whitespace-nowrap`}
-    >
-      {s.icon}
-      {s.label}
+    <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap", s.cls)}>
+      {s.icon} {s.label}
     </span>
   );
 }
