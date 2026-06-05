@@ -162,7 +162,7 @@ export function AdBanner({
           ref={adsRef}
           className="adsbygoogle block"
           style={{ display: "block" }}
-          data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+          data-ad-client={import.meta.env.VITE_ADSENSE_PUBLISHER_ID ?? "ca-pub-XXXXXXXXXXXXXXXX"}
           data-ad-slot={adsenseSlot}
           data-ad-format="auto"
           data-full-width-responsive="true"
