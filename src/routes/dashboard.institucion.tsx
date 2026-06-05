@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
@@ -127,162 +127,238 @@ function waLink(phone: string | null | undefined, name: string, offerTitle: stri
   )}`;
 }
 
+// Supabase returns a nested `job_offers` object when using the join select.
+// We strip it so downstream code only sees plain ApplicationRow.
+type ApplicationRowRaw = ApplicationRow & { job_offers?: unknown };
+
+function stripJoin(rows: ApplicationRowRaw[]): ApplicationRow[] {
+  return rows.map(({ job_offers: _j, ...a }) => a as ApplicationRow);
+}
+
+// Merge professional_profiles + profiles rows into a ProSummary map
+function buildProMap(
+  proRows: Record<string, unknown>[],
+  profileRows: Record<string, unknown>[],
+): Record<string, ProSummary> {
+  const map: Record<string, ProSummary> = {};
+  proRows.forEach((r) => {
+    map[r.user_id as string] = {
+      user_id: r.user_id as string,
+      full_name: null,
+      avatar_url: null,
+      city: null,
+      phone: null,
+      specialty: (r.specialty as string) ?? null,
+      sub_specialties: Array.isArray(r.sub_specialties) ? (r.sub_specialties as string[]) : null,
+      avg_rating: (r.avg_rating as number) ?? null,
+      trust_score: (r.trust_score as number) ?? null,
+      hourly_rate: (r.hourly_rate as number) ?? null,
+      shift_rate: (r.shift_rate as number) ?? null,
+      monthly_rate: (r.monthly_rate as number) ?? null,
+      verified: (r.verified as boolean) ?? null,
+      rethus_verified: (r.rethus_verified as boolean) ?? null,
+      ai_preapproved: (r.ai_preapproved as boolean) ?? null,
+      available: Boolean(r.available),
+      years_experience: (r.years_experience as number) ?? null,
+      bio: (r.bio as string) ?? null,
+      total_jobs: (r.total_jobs as number) ?? null,
+      certifications: Array.isArray(r.certifications) ? (r.certifications as string[]) : null,
+    };
+  });
+  profileRows.forEach((p) => {
+    const uid = p.user_id as string;
+    const existing = map[uid] ?? {
+      user_id: uid, full_name: null, avatar_url: null, city: null, phone: null,
+      specialty: null, sub_specialties: null, avg_rating: null, trust_score: null,
+      hourly_rate: null, shift_rate: null, monthly_rate: null, verified: null,
+      rethus_verified: null, ai_preapproved: null, available: false,
+      years_experience: null, bio: null, total_jobs: null, certifications: null,
+    };
+    map[uid] = {
+      ...existing,
+      full_name: (p.full_name as string) ?? null,
+      avatar_url: (p.avatar_url as string) ?? null,
+      city: (p.city as string) ?? null,
+      phone: (p.phone as string) ?? null,
+    };
+  });
+  return map;
+}
+
 function InstitutionDashboard() {
   const { user, loading: authLoading, logout } = useAppUser({
     allow: ["institution", "superadmin"],
   });
 
   const [tab, setTab] = useState<Tab>("inicio");
+  // dataLoading: Phase 1 (profile + offers + apps) pending — shows inbox skeleton
   const [dataLoading, setDataLoading] = useState(true);
+  // talentLoading: Phase 2 (professional profiles) pending — shows talent skeleton
+  const [talentLoading, setTalentLoading] = useState(false);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [proMap, setProMap] = useState<Record<string, ProSummary>>({});
   const [instProfile, setInstProfile] = useState<InstitutionProfile | null>(null);
   const [updatingApp, setUpdatingApp] = useState<string | null>(null);
 
-  const loadAll = async (uid: string) => {
-    try {
-      const [offersRes, instRes] = await Promise.all([
-        supabase
-          .from("job_offers")
-          .select(
-            "id, title, city, modality, amount, status, specialty_required, description, shifts_count, lat, lng, reserved_until, created_at",
-          )
-          .eq("posted_by", uid)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("institution_profiles")
-          .select(
-            "institution_name, institution_type, city, verified, nit, compliance_fuid",
-          )
-          .eq("user_id", uid)
-          .maybeSingle(),
-      ]);
+  // Abort guard — mutable ref shared across async callbacks
+  const signal = useRef({ cancelled: false });
 
-      if (instRes.data) setInstProfile(instRes.data as InstitutionProfile);
-      const offerList = (offersRes.data ?? []) as Offer[];
-      setOffers(offerList);
+  // ── Phase 2: load professional profiles for a set of proIds ───────────────
+  const loadTalent = useCallback(
+    async (proIds: string[]) => {
+      if (!proIds.length) {
+        setProMap({});
+        setTalentLoading(false);
+        return;
+      }
+      setTalentLoading(true);
+      try {
+        const [proRowsRes, profilesRes] = await Promise.all([
+          supabase
+            .from("professional_profiles")
+            .select(
+              "user_id, specialty, sub_specialties, avg_rating, trust_score, hourly_rate, shift_rate, monthly_rate, verified, rethus_verified, ai_preapproved, available, years_experience, bio, total_jobs, certifications",
+            )
+            .in("user_id", proIds),
+          supabase
+            .from("profiles")
+            .select("user_id, full_name, avatar_url, city, phone")
+            .in("user_id", proIds),
+        ]);
 
-      const offerIds = offerList.map((o) => o.id);
-      if (offerIds.length === 0) return;
+        if (signal.current.cancelled) return;
+        setProMap(
+          buildProMap(
+            (proRowsRes.data ?? []) as Record<string, unknown>[],
+            (profilesRes.data ?? []) as Record<string, unknown>[],
+          ),
+        );
+      } catch (err) {
+        console.error("[inst] talent load failed:", err);
+      } finally {
+        if (!signal.current.cancelled) setTalentLoading(false);
+      }
+    },
+    [],
+  );
 
-      const { data: appsData } = await supabase
-        .from("applications")
-        .select("id, status, created_at, proposed_amount, message, professional_id, job_offer_id")
-        .in("job_offer_id", offerIds)
-        .order("created_at", { ascending: false })
-        .limit(100);
+  // ── Full load: Phase 1 (3-way parallel) → Phase 2 ─────────────────────────
+  //
+  // OLD flow:  [offers + profile] → [apps] → [pro_profiles + profiles]   (3 rounds)
+  // NEW flow:  [offers + profile + apps(join)] → [pro_profiles + profiles] (2 rounds)
+  //
+  // Applications are fetched with an inner join on job_offers.posted_by so
+  // we never need offerIds first, eliminating one full network round-trip.
+  // State is committed per-phase so each UI section renders as soon as its
+  // data arrives instead of waiting for the entire cascade.
+  const loadAll = useCallback(
+    async (uid: string) => {
+      try {
+        // ── Phase 1: profile + offers + applications — all parallel ──────────
+        const [offersRes, instRes, appsRes] = await Promise.all([
+          supabase
+            .from("job_offers")
+            .select(
+              "id, title, city, modality, amount, status, specialty_required, description, shifts_count, lat, lng, reserved_until, created_at",
+            )
+            .eq("posted_by", uid)
+            .order("created_at", { ascending: false }),
 
-      const apps = (appsData ?? []) as ApplicationRow[];
-      setApplications(apps);
+          supabase
+            .from("institution_profiles")
+            .select("institution_name, institution_type, city, verified, nit, compliance_fuid")
+            .eq("user_id", uid)
+            .maybeSingle(),
 
-      const proIds = Array.from(new Set(apps.map((a) => a.professional_id)));
-      if (proIds.length === 0) return;
+          // Inner join lets us filter by posted_by without a prior offerIds fetch.
+          // The nested job_offers object is stripped by stripJoin() below.
+          supabase
+            .from("applications")
+            .select(
+              "id, status, created_at, proposed_amount, message, professional_id, job_offer_id, job_offers!inner(posted_by)",
+            )
+            .eq("job_offers.posted_by", uid)
+            .order("created_at", { ascending: false })
+            .limit(200),
+        ]);
 
-      const [proRowsRes, profilesRes] = await Promise.all([
-        supabase
-          .from("professional_profiles")
-          .select(
-            "user_id, specialty, sub_specialties, avg_rating, trust_score, hourly_rate, shift_rate, monthly_rate, verified, rethus_verified, ai_preapproved, available, years_experience, bio, total_jobs, certifications",
-          )
-          .in("user_id", proIds),
-        supabase
-          .from("profiles")
-          .select("user_id, full_name, avatar_url, city, phone")
-          .in("user_id", proIds),
-      ]);
+        if (signal.current.cancelled) return;
 
-      const map: Record<string, ProSummary> = {};
-      (proRowsRes.data ?? []).forEach((r) => {
-        map[r.user_id] = {
-          user_id: r.user_id,
-          full_name: null,
-          avatar_url: null,
-          city: null,
-          specialty: r.specialty,
-          sub_specialties: (r as { sub_specialties?: string[] }).sub_specialties ?? null,
-          avg_rating: r.avg_rating,
-          trust_score: r.trust_score,
-          hourly_rate: r.hourly_rate,
-          shift_rate: r.shift_rate,
-          monthly_rate: (r as { monthly_rate?: number }).monthly_rate ?? null,
-          phone: null,
-          verified: r.verified,
-          rethus_verified: (r as { rethus_verified?: boolean }).rethus_verified ?? null,
-          ai_preapproved: (r as { ai_preapproved?: boolean }).ai_preapproved ?? null,
-          available: Boolean((r as { available?: boolean }).available),
-          years_experience: (r as { years_experience?: number }).years_experience ?? null,
-          bio: (r as { bio?: string }).bio ?? null,
-          total_jobs: (r as { total_jobs?: number }).total_jobs ?? null,
-          certifications: (r as { certifications?: string[] }).certifications ?? null,
-        };
-      });
-      (profilesRes.data ?? []).forEach((p) => {
-        const existing = map[p.user_id] ?? {
-          user_id: p.user_id,
-          full_name: null,
-          avatar_url: null,
-          city: null,
-          specialty: null,
-          sub_specialties: null,
-          avg_rating: null,
-          trust_score: null,
-          hourly_rate: null,
-          shift_rate: null,
-          monthly_rate: null,
-          phone: null,
-          verified: null,
-          rethus_verified: null,
-          ai_preapproved: null,
-          available: false,
-          years_experience: null,
-          bio: null,
-          total_jobs: null,
-          certifications: null,
-        };
-        map[p.user_id] = {
-          ...existing,
-          full_name: p.full_name,
-          avatar_url: p.avatar_url,
-          city: p.city,
-          phone: p.phone,
-        };
-      });
-      setProMap(map);
-    } catch (err) {
-      console.error("[institucion dashboard] load failed:", err);
-      toast.error("Error cargando datos. Intenta refrescar.");
-    }
-  };
+        // Commit Phase 1 state — inbox + offers tabs render immediately
+        if (instRes.data) setInstProfile(instRes.data as InstitutionProfile);
+        setOffers((offersRes.data ?? []) as Offer[]);
+
+        const apps = stripJoin((appsRes.data ?? []) as ApplicationRowRaw[]);
+        setApplications(apps);
+        setDataLoading(false); // ← inbox renders NOW, before talent is ready
+
+        // ── Phase 2: professional profiles — parallel pair ───────────────────
+        const proIds = [...new Set(apps.map((a) => a.professional_id))];
+        await loadTalent(proIds);
+      } catch (err) {
+        console.error("[inst] loadAll failed:", err);
+        toast.error("Error cargando datos. Intenta refrescar.");
+      } finally {
+        if (!signal.current.cancelled) setDataLoading(false);
+      }
+    },
+    [loadTalent],
+  );
 
   useEffect(() => {
     if (authLoading || !user) return;
-    let active = true;
+    signal.current = { cancelled: false };
     const uid = user.id;
-    (async () => {
-      try {
-        await loadAll(uid);
-      } finally {
-        if (active) setDataLoading(false);
-      }
-    })();
-    const safety = setTimeout(() => { if (active) setDataLoading(false); }, 8000);
-    return () => { active = false; clearTimeout(safety); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, user?.id]);
+    void loadAll(uid);
+    // Safety valve: never leave inbox spinner past 10 s
+    const safety = setTimeout(() => {
+      if (!signal.current.cancelled) setDataLoading(false);
+    }, 10_000);
+    return () => {
+      signal.current.cancelled = true;
+      clearTimeout(safety);
+    };
+  }, [authLoading, user?.id, loadAll]);
 
+  // Applications changes (most frequent) — reload apps then talent only.
+  // Avoids re-fetching offers and institution profile on every status flip.
   useRealtimeRefresh(
-    `inst-dash-${user?.id ?? "anon"}`,
-    [
-      {
-        table: "applications",
-        event: "*",
-        filter: undefined,
-      },
-      { table: "job_offers", event: "*" },
-    ],
-    () => {
-      if (user?.id) void loadAll(user.id);
+    `inst-apps-${user?.id ?? "anon"}`,
+    [{ table: "applications", event: "*" }],
+    async () => {
+      if (!user?.id || signal.current.cancelled) return;
+      const { data } = await supabase
+        .from("applications")
+        .select(
+          "id, status, created_at, proposed_amount, message, professional_id, job_offer_id, job_offers!inner(posted_by)",
+        )
+        .eq("job_offers.posted_by", user.id)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      const apps = stripJoin((data ?? []) as ApplicationRowRaw[]);
+      setApplications(apps);
+      const proIds = [...new Set(apps.map((a) => a.professional_id))];
+      await loadTalent(proIds);
+    },
+    !!user?.id,
+  );
+
+  // Offer changes — reload offers only (status, fills, new offers).
+  // Applications and talent are unaffected by offer metadata changes.
+  useRealtimeRefresh(
+    `inst-offers-${user?.id ?? "anon"}`,
+    [{ table: "job_offers", event: "*" }],
+    async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from("job_offers")
+        .select(
+          "id, title, city, modality, amount, status, specialty_required, description, shifts_count, lat, lng, reserved_until, created_at",
+        )
+        .eq("posted_by", user.id)
+        .order("created_at", { ascending: false });
+      setOffers((data ?? []) as Offer[]);
     },
     !!user?.id,
   );
@@ -797,6 +873,7 @@ function InstitutionDashboard() {
             instCity={instProfile?.city ?? ""}
             updatingApp={updatingApp}
             onUpdateApp={updateAppStatus}
+            loading={talentLoading}
           />
         )}
 

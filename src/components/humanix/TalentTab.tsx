@@ -85,6 +85,8 @@ interface TalentTabProps {
   instCity?: string;
   updatingApp: string | null;
   onUpdateApp: (appId: string, status: AppStatus) => void;
+  /** True while Phase 2 (professional profiles) is still loading */
+  loading?: boolean;
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -146,6 +148,7 @@ export function TalentTab({
   instCity = "",
   updatingApp,
   onUpdateApp,
+  loading = false,
 }: TalentTabProps) {
   // Pool quick-filter tab
   const [poolTab, setPoolTab] = useState<PoolTab>("all");
@@ -896,7 +899,34 @@ export function TalentTab({
       </div>
 
       {/* ── Pool grid / table ── */}
-      {filteredPool.length === 0 ? (
+      {loading && rawPool.length === 0 ? (
+        /* Skeleton while Phase 2 (professional profiles) is in flight */
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card/95 p-4 animate-pulse space-y-3">
+              <div className="h-4 w-20 bg-muted rounded-full" />
+              <div className="flex items-start gap-3">
+                <div className="h-12 w-12 rounded-full bg-muted shrink-0" />
+                <div className="flex-1 space-y-2 pt-1">
+                  <div className="h-3.5 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                  <div className="h-3 bg-muted rounded w-1/3" />
+                </div>
+                <div className="h-12 w-12 rounded-full bg-muted shrink-0" />
+              </div>
+              <div className="flex gap-1.5 flex-wrap">
+                <div className="h-5 bg-muted rounded-full w-16" />
+                <div className="h-5 bg-muted rounded-full w-20" />
+                <div className="h-5 bg-muted rounded-full w-14" />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <div className="h-8 bg-muted rounded-xl flex-1" />
+                <div className="h-8 bg-muted rounded-xl w-14" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredPool.length === 0 ? (
         <EmptyPool
           poolTab={poolTab}
           hasSearched={hasSearched}
@@ -921,7 +951,6 @@ export function TalentTab({
       ) : (
         <TalentTable
           pool={filteredPool}
-          appByPro={appByPro}
           latestAppByPro={latestAppByPro}
           offers={offers}
           updatingApp={updatingApp}
@@ -1235,7 +1264,6 @@ function ProCard({
 
 function TalentTable({
   pool,
-  appByPro,
   latestAppByPro,
   offers,
   updatingApp,
@@ -1243,7 +1271,6 @@ function TalentTable({
   applicantIds,
 }: {
   pool: ProSummary[];
-  appByPro: Record<string, ApplicationRow[]>;
   latestAppByPro: Record<string, ApplicationRow>;
   offers: Offer[];
   updatingApp: string | null;
