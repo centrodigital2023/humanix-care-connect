@@ -1022,6 +1022,7 @@ function ProfessionalDetailDialog({
   const [expandedDoc, setExpandedDoc] = useState<string | null>(null);
   const [holistic, setHolistic] = useState<HolisticValidation | null>(null);
   const [holisticBusy, setHolisticBusy] = useState(false);
+  const [detailTab, setDetailTab] = useState<"perfil" | "documentos" | "herramientas">("perfil");
 
   const loadAll = async () => {
     const [docsRes, refsRes] = await Promise.all([
@@ -1406,9 +1407,33 @@ function ProfessionalDetailDialog({
             </DialogTitle>
           </DialogHeader>
 
+          {/* ── Tab navigation ──────────────────────────────────────────────── */}
+          <div className="flex -mx-3 sm:-mx-6 px-4 border-b border-border shrink-0">
+            {(["perfil", "documentos", "herramientas"] as const).map((t) => {
+              const labels: Record<typeof t, string> = {
+                perfil: "Perfil",
+                documentos: `Documentos (${docs.length})`,
+                herramientas: "IA & Acciones",
+              };
+              return (
+                <button
+                  key={t}
+                  onClick={() => setDetailTab(t)}
+                  className={`px-4 py-2.5 text-xs font-medium border-b-2 -mb-px transition-colors ${
+                    detailTab === t
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {labels[t]}
+                </button>
+              );
+            })}
+          </div>
+
           <ScrollArea className="flex-1 -mx-1 px-1">
             <div className="space-y-4 py-1">
-              {/* Status banner */}
+              {/* Status banner - always visible */}
               {pro.blocked && (
                 <Card className="p-3 border-destructive/30 bg-destructive/5 flex items-start gap-2">
                   <Ban className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
@@ -1419,6 +1444,7 @@ function ProfessionalDetailDialog({
                 </Card>
               )}
 
+              {detailTab === "perfil" && (<>
               {/* ── Fila 1: KPIs + Contacto ─────────────────────────────────── */}
               <div className="grid sm:grid-cols-2 gap-4">
                 {/* KPIs */}
@@ -1698,6 +1724,185 @@ function ProfessionalDetailDialog({
               )}
 
               {/* ── Presencia web &amp; verificación IA ─────────────────────── */}
+              </>)} {/* end perfil tab */}
+
+              {detailTab === "documentos" && (<>
+              {/* Todos los documentos adjuntos — grid responsivo */}
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <FileText className="h-3.5 w-3.5 text-fuchsia-neural" />
+                  {docs.length} documento{docs.length !== 1 ? "s" : ""} adjunto{docs.length !== 1 ? "s" : ""}
+                </p>
+                {docs.length > 0 && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={analyzeAllDocs}
+                    disabled={analyzingAll}
+                    className="h-7 text-[10px]"
+                  >
+                    {analyzingAll ? (
+                      <Loader2 className="h-3 w-3 animate-spin mr-0.5" />
+                    ) : (
+                      <Sparkles className="h-3 w-3 mr-0.5" />
+                    )}
+                    Analizar todos con IA
+                  </Button>
+                )}
+              </div>
+              {docs.length === 0 ? (
+                <Card className="p-10 text-center">
+                  <FileText className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
+                </Card>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {docs.map((d) => {
+                    const extra = docExtras[d.id];
+                    const extracted = extra?.ai_extracted as
+                      | Record<string, unknown>
+                      | null
+                      | undefined;
+                    const isExpanded = expandedDoc === d.id;
+                    const aiOk = extra?.ai_verified === true;
+                    const aiBad = extra?.ai_verified === false;
+                    return (
+                      <div
+                        key={d.id}
+                        className={`rounded-xl border flex flex-col overflow-hidden bg-card ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}
+                      >
+                        <div
+                          className={`px-3 py-2 flex items-center justify-between gap-2 ${aiOk ? "bg-biosensor/5" : aiBad ? "bg-destructive/5" : "bg-muted/30"}`}
+                        >
+                          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                            <Badge variant="secondary" className="uppercase text-[10px]">
+                              {d.doc_type}
+                            </Badge>
+                            <Badge
+                              variant={
+                                d.status === "approved"
+                                  ? "default"
+                                  : d.status === "rejected"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                              className="text-[10px] capitalize"
+                            >
+                              {d.status}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {d.ai_score != null && (
+                              <span
+                                className={`text-[10px] font-bold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}
+                              >
+                                {d.ai_score}/100
+                              </span>
+                            )}
+                            {aiOk && <CheckCircle2 className="h-3.5 w-3.5 text-biosensor" />}
+                            {aiBad && <XCircle className="h-3.5 w-3.5 text-destructive" />}
+                          </div>
+                        </div>
+                        <div className="px-3 py-2 flex-1">
+                          <p
+                            className="text-xs font-medium truncate"
+                            title={d.file_name || "Sin nombre"}
+                          >
+                            {d.file_name || "Sin nombre"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {new Date(d.created_at).toLocaleDateString("es-CO")}
+                            {d.ai_score != null && (
+                              <span
+                                className={`ml-1 font-semibold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}
+                              >
+                                {" "}· IA {d.ai_score}/100
+                              </span>
+                            )}
+                          </p>
+                          {d.ai_notes && (
+                            <p className="text-[10px] text-muted-foreground mt-1 line-clamp-2 italic">
+                              {d.ai_notes}
+                            </p>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-3 gap-1 px-2 pb-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openPreview(d)}
+                            disabled={previewLoading}
+                            className="h-7 text-[10px]"
+                          >
+                            <Eye className="h-3 w-3 mr-0.5" /> Ver
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => downloadDoc(d)}
+                            className="h-7 text-[10px]"
+                          >
+                            <Download className="h-3 w-3 mr-0.5" /> Bajar
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={analyzingDoc === d.id ? "secondary" : "outline"}
+                            onClick={() => analyzeDoc(d)}
+                            disabled={analyzingDoc === d.id}
+                            className="h-7 text-[10px]"
+                          >
+                            {analyzingDoc === d.id ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <>
+                                <Sparkles className="h-3 w-3 mr-0.5" />
+                                IA
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                        {(extra?.ai_notes ||
+                          (extracted && Object.keys(extracted).length > 0)) && (
+                          <button
+                            onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
+                            className="text-[10px] text-muted-foreground hover:text-foreground px-3 pb-2 text-left underline underline-offset-2"
+                          >
+                            {isExpanded ? "Ocultar análisis IA" : "Ver análisis IA"}
+                          </button>
+                        )}
+                        {isExpanded && (
+                          <div className="border-t mx-2 mb-2 px-2 pt-2 bg-muted/10 rounded-b-lg space-y-1.5 text-xs max-h-36 overflow-y-auto">
+                            {extra?.ai_notes && (
+                              <div>
+                                <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">
+                                  Veredicto IA
+                                </p>
+                                <p className="text-muted-foreground">{extra.ai_notes}</p>
+                              </div>
+                            )}
+                            {extracted && Object.keys(extracted).length > 0 && (
+                              <div>
+                                <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">
+                                  Datos extraídos
+                                </p>
+                                {Object.entries(extracted).map(([k, v]) => (
+                                  <p key={k} className="text-muted-foreground">
+                                    <span className="font-medium text-foreground">{k}:</span>{" "}
+                                    {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              </>)} {/* end documentos tab */}
+
+              {detailTab === "herramientas" && (<>
               <WebPresencePanel
                 pro={pro}
                 docs={docs.map((d) => ({
@@ -1729,161 +1934,6 @@ function ProfessionalDetailDialog({
 
               {/* ── Tarea 2: seguimiento en casa · signos vitales ──────────── */}
               <VitalSignsMonitor patientName={pro.profile?.full_name ?? undefined} />
-
-              {/* ── Documentos en grid ──────────────────────────────────────── */}
-              <Card className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground flex items-center gap-1.5">
-                    <FileText className="h-3.5 w-3.5 text-fuchsia-neural" /> Documentos (
-                    {docs.length})
-                  </p>
-                  <span className="text-[10px] text-muted-foreground">Ver · IA · Descargar</span>
-                </div>
-                {docs.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin documentos cargados.</p>
-                ) : (
-                  <>
-                    <div className="flex items-center justify-between mb-2 text-[10px] text-muted-foreground">
-                      <span>{docs.length} documento{docs.length === 1 ? "" : "s"} adjunto{docs.length === 1 ? "" : "s"}</span>
-                      <span className="md:hidden">← desliza →</span>
-                      <span className="hidden md:inline">Usa las flechas o arrastra para ver todo</span>
-                    </div>
-                    <HScrollCarousel step={300} className="-mx-1 px-1">
-                      <div className="flex gap-3 snap-x snap-mandatory">
-                        {docs.map((d) => {
-                      const extra = docExtras[d.id];
-                      const extracted = extra?.ai_extracted as
-                        | Record<string, unknown>
-                        | null
-                        | undefined;
-                      const isExpanded = expandedDoc === d.id;
-                      const aiOk = extra?.ai_verified === true;
-                      const aiBad = extra?.ai_verified === false;
-                      return (
-                        <div
-                          key={d.id}
-                          className={`shrink-0 snap-start w-[280px] rounded-xl border flex flex-col overflow-hidden bg-card ${aiOk ? "border-biosensor/30" : aiBad ? "border-destructive/30" : "border-border"}`}
-                        >
-                          {/* Doc type header */}
-                          <div
-                            className={`px-3 py-2 flex items-center justify-between gap-2 ${aiOk ? "bg-biosensor/5" : aiBad ? "bg-destructive/5" : "bg-muted/30"}`}
-                          >
-                            <Badge variant="secondary" className="uppercase text-[10px]">
-                              {d.doc_type}
-                            </Badge>
-                            {aiOk && (
-                              <Badge className="bg-biosensor/20 text-biosensor text-[10px] h-4 px-1.5">
-                                <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
-                                Veraz
-                              </Badge>
-                            )}
-                            {aiBad && (
-                              <Badge variant="destructive" className="text-[10px] h-4 px-1.5">
-                                <XCircle className="h-2.5 w-2.5 mr-0.5" />
-                                Sospechoso
-                              </Badge>
-                            )}
-                          </div>
-                          {/* Doc name + score */}
-                          <div className="px-3 py-2 flex-1">
-                            <p
-                              className="text-xs font-medium truncate"
-                              title={d.file_name || "Sin nombre"}
-                            >
-                              {d.file_name || "Sin nombre"}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
-                              <span className="capitalize">{d.status}</span>
-                              <span>·</span>
-                              <span>{new Date(d.created_at).toLocaleDateString("es-CO")}</span>
-                              {d.ai_score != null && (
-                                <span
-                                  className={`font-semibold ${d.ai_score >= 70 ? "text-biosensor" : "text-destructive"}`}
-                                >
-                                  · IA {d.ai_score}/100
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                          {/* Actions */}
-                          <div className="grid grid-cols-3 gap-1 px-2 pb-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openPreview(d)}
-                              disabled={previewLoading}
-                              className="h-7 text-[10px]"
-                            >
-                              <Eye className="h-3 w-3 mr-0.5" /> Ver
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => downloadDoc(d)}
-                              className="h-7 text-[10px]"
-                            >
-                              <Download className="h-3 w-3 mr-0.5" /> Bajar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={analyzingDoc === d.id ? "secondary" : "outline"}
-                              onClick={() => analyzeDoc(d)}
-                              disabled={analyzingDoc === d.id}
-                              className="h-7 text-[10px]"
-                            >
-                              {analyzingDoc === d.id ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <>
-                                  <Sparkles className="h-3 w-3 mr-0.5" />
-                                  IA
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                          {/* Expand AI results */}
-                          {(extra?.ai_notes ||
-                            (extracted && Object.keys(extracted).length > 0)) && (
-                            <button
-                              onClick={() => setExpandedDoc(isExpanded ? null : d.id)}
-                              className="text-[10px] text-muted-foreground hover:text-foreground px-3 pb-2 text-left underline underline-offset-2"
-                            >
-                              {isExpanded ? "Ocultar análisis IA" : "Ver análisis IA"}
-                            </button>
-                          )}
-                          {isExpanded && (
-                            <div className="border-t mx-2 mb-2 px-2 pt-2 bg-muted/10 rounded-b-lg space-y-1.5 text-xs max-h-36 overflow-y-auto">
-                              {extra?.ai_notes && (
-                                <div>
-                                  <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">
-                                    Veredicto IA
-                                  </p>
-                                  <p className="text-muted-foreground">{extra.ai_notes}</p>
-                                </div>
-                              )}
-                              {extracted && Object.keys(extracted).length > 0 && (
-                                <div>
-                                  <p className="font-semibold uppercase text-[9px] text-muted-foreground mb-0.5">
-                                    Datos extraídos
-                                  </p>
-                                  {Object.entries(extracted).map(([k, v]) => (
-                                    <p key={k} className="text-muted-foreground">
-                                      <span className="font-medium text-foreground">{k}:</span>{" "}
-                                      {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                                    </p>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                        })}
-                      </div>
-                    </HScrollCarousel>
-                  </>
-                )}
-              </Card>
 
               {/* ── Análisis IA holístico ────────────────────────────────────── */}
               <Card className="p-4">
@@ -1988,6 +2038,7 @@ function ProfessionalDetailDialog({
                   Visible para el profesional al iniciar sesión.
                 </p>
               </Card>
+              </>)} {/* end herramientas tab */}
             </div>
           </ScrollArea>
 
@@ -2030,7 +2081,7 @@ function ProfessionalDetailDialog({
                 disabled={busy}
                 className="flex-1 sm:flex-initial"
               >
-                <CheckCircle2 className="h-4 w-4 mr-1" /> Aprobar y publicar
+                <CheckCircle2 className="h-4 w-4 mr-1" /> Habilitar y publicar
               </Button>
             </div>
           </DialogFooter>

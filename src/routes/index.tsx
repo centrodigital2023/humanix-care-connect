@@ -10,6 +10,7 @@ import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
@@ -54,6 +55,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
+  const { professionals, families, institutions, loading: countsLoading } = useActiveUsersCount();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <script
@@ -88,14 +90,26 @@ function Index() {
               </div>
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1">
-                    <span className="h-2 w-2 rounded-full bg-blue-600" /> Profesionales
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 font-medium">
+                    <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                    Profesionales
+                    {!countsLoading && professionals > 0 && (
+                      <span className="font-bold text-blue-600">{professionals}</span>
+                    )}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-copper/25 bg-copper/10 px-2.5 py-1">
-                    <span className="h-2 w-2 rounded-full bg-copper" /> Familias
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-copper/25 bg-copper/10 px-2.5 py-1 font-medium">
+                    <span className="h-2 w-2 rounded-full bg-copper animate-pulse" />
+                    Familias
+                    {!countsLoading && families > 0 && (
+                      <span className="font-bold text-copper">{families}</span>
+                    )}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-neural/25 bg-fuchsia-neural/10 px-2.5 py-1">
-                    <span className="h-2 w-2 rounded-sm bg-fuchsia-neural" /> Instituciones
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-neural/25 bg-fuchsia-neural/10 px-2.5 py-1 font-medium">
+                    <span className="h-2 w-2 rounded-sm bg-fuchsia-neural animate-pulse" />
+                    Instituciones
+                    {!countsLoading && institutions > 0 && (
+                      <span className="font-bold text-fuchsia-neural">{institutions}</span>
+                    )}
                   </span>
                 </div>
                 <a

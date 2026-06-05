@@ -97,7 +97,7 @@ type Emergency = {
 
 function SuperadminPage() {
   const { user, loading, logout } = useAppUser({ allow: ["superadmin"] });
-  const [stats, setStats] = useState({ users: 0, professionals: 0, offers: 0, docs: 0 });
+  const [stats, setStats] = useState({ users: 0, professionals: 0, offers: 0, docs: 0, pending_pros: 0, blocked_pros: 0 });
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [aiAlerts, setAiAlerts] = useState<AiRating[]>([]);
   const [emergencies, setEmergencies] = useState<Emergency[]>([]);
@@ -156,6 +156,8 @@ function SuperadminPage() {
       { count: professionals },
       { count: offers },
       { count: docs },
+      { count: pending_pros },
+      { count: blocked_pros },
       { data: inv },
       { data: alerts },
       { data: emerg },
@@ -169,6 +171,15 @@ function SuperadminPage() {
         .from("professional_documents")
         .select("*", { count: "exact", head: true })
         .eq("status", "pending"),
+      supabase
+        .from("professional_profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("published", false)
+        .eq("blocked", false),
+      supabase
+        .from("professional_profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("blocked", true),
       supabase
         .from("staff_invitations")
         .select("*")
@@ -203,6 +214,8 @@ function SuperadminPage() {
       professionals: professionals ?? 0,
       offers: offers ?? 0,
       docs: docs ?? 0,
+      pending_pros: pending_pros ?? 0,
+      blocked_pros: blocked_pros ?? 0,
     });
     setInvitations((inv ?? []) as Invitation[]);
     setAiAlerts((alerts ?? []) as AiRating[]);
@@ -295,11 +308,13 @@ function SuperadminPage() {
             </Link>
           )}
         </div>
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <Stat icon={Users} label="Usuarios" value={stats.users} tone="bio" />
           <Stat icon={Briefcase} label="Profesionales" value={stats.professionals} tone="copper" />
+          <Stat icon={CheckCircle2} label="Pendientes rev." value={stats.pending_pros} tone="copper" urgent={stats.pending_pros > 0} />
+          <Stat icon={ShieldAlert} label="Bloqueados" value={stats.blocked_pros} tone="fuchsia" urgent={stats.blocked_pros > 0} />
           <Stat icon={FileCheck} label="Ofertas" value={stats.offers} tone="bio" />
-          <Stat icon={Mail} label="Docs pendientes" value={stats.docs} tone="fuchsia" />
+          <Stat icon={Mail} label="Docs pendientes" value={stats.docs} tone="fuchsia" urgent={stats.docs > 0} />
         </section>
 
         <section className="grid lg:grid-cols-2 gap-4">
@@ -754,11 +769,13 @@ function Stat({
   label,
   value,
   tone,
+  urgent,
 }: {
   icon: typeof Users;
   label: string;
   value: number;
   tone: "bio" | "copper" | "fuchsia";
+  urgent?: boolean;
 }) {
   const colors = {
     bio: "text-biosensor bg-biosensor/10",
@@ -766,11 +783,16 @@ function Stat({
     fuchsia: "text-fuchsia-neural bg-fuchsia-neural/10",
   }[tone];
   return (
-    <Card className="p-4">
-      <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${colors}`}>
-        <Icon className="h-4 w-4" />
+    <Card className={`p-4 transition-colors ${urgent && value > 0 ? "border-fuchsia-neural/40 bg-fuchsia-neural/[0.02]" : ""}`}>
+      <div className="relative inline-flex">
+        <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${colors}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        {urgent && value > 0 && (
+          <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-fuchsia-neural animate-pulse" />
+        )}
       </div>
-      <p className="mt-3 text-2xl font-bold font-display">{value}</p>
+      <p className={`mt-3 text-2xl font-bold font-display ${urgent && value > 0 ? "text-fuchsia-neural" : ""}`}>{value}</p>
       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
     </Card>
   );

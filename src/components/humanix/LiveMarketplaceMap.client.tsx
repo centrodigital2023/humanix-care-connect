@@ -59,6 +59,7 @@ type Point = {
   gender?: string | null;
   yearsExperience?: number | null;
   subSpecialties?: string[] | null;
+  availabilityStatus?: "available" | "busy" | "away" | null;
 };
 
 const COLORS = {
@@ -67,36 +68,41 @@ const COLORS = {
   institution: "#d4145a", // fuchsia
 };
 
-const ICONS = {
-  professional: (color = COLORS.professional) =>
-    L.divIcon({
-      className: "live-marker",
-      html: `<div style="width:22px;height:22px;border-radius:9999px;background:${color};border:3px solid white;box-shadow:0 0 0 4px ${color}44, 0 4px 14px rgba(0,0,0,.35);animation:livePulse 2s infinite"></div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11],
-    }),
-  family: () =>
-    L.divIcon({
-      className: "live-marker",
-      html: `<div style="width:22px;height:22px;border-radius:9999px;background:${COLORS.family};border:3px solid white;box-shadow:0 0 0 4px ${COLORS.family}44, 0 4px 14px rgba(0,0,0,.35);animation:livePulse 2.4s infinite"></div>`,
-      iconSize: [22, 22],
-      iconAnchor: [11, 11],
-    }),
-  institution: () =>
-    L.divIcon({
-      className: "live-marker",
-      html: `<div style="width:24px;height:24px;border-radius:6px;background:${COLORS.institution};border:3px solid white;box-shadow:0 0 0 4px ${COLORS.institution}44, 0 4px 14px rgba(0,0,0,.35);animation:livePulse 2.8s infinite"></div>`,
-      iconSize: [24, 24],
-      iconAnchor: [12, 12],
-    }),
-  me: () =>
-    L.divIcon({
-      className: "live-marker-me",
-      html: `<div style="width:26px;height:26px;border-radius:9999px;background:oklch(0.78 0.18 165);border:4px solid white;box-shadow:0 0 0 5px oklch(0.78 0.18 165 / .35), 0 6px 18px rgba(0,0,0,.4)"></div>`,
-      iconSize: [26, 26],
-      iconAnchor: [13, 13],
-    }),
-};
+function makeMarkerIcon(
+  kind: "professional" | "family" | "institution",
+  status: "available" | "busy" | "away" | null = "available",
+  selected = false,
+) {
+  const shape = kind === "institution" ? "6px" : "9999px";
+  const baseColor = COLORS[kind];
+  const color =
+    status === "busy" ? "#f59e0b" : status === "away" ? "#9ca3af" : baseColor;
+  const dur = kind === "professional" ? 2 : kind === "family" ? 2.4 : 2.8;
+  const pulse =
+    status === "available"
+      ? `animation:livePulse ${dur}s infinite`
+      : status === "busy"
+        ? "animation:livePulseSlow 3.5s infinite"
+        : "";
+  const size = (kind === "institution" ? 24 : 22) + (selected ? 6 : 0);
+  const ring = selected
+    ? `0 0 0 5px ${color}55,0 0 0 12px ${color}22,0 6px 20px rgba(0,0,0,.45)`
+    : `0 0 0 4px ${color}44,0 4px 14px rgba(0,0,0,.35)`;
+  return L.divIcon({
+    className: "live-marker",
+    html: `<div style="width:${size}px;height:${size}px;border-radius:${shape};background:${color};border:3px solid white;box-shadow:${ring};${pulse};transition:all .2s ease"></div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
+
+const ME_ICON = () =>
+  L.divIcon({
+    className: "live-marker-me",
+    html: `<div style="width:26px;height:26px;border-radius:9999px;background:oklch(0.78 0.18 165);border:4px solid white;box-shadow:0 0 0 5px oklch(0.78 0.18 165 / .35), 0 6px 18px rgba(0,0,0,.4)"></div>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+  });
 
 function FitBounds({ points }: { points: Point[] }) {
   const map = useMap();
@@ -193,6 +199,8 @@ export function LiveMarketplaceMap({
   const [institutions, setInstitutions] = useState<Point[]>([]);
   const [picking, setPicking] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(11);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [filterAvailability, setFilterAvailability] = useState<"all" | "available" | "busy">("all");
   const [meCoords, setMeCoords] = useState<{ lat: number | null; lng: number | null }>({
     lat: pickLocation?.lat ?? null,
     lng: pickLocation?.lng ?? null,
@@ -288,7 +296,7 @@ export function LiveMarketplaceMap({
           .select(
             "user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, profiles:user_id(full_name, avatar_url, phone)",
           )
-          .or("available.eq.true,availability_status.eq.available")
+          .or("available.eq.true,availability_status.in.(available,busy)")
           .not("lat", "is", null)
           .not("lng", "is", null)
           .limit(200),
@@ -327,6 +335,12 @@ export function LiveMarketplaceMap({
           gender: p.gender ?? null,
           yearsExperience: p.years_experience ?? null,
           subSpecialties: p.sub_specialties ?? null,
+          availabilityStatus:
+            p.availability_status === "busy"
+              ? "busy"
+              : p.available === true || p.availability_status === "available"
+                ? "available"
+                : "away",
         })),
       );
       setFamilies(
@@ -428,6 +442,9 @@ export function LiveMarketplaceMap({
   // Apply filters to professionals
   const filteredPros = useMemo<Point[]>(() => {
     let list = pros.slice();
+    if (filterAvailability !== "all") {
+      list = list.filter((p) => p.availabilityStatus === filterAvailability);
+    }
     const q = filterSpecialty.trim().toLowerCase();
     if (q) {
       list = list.filter((p) => {
@@ -485,6 +502,7 @@ export function LiveMarketplaceMap({
     return list;
   }, [
     pros,
+    filterAvailability,
     filterSpecialty,
     filterGender,
     filterMinYears,
@@ -718,6 +736,68 @@ export function LiveMarketplaceMap({
         </Card>
       )}
 
+      {showFilters && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
+            Estado:
+          </span>
+          {(["all", "available", "busy"] as const).map((s) => {
+            const label =
+              s === "all" ? "Todos" : s === "available" ? "Disponibles" : "Ocupados";
+            const busyCount = pros.filter((p) => p.availabilityStatus === "busy").length;
+            const availCount = pros.filter((p) => p.availabilityStatus === "available").length;
+            const count = s === "all" ? pros.length : s === "available" ? availCount : busyCount;
+            const dotColor =
+              s === "available" ? "#22c55e" : s === "busy" ? "#f59e0b" : "#6b7280";
+            const active = filterAvailability === s;
+            return (
+              <button
+                key={s}
+                onClick={() => setFilterAvailability(s)}
+                className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-medium transition-all duration-200"
+                style={
+                  active
+                    ? {
+                        background: dotColor,
+                        borderColor: "transparent",
+                        color: "white",
+                        boxShadow: `0 2px 8px ${dotColor}55`,
+                      }
+                    : {
+                        borderColor: "rgba(0,0,0,0.12)",
+                        color: "inherit",
+                      }
+                }
+              >
+                <span
+                  className={s === "available" && !active ? "animate-pulse" : ""}
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: 9999,
+                    display: "inline-block",
+                    background: dotColor,
+                    opacity: active ? 1 : 0.8,
+                  }}
+                />
+                {label}
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 800,
+                    padding: "1px 5px",
+                    borderRadius: 9999,
+                    background: active ? "rgba(255,255,255,.25)" : "rgba(0,0,0,.07)",
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {showFilters && !isGuest && filtersOpen && (
         <Card className="p-3 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -865,7 +945,7 @@ export function LiveMarketplaceMap({
               <>
                 <Marker
                   position={[meCoords.lat, meCoords.lng]}
-                  icon={ICONS.me()}
+                  icon={ME_ICON()}
                   draggable={!!pickLocation}
                   eventHandlers={
                     pickLocation
@@ -942,12 +1022,8 @@ export function LiveMarketplaceMap({
                 );
               }
               const p = item as Point;
-              const icon =
-                p.kind === "professional"
-                  ? ICONS.professional()
-                  : p.kind === "family"
-                    ? ICONS.family()
-                    : ICONS.institution();
+              const isSelected = selectedId === p.id;
+              const icon = makeMarkerIcon(p.kind, p.availabilityStatus ?? "available", isSelected);
               const Icon =
                 p.kind === "professional" ? HeartPulse : p.kind === "family" ? Users : Building2;
               const dist =
@@ -966,7 +1042,16 @@ export function LiveMarketplaceMap({
               const profileHref =
                 p.kind === "professional" && p.userId ? `/profesional/${p.userId}` : null;
               return (
-                <Marker key={p.id} position={[p.lat, p.lng]} icon={icon}>
+                <Marker
+                  key={p.id}
+                  position={[p.lat, p.lng]}
+                  icon={icon}
+                  zIndexOffset={isSelected ? 1000 : 0}
+                  eventHandlers={{
+                    click: () => setSelectedId(p.id),
+                    popupclose: () => setSelectedId(null),
+                  }}
+                >
                   <Popup minWidth={260} maxWidth={300}>
                     <div className="text-sm" style={{ minWidth: 240 }}>
                       <div className="flex items-center gap-2 mb-2">
@@ -1011,6 +1096,44 @@ export function LiveMarketplaceMap({
                             <Icon className="h-3 w-3" />
                             {kindLabel}
                           </p>
+                          {p.kind === "professional" && (
+                            <span
+                              style={{
+                                fontSize: 10,
+                                padding: "2px 8px",
+                                borderRadius: 9999,
+                                fontWeight: 700,
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 4,
+                                marginTop: 2,
+                                background:
+                                  p.availabilityStatus === "busy"
+                                    ? "#f59e0b22"
+                                    : "#22c55e22",
+                                color:
+                                  p.availabilityStatus === "busy"
+                                    ? "#d97706"
+                                    : "#16a34a",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  width: 6,
+                                  height: 6,
+                                  borderRadius: 9999,
+                                  display: "inline-block",
+                                  background:
+                                    p.availabilityStatus === "busy"
+                                      ? "#f59e0b"
+                                      : "#22c55e",
+                                }}
+                              />
+                              {p.availabilityStatus === "busy"
+                                ? "Ocupado"
+                                : "Disponible ahora"}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -1180,7 +1303,12 @@ export function LiveMarketplaceMap({
         )}
       </div>
 
-      <style>{`@keyframes livePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}`}</style>
+      <style>{`
+@keyframes livePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.85}}
+@keyframes livePulseSlow{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.9}}
+.leaflet-popup-pane{z-index:700!important}
+.leaflet-marker-pane .live-marker{transition:filter .15s ease}
+`}</style>
 
       <AlertDialog open={guestPromptOpen} onOpenChange={setGuestPromptOpen}>
         <AlertDialogContent>
