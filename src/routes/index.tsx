@@ -19,6 +19,9 @@ const { buildSeo, faqLd, SITE_NAME } = seo;
 import heroImage from "@/assets/hero-humanix.webp";
 
 // Below-the-fold: lazy to mejorar FCP/LCP
+const HowItWorks = lazy(() =>
+  import("@/components/humanix/HowItWorks").then((m) => ({ default: m.HowItWorks })),
+);
 const TechSection = lazy(() =>
   import("@/components/humanix/TechSection").then((m) => ({ default: m.TechSection })),
 );
@@ -130,6 +133,7 @@ function Index() {
         </section>
         <AudienceSection />
         <Suspense fallback={<div className="min-h-[200px]" />}>
+          <HowItWorks />
           <TechSection />
           <Testimonials />
           <Pricing />

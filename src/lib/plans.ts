@@ -183,3 +183,109 @@ export const COP = (n: number) =>
     currency: "COP",
     maximumFractionDigits: 0,
   }).format(n);
+
+// ── Lógica de cobro institucional ─────────────────────────────────────────────
+
+export type BillingCycle = "monthly" | "annual";
+
+export type InstitutionBillingConfig = {
+  /** Precio base mensual del plan institución (COP) */
+  basePriceCOP: number;
+  /** Precio por cada sucursal adicional más allá de la primera (COP/mes) */
+  extraBranchCOP: number;
+  /** Precio por cada profesional asociado más allá del límite incluido (COP/mes) */
+  extraProfessionalCOP: number;
+  /** Número de profesionales incluidos en el plan base */
+  includedProfessionals: number;
+  /** Número de sucursales incluidas en el plan base */
+  includedBranches: number;
+  /** Descuento en fracción por ciclo anual (ej: 0.20 = 20%) */
+  annualDiscount: number;
+  /** Días de período de prueba gratuito */
+  trialDays: number;
+  /** Días de gracia antes de suspender por falta de pago */
+  graceDays: number;
+};
+
+export const INSTITUTION_BILLING: InstitutionBillingConfig = {
+  basePriceCOP: 99_000,
+  extraBranchCOP: 29_000,
+  extraProfessionalCOP: 5_000,
+  includedProfessionals: 10,
+  includedBranches: 1,
+  annualDiscount: 0.20,
+  trialDays: 14,
+  graceDays: 7,
+};
+
+export type InstitutionBillingBreakdown = {
+  baseCOP: number;
+  extraBranchesCOP: number;
+  extraProfessionalsCOP: number;
+  subtotalMonthlyCOP: number;
+  annualDiscountCOP: number;
+  totalCOP: number;
+  cycle: BillingCycle;
+  /** Resumen legible para mostrar al usuario */
+  lines: Array<{ label: string; amountCOP: number }>;
+};
+
+/** Calcula el total a cobrar a una institución según su configuración. */
+export function calculateInstitutionBilling(opts: {
+  branches: number;
+  professionals: number;
+  cycle: BillingCycle;
+}): InstitutionBillingBreakdown {
+  const cfg = INSTITUTION_BILLING;
+  const { branches, professionals, cycle } = opts;
+
+  const extraBranches = Math.max(0, branches - cfg.includedBranches);
+  const extraPros = Math.max(0, professionals - cfg.includedProfessionals);
+
+  const baseCOP = cfg.basePriceCOP;
+  const extraBranchesCOP = extraBranches * cfg.extraBranchCOP;
+  const extraProfessionalsCOP = extraPros * cfg.extraProfessionalCOP;
+  const subtotalMonthlyCOP = baseCOP + extraBranchesCOP + extraProfessionalsCOP;
+
+  const months = cycle === "annual" ? 12 : 1;
+  const rawTotal = subtotalMonthlyCOP * months;
+  const annualDiscountCOP = cycle === "annual" ? Math.round(rawTotal * cfg.annualDiscount) : 0;
+  const totalCOP = rawTotal - annualDiscountCOP;
+
+  const lines: InstitutionBillingBreakdown["lines"] = [
+    { label: `Plan Institución base (${cfg.includedBranches} sede, ${cfg.includedProfessionals} profesionales)`, amountCOP: baseCOP },
+  ];
+  if (extraBranches > 0) {
+    lines.push({ label: `${extraBranches} sede${extraBranches > 1 ? "s" : ""} adicional${extraBranches > 1 ? "es" : ""}`, amountCOP: extraBranchesCOP });
+  }
+  if (extraPros > 0) {
+    lines.push({ label: `${extraPros} profesional${extraPros > 1 ? "es" : ""} adicional${extraPros > 1 ? "es" : ""}`, amountCOP: extraProfessionalsCOP });
+  }
+  if (cycle === "annual") {
+    lines.push({ label: "Descuento anual (−20%)", amountCOP: -annualDiscountCOP });
+  }
+
+  return {
+    baseCOP,
+    extraBranchesCOP,
+    extraProfessionalsCOP,
+    subtotalMonthlyCOP,
+    annualDiscountCOP,
+    totalCOP,
+    cycle,
+    lines,
+  };
+}
+
+/** Estados posibles de una suscripción */
+export type SubscriptionStatus =
+  | "trial"
+  | "active"
+  | "past_due"
+  | "suspended"
+  | "cancelled";
+
+/** Determina si la suscripción está en buen estado para acceder a la plataforma */
+export function isSubscriptionAccessible(status: SubscriptionStatus): boolean {
+  return status === "trial" || status === "active" || status === "past_due";
+}

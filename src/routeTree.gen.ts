@@ -52,6 +52,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as SuperadminIndexRouteImport } from './routes/superadmin.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminTestimoniosRouteImport } from './routes/superadmin.testimonios'
+import { Route as SuperadminResenasRouteImport } from './routes/superadmin.resenas'
 import { Route as SuperadminPublicidadRouteImport } from './routes/superadmin.publicidad'
 import { Route as SuperadminMarketplaceRouteImport } from './routes/superadmin.marketplace'
 import { Route as SuperadminMarketingRouteImport } from './routes/superadmin.marketing'
@@ -286,6 +287,11 @@ const SuperadminTestimoniosRoute = SuperadminTestimoniosRouteImport.update({
   path: '/testimonios',
   getParentRoute: () => SuperadminRoute,
 } as any)
+const SuperadminResenasRoute = SuperadminResenasRouteImport.update({
+  id: '/resenas',
+  path: '/resenas',
+  getParentRoute: () => SuperadminRoute,
+} as any)
 const SuperadminPublicidadRoute = SuperadminPublicidadRouteImport.update({
   id: '/publicidad',
   path: '/publicidad',
@@ -436,6 +442,7 @@ export interface FileRoutesByFullPath {
   '/superadmin/marketing': typeof SuperadminMarketingRoute
   '/superadmin/marketplace': typeof SuperadminMarketplaceRoute
   '/superadmin/publicidad': typeof SuperadminPublicidadRoute
+  '/superadmin/resenas': typeof SuperadminResenasRoute
   '/superadmin/testimonios': typeof SuperadminTestimoniosRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/superadmin/': typeof SuperadminIndexRoute
@@ -497,6 +504,7 @@ export interface FileRoutesByTo {
   '/superadmin/marketing': typeof SuperadminMarketingRoute
   '/superadmin/marketplace': typeof SuperadminMarketplaceRoute
   '/superadmin/publicidad': typeof SuperadminPublicidadRoute
+  '/superadmin/resenas': typeof SuperadminResenasRoute
   '/superadmin/testimonios': typeof SuperadminTestimoniosRoute
   '/dashboard': typeof DashboardIndexRoute
   '/superadmin': typeof SuperadminIndexRoute
@@ -561,6 +569,7 @@ export interface FileRoutesById {
   '/superadmin/marketing': typeof SuperadminMarketingRoute
   '/superadmin/marketplace': typeof SuperadminMarketplaceRoute
   '/superadmin/publicidad': typeof SuperadminPublicidadRoute
+  '/superadmin/resenas': typeof SuperadminResenasRoute
   '/superadmin/testimonios': typeof SuperadminTestimoniosRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/superadmin/': typeof SuperadminIndexRoute
@@ -626,6 +635,7 @@ export interface FileRouteTypes {
     | '/superadmin/marketing'
     | '/superadmin/marketplace'
     | '/superadmin/publicidad'
+    | '/superadmin/resenas'
     | '/superadmin/testimonios'
     | '/dashboard/'
     | '/superadmin/'
@@ -687,6 +697,7 @@ export interface FileRouteTypes {
     | '/superadmin/marketing'
     | '/superadmin/marketplace'
     | '/superadmin/publicidad'
+    | '/superadmin/resenas'
     | '/superadmin/testimonios'
     | '/dashboard'
     | '/superadmin'
@@ -750,6 +761,7 @@ export interface FileRouteTypes {
     | '/superadmin/marketing'
     | '/superadmin/marketplace'
     | '/superadmin/publicidad'
+    | '/superadmin/resenas'
     | '/superadmin/testimonios'
     | '/dashboard/'
     | '/superadmin/'
@@ -1108,6 +1120,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminTestimoniosRouteImport
       parentRoute: typeof SuperadminRoute
     }
+    '/superadmin/resenas': {
+      id: '/superadmin/resenas'
+      path: '/resenas'
+      fullPath: '/superadmin/resenas'
+      preLoaderRoute: typeof SuperadminResenasRouteImport
+      parentRoute: typeof SuperadminRoute
+    }
     '/superadmin/publicidad': {
       id: '/superadmin/publicidad'
       path: '/publicidad'
@@ -1287,6 +1306,7 @@ interface SuperadminRouteChildren {
   SuperadminMarketingRoute: typeof SuperadminMarketingRoute
   SuperadminMarketplaceRoute: typeof SuperadminMarketplaceRoute
   SuperadminPublicidadRoute: typeof SuperadminPublicidadRoute
+  SuperadminResenasRoute: typeof SuperadminResenasRoute
   SuperadminTestimoniosRoute: typeof SuperadminTestimoniosRoute
   SuperadminIndexRoute: typeof SuperadminIndexRoute
 }
@@ -1298,6 +1318,7 @@ const SuperadminRouteChildren: SuperadminRouteChildren = {
   SuperadminMarketingRoute: SuperadminMarketingRoute,
   SuperadminMarketplaceRoute: SuperadminMarketplaceRoute,
   SuperadminPublicidadRoute: SuperadminPublicidadRoute,
+  SuperadminResenasRoute: SuperadminResenasRoute,
   SuperadminTestimoniosRoute: SuperadminTestimoniosRoute,
   SuperadminIndexRoute: SuperadminIndexRoute,
 }
