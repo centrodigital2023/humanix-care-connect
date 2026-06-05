@@ -157,6 +157,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: seo.jsonLdString(webApplicationLd()) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: seo.jsonLdString(seo.siteLinksSearchBoxLd()) }}
+        />
       </head>
       <body>
         <noscript>

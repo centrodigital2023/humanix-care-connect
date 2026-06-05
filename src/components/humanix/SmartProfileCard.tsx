@@ -159,8 +159,6 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
   const total = reqs.length;
   const percent = total > 0 ? Math.round((done / total) * 100) : 0;
   const complete = done === total;
-  const nextReq = reqs.find((r) => !r.done);
-  const firstName = fullName.split(" ")[0] || "Hola";
 
   // Tono cromático segun progreso
   const tone = complete
@@ -215,7 +213,7 @@ export function SmartProfileCard({ userId, fullName, avatarUrl }: Props) {
         {/* Acciones */}
         <div className="mt-5 flex flex-col sm:flex-row gap-2">
           <Button variant={complete ? "outline" : "hero"} asChild className="flex-1 sm:flex-none">
-            <Link to="/dashboard/familia/onboarding">
+            <Link to="/dashboard/familia/onboarding" search={{ step: undefined }}>
               <Sparkles className="h-4 w-4 mr-1.5" />
               {complete ? "Editar perfil" : "Completar ahora"}
               <ArrowRight className="h-4 w-4 ml-1" />

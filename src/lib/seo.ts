@@ -257,3 +257,92 @@ export function webApplicationLd() {
     },
   } as const;
 }
+
+/** SiteLinksSearchBox — aparece en SERP con buscador integrado */
+export function siteLinksSearchBoxLd() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    potentialAction: [
+      {
+        "@type": "SearchAction",
+        target: {
+          "@type": "EntryPoint",
+          urlTemplate: `${SITE_URL}/buscar?q={search_term_string}`,
+        },
+        "query-input": "required name=search_term_string",
+      },
+    ],
+  } as const;
+}
+
+/** JobPosting base — para plataformas que muestran empleos en SERP */
+export function jobPostingLd(opts: {
+  title: string;
+  description: string;
+  datePosted: string;
+  city: string;
+  employmentType?: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "TEMPORARY";
+  baseSalary?: number;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    title: opts.title,
+    description: opts.description,
+    datePosted: opts.datePosted,
+    employmentType: opts.employmentType ?? "CONTRACT",
+    hiringOrganization: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      sameAs: SITE_URL,
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: opts.city,
+        addressCountry: "CO",
+      },
+    },
+    ...(opts.baseSalary
+      ? {
+          baseSalary: {
+            "@type": "MonetaryAmount",
+            currency: "COP",
+            value: {
+              "@type": "QuantitativeValue",
+              value: opts.baseSalary,
+              unitText: "HOUR",
+            },
+          },
+        }
+      : {}),
+  } as const;
+}
+
+/** MedicalClinic schema — para IPS/clínicas en la plataforma */
+export function medicalClinicLd(opts: {
+  name: string;
+  city: string;
+  specialty?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "MedicalClinic",
+    name: opts.name,
+    medicalSpecialty: opts.specialty ?? "Nursing",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: opts.city,
+      addressCountry: "CO",
+    },
+    provider: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: SITE_URL,
+    },
+  } as const;
+}
