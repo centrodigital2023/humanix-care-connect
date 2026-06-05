@@ -1,28 +1,36 @@
-// @ts-nocheck
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Loader2,
   Building2,
-  LayoutDashboard,
   Briefcase,
   Users,
   Search,
-  TrendingUp,
   CheckCircle2,
-  Clock,
-  MessageSquare,
-  Crown,
   Inbox,
   Phone,
   Star,
+  LayoutDashboard,
+  CalendarDays,
+  BarChart3,
+  UserCircle,
+  LogOut,
+  X,
+  ChevronRight,
+  BadgeCheck,
+  MapPin,
+  Plus,
+  RefreshCw,
+  Bell,
+  DollarSign,
+  Target,
+  Stethoscope,
+  ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { AppShell, type NavItem } from "@/components/humanix/AppShell";
-import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { Progress } from "@/components/ui/progress";
+import { Logo } from "@/components/humanix/Logo";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { EnhancedBulkOffersModule } from "@/components/humanix/EnhancedBulkOffersModule";
 import { EnhancedPatientsModule } from "@/components/humanix/EnhancedPatientsModule";
@@ -30,20 +38,37 @@ import { EnhancedAgendaModule } from "@/components/humanix/EnhancedAgendaModule"
 import { EnhancedReportsWithCRMModule } from "@/components/humanix/EnhancedReportsWithCRMModule";
 import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { EnhancedInstitutionOperations } from "@/components/humanix/EnhancedInstitutionOperations";
+import { SmartInstitutionProfileForm } from "@/components/humanix/SmartInstitutionProfileForm";
+import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
+import { NotificationsBell } from "@/components/humanix/NotificationsBell";
+import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { useAppUser } from "@/hooks/use-app-user";
+import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard/institucion")({
-  head: () => ({ meta: [{ title: "Institución · Humanix" }] }),
+  head: () => ({ meta: [{ title: "Panel Institución · Humanix" }] }),
   component: InstitutionDashboard,
 });
 
-const getNav = (): NavItem[] => [
-  { label: "Inicio", to: "/dashboard/institucion", icon: LayoutDashboard },
-  { label: "Ofertas", to: "/dashboard/institucion", icon: Briefcase },
-  { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
-  { label: "Talento", to: "/buscar", icon: Users },
-  { label: "Buscar", to: "/buscar", icon: Search },
-  { label: "Planes", to: "/planes", icon: Crown },
+type Tab =
+  | "inicio"
+  | "ofertas"
+  | "talento"
+  | "operaciones"
+  | "pacientes"
+  | "agenda"
+  | "perfil";
+
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: "inicio", label: "Inicio", icon: <LayoutDashboard className="h-5 w-5" /> },
+  { id: "ofertas", label: "Ofertas", icon: <Briefcase className="h-5 w-5" /> },
+  { id: "talento", label: "Talento", icon: <Users className="h-5 w-5" /> },
+  { id: "operaciones", label: "Ops", icon: <BarChart3 className="h-5 w-5" /> },
+  { id: "pacientes", label: "Pacientes", icon: <Stethoscope className="h-5 w-5" /> },
+  { id: "agenda", label: "Agenda", icon: <CalendarDays className="h-5 w-5" /> },
+  { id: "perfil", label: "Perfil", icon: <UserCircle className="h-5 w-5" /> },
 ];
 
 type Offer = {
@@ -52,15 +77,21 @@ type Offer = {
   city: string;
   modality: string;
   amount: number;
-  status: string;
+  status: "open" | "filled" | "closed" | "reserved";
+  specialty_required: string | null;
+  description: string | null;
+  shifts_count: number | null;
   lat: number | null;
   lng: number | null;
   reserved_until: string | null;
+  created_at: string;
 };
+
+type AppStatus = "pending" | "accepted" | "rejected" | "withdrawn";
 
 type ApplicationRow = {
   id: string;
-  status: string;
+  status: AppStatus;
   created_at: string;
   proposed_amount: number | null;
   message: string | null;
@@ -75,396 +106,1091 @@ type ProSummary = {
   city: string | null;
   specialty: string | null;
   avg_rating: number | null;
+  trust_score: number | null;
   hourly_rate: number | null;
+  shift_rate: number | null;
   phone: string | null;
+  verified: boolean | null;
 };
 
-function waLink(phone: string | null | undefined, text: string) {
+type InstitutionProfile = {
+  institution_name: string;
+  institution_type: string | null;
+  city: string | null;
+  verified: boolean | null;
+  nit: string | null;
+  compliance_fuid: boolean;
+};
+
+const COP = (n: number | null | undefined) =>
+  typeof n === "number"
+    ? new Intl.NumberFormat("es-CO", {
+        style: "currency",
+        currency: "COP",
+        maximumFractionDigits: 0,
+      }).format(n)
+    : "—";
+
+function waLink(phone: string | null | undefined, name: string, offerTitle: string) {
   if (!phone) return null;
   const clean = phone.replace(/[^0-9]/g, "");
   const normalized = clean.startsWith("57") ? clean : `57${clean}`;
-  return `https://wa.me/${normalized}?text=${encodeURIComponent(text)}`;
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(
+    `Hola ${name}, te escribo desde Humanix por tu postulación a "${offerTitle}". ¿Cuándo podemos hablar?`,
+  )}`;
 }
 
 function InstitutionDashboard() {
-  const { user, loading, logout } = useAppUser({ allow: ["institution", "superadmin"] });
+  const { user, loading: authLoading, logout } = useAppUser({
+    allow: ["institution", "superadmin"],
+  });
+
+  const [tab, setTab] = useState<Tab>("inicio");
   const [dataLoading, setDataLoading] = useState(true);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
   const [proMap, setProMap] = useState<Record<string, ProSummary>>({});
+  const [instProfile, setInstProfile] = useState<InstitutionProfile | null>(null);
+  const [updatingApp, setUpdatingApp] = useState<string | null>(null);
+
+  const loadAll = async (uid: string) => {
+    try {
+      const [offersRes, instRes] = await Promise.all([
+        supabase
+          .from("job_offers")
+          .select(
+            "id, title, city, modality, amount, status, specialty_required, description, shifts_count, lat, lng, reserved_until, created_at",
+          )
+          .eq("posted_by", uid)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("institution_profiles")
+          .select(
+            "institution_name, institution_type, city, verified, nit, compliance_fuid",
+          )
+          .eq("user_id", uid)
+          .maybeSingle(),
+      ]);
+
+      if (instRes.data) setInstProfile(instRes.data as InstitutionProfile);
+      const offerList = (offersRes.data ?? []) as Offer[];
+      setOffers(offerList);
+
+      const offerIds = offerList.map((o) => o.id);
+      if (offerIds.length === 0) return;
+
+      const { data: appsData } = await supabase
+        .from("applications")
+        .select("id, status, created_at, proposed_amount, message, professional_id, job_offer_id")
+        .in("job_offer_id", offerIds)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      const apps = (appsData ?? []) as ApplicationRow[];
+      setApplications(apps);
+
+      const proIds = Array.from(new Set(apps.map((a) => a.professional_id)));
+      if (proIds.length === 0) return;
+
+      const [proRowsRes, profilesRes] = await Promise.all([
+        supabase
+          .from("professional_profiles")
+          .select("user_id, specialty, avg_rating, trust_score, hourly_rate, shift_rate, verified")
+          .in("user_id", proIds),
+        supabase
+          .from("profiles")
+          .select("user_id, full_name, avatar_url, city, phone")
+          .in("user_id", proIds),
+      ]);
+
+      const map: Record<string, ProSummary> = {};
+      (proRowsRes.data ?? []).forEach((r) => {
+        map[r.user_id] = {
+          user_id: r.user_id,
+          full_name: null,
+          avatar_url: null,
+          city: null,
+          specialty: r.specialty,
+          avg_rating: r.avg_rating,
+          trust_score: r.trust_score,
+          hourly_rate: r.hourly_rate,
+          shift_rate: r.shift_rate,
+          phone: null,
+          verified: r.verified,
+        };
+      });
+      (profilesRes.data ?? []).forEach((p) => {
+        const existing = map[p.user_id] ?? {
+          user_id: p.user_id,
+          full_name: null,
+          avatar_url: null,
+          city: null,
+          specialty: null,
+          avg_rating: null,
+          trust_score: null,
+          hourly_rate: null,
+          shift_rate: null,
+          phone: null,
+          verified: null,
+        };
+        map[p.user_id] = {
+          ...existing,
+          full_name: p.full_name,
+          avatar_url: p.avatar_url,
+          city: p.city,
+          phone: p.phone,
+        };
+      });
+      setProMap(map);
+    } catch (err) {
+      console.error("[institucion dashboard] load failed:", err);
+      toast.error("Error cargando datos. Intenta refrescar.");
+    }
+  };
 
   useEffect(() => {
-    if (!user) return;
+    if (authLoading || !user) return;
     let active = true;
+    const uid = user.id;
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("job_offers")
-          .select("id, title, city, modality, amount, status, lat, lng, reserved_until")
-          .eq("posted_by", user.id)
-          .order("created_at", { ascending: false });
-        if (!active) return;
-        if (error) console.warn("[institucion dashboard] offers error:", error.message);
-        const offerList = (data ?? []) as Offer[];
-        setOffers(offerList);
-
-        const offerIds = offerList.map((o) => o.id);
-        if (offerIds.length > 0) {
-          const { data: appsData } = await supabase
-            .from("applications")
-            .select(
-              "id, status, created_at, proposed_amount, message, professional_id, job_offer_id",
-            )
-            .in("job_offer_id", offerIds)
-            .order("created_at", { ascending: false })
-            .limit(80);
-          const apps = (appsData ?? []) as ApplicationRow[];
-          setApplications(apps);
-
-          const proIds = Array.from(new Set(apps.map((a) => a.professional_id)));
-          if (proIds.length > 0) {
-            const [proRowsRes, profilesRowsRes] = await Promise.all([
-              supabase
-                .from("professional_profiles")
-                .select("user_id, specialty, avg_rating, hourly_rate")
-                .in("user_id", proIds),
-              supabase
-                .from("profiles")
-                .select("user_id, full_name, avatar_url, city, phone")
-                .in("user_id", proIds),
-            ]);
-            const map: Record<string, ProSummary> = {};
-            (proRowsRes.data ?? []).forEach((r) => {
-              map[r.user_id] = {
-                user_id: r.user_id,
-                full_name: null,
-                avatar_url: null,
-                city: null,
-                specialty: r.specialty,
-                avg_rating: r.avg_rating,
-                hourly_rate: r.hourly_rate,
-                phone: null,
-              };
-            });
-            (profilesRowsRes.data ?? []).forEach((p) => {
-              const existing = map[p.user_id] ?? {
-                user_id: p.user_id,
-                full_name: null,
-                avatar_url: null,
-                city: null,
-                specialty: null,
-                avg_rating: null,
-                hourly_rate: null,
-                phone: null,
-              };
-              map[p.user_id] = {
-                ...existing,
-                full_name: p.full_name,
-                avatar_url: p.avatar_url,
-                city: p.city,
-                phone: p.phone,
-              };
-            });
-            setProMap(map);
-          }
-        }
-      } catch (err) {
-        console.error("[institucion dashboard] load failed:", err);
+        await loadAll(uid);
       } finally {
         if (active) setDataLoading(false);
       }
     })();
-    const safety = setTimeout(() => {
-      if (active) setDataLoading(false);
-    }, 8000);
-    return () => {
-      active = false;
-      clearTimeout(safety);
-    };
-  }, [user]);
+    const safety = setTimeout(() => { if (active) setDataLoading(false); }, 8000);
+    return () => { active = false; clearTimeout(safety); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user?.id]);
 
-  if (loading || !user) {
+  useRealtimeRefresh(
+    `inst-dash-${user?.id ?? "anon"}`,
+    [
+      {
+        table: "applications",
+        event: "*",
+        filter: undefined,
+      },
+      { table: "job_offers", event: "*" },
+    ],
+    () => {
+      if (user?.id) void loadAll(user.id);
+    },
+    !!user?.id,
+  );
+
+  const updateAppStatus = async (appId: string, newStatus: AppStatus) => {
+    setUpdatingApp(appId);
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({ status: newStatus })
+        .eq("id", appId);
+      if (error) throw error;
+      setApplications((prev) =>
+        prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a)),
+      );
+      toast.success(
+        newStatus === "accepted"
+          ? "✅ Profesional aceptado. Se le notificará."
+          : "Postulación rechazada.",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error actualizando estado");
+    } finally {
+      setUpdatingApp(null);
+    }
+  };
+
+  const updateOfferStatus = async (offerId: string, newStatus: "open" | "closed" | "filled") => {
+    try {
+      const { error } = await supabase
+        .from("job_offers")
+        .update({ status: newStatus })
+        .eq("id", offerId);
+      if (error) throw error;
+      setOffers((prev) =>
+        prev.map((o) => (o.id === offerId ? { ...o, status: newStatus } : o)),
+      );
+      toast.success(
+        newStatus === "open"
+          ? "Oferta reactivada"
+          : newStatus === "filled"
+            ? "Oferta marcada como cubierta"
+            : "Oferta cerrada",
+      );
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Error actualizando oferta");
+    }
+  };
+
+  // Derived metrics
+  const metrics = useMemo(() => {
+    const open = offers.filter((o) => o.status === "open").length;
+    const filled = offers.filter((o) => o.status === "filled").length;
+    const pending = applications.filter((a) => a.status === "pending").length;
+    const accepted = applications.filter((a) => a.status === "accepted").length;
+    const convRate = applications.length
+      ? Math.round((accepted / applications.length) * 100)
+      : 0;
+    const totalBudget = offers
+      .filter((o) => o.status === "open" || o.status === "filled")
+      .reduce((s, o) => s + (o.amount ?? 0), 0);
+    return { open, filled, pending, accepted, convRate, totalBudget };
+  }, [offers, applications]);
+
+  const pendingApps = useMemo(
+    () => applications.filter((a) => a.status === "pending"),
+    [applications],
+  );
+
+  if (authLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Cargando…
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center space-y-3">
+          <div className="mx-auto h-12 w-12 rounded-full bg-fuchsia-neural/10 flex items-center justify-center">
+            <Building2 className="h-6 w-6 text-fuchsia-neural animate-pulse" />
+          </div>
+          <p className="text-sm text-muted-foreground">Cargando panel institución…</p>
+        </div>
       </div>
     );
   }
 
-  const open = offers.filter((o) => o.status === "open").length;
-  const filled = offers.filter((o) => o.status === "filled").length;
-  const pendingApps = applications.filter((a) => a.status === "pending").length;
+  const instName =
+    instProfile?.institution_name || user.fullName || "Mi institución";
+  const instType = instProfile?.institution_type ?? "IPS / Clínica";
 
   return (
-    <AppShell
-      user={user}
-      onLogout={logout}
-      nav={getNav()}
-      title="Panel institución"
-      subtitle="Gestiona tus ofertas, talento aplicado y métricas operativas en tiempo real."
-      crumbs={[{ label: "Inicio", to: "/" }, { label: "Institución" }]}
-      badge={{ label: "IPS / Clínica", tone: "fuchsia" }}
-      actions={
-        <>
-          <Button variant="outline" asChild>
-            <Link to="/buscar">
-              <Search className="h-4 w-4 mr-1.5" /> Buscar talento
-            </Link>
-          </Button>
-          <HiringCopilot />
-        </>
-      }
-    >
-      <div className="space-y-8">
-        <section className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Kpi icon={Briefcase} label="Ofertas" value={offers.length} tone="bio" />
-          <Kpi icon={Clock} label="Abiertas" value={open} tone="copper" />
-          <Kpi icon={Inbox} label="Postulaciones" value={pendingApps} tone="fuchsia" />
-          <Kpi icon={CheckCircle2} label="Cubiertas" value={filled} tone="bio" />
-        </section>
-
-        <Tabs defaultValue="resumen" className="w-full">
-          <TabsList className="flex flex-wrap h-auto">
-            <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="metricas">📊 Métricas operativas</TabsTrigger>
-            <TabsTrigger value="profesionales">🗺️ Profesionales disponibles</TabsTrigger>
-            <TabsTrigger value="bulk">Ofertas masivas + IA</TabsTrigger>
-            <TabsTrigger value="pacientes">Pacientes</TabsTrigger>
-            <TabsTrigger value="agenda">Agenda</TabsTrigger>
-            <TabsTrigger value="reportes">Reportes</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="resumen" className="space-y-8 mt-4">
-        {/* Buzón */}
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
-              <Inbox className="h-5 w-5 text-fuchsia-neural" />
-              Buzón de postulaciones
-            </h2>
-            <span className="text-xs text-muted-foreground">{applications.length} en total</span>
-          </div>
-          {dataLoading ? (
-            <Card className="p-6 text-center text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin inline mr-2" /> Cargando…
-            </Card>
-          ) : applications.length === 0 ? (
-            <Card className="p-8 text-center">
-              <Inbox className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-              <p className="font-semibold">Aún no tienes postulaciones</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Publica una oferta o busca talento directamente.
-              </p>
-            </Card>
-          ) : (
-            <div className="grid gap-3">
-              {applications.map((a) => {
-                const pro = proMap[a.professional_id];
-                const offer = offers.find((o) => o.id === a.job_offer_id);
-                const wa = waLink(
-                  pro?.phone,
-                  `Hola ${pro?.full_name ?? ""}, te escribo desde Humanix por tu postulación a "${offer?.title ?? "nuestra oferta"}".`,
-                );
-                const stars = pro?.avg_rating ?? 0;
-                return (
-                  <Card key={a.id} className="p-4 flex flex-col sm:flex-row gap-4">
-                    <div className="flex items-start gap-3 flex-1 min-w-0">
-                      {pro?.avatar_url ? (
-                        <img
-                          src={pro.avatar_url}
-                          alt={pro.full_name ?? ""}
-                          className="h-12 w-12 rounded-full object-cover border border-border shrink-0"
-                        />
-                      ) : (
-                        <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-sm font-semibold shrink-0">
-                          {(pro?.full_name ?? "?").slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold truncate">
-                            {pro?.full_name ?? "Profesional"}
-                          </p>
-                          {stars > 0 && (
-                            <span className="inline-flex items-center gap-0.5 text-xs text-copper">
-                              <Star className="h-3 w-3 fill-copper" />
-                              {Number(stars).toFixed(1)}
-                            </span>
-                          )}
-                          <StatusPill status={a.status} />
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {pro?.specialty ?? "Profesional de la salud"} · {pro?.city ?? "—"}
-                          {pro?.hourly_rate
-                            ? ` · $${pro.hourly_rate.toLocaleString("es-CO")}/h`
-                            : ""}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Para:{" "}
-                          <span className="font-medium text-foreground">
-                            {offer?.title ?? "Oferta"}
-                          </span>
-                          {a.proposed_amount
-                            ? ` · Propone $${a.proposed_amount.toLocaleString("es-CO")} COP`
-                            : ""}
-                        </p>
-                        {a.message && (
-                          <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
-                            "{a.message}"
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex sm:flex-col gap-2 sm:w-40 shrink-0">
-                      <Button size="sm" variant="hero" asChild className="flex-1">
-                        <Link to="/profesional/$proId" params={{ proId: a.professional_id }}>
-                          Ver perfil
-                        </Link>
-                      </Button>
-                      {wa && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          asChild
-                          className="flex-1 border-biosensor/40 text-biosensor hover:bg-biosensor/5"
-                        >
-                          <a href={wa} target="_blank" rel="noopener noreferrer">
-                            <Phone className="h-3.5 w-3.5 mr-1" /> WhatsApp
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </Card>
-                );
-              })}
+    <div className="min-h-screen bg-background text-foreground bg-aurora pb-20 lg:pb-0">
+      {/* ── Header ── */}
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between gap-3">
+          {/* Brand */}
+          <div className="flex items-center gap-3 min-w-0">
+            <Logo />
+            <div className="hidden sm:block min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold truncate max-w-[200px]">{instName}</p>
+                {instProfile?.verified && (
+                  <BadgeCheck className="h-4 w-4 text-fuchsia-neural shrink-0" />
+                )}
+              </div>
+              <p className="text-[11px] text-muted-foreground">{instType}</p>
             </div>
-          )}
-        </section>
-
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-display text-lg font-semibold">Ofertas publicadas</h2>
-            <Link to="/buscar" className="text-xs text-muted-foreground hover:text-foreground">
-              Ver marketplace →
-            </Link>
           </div>
-          {offers.length === 0 ? (
-            <Card className="p-10 text-center">
-              <Building2 className="h-8 w-8 text-fuchsia-neural mx-auto mb-3" />
-              <p className="font-semibold">Sin ofertas activas</p>
-              <p className="text-sm text-muted-foreground mt-1 max-w-md mx-auto">
-                Publica tu primera oferta <span className="font-semibold text-emerald-600">gratis</span> y la IA la distribuirá a los profesionales que mejor encajan.
-              </p>
-              <div className="mt-4 flex justify-center">
+
+          {/* Center: pending badge */}
+          {pendingApps.length > 0 && (
+            <button
+              onClick={() => setTab("inicio")}
+              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-medium hover:bg-amber-500/20 transition-colors"
+            >
+              <Bell className="h-3.5 w-3.5 animate-pulse" />
+              {pendingApps.length} postulación{pendingApps.length > 1 ? "es" : ""} nueva{pendingApps.length > 1 ? "s" : ""}
+            </button>
+          )}
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            {user.id && <NotificationsBell userId={user.id} />}
+            <div className="hidden sm:block">
+              <HiringCopilot />
+            </div>
+            <Button variant="ghost" size="icon" onClick={logout} title="Salir">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Desktop tab bar */}
+        <div className="hidden lg:flex border-t border-border">
+          <div className="mx-auto max-w-7xl w-full px-4 flex gap-0.5 overflow-x-auto">
+            {TABS.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px shrink-0 whitespace-nowrap",
+                  tab === t.id
+                    ? "border-fuchsia-neural text-fuchsia-neural"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t.icon}
+                {t.label}
+                {t.id === "inicio" && pendingApps.length > 0 && (
+                  <span className="ml-1 h-4 w-4 rounded-full bg-amber-500 text-white text-[9px] font-bold flex items-center justify-center">
+                    {pendingApps.length}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      </header>
+
+      {/* ── Main ── */}
+      <main className="mx-auto max-w-7xl px-4 py-6">
+
+        {/* ══ TAB: INICIO ══ */}
+        {tab === "inicio" && (
+          <div className="space-y-5">
+
+            {/* KPI row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <KpiCard
+                icon={<Briefcase className="h-5 w-5" />}
+                label="Ofertas abiertas"
+                value={metrics.open}
+                tone="fuchsia"
+                sub={`${offers.length} totales`}
+              />
+              <KpiCard
+                icon={<Inbox className="h-5 w-5" />}
+                label="Nuevas postulaciones"
+                value={metrics.pending}
+                tone="amber"
+                sub="requieren respuesta"
+                urgent={metrics.pending > 0}
+              />
+              <KpiCard
+                icon={<CheckCircle2 className="h-5 w-5" />}
+                label="Turnos cubiertos"
+                value={metrics.filled}
+                tone="bio"
+                sub={`${metrics.accepted} aceptados`}
+              />
+              <KpiCard
+                icon={<Target className="h-5 w-5" />}
+                label="Tasa de conversión"
+                value={`${metrics.convRate}%`}
+                tone="cyber"
+                sub={`${applications.length} postulaciones`}
+              />
+            </div>
+
+            {/* Budget bar */}
+            {metrics.totalBudget > 0 && (
+              <div className="rounded-2xl border border-border bg-card/95 p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-fuchsia-neural" />
+                    <p className="text-sm font-semibold">Presupuesto en ofertas activas</p>
+                  </div>
+                  <p className="text-sm font-bold text-fuchsia-neural">{COP(metrics.totalBudget)}</p>
+                </div>
+                <Progress value={Math.min(100, (metrics.filled / Math.max(offers.length, 1)) * 100)} className="h-1.5" />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {metrics.filled} de {offers.length} ofertas cubiertas · conversión {metrics.convRate}%
+                </p>
+              </div>
+            )}
+
+            {/* Pending applications inbox */}
+            {dataLoading ? (
+              <div className="rounded-2xl border border-border bg-card/95 p-8 text-center">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
+                <p className="text-sm text-muted-foreground mt-2">Cargando postulaciones…</p>
+              </div>
+            ) : pendingApps.length === 0 && applications.length === 0 ? (
+              <div className="rounded-2xl border border-border bg-card/95 p-10 text-center">
+                <Inbox className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-40" />
+                <p className="font-semibold">Sin postulaciones aún</p>
+                <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                  Publica una oferta o busca talento directamente en el marketplace.
+                </p>
+                <div className="mt-4 flex justify-center">
+                  <HiringCopilot />
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b border-border">
+                  <div className="flex items-center gap-2">
+                    <Inbox className="h-4 w-4 text-fuchsia-neural" />
+                    <p className="text-sm font-semibold">Buzón de postulaciones</p>
+                    {pendingApps.length > 0 && (
+                      <span className="h-5 px-1.5 rounded-full bg-amber-500 text-white text-[10px] font-bold flex items-center">
+                        {pendingApps.length} nuevas
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{applications.length} en total</p>
+                </div>
+                <div className="divide-y divide-border">
+                  {applications.slice(0, 15).map((a) => (
+                    <ApplicationCard
+                      key={a.id}
+                      app={a}
+                      pro={proMap[a.professional_id]}
+                      offer={offers.find((o) => o.id === a.job_offer_id)}
+                      updating={updatingApp === a.id}
+                      onAccept={() => updateAppStatus(a.id, "accepted")}
+                      onReject={() => updateAppStatus(a.id, "rejected")}
+                    />
+                  ))}
+                  {applications.length > 15 && (
+                    <div className="p-3 text-center">
+                      <button
+                        onClick={() => setTab("ofertas")}
+                        className="text-xs text-fuchsia-neural hover:underline"
+                      >
+                        Ver todas ({applications.length}) →
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Recent offers strip */}
+            <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-fuchsia-neural" />
+                  <p className="text-sm font-semibold">Mis ofertas</p>
+                </div>
+                <button onClick={() => setTab("ofertas")} className="text-xs text-fuchsia-neural hover:underline flex items-center gap-1">
+                  Gestionar <ChevronRight className="h-3 w-3" />
+                </button>
+              </div>
+              {offers.length === 0 ? (
+                <div className="p-8 text-center">
+                  <Building2 className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-40" />
+                  <p className="text-sm font-semibold">Sin ofertas publicadas</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Publica <span className="text-biosensor font-medium">gratis</span> y la IA distribuye a los mejores profesionales.
+                  </p>
+                  <div className="mt-3 flex justify-center">
+                    <HiringCopilot />
+                  </div>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {offers.slice(0, 5).map((o) => (
+                    <div key={o.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{o.title}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {o.city} · {COP(o.amount)} ·{" "}
+                          {applications.filter((a) => a.job_offer_id === o.id).length} postulaciones
+                        </p>
+                      </div>
+                      <OfferStatusBadge status={o.status} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick actions */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <QuickAction icon={<Plus className="h-5 w-5 text-fuchsia-neural" />} label="Nueva oferta" sub="IA copilot" onClick={() => setTab("ofertas")} />
+              <QuickAction icon={<Users className="h-5 w-5 text-biosensor" />} label="Ver talento" sub="Mapa en vivo" onClick={() => setTab("talento")} />
+              <QuickAction icon={<ClipboardList className="h-5 w-5 text-fuchsia-neural" />} label="Pacientes" sub="Casos activos" onClick={() => setTab("pacientes")} />
+              <QuickAction icon={<BarChart3 className="h-5 w-5 text-biosensor" />} label="Reportes" sub="Métricas operativas" onClick={() => setTab("operaciones")} />
+            </div>
+          </div>
+        )}
+
+        {/* ══ TAB: OFERTAS ══ */}
+        {tab === "ofertas" && (
+          <div className="space-y-5">
+
+            {/* Create offer */}
+            <div className="rounded-2xl border border-fuchsia-neural/20 bg-fuchsia-neural/5 p-4 flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-sm font-semibold">Publicar nueva oferta</p>
+                <p className="text-xs text-muted-foreground">La IA escribe la descripción y encuentra los mejores candidatos.</p>
+              </div>
+              <div className="flex gap-2">
                 <HiringCopilot />
               </div>
-            </Card>
-          ) : (
-            <div className="grid gap-3">
-              {offers.map((o) => (
-                <Card key={o.id} className="p-4 flex items-center justify-between gap-3 flex-wrap">
-                  <div>
-                    <p className="font-medium">{o.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {o.city} · {o.modality} · ${o.amount.toLocaleString("es-CO")} COP
+            </div>
+
+            {/* Bulk offers */}
+            <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <p className="text-sm font-semibold">Ofertas masivas con IA</p>
+                <p className="text-xs text-muted-foreground">Publica múltiples turnos a la vez y calcula automáticamente cuántos profesionales disponibles hay.</p>
+              </div>
+              <div className="p-4">
+                <EnhancedBulkOffersModule userId={user.id} defaultCity={instProfile?.city ?? undefined} />
+              </div>
+            </div>
+
+            {/* All offers list */}
+            <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <p className="text-sm font-semibold">Todas mis ofertas ({offers.length})</p>
+                <button
+                  onClick={() => user.id && loadAll(user.id)}
+                  className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+                >
+                  <RefreshCw className="h-3 w-3" /> Actualizar
+                </button>
+              </div>
+              {offers.length === 0 ? (
+                <div className="p-10 text-center text-sm text-muted-foreground">Sin ofertas aún.</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {offers.map((o) => {
+                    const offerApps = applications.filter((a) => a.job_offer_id === o.id);
+                    const pendingCount = offerApps.filter((a) => a.status === "pending").length;
+                    return (
+                      <div key={o.id} className="p-4">
+                        <div className="flex items-start justify-between gap-3 flex-wrap">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="font-semibold text-sm">{o.title}</p>
+                              <OfferStatusBadge status={o.status} />
+                              {pendingCount > 0 && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 font-medium">
+                                  {pendingCount} pendiente{pendingCount > 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1 flex-wrap">
+                              <MapPin className="h-3 w-3 shrink-0" /> {o.city}
+                              {o.specialty_required && <span>· {o.specialty_required}</span>}
+                              <span>· {COP(o.amount)} / {labelModality(o.modality as never)}</span>
+                              <span>· {offerApps.length} postulaciones</span>
+                            </p>
+                            {o.description && (
+                              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{o.description}</p>
+                            )}
+                          </div>
+                          <div className="flex gap-2 shrink-0">
+                            {o.status === "open" && (
+                              <Button
+                                size="sm"
+                                variant="glass"
+                                onClick={() => updateOfferStatus(o.id, "filled")}
+                              >
+                                Marcar cubierta
+                              </Button>
+                            )}
+                            {o.status === "filled" && (
+                              <Button
+                                size="sm"
+                                variant="glass"
+                                onClick={() => updateOfferStatus(o.id, "open")}
+                              >
+                                Reabrir
+                              </Button>
+                            )}
+                            {o.status === "open" && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-muted-foreground"
+                                onClick={() => updateOfferStatus(o.id, "closed")}
+                              >
+                                Cerrar
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Mini applicants list under each offer */}
+                        {offerApps.length > 0 && (
+                          <div className="mt-3 flex flex-wrap gap-2">
+                            {offerApps.slice(0, 5).map((a) => {
+                              const pro = proMap[a.professional_id];
+                              return (
+                                <div
+                                  key={a.id}
+                                  className={cn(
+                                    "flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs border",
+                                    a.status === "pending"
+                                      ? "border-amber-500/30 bg-amber-500/5"
+                                      : a.status === "accepted"
+                                        ? "border-biosensor/30 bg-biosensor/5"
+                                        : "border-border bg-muted/30",
+                                  )}
+                                >
+                                  <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[10px] font-bold shrink-0">
+                                    {(pro?.full_name ?? "?").charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="max-w-[80px] truncate">{pro?.full_name ?? "—"}</span>
+                                  <AppStatusDot status={a.status} />
+                                </div>
+                              );
+                            })}
+                            {offerApps.length > 5 && (
+                              <span className="text-xs text-muted-foreground self-center">
+                                +{offerApps.length - 5} más
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Map */}
+            {offers.some((o) => o.lat != null && o.lng != null) && (
+              <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <p className="text-sm font-semibold">Mapa de tus ofertas</p>
+                </div>
+                <OffersMap
+                  points={offers
+                    .filter((o) => o.lat != null && o.lng != null)
+                    .map<MapPoint>((o) => ({
+                      id: o.id,
+                      lat: o.lat as number,
+                      lng: o.lng as number,
+                      title: o.title,
+                      subtitle: `${o.city} · ${o.status === "open" ? "Disponible" : o.status === "filled" ? "Cubierta" : "Cerrada"}`,
+                      status: o.status === "filled" ? "reserved" : "available",
+                    }))}
+                  height={360}
+                />
+              </div>
+            )}
+
+            {/* Full applications table */}
+            {applications.length > 0 && (
+              <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <p className="text-sm font-semibold">Todas las postulaciones ({applications.length})</p>
+                </div>
+                <div className="divide-y divide-border">
+                  {applications.map((a) => (
+                    <ApplicationCard
+                      key={a.id}
+                      app={a}
+                      pro={proMap[a.professional_id]}
+                      offer={offers.find((o) => o.id === a.job_offer_id)}
+                      updating={updatingApp === a.id}
+                      onAccept={() => updateAppStatus(a.id, "accepted")}
+                      onReject={() => updateAppStatus(a.id, "rejected")}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ TAB: TALENTO ══ */}
+        {tab === "talento" && (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-border bg-card/95 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-semibold">Profesionales disponibles en tiempo real</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Verde = disponible · Toca un marcador para ver perfil y contactar.</p>
+                </div>
+                <Button variant="glass" size="sm" asChild>
+                  <Link to="/buscar">
+                    <Search className="h-3.5 w-3.5 mr-1.5" /> Buscar
+                  </Link>
+                </Button>
+              </div>
+              <LiveMarketplaceMap role="institution" userId={user.id} height={520} />
+            </div>
+
+            {/* Recent applicants as talent pool */}
+            {Object.keys(proMap).length > 0 && (
+              <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+                <div className="p-4 border-b border-border">
+                  <p className="text-sm font-semibold">Profesionales que se postularon</p>
+                  <p className="text-xs text-muted-foreground">Tu banco de talento local.</p>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+                  {Object.values(proMap).map((pro) => (
+                    <TalentCard key={pro.user_id} pro={pro} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ══ TAB: OPERACIONES ══ */}
+        {tab === "operaciones" && (
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-border bg-card/95 p-4">
+              <p className="text-sm font-semibold mb-4">Métricas operativas</p>
+              <EnhancedInstitutionOperations userId={user.id} />
+            </div>
+            <div className="rounded-2xl border border-border bg-card/95 p-4">
+              <p className="text-sm font-semibold mb-4">Reportes y CRM</p>
+              <EnhancedReportsWithCRMModule userId={user.id} />
+            </div>
+          </div>
+        )}
+
+        {/* ══ TAB: PACIENTES ══ */}
+        {tab === "pacientes" && (
+          <div className="rounded-2xl border border-border bg-card/95 p-4">
+            <EnhancedPatientsModule userId={user.id} />
+          </div>
+        )}
+
+        {/* ══ TAB: AGENDA ══ */}
+        {tab === "agenda" && (
+          <div className="rounded-2xl border border-border bg-card/95 p-4">
+            <EnhancedAgendaModule userId={user.id} />
+          </div>
+        )}
+
+        {/* ══ TAB: PERFIL ══ */}
+        {tab === "perfil" && (
+          <div className="space-y-5">
+            {/* Institution header card */}
+            <div className="rounded-2xl bg-gradient-to-br from-fuchsia-neural/10 via-background to-biosensor/5 border border-border p-5">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-fuchsia-neural/10 border border-fuchsia-neural/20 flex items-center justify-center shrink-0">
+                  <Building2 className="h-7 w-7 text-fuchsia-neural" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-bold text-lg">{instName}</p>
+                    {instProfile?.verified && (
+                      <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural font-medium">
+                        <BadgeCheck className="h-3 w-3" /> Verificada
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{instType}</p>
+                  {instProfile?.city && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                      <MapPin className="h-3 w-3" /> {instProfile.city}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {instProfile?.nit && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="rounded-lg bg-background/60 border border-border/50 px-3 py-2">
+                    <p className="text-muted-foreground">NIT</p>
+                    <p className="font-semibold mt-0.5">{instProfile.nit}</p>
+                  </div>
+                  <div className="rounded-lg bg-background/60 border border-border/50 px-3 py-2">
+                    <p className="text-muted-foreground">FUID</p>
+                    <p className={cn("font-semibold mt-0.5", instProfile.compliance_fuid ? "text-biosensor" : "text-muted-foreground")}>
+                      {instProfile.compliance_fuid ? "Completo" : "Pendiente"}
                     </p>
                   </div>
-                  <StatusPill status={o.status} />
-                </Card>
-              ))}
+                  <div className="rounded-lg bg-background/60 border border-border/50 px-3 py-2">
+                    <p className="text-muted-foreground">Estado</p>
+                    <p className={cn("font-semibold mt-0.5", instProfile.verified ? "text-biosensor" : "text-amber-500")}>
+                      {instProfile.verified ? "Verificada" : "En revisión"}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </section>
 
-        {offers.some((o) => o.lat != null && o.lng != null) && (
-          <section>
-            <h2 className="font-display text-lg font-semibold mb-3">Mapa de tus ofertas</h2>
-            <OffersMap
-              points={offers
-                .filter((o) => o.lat != null && o.lng != null)
-                .map<MapPoint>((o) => ({
-                  id: o.id,
-                  lat: o.lat as number,
-                  lng: o.lng as number,
-                  title: o.title,
-                  subtitle: `${o.city} · ${o.status === "open" ? "Disponible" : o.status === "filled" ? "Tomado" : "Cerrada"}`,
-                  status: o.status === "filled" ? "reserved" : "available",
-                }))}
-              height={360}
-            />
-          </section>
+            <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
+              <div className="p-4 border-b border-border">
+                <p className="text-sm font-semibold">Datos de la institución</p>
+                <p className="text-xs text-muted-foreground mt-0.5">NIT, cámara de comercio, representante legal y compliance.</p>
+              </div>
+              <div className="p-4">
+                <SmartInstitutionProfileForm userId={user.id} />
+              </div>
+            </div>
+          </div>
         )}
-          </TabsContent>
+      </main>
 
-          <TabsContent value="metricas" className="mt-4">
-            <EnhancedInstitutionOperations userId={user.id} />
-          </TabsContent>
+      {/* ── Bottom nav (mobile/tablet) ── */}
+      <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-background/95 backdrop-blur-xl border-t border-border safe-area-bottom">
+        <div className="grid grid-cols-7">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "flex flex-col items-center justify-center gap-0.5 py-2 text-[9px] font-medium transition-colors relative",
+                tab === t.id ? "text-fuchsia-neural" : "text-muted-foreground",
+              )}
+            >
+              <span className={cn("transition-transform", tab === t.id && "scale-110")}>
+                {t.icon}
+              </span>
+              {t.label}
+              {t.id === "inicio" && pendingApps.length > 0 && (
+                <span className="absolute top-1 right-1/4 h-2 w-2 rounded-full bg-amber-500" />
+              )}
+            </button>
+          ))}
+        </div>
+      </nav>
 
-          <TabsContent value="profesionales" className="mt-4">
-            <LiveMarketplaceMap role="institution" userId={user.id} height={520} />
-          </TabsContent>
-
-          <TabsContent value="bulk" className="mt-4">
-            <EnhancedBulkOffersModule userId={user.id} defaultCity={user.city || ""} />
-          </TabsContent>
-          <TabsContent value="pacientes" className="mt-4">
-            <EnhancedPatientsModule userId={user.id} defaultCity={user.city || ""} />
-          </TabsContent>
-          <TabsContent value="agenda" className="mt-4">
-            <EnhancedAgendaModule userId={user.id} defaultCity={user.city || ""} />
-          </TabsContent>
-          <TabsContent value="reportes" className="mt-4">
-            <EnhancedReportsWithCRMModule userId={user.id} defaultCity={user.city || ""} />
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AppShell>
+      <HumanixAssistant
+        persona="institution"
+        greeting={`Hola, soy el copiloto de ${instName}. Puedo ayudarte a redactar ofertas, analizar candidatos, o gestionar tus casos clínicos.`}
+      />
+    </div>
   );
 }
 
-function StatusPill({ status }: { status: string }) {
-  const map: Record<string, string> = {
-    open: "bg-biosensor/10 text-biosensor border-biosensor/30",
-    pending: "bg-copper/10 text-copper border-copper/30",
-    accepted: "bg-fuchsia-neural/10 text-fuchsia-neural border-fuchsia-neural/30",
-    rejected: "bg-destructive/10 text-destructive border-destructive/30",
-    filled: "bg-fuchsia-neural/10 text-fuchsia-neural border-fuchsia-neural/30",
-    closed: "bg-muted text-muted-foreground border-border",
-  };
+// ── Sub-components ──
+
+function ApplicationCard({
+  app: a,
+  pro,
+  offer,
+  updating,
+  onAccept,
+  onReject,
+}: {
+  app: ApplicationRow;
+  pro: ProSummary | undefined;
+  offer: Offer | undefined;
+  updating: boolean;
+  onAccept: () => void;
+  onReject: () => void;
+}) {
+  const wa = waLink(pro?.phone, pro?.full_name ?? "", offer?.title ?? "nuestra oferta");
+  const stars = pro?.avg_rating ?? 0;
+  const isPending = a.status === "pending";
+
   return (
-    <span
-      className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded-full border ${
-        map[status] ?? "bg-muted text-muted-foreground border-border"
-      }`}
+    <div
+      className={cn(
+        "p-4 transition-colors",
+        isPending && "bg-amber-500/3 hover:bg-amber-500/5",
+      )}
     >
-      {status}
+      <div className="flex items-start gap-3">
+        {/* Avatar */}
+        {pro?.avatar_url ? (
+          <img
+            src={pro.avatar_url}
+            alt={pro.full_name ?? ""}
+            className="h-10 w-10 rounded-full object-cover border border-border shrink-0"
+          />
+        ) : (
+          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-sm font-bold shrink-0">
+            {(pro?.full_name ?? "?").charAt(0).toUpperCase()}
+          </div>
+        )}
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold">{pro?.full_name ?? "Profesional"}</p>
+            {pro?.verified && <BadgeCheck className="h-3.5 w-3.5 text-biosensor shrink-0" />}
+            {stars > 0 && (
+              <span className="inline-flex items-center gap-0.5 text-[11px] text-amber-500">
+                <Star className="h-3 w-3 fill-amber-500" />
+                {Number(stars).toFixed(1)}
+              </span>
+            )}
+            {pro?.trust_score != null && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-biosensor/10 text-biosensor font-medium">
+                Trust {pro.trust_score}
+              </span>
+            )}
+            <AppStatusBadge status={a.status} />
+          </div>
+
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {pro?.specialty ?? "Profesional de la salud"}
+            {pro?.city && ` · ${pro.city}`}
+            {pro?.shift_rate && ` · ${COP(pro.shift_rate)}/turno`}
+          </p>
+
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Para:{" "}
+            <span className="font-medium text-foreground">{offer?.title ?? "Oferta"}</span>
+            {a.proposed_amount && ` · Propone ${COP(a.proposed_amount)}`}
+          </p>
+
+          {a.message && (
+            <p className="text-xs text-muted-foreground mt-1.5 italic line-clamp-2">
+              "{a.message}"
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+          <Button size="sm" variant="glass" asChild>
+            <Link to="/profesional/$proId" params={{ proId: a.professional_id }}>
+              Ver perfil
+            </Link>
+          </Button>
+          {wa && (
+            <Button size="sm" variant="outline" asChild className="border-biosensor/30 text-biosensor hover:bg-biosensor/5">
+              <a href={wa} target="_blank" rel="noopener noreferrer">
+                <Phone className="h-3.5 w-3.5 mr-1" /> WA
+              </a>
+            </Button>
+          )}
+          {isPending && (
+            <>
+              <Button
+                size="sm"
+                variant="hero"
+                onClick={onAccept}
+                disabled={updating}
+                className="bg-biosensor hover:bg-biosensor/90"
+              >
+                {updating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1" />}
+                Aceptar
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onReject}
+                disabled={updating}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-3.5 w-3.5 mr-1" /> Rechazar
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TalentCard({ pro }: { pro: ProSummary }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3 hover:border-fuchsia-neural/30 transition-colors">
+      <div className="flex items-center gap-2 mb-2">
+        {pro.avatar_url ? (
+          <img src={pro.avatar_url} alt={pro.full_name ?? ""} className="h-9 w-9 rounded-full object-cover border border-border shrink-0" />
+        ) : (
+          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-sm font-bold shrink-0">
+            {(pro.full_name ?? "?").charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0">
+          <p className="text-sm font-semibold truncate">{pro.full_name ?? "—"}</p>
+          <p className="text-xs text-muted-foreground truncate">{pro.specialty ?? "—"}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          {pro.avg_rating ? <><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {pro.avg_rating.toFixed(1)}</> : "Sin rating"}
+        </span>
+        {pro.trust_score != null && (
+          <span className="text-biosensor font-medium">Trust {pro.trust_score}</span>
+        )}
+      </div>
+      <div className="mt-2 flex gap-1.5">
+        <Button size="sm" variant="glass" className="flex-1 text-xs h-7" asChild>
+          <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>Ver perfil</Link>
+        </Button>
+        {pro.phone && (
+          <Button size="sm" variant="outline" className="h-7 px-2 border-biosensor/30 text-biosensor" asChild>
+            <a href={waLink(pro.phone, pro.full_name ?? "", "una oportunidad laboral") ?? "#"} target="_blank" rel="noopener noreferrer">
+              <Phone className="h-3 w-3" />
+            </a>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({
+  icon,
+  label,
+  value,
+  tone,
+  sub,
+  urgent,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: number | string;
+  tone: "fuchsia" | "bio" | "amber" | "cyber";
+  sub?: string;
+  urgent?: boolean;
+}) {
+  const colors = {
+    fuchsia: "text-fuchsia-neural bg-fuchsia-neural/10",
+    bio: "text-biosensor bg-biosensor/10",
+    amber: "text-amber-600 bg-amber-500/10",
+    cyber: "text-cyan-500 bg-cyan-500/10",
+  }[tone];
+
+  return (
+    <div className={cn("rounded-2xl border bg-card/95 p-4 transition-all", urgent && "border-amber-500/30 shadow-sm shadow-amber-500/10")}>
+      <div className={cn("inline-flex h-9 w-9 items-center justify-center rounded-xl", colors)}>
+        {icon}
+      </div>
+      <p className="mt-3 text-2xl font-bold font-display">{value}</p>
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{label}</p>
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+    </div>
+  );
+}
+
+function QuickAction({ icon, label, sub, onClick }: {
+  icon: React.ReactNode; label: string; sub: string; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-2xl border border-border bg-card/95 p-4 text-left hover:border-fuchsia-neural/30 transition-colors active:scale-[0.98]"
+    >
+      <div className="flex items-center gap-2 mb-1">
+        {icon}
+        <p className="text-sm font-semibold">{label}</p>
+      </div>
+      <p className="text-xs text-muted-foreground">{sub}</p>
+    </button>
+  );
+}
+
+function OfferStatusBadge({ status }: { status: string }) {
+  const map: Record<string, { label: string; cls: string }> = {
+    open: { label: "Abierta", cls: "bg-biosensor/10 text-biosensor border-biosensor/20" },
+    filled: { label: "Cubierta", cls: "bg-fuchsia-neural/10 text-fuchsia-neural border-fuchsia-neural/20" },
+    closed: { label: "Cerrada", cls: "bg-muted text-muted-foreground border-border" },
+    reserved: { label: "Reservada", cls: "bg-amber-500/10 text-amber-600 border-amber-500/20" },
+  };
+  const s = map[status] ?? map.closed;
+  return (
+    <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-semibold border whitespace-nowrap", s.cls)}>
+      {s.label}
     </span>
   );
 }
 
-function Kpi({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: typeof Briefcase;
-  label: string;
-  value: number | string;
-  tone: "bio" | "copper" | "fuchsia";
-}) {
-  const colors = {
-    bio: "text-biosensor bg-biosensor/10",
-    copper: "text-copper bg-copper/10",
-    fuchsia: "text-fuchsia-neural bg-fuchsia-neural/10",
-  }[tone];
+function AppStatusBadge({ status }: { status: AppStatus }) {
+  const map: Record<AppStatus, { label: string; cls: string }> = {
+    pending: { label: "Pendiente", cls: "bg-amber-500/10 text-amber-600" },
+    accepted: { label: "Aceptado", cls: "bg-biosensor/10 text-biosensor" },
+    rejected: { label: "Rechazado", cls: "bg-rose-500/10 text-rose-600" },
+    withdrawn: { label: "Retirado", cls: "bg-muted text-muted-foreground" },
+  };
+  const s = map[status];
   return (
-    <Card className="p-4">
-      <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg ${colors}`}>
-        <Icon className="h-4 w-4" />
-      </div>
-      <p className="mt-3 text-2xl font-bold font-display">{value}</p>
-      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
-    </Card>
+    <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap", s.cls)}>
+      {s.label}
+    </span>
   );
+}
+
+function AppStatusDot({ status }: { status: AppStatus }) {
+  const colors: Record<AppStatus, string> = {
+    pending: "bg-amber-500",
+    accepted: "bg-biosensor",
+    rejected: "bg-rose-500",
+    withdrawn: "bg-muted-foreground",
+  };
+  return <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", colors[status])} />;
+}
+
+function labelModality(m: "hour" | "shift" | "month" | "package") {
+  return m === "hour" ? "hora" : m === "shift" ? "turno" : m === "month" ? "mes" : "paquete";
 }
