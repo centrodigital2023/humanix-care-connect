@@ -5,7 +5,6 @@ import {
   Building2,
   Briefcase,
   Users,
-  Search,
   CheckCircle2,
   Inbox,
   Phone,
@@ -36,7 +35,7 @@ import { EnhancedBulkOffersModule } from "@/components/humanix/EnhancedBulkOffer
 import { EnhancedPatientsModule } from "@/components/humanix/EnhancedPatientsModule";
 import { EnhancedAgendaModule } from "@/components/humanix/EnhancedAgendaModule";
 import { EnhancedReportsWithCRMModule } from "@/components/humanix/EnhancedReportsWithCRMModule";
-import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
+import { TalentTab, type ProSummary } from "@/components/humanix/TalentTab";
 import { EnhancedInstitutionOperations } from "@/components/humanix/EnhancedInstitutionOperations";
 import { SmartInstitutionProfileForm } from "@/components/humanix/SmartInstitutionProfileForm";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
@@ -99,19 +98,7 @@ type ApplicationRow = {
   job_offer_id: string;
 };
 
-type ProSummary = {
-  user_id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  city: string | null;
-  specialty: string | null;
-  avg_rating: number | null;
-  trust_score: number | null;
-  hourly_rate: number | null;
-  shift_rate: number | null;
-  phone: string | null;
-  verified: boolean | null;
-};
+// ProSummary imported from TalentTab
 
 type InstitutionProfile = {
   institution_name: string;
@@ -195,7 +182,9 @@ function InstitutionDashboard() {
       const [proRowsRes, profilesRes] = await Promise.all([
         supabase
           .from("professional_profiles")
-          .select("user_id, specialty, avg_rating, trust_score, hourly_rate, shift_rate, verified")
+          .select(
+            "user_id, specialty, sub_specialties, avg_rating, trust_score, hourly_rate, shift_rate, monthly_rate, verified, rethus_verified, ai_preapproved, available, years_experience, bio, total_jobs, certifications",
+          )
           .in("user_id", proIds),
         supabase
           .from("profiles")
@@ -211,12 +200,21 @@ function InstitutionDashboard() {
           avatar_url: null,
           city: null,
           specialty: r.specialty,
+          sub_specialties: (r as { sub_specialties?: string[] }).sub_specialties ?? null,
           avg_rating: r.avg_rating,
           trust_score: r.trust_score,
           hourly_rate: r.hourly_rate,
           shift_rate: r.shift_rate,
+          monthly_rate: (r as { monthly_rate?: number }).monthly_rate ?? null,
           phone: null,
           verified: r.verified,
+          rethus_verified: (r as { rethus_verified?: boolean }).rethus_verified ?? null,
+          ai_preapproved: (r as { ai_preapproved?: boolean }).ai_preapproved ?? null,
+          available: Boolean((r as { available?: boolean }).available),
+          years_experience: (r as { years_experience?: number }).years_experience ?? null,
+          bio: (r as { bio?: string }).bio ?? null,
+          total_jobs: (r as { total_jobs?: number }).total_jobs ?? null,
+          certifications: (r as { certifications?: string[] }).certifications ?? null,
         };
       });
       (profilesRes.data ?? []).forEach((p) => {
@@ -226,12 +224,21 @@ function InstitutionDashboard() {
           avatar_url: null,
           city: null,
           specialty: null,
+          sub_specialties: null,
           avg_rating: null,
           trust_score: null,
           hourly_rate: null,
           shift_rate: null,
+          monthly_rate: null,
           phone: null,
           verified: null,
+          rethus_verified: null,
+          ai_preapproved: null,
+          available: false,
+          years_experience: null,
+          bio: null,
+          total_jobs: null,
+          certifications: null,
         };
         map[p.user_id] = {
           ...existing,
@@ -782,37 +789,15 @@ function InstitutionDashboard() {
 
         {/* ══ TAB: TALENTO ══ */}
         {tab === "talento" && (
-          <div className="space-y-5">
-            <div className="rounded-2xl border border-border bg-card/95 p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="text-sm font-semibold">Profesionales disponibles en tiempo real</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Verde = disponible · Toca un marcador para ver perfil y contactar.</p>
-                </div>
-                <Button variant="glass" size="sm" asChild>
-                  <Link to="/buscar">
-                    <Search className="h-3.5 w-3.5 mr-1.5" /> Buscar
-                  </Link>
-                </Button>
-              </div>
-              <LiveMarketplaceMap role="institution" userId={user.id} height={520} />
-            </div>
-
-            {/* Recent applicants as talent pool */}
-            {Object.keys(proMap).length > 0 && (
-              <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
-                <div className="p-4 border-b border-border">
-                  <p className="text-sm font-semibold">Profesionales que se postularon</p>
-                  <p className="text-xs text-muted-foreground">Tu banco de talento local.</p>
-                </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
-                  {Object.values(proMap).map((pro) => (
-                    <TalentCard key={pro.user_id} pro={pro} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+          <TalentTab
+            userId={user.id}
+            applications={applications}
+            proMap={proMap}
+            offers={offers.map((o) => ({ id: o.id, title: o.title }))}
+            instCity={instProfile?.city ?? ""}
+            updatingApp={updatingApp}
+            onUpdateApp={updateAppStatus}
+          />
         )}
 
         {/* ══ TAB: OPERACIONES ══ */}
@@ -1060,45 +1045,6 @@ function ApplicationCard({
   );
 }
 
-function TalentCard({ pro }: { pro: ProSummary }) {
-  return (
-    <div className="rounded-xl border border-border bg-background p-3 hover:border-fuchsia-neural/30 transition-colors">
-      <div className="flex items-center gap-2 mb-2">
-        {pro.avatar_url ? (
-          <img src={pro.avatar_url} alt={pro.full_name ?? ""} className="h-9 w-9 rounded-full object-cover border border-border shrink-0" />
-        ) : (
-          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-sm font-bold shrink-0">
-            {(pro.full_name ?? "?").charAt(0).toUpperCase()}
-          </div>
-        )}
-        <div className="min-w-0">
-          <p className="text-sm font-semibold truncate">{pro.full_name ?? "—"}</p>
-          <p className="text-xs text-muted-foreground truncate">{pro.specialty ?? "—"}</p>
-        </div>
-      </div>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          {pro.avg_rating ? <><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {pro.avg_rating.toFixed(1)}</> : "Sin rating"}
-        </span>
-        {pro.trust_score != null && (
-          <span className="text-biosensor font-medium">Trust {pro.trust_score}</span>
-        )}
-      </div>
-      <div className="mt-2 flex gap-1.5">
-        <Button size="sm" variant="glass" className="flex-1 text-xs h-7" asChild>
-          <Link to="/profesional/$proId" params={{ proId: pro.user_id }}>Ver perfil</Link>
-        </Button>
-        {pro.phone && (
-          <Button size="sm" variant="outline" className="h-7 px-2 border-biosensor/30 text-biosensor" asChild>
-            <a href={waLink(pro.phone, pro.full_name ?? "", "una oportunidad laboral") ?? "#"} target="_blank" rel="noopener noreferrer">
-              <Phone className="h-3 w-3" />
-            </a>
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 function KpiCard({
   icon,
