@@ -23,7 +23,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/auth")({
   validateSearch: (
     search: Record<string, unknown>,
-  ): { role?: Role; redirect?: string; mode?: "signin" | "signup" } => {
+  ): { role?: Role; redirect?: string; mode?: "signin" | "signup"; ref?: string } => {
     const r = search.role;
     const role: Role | undefined =
       r === "professional" || r === "family" || r === "institution" ? r : undefined;
@@ -34,10 +34,14 @@ export const Route = createFileRoute("/auth")({
     const m = search.mode;
     const mode: "signin" | "signup" | undefined =
       m === "signin" || m === "signup" ? m : undefined;
-    const out: { role?: Role; redirect?: string; mode?: "signin" | "signup" } = {};
+    const ref = typeof search.ref === "string" && /^[A-Z0-9]{6,12}$/i.test(search.ref)
+      ? search.ref.toUpperCase()
+      : undefined;
+    const out: { role?: Role; redirect?: string; mode?: "signin" | "signup"; ref?: string } = {};
     if (role) out.role = role;
     if (redirect) out.redirect = redirect;
     if (mode) out.mode = mode;
+    if (ref) out.ref = ref;
     return out;
   },
   head: () => ({
@@ -113,6 +117,21 @@ function AuthPage() {
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
 
+  // Referral code: from URL param or localStorage
+  const [refCode, setRefCode] = useState<string | null>(null);
+
+  // Capture referral code on mount
+  useEffect(() => {
+    const fromUrl = search.ref;
+    if (fromUrl) {
+      localStorage.setItem("humanix_ref_code", fromUrl);
+      setRefCode(fromUrl);
+    } else {
+      const stored = localStorage.getItem("humanix_ref_code");
+      if (stored) setRefCode(stored);
+    }
+  }, [search.ref]);
+
   // Redirect if already logged in
   useEffect(() => {
     const target = search.redirect ?? "/dashboard";
@@ -148,6 +167,20 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+
+        // Aplicar código de referido si existe (fire-and-forget, sin bloquear el flujo)
+        if (refCode && data.user?.id) {
+          const _code = refCode;
+          const _uid = data.user.id;
+          void (async () => {
+            try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              await (supabase as any).rpc("apply_referral_code", { p_code: _code, p_new_user_id: _uid });
+              localStorage.removeItem("humanix_ref_code");
+            } catch { /* silencio — no bloquear el registro */ }
+          })();
+        }
+
         // If Supabase project has "Confirm email" enabled, session will be
         // null and user must verify via the OTP code we just emailed.
         if (!data.session) {

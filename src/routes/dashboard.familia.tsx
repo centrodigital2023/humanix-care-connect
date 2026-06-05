@@ -31,6 +31,7 @@ import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { FamilyNeedsCalendar } from "@/components/humanix/FamilyNeedsCalendar";
 import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
+import { CareFeed } from "@/components/humanix/CareFeed";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
@@ -822,6 +823,9 @@ function FamilyDashboard() {
           </section>
         )}
 
+        {/* Bitácora del turno activo — tiempo real */}
+        {user?.id && <ActiveCareFeedSection clientId={user.id} />}
+
         {/* Valoraciones pendientes (bidireccional) */}
         {user?.id && <PendingRatingsCard userId={user.id} role="family" />}
 
@@ -876,5 +880,39 @@ function Kpi({
       <p className="mt-3 text-2xl font-bold font-display">{value}</p>
       <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
     </Card>
+  );
+}
+
+// Muestra la bitácora en tiempo real del turno activo más reciente de la familia.
+function ActiveCareFeedSection({ clientId }: { clientId: string }) {
+  const [activeBookingId, setActiveBookingId] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase
+      .from("service_bookings")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("status", "confirmed")
+      .order("scheduled_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (mounted) {
+          setActiveBookingId(data?.id ?? null);
+          setChecking(false);
+        }
+      });
+    return () => { mounted = false; };
+  }, [clientId]);
+
+  if (checking || !activeBookingId) return null;
+
+  return (
+    <section className="space-y-3">
+      <h2 className="font-display text-lg font-semibold">Bitácora del turno activo</h2>
+      <CareFeed bookingId={activeBookingId} />
+    </section>
   );
 }

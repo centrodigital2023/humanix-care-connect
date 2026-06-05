@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { ArrowRight, Sparkles, MapPin, Activity, Zap, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkles, MapPin, Activity, Zap, TrendingUp, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useActiveUsersCount } from "@/hooks/use-active-users-count";
+import { usePublicStats } from "@/hooks/use-public-stats";
+import { AnimatedCounter } from "./AnimatedCounter";
 import heroImage from "@/assets/hero-humanix.webp";
 import { RoleGate } from "./RoleGate";
 
 export function Hero() {
   const [gateOpen, setGateOpen] = useState(false);
-  const { professionals } = useActiveUsersCount();
+  const { stats, loading } = usePublicStats();
 
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-28">
@@ -31,23 +32,54 @@ export function Hero() {
               Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;150ms. Pagos directos.
             </p>
 
-            {/* Key Stats */}
+            {/* Key Stats — datos reales desde Supabase */}
             <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 pb-8">
               <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-white">{professionals}+</p>
+                {loading ? (
+                  <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-black text-white">
+                    <AnimatedCounter
+                      value={stats.verified_professionals || 0}
+                      suffix="+"
+                      immediate={false}
+                    />
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">Profesionales verificados RETHUS</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-biosensor">&lt;150ms</p>
-                <p className="text-xs text-muted-foreground">Match automático</p>
+                {loading ? (
+                  <div className="h-9 w-16 animate-pulse rounded-md bg-biosensor/20" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-black text-biosensor flex items-center gap-1.5">
+                    <Wifi className="h-5 w-5 animate-pulse" />
+                    <AnimatedCounter
+                      value={stats.online_now || 0}
+                    />
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">Online ahora mismo</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-copper">3</p>
-                <p className="text-xs text-muted-foreground">Actores en el marketplace</p>
+                {loading ? (
+                  <div className="h-9 w-16 animate-pulse rounded-md bg-copper/20" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-black text-copper">
+                    <AnimatedCounter value={stats.total_clients || 0} />
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">Familias e IPS activas</p>
               </div>
               <div className="space-y-1">
-                <p className="text-2xl sm:text-3xl font-black text-emerald-400">4</p>
-                <p className="text-xs text-muted-foreground">Modalidades de pago</p>
+                {loading ? (
+                  <div className="h-9 w-16 animate-pulse rounded-md bg-emerald-400/20" />
+                ) : (
+                  <p className="text-2xl sm:text-3xl font-black text-emerald-400">
+                    <AnimatedCounter value={stats.completed_services || 0} suffix="+" />
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">Servicios completados</p>
               </div>
             </div>
 

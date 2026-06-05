@@ -52,6 +52,7 @@ import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
 import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { OpenFamilyNeedsList } from "@/components/humanix/OpenFamilyNeedsList";
 import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
+import { ReferralCard } from "@/components/humanix/ReferralCard";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -665,6 +666,9 @@ function ProDashboard() {
               <QuickAction icon={<CalendarDays className="h-5 w-5 text-biosensor" />} label="Mi agenda" sub="Disponibilidad" onClick={() => setTab("agenda")} />
               <QuickAction icon={<TrendingUp className="h-5 w-5 text-fuchsia-neural" />} label="Re-evaluar Trust" sub={`Score: ${trust}/100`} onClick={validateWithAI} loading={validating} />
             </div>
+
+            {/* Referidos — gana meses gratis */}
+            {userId && <ReferralCard userId={userId} />}
 
             {/* Suscripción */}
             {userId && (
