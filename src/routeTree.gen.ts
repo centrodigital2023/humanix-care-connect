@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerificarRouteImport } from './routes/verificar'
 import { Route as TerminosRouteImport } from './routes/terminos'
 import { Route as TecnologiaRouteImport } from './routes/tecnologia'
 import { Route as TalentoHumanoRouteImport } from './routes/talento-humano'
@@ -48,7 +49,6 @@ import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuxiliarEnfermeriaRouteImport } from './routes/auxiliar-enfermeria'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as VerificarRouteImport } from './routes/verificar'
 import { Route as SuperadminIndexRouteImport } from './routes/superadmin.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminTestimoniosRouteImport } from './routes/superadmin.testimonios'
@@ -418,6 +418,7 @@ export interface FileRoutesByFullPath {
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
   '/terminos': typeof TerminosRoute
+  '/verificar': typeof VerificarRoute
   '/b/$bannerId': typeof BBannerIdRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
@@ -478,6 +479,7 @@ export interface FileRoutesByTo {
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
   '/terminos': typeof TerminosRoute
+  '/verificar': typeof VerificarRoute
   '/b/$bannerId': typeof BBannerIdRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
@@ -541,6 +543,7 @@ export interface FileRoutesById {
   '/talento-humano': typeof TalentoHumanoRoute
   '/tecnologia': typeof TecnologiaRoute
   '/terminos': typeof TerminosRoute
+  '/verificar': typeof VerificarRoute
   '/b/$bannerId': typeof BBannerIdRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
@@ -605,6 +608,7 @@ export interface FileRouteTypes {
     | '/talento-humano'
     | '/tecnologia'
     | '/terminos'
+    | '/verificar'
     | '/b/$bannerId'
     | '/dashboard/familia'
     | '/dashboard/institucion'
@@ -728,6 +732,7 @@ export interface FileRouteTypes {
     | '/talento-humano'
     | '/tecnologia'
     | '/terminos'
+    | '/verificar'
     | '/b/$bannerId'
     | '/dashboard/familia'
     | '/dashboard/institucion'
@@ -749,7 +754,6 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/superadmin/'
     | '/dashboard/familia/onboarding'
-    | '/verificar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -792,17 +796,24 @@ export interface RootRouteChildren {
   TalentoHumanoRoute: typeof TalentoHumanoRoute
   TecnologiaRoute: typeof TecnologiaRoute
   TerminosRoute: typeof TerminosRoute
+  VerificarRoute: typeof VerificarRoute
   BBannerIdRoute: typeof BBannerIdRoute
   InstitutionFormsRoute: typeof InstitutionFormsRoute
   InstitutionProfileRoute: typeof InstitutionProfileRoute
   OfertaOfferIdRoute: typeof OfertaOfferIdRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
-  VerificarRoute: typeof VerificarRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verificar': {
+      id: '/verificar'
+      path: '/verificar'
+      fullPath: '/verificar'
+      preLoaderRoute: typeof VerificarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terminos': {
       id: '/terminos'
       path: '/terminos'
@@ -850,13 +861,6 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/verificar': {
-      id: '/verificar'
-      path: '/verificar'
-      fullPath: '/verificar'
-      preLoaderRoute: typeof VerificarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recursos': {
@@ -1342,14 +1346,23 @@ const rootRouteChildren: RootRouteChildren = {
   TalentoHumanoRoute: TalentoHumanoRoute,
   TecnologiaRoute: TecnologiaRoute,
   TerminosRoute: TerminosRoute,
+  VerificarRoute: VerificarRoute,
   BBannerIdRoute: BBannerIdRoute,
   InstitutionFormsRoute: InstitutionFormsRoute,
   InstitutionProfileRoute: InstitutionProfileRoute,
   OfertaOfferIdRoute: OfertaOfferIdRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
-  VerificarRoute: VerificarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
