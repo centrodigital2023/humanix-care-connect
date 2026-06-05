@@ -10,6 +10,7 @@ import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { AdBanner } from "@/components/humanix/AdBanner";
 import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 
 import { faqs } from "@/components/humanix/FAQ";
@@ -122,6 +123,10 @@ function Index() {
             </div>
             <LiveMarketplaceMap preview height={360} />
           </div>
+        </section>
+        {/* Ad slot between map and audience sections */}
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-4">
+          <AdBanner slot="homepage-mid" adsenseSlot="1234567890" size="leaderboard" dismissible />
         </section>
         <AudienceSection />
         <Suspense fallback={<div className="min-h-[200px]" />}>

@@ -48,6 +48,7 @@ import { Route as BuscarRouteImport } from './routes/buscar'
 import { Route as AuxiliarEnfermeriaRouteImport } from './routes/auxiliar-enfermeria'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VerificarRouteImport } from './routes/verificar'
 import { Route as SuperadminIndexRouteImport } from './routes/superadmin.index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
 import { Route as SuperadminTestimoniosRouteImport } from './routes/superadmin.testimonios'
@@ -70,6 +71,11 @@ import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia
 import { Route as BBannerIdRouteImport } from './routes/b.$bannerId'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
+const VerificarRoute = VerificarRouteImport.update({
+  id: '/verificar',
+  path: '/verificar',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TerminosRoute = TerminosRouteImport.update({
   id: '/terminos',
   path: '/terminos',
@@ -659,6 +665,7 @@ export interface FileRouteTypes {
     | '/talento-humano'
     | '/tecnologia'
     | '/terminos'
+    | '/verificar'
     | '/b/$bannerId'
     | '/dashboard/familia'
     | '/dashboard/institucion'
@@ -742,6 +749,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/superadmin/'
     | '/dashboard/familia/onboarding'
+    | '/verificar'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -790,6 +798,7 @@ export interface RootRouteChildren {
   OfertaOfferIdRoute: typeof OfertaOfferIdRoute
   ProfesionalProIdRoute: typeof ProfesionalProIdRoute
   ServicioBookingIdRoute: typeof ServicioBookingIdRoute
+  VerificarRoute: typeof VerificarRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -841,6 +850,13 @@ declare module '@tanstack/react-router' {
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verificar': {
+      id: '/verificar'
+      path: '/verificar'
+      fullPath: '/verificar'
+      preLoaderRoute: typeof VerificarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recursos': {
@@ -1332,6 +1348,7 @@ const rootRouteChildren: RootRouteChildren = {
   OfertaOfferIdRoute: OfertaOfferIdRoute,
   ProfesionalProIdRoute: ProfesionalProIdRoute,
   ServicioBookingIdRoute: ServicioBookingIdRoute,
+  VerificarRoute: VerificarRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

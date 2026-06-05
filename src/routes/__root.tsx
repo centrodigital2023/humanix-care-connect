@@ -123,6 +123,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
             __html: `document.addEventListener('DOMContentLoaded',function(){var l=document.querySelector('link[rel=stylesheet][href*="fonts.googleapis.com"][media="print"]');if(l)l.media='all';});`,
           }}
         />
+        {/* Google Analytics 4 — deferred, no bloquea render */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var G=typeof __GA4_ID__!=='undefined'?__GA4_ID__:(window.__ENV__&&window.__ENV__.VITE_GA4_MEASUREMENT_ID)||'G-XXXXXXXXXXXX';function load(){if(window.gtag)return;var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+G;document.head.appendChild(s);window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;gtag('js',new Date());gtag('config',G,{send_page_view:true,cookie_flags:'max-age=7200;secure;samesite=none'});}if('requestIdleCallback' in window){requestIdleCallback(load,{timeout:4000})}else{setTimeout(load,3000)}})();`,
+          }}
+        />
+        {/* Google AdSense — carga diferida para no penalizar CWV */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){function loadAds(){if(document.querySelector('script[src*="adsbygoogle"]'))return;var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX';document.head.appendChild(s);}if('requestIdleCallback' in window){requestIdleCallback(loadAds,{timeout:5000})}else{setTimeout(loadAds,4000)}})();`,
+          }}
+        />
         {/* Defer Meta Pixel hasta idle para no bloquear el hilo principal */}
         <script
           dangerouslySetInnerHTML={{
