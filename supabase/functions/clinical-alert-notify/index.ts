@@ -7,6 +7,13 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildCorsHeaders } from "../_shared/auth.ts";
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
+
 const WA_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN") ?? "";
 const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") ?? "";
 
@@ -61,6 +68,14 @@ async function sendWa(phone: string, body: string) {
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const expected = Deno.env.get("INTERNAL_WEBHOOK_SECRET") ?? "";
+  const provided = req.headers.get("x-webhook-secret") ?? "";
+  if (!expected || !provided || !timingSafeEqual(provided, expected)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
