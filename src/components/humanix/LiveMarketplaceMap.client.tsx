@@ -26,16 +26,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { clusterMarkers, isCluster } from "@/lib/marker-clustering";
 import { useThrottle } from "@/hooks/use-throttle";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useNavigate } from "@tanstack/react-router";
 
 type Role = "professional" | "family" | "institution" | "guest";
@@ -183,10 +173,21 @@ export function LiveMarketplaceMap({
   const effectiveRole: Role = role ?? "guest";
   const isGuest = preview || effectiveRole === "guest" || !userId;
   const navigate = useNavigate();
-  const [guestPromptOpen, setGuestPromptOpen] = useState(false);
+  // Antes esto abría un modal de pantalla completa que tapaba el mapa por
+  // completo ("el mapa queda detrás del registro"). En Uber/InDrive puedes
+  // explorar el mapa libremente sin cuenta — el registro es una invitación
+  // suave, no una pared. Por eso usamos un toast con acción: el mapa nunca
+  // deja de verse ni de poder explorarse.
   const requireAuth = (): boolean => {
     if (isGuest) {
-      setGuestPromptOpen(true);
+      toast("Crea tu cuenta gratis para continuar", {
+        description:
+          "Marca tu ubicación, activa tu visibilidad y usa los filtros inteligentes — gratis, en 1 minuto.",
+        action: {
+          label: "Registrarme",
+          onClick: () => navigate({ to: "/auth" }),
+        },
+      });
       return true;
     }
     return false;
@@ -225,35 +226,82 @@ export function LiveMarketplaceMap({
     setMeCoords({ lat: pickLocation?.lat ?? null, lng: pickLocation?.lng ?? null });
   }, [pickLocation?.lat, pickLocation?.lng]);
 
-  // Hydrate self coords from DB for family/institution when no external pickLocation
+  // Auto-presencia estilo Uber/InDrive: si el usuario no tiene ubicación
+  // guardada, la capturamos sola (GPS del navegador y, si no hay permiso,
+  // geocodificando su ciudad) y la persistimos — así aparece "en línea" en
+  // el mapa desde el primer momento, sin pasos manuales. Solo desaparece si
+  // se apaga con el botón "Apagar".
   useEffect(() => {
-    if (!selfPersist || !userId) return;
+    if (!userId || isGuest || effectiveRole === "guest" || pickLocation) return;
+    let cancelled = false;
+    const resolveLoc = async (city: string | null) => {
+      const gps = await getBrowserLocation();
+      if (gps) return gps;
+      return city ? await geocodeCity(city) : null;
+    };
     (async () => {
       try {
         if (effectiveRole === "institution") {
           const { data } = await supabase
             .from("institution_profiles")
-            .select("lat, lng")
+            .select("lat, lng, city")
             .eq("user_id", userId)
             .maybeSingle();
           if (data?.lat != null && data?.lng != null) {
-            setMeCoords({ lat: Number(data.lat), lng: Number(data.lng) });
+            if (!cancelled) setMeCoords({ lat: Number(data.lat), lng: Number(data.lng) });
+            return;
           }
+          const loc = await resolveLoc(data?.city ?? null);
+          if (!loc || cancelled) return;
+          await supabase
+            .from("institution_profiles")
+            .update({ lat: loc.lat, lng: loc.lng })
+            .eq("user_id", userId);
+          if (!cancelled) setMeCoords(loc);
         } else if (effectiveRole === "family") {
           const { data } = await supabase
             .from("family_profiles")
-            .select("default_lat, default_lng")
+            .select("default_lat, default_lng, default_address")
             .eq("user_id", userId)
             .maybeSingle();
           if (data?.default_lat != null && data?.default_lng != null) {
-            setMeCoords({ lat: Number(data.default_lat), lng: Number(data.default_lng) });
+            if (!cancelled)
+              setMeCoords({ lat: Number(data.default_lat), lng: Number(data.default_lng) });
+            return;
           }
+          const loc = await resolveLoc(data?.default_address ?? null);
+          if (!loc || cancelled) return;
+          await supabase
+            .from("family_profiles")
+            .update({ default_lat: loc.lat, default_lng: loc.lng })
+            .eq("user_id", userId);
+          if (!cancelled) setMeCoords(loc);
+        } else if (effectiveRole === "professional") {
+          const { data } = await supabase
+            .from("professional_profiles")
+            .select("lat, lng, home_city")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (data?.lat != null && data?.lng != null) {
+            if (!cancelled) setMeCoords({ lat: Number(data.lat), lng: Number(data.lng) });
+            return;
+          }
+          const loc = await resolveLoc(data?.home_city ?? null);
+          if (!loc || cancelled) return;
+          await supabase
+            .from("professional_profiles")
+            .update({ lat: loc.lat, lng: loc.lng })
+            .eq("user_id", userId);
+          if (!cancelled) setMeCoords(loc);
         }
       } catch (e) {
-        console.warn("[LiveMap] could not hydrate self coords", e);
+        console.warn("[LiveMap] auto-presence failed", e);
       }
     })();
-  }, [selfPersist, userId, effectiveRole]);
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, effectiveRole, isGuest, pickLocation]);
 
   // Load own availability
   useEffect(() => {
@@ -1305,30 +1353,6 @@ export function LiveMarketplaceMap({
 .leaflet-popup-pane{z-index:700!important}
 .leaflet-marker-pane .live-marker{transition:filter .15s ease}
 `}</style>
-
-      <AlertDialog open={guestPromptOpen} onOpenChange={setGuestPromptOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Crea tu cuenta para continuar</AlertDialogTitle>
-            <AlertDialogDescription>
-              Para marcar tu ubicación, activar tu visibilidad en el mapa y usar los filtros
-              inteligentes necesitas una cuenta. Es gratis y solo toma 1 minuto. Al registrarte
-              sincronizas en tiempo real con profesionales, familias e instituciones cercanas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Ahora no</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                setGuestPromptOpen(false);
-                navigate({ to: "/auth" });
-              }}
-            >
-              Registrarme gratis
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

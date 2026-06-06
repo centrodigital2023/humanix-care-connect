@@ -28,6 +28,7 @@ import {
   CircleCheck,
   BadgeCheck,
   Wallet,
+  HeartPulse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -669,6 +670,7 @@ function ProDashboard() {
               <QuickAction icon={<FileText className="h-5 w-5 text-fuchsia-neural" />} label="Subir documentos" sub={`${Object.keys(docSummary).length} subidos`} onClick={() => setTab("documentos")} />
               <QuickAction icon={<CalendarDays className="h-5 w-5 text-biosensor" />} label="Mi agenda" sub="Disponibilidad" onClick={() => setTab("agenda")} />
               <QuickAction icon={<TrendingUp className="h-5 w-5 text-fuchsia-neural" />} label="Re-evaluar Trust" sub={`Score: ${trust}/100`} onClick={validateWithAI} loading={validating} />
+              <QuickAction icon={<HeartPulse className="h-5 w-5 text-rose-500" />} label="Monitoreo de pacientes" sub="Signos vitales y alertas en vivo" to="/dashboard/monitoreo" />
             </div>
 
             {/* Billetera — saldo, movimientos y retiros Nequi/PSE/RappiPay */}
@@ -1165,19 +1167,29 @@ function StatPill({ icon, label, value }: { icon: React.ReactNode; label: string
   );
 }
 
-function QuickAction({ icon, label, sub, onClick, loading }: {
-  icon: React.ReactNode; label: string; sub: string; onClick?: () => void; loading?: boolean;
+function QuickAction({ icon, label, sub, onClick, loading, to }: {
+  icon: React.ReactNode; label: string; sub: string; onClick?: () => void; loading?: boolean; to?: string;
 }) {
-  return (
-    <button
-      onClick={onClick}
-      className="rounded-2xl border border-border bg-card/95 p-4 text-left hover:border-biosensor/30 transition-colors active:scale-[0.98]"
-    >
+  const className = "rounded-2xl border border-border bg-card/95 p-4 text-left hover:border-biosensor/30 transition-colors active:scale-[0.98] block";
+  const content = (
+    <>
       <div className="flex items-center gap-2 mb-1">
         {loading ? <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /> : icon}
         <p className="text-sm font-semibold">{label}</p>
       </div>
       <p className="text-xs text-muted-foreground">{sub}</p>
+    </>
+  );
+  if (to) {
+    return (
+      <Link to={to} className={className}>
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button onClick={onClick} className={className}>
+      {content}
     </button>
   );
 }

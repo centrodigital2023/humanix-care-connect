@@ -16,6 +16,8 @@ import {
   MapPin,
   Star,
   Inbox,
+  ChevronRight,
+  Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/dashboard/familia")({
 
 const getNav = (): NavItem[] => [
   { label: "Inicio", to: "/dashboard/familia", icon: LayoutDashboard },
+  { label: "Monitoreo", to: "/dashboard/monitoreo", icon: Heart },
   { label: "Buscar", to: "/buscar", icon: Search },
   { label: "Mensajes", to: "/mensajes", icon: MessageSquare },
   { label: "Mis solicitudes", to: "/dashboard/familia", icon: FileText },
@@ -550,6 +553,27 @@ function FamilyDashboard() {
           <Kpi icon={Inbox} label="Postulaciones" value={pendingApps} tone="fuchsia" />
           <Kpi icon={ShieldCheck} label="Cubiertas" value={filled} tone="bio" />
         </section>
+
+        {/* Monitoreo clínico en vivo */}
+        <Link
+          to="/dashboard/monitoreo"
+          className="flex items-center gap-4 rounded-2xl border border-rose-500/20 bg-gradient-to-r from-rose-500/10 via-card/95 to-card/95 p-5 transition hover:border-rose-500/40 hover:-translate-y-0.5"
+        >
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-rose-500">
+            <Activity className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-sm flex items-center gap-1.5">
+              <Heart className="h-3.5 w-3.5 text-rose-500" />
+              Monitoreo clínico en vivo
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Signos vitales en tiempo real, alertas automáticas y riesgo con IA — conecta wearables
+              y revisa el estado de tu ser querido al instante.
+            </p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
+        </Link>
 
         {/* Buzón de postulaciones */}
         <section>

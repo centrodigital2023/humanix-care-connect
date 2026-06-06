@@ -29,6 +29,7 @@ const ALERT_LABELS: Record<string, string> = {
   inactivity: "Inactividad prolongada",
   high_respiration: "Frecuencia respiratoria anormal",
   abnormal_glucose: "Glucosa fuera de rango",
+  sos_manual: "SOS · Botón de pánico activado",
 };
 
 const SEVERITY_EMOJI: Record<string, string> = {
@@ -107,7 +108,11 @@ Deno.serve(async (req) => {
       .eq("vital_type", alert.alert_type?.replace(/^(high_|low_)/, "") ?? "")
       .maybeSingle();
 
-    const shouldNotifyWhatsapp = threshold?.notify_whatsapp ?? true;
+    // El SOS manual es un botón de pánico que la persona activó a propósito:
+    // siempre se notifica por WhatsApp, sin depender de la configuración de
+    // umbrales (que es para alertas automáticas de signos vitales).
+    const shouldNotifyWhatsapp =
+      alert.alert_type === "sos_manual" ? true : (threshold?.notify_whatsapp ?? true);
 
     const [{ data: patient }, { data: booking }] = await Promise.all([
       supabase.from("profiles").select("full_name, phone").eq("user_id", alert.patient_id).maybeSingle(),
@@ -135,15 +140,26 @@ Deno.serve(async (req) => {
 
     const label = ALERT_LABELS[alert.alert_type] ?? alert.alert_type ?? "Alerta clínica";
     const emoji = SEVERITY_EMOJI[alert.severity] ?? "⚠️";
+    const isSos = alert.alert_type === "sos_manual";
     const valueStr = alert.unit ? `${alert.actual_value} ${alert.unit}` : `${alert.actual_value}`;
+    const locationLine =
+      alert.lat != null && alert.lng != null
+        ? `\n📍 Ubicación: https://www.google.com/maps?q=${alert.lat},${alert.lng}\n`
+        : "";
 
-    const message =
-      `${emoji} HUMANIX · ALERTA CLÍNICA\n\n` +
-      `Paciente: ${patient?.full_name ?? "Paciente"}\n` +
-      `Evento: ${label}\n` +
-      `Valor registrado: ${valueStr}\n` +
-      `Severidad: ${alert.severity?.toUpperCase() ?? "MEDIA"}\n\n` +
-      `Ver detalle y monitoreo en vivo:\nhttps://humanix.lat/dashboard/monitoreo`;
+    const message = isSos
+      ? `🆘 HUMANIX · SOS ACTIVADO\n\n` +
+        `${patient?.full_name ?? "Un paciente"} presionó el botón de pánico y necesita ayuda YA.\n` +
+        locationLine +
+        `\nContáctalo de inmediato y, si es necesario, llama a la línea de emergencias 123.\n\n` +
+        `Ver monitoreo en vivo:\nhttps://humanix.lat/dashboard/monitoreo`
+      : `${emoji} HUMANIX · ALERTA CLÍNICA\n\n` +
+        `Paciente: ${patient?.full_name ?? "Paciente"}\n` +
+        `Evento: ${label}\n` +
+        `Valor registrado: ${valueStr}\n` +
+        `Severidad: ${alert.severity?.toUpperCase() ?? "MEDIA"}\n` +
+        locationLine +
+        `\nVer detalle y monitoreo en vivo:\nhttps://humanix.lat/dashboard/monitoreo`;
 
     let sentAny = false;
     if (shouldNotifyWhatsapp) {

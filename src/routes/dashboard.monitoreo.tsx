@@ -11,6 +11,7 @@ import { ClinicalMonitor } from "@/components/humanix/ClinicalMonitor";
 import { AlertSystem } from "@/components/humanix/AlertSystem";
 import { PatientRiskCard } from "@/components/humanix/PatientRiskCard";
 import { WearableConnections } from "@/components/humanix/WearableConnections";
+import { SosFamiliarButton } from "@/components/humanix/SosFamiliarButton";
 import {
   Loader2,
   Heart,
@@ -174,6 +175,15 @@ function MonitoreoPage() {
               </span>
             </div>
           </div>
+          {!targetPatientId && (
+            <div className="relative mt-4 flex items-center justify-between gap-3 rounded-xl border border-red-600/20 bg-red-600/5 p-3">
+              <p className="text-xs text-muted-foreground max-w-[60%]">
+                ¿Necesitas ayuda urgente? Avisa a tu familia y a tu profesional al instante con tu
+                ubicación.
+              </p>
+              <SosFamiliarButton patientId={patientId} />
+            </div>
+          )}
         </div>
 
         {/* Patient selector for clinicians */}

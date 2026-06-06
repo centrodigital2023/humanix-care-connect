@@ -122,6 +122,7 @@ const ALERT_LABELS: Record<string, string> = {
   inactivity:       "Inactividad prolongada",
   high_respiration: "Taquipnea",
   abnormal_glucose: "Glucosa alterada",
+  sos_manual:       "SOS · Botón de pánico",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
