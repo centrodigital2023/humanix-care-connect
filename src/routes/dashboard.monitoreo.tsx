@@ -10,6 +10,7 @@ import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { ClinicalMonitor } from "@/components/humanix/ClinicalMonitor";
 import { AlertSystem } from "@/components/humanix/AlertSystem";
 import { PatientRiskCard } from "@/components/humanix/PatientRiskCard";
+import { WearableConnections } from "@/components/humanix/WearableConnections";
 import {
   Loader2,
   Heart,
@@ -23,7 +24,6 @@ import {
   Crown,
   Info,
   Sparkles,
-  Smartphone,
   Upload,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -212,24 +212,8 @@ function MonitoreoPage() {
           </Card>
         )}
 
-        {/* Mobile device sync info */}
-        <Card className="p-3 border-violet-500/20 bg-gradient-to-r from-violet-500/5 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
-              <Smartphone className="h-4 w-4 text-violet-600" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs font-semibold">Sincroniza tu wearable</p>
-              <p className="text-[10px] text-muted-foreground truncate">
-                Apple Watch · Garmin · Fitbit · Tensiómetro Bluetooth · Pulsioxímetro inalámbrico
-              </p>
-            </div>
-            <Button variant="outline" size="sm" className="h-7 text-xs ml-auto flex-shrink-0">
-              <Sparkles className="h-3 w-3 mr-1 text-violet-500" />
-              Conectar
-            </Button>
-          </div>
-        </Card>
+        {/* Vinculación de wearables (solo sobre los propios datos del usuario) */}
+        {!targetPatientId && <WearableConnections patientId={patientId} />}
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-muted/50 rounded-xl overflow-x-auto">

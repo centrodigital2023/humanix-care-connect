@@ -106,3 +106,8 @@ verify_jwt = true
 
 [functions.nasa-proxy]
 verify_jwt = false
+
+# Llamado por la app móvil / agregadores de wearables con un secreto
+# compartido propio (X-Wearable-Secret), no con un JWT de Supabase.
+[functions.wearable-ingest]
+verify_jwt = false
