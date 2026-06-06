@@ -292,11 +292,10 @@ export function LiveMarketplaceMap({
     try {
       const [proRes, famRes, instRes] = await Promise.all([
         supabase
-          .from("professional_profiles")
+          .from("public_professionals_safe")
           .select(
             "user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, profiles:user_id(full_name, avatar_url, phone)",
           )
-          .or("available.eq.true,availability_status.in.(available,busy)")
           .not("lat", "is", null)
           .not("lng", "is", null)
           .limit(200),
@@ -305,13 +304,10 @@ export function LiveMarketplaceMap({
           .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp, profiles:user_id(full_name, avatar_url, phone)")
           .limit(200),
         supabase
-          .from("institution_profiles")
+          .from("public_institutions_safe")
           .select(
             "user_id, lat, lng, institution_name, city, institution_type, visible_on_map, profiles:user_id(full_name, avatar_url, phone)",
           )
-          .eq("visible_on_map", true)
-          .not("lat", "is", null)
-          .not("lng", "is", null)
           .limit(200),
       ]);
 
