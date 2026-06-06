@@ -27,6 +27,7 @@ import {
   ClipboardList,
   Wallet,
   Sparkles,
+  Heart,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,7 @@ import { SmartInstitutionProfileForm } from "@/components/humanix/SmartInstituti
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { NotificationsBell } from "@/components/humanix/NotificationsBell";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
+import { InstitutionClinicalMonitoring } from "@/components/humanix/InstitutionClinicalMonitoring";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { toast } from "sonner";
@@ -62,17 +64,19 @@ type Tab =
   | "talento"
   | "operaciones"
   | "pacientes"
+  | "monitoreo"
   | "agenda"
   | "perfil";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "inicio", label: "Inicio", icon: <LayoutDashboard className="h-5 w-5" /> },
-  { id: "ofertas", label: "Ofertas", icon: <Briefcase className="h-5 w-5" /> },
-  { id: "talento", label: "Talento", icon: <Users className="h-5 w-5" /> },
-  { id: "operaciones", label: "Ops", icon: <BarChart3 className="h-5 w-5" /> },
-  { id: "pacientes", label: "Pacientes", icon: <Stethoscope className="h-5 w-5" /> },
-  { id: "agenda", label: "Agenda", icon: <CalendarDays className="h-5 w-5" /> },
-  { id: "perfil", label: "Perfil", icon: <UserCircle className="h-5 w-5" /> },
+  { id: "inicio",     label: "Inicio",     icon: <LayoutDashboard className="h-5 w-5" /> },
+  { id: "ofertas",    label: "Ofertas",    icon: <Briefcase className="h-5 w-5" /> },
+  { id: "talento",    label: "Talento",    icon: <Users className="h-5 w-5" /> },
+  { id: "operaciones",label: "Ops",        icon: <BarChart3 className="h-5 w-5" /> },
+  { id: "pacientes",  label: "Pacientes",  icon: <Stethoscope className="h-5 w-5" /> },
+  { id: "monitoreo",  label: "Monitoreo",  icon: <Heart className="h-5 w-5" /> },
+  { id: "agenda",     label: "Agenda",     icon: <CalendarDays className="h-5 w-5" /> },
+  { id: "perfil",     label: "Perfil",     icon: <UserCircle className="h-5 w-5" /> },
 ];
 
 type Offer = {
@@ -913,6 +917,11 @@ function InstitutionDashboard() {
           <div className="rounded-2xl border border-border bg-card/95 p-4">
             <EnhancedPatientsModule userId={user.id} />
           </div>
+        )}
+
+        {/* ══ TAB: MONITOREO ══ */}
+        {tab === "monitoreo" && (
+          <InstitutionClinicalMonitoring institutionId={user.id} />
         )}
 
         {/* ══ TAB: AGENDA ══ */}
