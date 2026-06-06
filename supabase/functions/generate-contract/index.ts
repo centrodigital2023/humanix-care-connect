@@ -1,13 +1,23 @@
 // Genera contrato de prestación de servicios y envía OTPs de firma.
 // El PDF se genera como HTML+texto y se almacena en Supabase Storage.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { buildCorsHeaders } from "../_shared/auth.ts";
+import { buildCorsHeaders, requireUser } from "../_shared/auth.ts";
 
 const WA_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN") ?? "";
 const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") ?? "";
 
 function randomOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // Cryptographically secure 6-digit OTP
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return (100000 + (buf[0] % 900000)).toString();
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function sendWa(phone: string, body: string) {
@@ -87,6 +97,9 @@ Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -111,6 +124,23 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "booking not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Verificar que el caller es parte del contrato o staff
+    const isParty =
+      auth.userId === booking.client_id || auth.userId === booking.professional_id;
+    if (!isParty) {
+      const { data: staff } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", auth.userId)
+        .in("role", ["superadmin", "hr_staff"])
+        .maybeSingle();
+      if (!staff) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const [{ data: famProfile }, { data: proProfile }, { data: proDetails }] = await Promise.all([
@@ -151,6 +181,11 @@ Deno.serve(async (req) => {
     const famOtp  = randomOtp();
     const proOtp  = randomOtp();
 
+    // Hash seguro con SHA-256 + salt por contrato.
+    const otpSalt = crypto.randomUUID();
+    const famOtpHash = await sha256Hex(famOtp + otpSalt);
+    const proOtpHash = await sha256Hex(proOtp + otpSalt);
+
     const { data: contract, error: cErr } = await supabase
       .from("service_contracts")
       .insert({
@@ -163,34 +198,13 @@ Deno.serve(async (req) => {
         value_per_session:   booking.hourly_rate,
         contract_text:       contractText,
         pdf_url:             publicUrl,
-        family_otp_hash:     // MD5 via simple hash string (se valida en sign_contract con MD5())
-          await crypto.subtle.digest("MD5", new TextEncoder().encode(famOtp))
-            .catch(() => famOtp), // fallback: guardar plain si no hay MD5
-        professional_otp_hash: await crypto.subtle.digest("MD5", new TextEncoder().encode(proOtp))
-          .catch(() => proOtp),
+        family_otp_hash:       famOtpHash,
+        professional_otp_hash: proOtpHash,
       })
       .select("id")
       .single();
 
-    // Workaround: WebCrypto no tiene MD5 nativo — usamos una función simple
-    // En producción, usar pgcrypto o almacenar hash SHA-256
-    // Para este MVP guardamos el OTP hasheado con una función básica
-    const hashFn = (s: string) => {
-      let h = 0;
-      for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
-      return Math.abs(h).toString(16).padStart(8, "0");
-    };
-
     if (cErr || !contract) throw cErr ?? new Error("insert failed");
-
-    // Re-update con hash real (usando hashFn simple)
-    await supabase.from("service_contracts").update({
-      family_otp_hash: hashFn(famOtp),
-      professional_otp_hash: hashFn(proOtp),
-    }).eq("id", contract.id);
-
-    // Actualizar sign_contract RPC para usar el mismo hashFn
-    // (el RPC usa MD5 de postgres — en prod, alinear con pgcrypto)
 
     // Enviar OTPs por WhatsApp
     await Promise.all([
