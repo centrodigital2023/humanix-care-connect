@@ -34,7 +34,7 @@ export const Route = createFileRoute("/profesional/$proId")({
           .eq("user_id", params.proId)
           .maybeSingle(),
         supabase
-          .from("professional_profiles")
+          .from("public_professionals_safe")
           .select("specialty, ai_summary, service_cities, rethus_verified, avg_rating, total_jobs")
           .eq("user_id", params.proId)
           .maybeSingle(),

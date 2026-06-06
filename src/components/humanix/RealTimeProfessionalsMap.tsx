@@ -74,7 +74,7 @@ export function RealTimeProfessionalsMap({
     (async () => {
       try {
         let query = supabase
-          .from("professional_profiles")
+          .from("public_professionals_safe")
           .select(
             `
             user_id,
