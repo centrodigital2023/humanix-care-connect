@@ -27,6 +27,92 @@ import { supabase as defaultSupabase } from "@/integrations/supabase/client";
 
 export type ChatPersona = "professional" | "family" | "institution" | "default";
 
+// ── Clinical types (Módulo 4-6) ──────────────────────────────────────────────
+
+export type VitalType =
+  | "heart_rate"
+  | "spo2"
+  | "temperature"
+  | "blood_pressure_sys"
+  | "blood_pressure_dia"
+  | "respiration_rate"
+  | "steps"
+  | "fall_detected"
+  | "glucose"
+  | "weight";
+
+export type RiskLevel = "low" | "medium" | "high" | "critical";
+
+export interface VitalDataPoint {
+  value: number;
+  recorded_at: string;
+  type?: VitalType;
+  unit?: string;
+}
+
+export interface ClinicalTrendResult {
+  vital_type: VitalType;
+  trend: "improving" | "stable" | "worsening" | "insufficient_data";
+  direction: "up" | "down" | "flat";
+  mean: number;
+  std_dev: number;
+  min: number;
+  max: number;
+  insight: string;
+  alert_risk: boolean;
+}
+
+export interface ClinicalAnomaly {
+  vital_type: VitalType;
+  recorded_at: string;
+  value: number;
+  z_score: number;
+  severity: "low" | "medium" | "high" | "critical";
+  description: string;
+}
+
+export interface RiskFactor {
+  name: string;
+  weight: number;
+  value: string | number;
+  description?: string;
+  direction?: "increase" | "decrease" | "neutral";
+}
+
+export interface ClinicalRiskResult {
+  patient_id: string;
+  score: number;
+  level: RiskLevel;
+  factors: RiskFactor[];
+  ai_summary: string;
+  recommendations: Array<{
+    priority: "urgent" | "high" | "medium" | "low";
+    action: string;
+    rationale?: string;
+  }>;
+  trend: "improving" | "stable" | "worsening";
+}
+
+export interface ClinicalReportResult {
+  period: "daily" | "weekly" | "monthly";
+  period_start: string;
+  period_end: string;
+  report_text: string;
+  summary: string;
+  vitals_summary: Record<VitalType, { mean: number; min: number; max: number; count: number }>;
+  alerts_count: number;
+  risk_score: number;
+  pdf_url?: string;
+}
+
+export interface ClinicalSummaryResult {
+  summary: string;
+  key_findings: string[];
+  recommendations: string[];
+  risk_level: RiskLevel;
+  follow_up_in_days: number;
+}
+
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
   content: string;
@@ -181,6 +267,44 @@ export interface HumanixAiClient {
     user_id: string;
   }): Promise<{ score: number; signals: Record<string, unknown> }>;
 
+  // ── Clinical AI (Módulo 4-6) ──────────────────────────────────────────────
+
+  /** Analiza tendencias de signos vitales de un paciente en el período indicado */
+  analyzeTrends(input: {
+    patient_id: string;
+    vital_types?: VitalType[];
+    days?: number;
+  }): Promise<{ trends: ClinicalTrendResult[]; overall_insight: string }>;
+
+  /** Detecta anomalías estadísticas en una serie de signos vitales */
+  detectAnomalies(input: {
+    patient_id: string;
+    vital_signs: VitalDataPoint[];
+    sensitivity?: "low" | "medium" | "high";
+  }): Promise<{ anomalies: ClinicalAnomaly[]; risk_score: number }>;
+
+  /** Calcula el score de riesgo clínico del paciente con IA */
+  patientRiskScore(input: {
+    patient_id: string;
+    include_history?: boolean;
+  }): Promise<ClinicalRiskResult>;
+
+  /** Genera un reporte clínico automático para el período indicado */
+  generateClinicalReport(input: {
+    patient_id: string;
+    period: "daily" | "weekly" | "monthly";
+    period_start?: string;
+    period_end?: string;
+  }): Promise<ClinicalReportResult>;
+
+  /** Genera un resumen clínico narrativo para un profesional o familia */
+  clinicalSummary(input: {
+    patient_id: string;
+    audience: "professional" | "family" | "eps";
+    vital_signs?: VitalDataPoint[];
+    include_recommendations?: boolean;
+  }): Promise<ClinicalSummaryResult>;
+
   raw<TRes = unknown, TBody = unknown>(
     fnName: string,
     body?: TBody,
@@ -260,6 +384,25 @@ export function createHumanixAi(config: HumanixAiConfig): HumanixAiClient {
       call("document-verifier", { body: { document_url, document_type } }),
 
     socialTrustScore: ({ user_id }) => call("social-trust-score", { body: { user_id } }),
+
+    // ── Clinical AI ─────────────────────────────────────────────────────────
+
+    analyzeTrends: ({ patient_id, vital_types, days = 7 }) =>
+      call("clinical-trends", { body: { patient_id, vital_types, days } }),
+
+    detectAnomalies: ({ patient_id, vital_signs, sensitivity = "medium" }) =>
+      call("clinical-anomalies", { body: { patient_id, vital_signs, sensitivity } }),
+
+    patientRiskScore: ({ patient_id, include_history = true }) =>
+      call("patient-risk-score", { body: { patient_id, include_history } }),
+
+    generateClinicalReport: ({ patient_id, period, period_start, period_end }) =>
+      call("clinical-report", { body: { patient_id, period, period_start, period_end } }),
+
+    clinicalSummary: ({ patient_id, audience, vital_signs, include_recommendations = true }) =>
+      call("clinical-summary", {
+        body: { patient_id, audience, vital_signs, include_recommendations },
+      }),
 
     raw: (fnName, body, signal) => call(fnName, { body, signal }),
   };

@@ -67,7 +67,9 @@ import { Route as InstitutionProfileRouteImport } from './routes/institution.pro
 import { Route as InstitutionFormsRouteImport } from './routes/institution.forms'
 import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsapp'
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
+import { Route as DashboardMonitoreoRouteImport } from './routes/dashboard.monitoreo'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
+import { Route as DashboardEpsRouteImport } from './routes/dashboard.eps'
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 import { Route as BBannerIdRouteImport } from './routes/b.$bannerId'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
@@ -362,9 +364,19 @@ const DashboardProfesionalRoute = DashboardProfesionalRouteImport.update({
   path: '/profesional',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardMonitoreoRoute = DashboardMonitoreoRouteImport.update({
+  id: '/monitoreo',
+  path: '/monitoreo',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardInstitucionRoute = DashboardInstitucionRouteImport.update({
   id: '/institucion',
   path: '/institucion',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardEpsRoute = DashboardEpsRouteImport.update({
+  id: '/eps',
+  path: '/eps',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardFamiliaRoute = DashboardFamiliaRouteImport.update({
@@ -426,8 +438,10 @@ export interface FileRoutesByFullPath {
   '/terminos': typeof TerminosRoute
   '/verificar': typeof VerificarRoute
   '/b/$bannerId': typeof BBannerIdRoute
+  '/dashboard/eps': typeof DashboardEpsRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
+  '/dashboard/monitoreo': typeof DashboardMonitoreoRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/institution/forms': typeof InstitutionFormsRoute
@@ -488,8 +502,10 @@ export interface FileRoutesByTo {
   '/terminos': typeof TerminosRoute
   '/verificar': typeof VerificarRoute
   '/b/$bannerId': typeof BBannerIdRoute
+  '/dashboard/eps': typeof DashboardEpsRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
+  '/dashboard/monitoreo': typeof DashboardMonitoreoRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/institution/forms': typeof InstitutionFormsRoute
@@ -553,8 +569,10 @@ export interface FileRoutesById {
   '/terminos': typeof TerminosRoute
   '/verificar': typeof VerificarRoute
   '/b/$bannerId': typeof BBannerIdRoute
+  '/dashboard/eps': typeof DashboardEpsRoute
   '/dashboard/familia': typeof DashboardFamiliaRouteWithChildren
   '/dashboard/institucion': typeof DashboardInstitucionRoute
+  '/dashboard/monitoreo': typeof DashboardMonitoreoRoute
   '/dashboard/profesional': typeof DashboardProfesionalRoute
   '/dashboard/whatsapp': typeof DashboardWhatsappRoute
   '/institution/forms': typeof InstitutionFormsRoute
@@ -619,8 +637,10 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/verificar'
     | '/b/$bannerId'
+    | '/dashboard/eps'
     | '/dashboard/familia'
     | '/dashboard/institucion'
+    | '/dashboard/monitoreo'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
     | '/institution/forms'
@@ -681,8 +701,10 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/verificar'
     | '/b/$bannerId'
+    | '/dashboard/eps'
     | '/dashboard/familia'
     | '/dashboard/institucion'
+    | '/dashboard/monitoreo'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
     | '/institution/forms'
@@ -745,8 +767,10 @@ export interface FileRouteTypes {
     | '/terminos'
     | '/verificar'
     | '/b/$bannerId'
+    | '/dashboard/eps'
     | '/dashboard/familia'
     | '/dashboard/institucion'
+    | '/dashboard/monitoreo'
     | '/dashboard/profesional'
     | '/dashboard/whatsapp'
     | '/institution/forms'
@@ -1225,11 +1249,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardProfesionalRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/monitoreo': {
+      id: '/dashboard/monitoreo'
+      path: '/monitoreo'
+      fullPath: '/dashboard/monitoreo'
+      preLoaderRoute: typeof DashboardMonitoreoRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/institucion': {
       id: '/dashboard/institucion'
       path: '/institucion'
       fullPath: '/dashboard/institucion'
       preLoaderRoute: typeof DashboardInstitucionRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/eps': {
+      id: '/dashboard/eps'
+      path: '/eps'
+      fullPath: '/dashboard/eps'
+      preLoaderRoute: typeof DashboardEpsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/dashboard/familia': {
@@ -1268,16 +1306,20 @@ const DashboardFamiliaRouteWithChildren =
   DashboardFamiliaRoute._addFileChildren(DashboardFamiliaRouteChildren)
 
 interface DashboardRouteChildren {
+  DashboardEpsRoute: typeof DashboardEpsRoute
   DashboardFamiliaRoute: typeof DashboardFamiliaRouteWithChildren
   DashboardInstitucionRoute: typeof DashboardInstitucionRoute
+  DashboardMonitoreoRoute: typeof DashboardMonitoreoRoute
   DashboardProfesionalRoute: typeof DashboardProfesionalRoute
   DashboardWhatsappRoute: typeof DashboardWhatsappRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardEpsRoute: DashboardEpsRoute,
   DashboardFamiliaRoute: DashboardFamiliaRouteWithChildren,
   DashboardInstitucionRoute: DashboardInstitucionRoute,
+  DashboardMonitoreoRoute: DashboardMonitoreoRoute,
   DashboardProfesionalRoute: DashboardProfesionalRoute,
   DashboardWhatsappRoute: DashboardWhatsappRoute,
   DashboardIndexRoute: DashboardIndexRoute,
