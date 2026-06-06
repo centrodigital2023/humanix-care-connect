@@ -52,6 +52,23 @@ Deno.serve(async (req) => {
     const role =
       auth.userId === conv.professional_id ? "profesional de salud" : "familia/IPS contratante";
 
+    // Consumir 1 crédito IA antes de invocar el modelo: valida el cupo mensual
+    // según el plan del usuario y registra el gasto de forma atómica.
+    const { error: creditsErr } = await admin.rpc("consume_ai_credits", {
+      p_user_id: auth.userId,
+      p_feature: "chat-copilot",
+      p_amount: 1,
+    });
+    if (creditsErr) {
+      if (creditsErr.message?.includes("ai_credits_exhausted")) {
+        return new Response(
+          JSON.stringify({ error: "Créditos IA agotados para este mes. Mejora tu plan para obtener más." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      throw creditsErr;
+    }
+
     const { data: msgs } = await admin
       .from("messages")
       .select("sender_id,content,created_at,is_ai_suggestion")
@@ -104,12 +121,6 @@ Deno.serve(async (req) => {
     const aiData = await aiResp.json();
     const call = aiData.choices?.[0]?.message?.tool_calls?.[0];
     const parsed = call ? JSON.parse(call.function.arguments || "{}") : { suggestions: [] };
-
-    await admin.from("ai_credits_ledger").insert({
-      user_id: auth.userId,
-      feature: "chat-copilot",
-      credits_used: 1,
-    });
 
     return new Response(JSON.stringify({ suggestions: parsed.suggestions ?? [] }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -24,7 +24,8 @@ export type PlanFeature =
   | "multi_user_roles"
   | "pipeline_scoring"
   | "cv_rethus_consistency"
-  | "priority_support";
+  | "priority_support"
+  | "branch_billing";
 
 export type PlanDef = {
   key: PlanKey;
@@ -100,18 +101,19 @@ export const PLAN_CATALOG: Record<PlanKey, PlanDef> = {
   },
   institution_monthly: {
     key: "institution_monthly",
-    label: "Institución (IPS)",
+    label: "IPS Mejorado",
     tier: 3,
-    amountCOP: 99000,
-    priceLabel: "Desde COP 99.000",
-    priceNote: "/mes",
-    audience: "Clínicas, hospitales y agencias de cuidado.",
+    amountCOP: 299_000,
+    priceLabel: "Desde COP 299.000",
+    priceNote: "/mes · 1 sede incluida",
+    audience: "Redes de IPS, clínicas y hospitales con varias sedes.",
     features: [
       "ai_credits",
       "multi_user_roles",
       "pipeline_scoring",
       "cv_rethus_consistency",
       "priority_support",
+      "branch_billing",
     ],
     featuresLabel: [
       "Bolsa de créditos IA mensual",
@@ -119,6 +121,7 @@ export const PLAN_CATALOG: Record<PlanKey, PlanDef> = {
       "Pipeline de candidatos con scoring IA",
       "Detección de inconsistencias en CVs y RETHUS",
       "Soporte prioritario y onboarding asistido",
+      "Cobro por sucursales: COP 299.000 base + COP 50.000 por sede adicional",
     ],
   },
 };
@@ -155,6 +158,7 @@ export const FEATURE_MIN_PLAN: Record<PlanFeature, PlanKey> = {
   pipeline_scoring: "institution_monthly",
   cv_rethus_consistency: "institution_monthly",
   priority_support: "institution_monthly",
+  branch_billing: "institution_monthly",
 };
 
 export function tierOf(plan: PlanKey | string | null | undefined): number {
@@ -207,9 +211,16 @@ export type InstitutionBillingConfig = {
   graceDays: number;
 };
 
+/**
+ * Plan IPS Mejorado — cobro por sucursales.
+ * Pensado para redes de IPS/clínicas con varias sedes: precio base cubre la
+ * sede principal + el cupo de profesionales, y cada sede adicional se cobra
+ * aparte (más caro que un profesional extra porque implica un nuevo "tenant"
+ * operativo: agenda, cumplimiento y KPIs propios en el dashboard EPS).
+ */
 export const INSTITUTION_BILLING: InstitutionBillingConfig = {
-  basePriceCOP: 99_000,
-  extraBranchCOP: 29_000,
+  basePriceCOP: 299_000,
+  extraBranchCOP: 50_000,
   extraProfessionalCOP: 5_000,
   includedProfessionals: 10,
   includedBranches: 1,

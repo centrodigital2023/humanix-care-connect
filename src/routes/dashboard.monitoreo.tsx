@@ -148,6 +148,34 @@ function MonitoreoPage() {
       badge={{ label: "Live", tone: "bio" }}
     >
       <div className="space-y-5 max-w-4xl mx-auto">
+        {/* Hero premium */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-biosensor/10 via-background to-fuchsia-neural/10 border border-border p-5">
+          <div className="absolute -left-10 -bottom-14 h-40 w-40 rounded-full bg-biosensor/10 blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-biosensor/10 border border-biosensor/20 flex items-center justify-center flex-shrink-0">
+                <Heart className="h-6 w-6 text-biosensor animate-pulse" />
+              </div>
+              <div>
+                <p className="text-base font-bold font-display leading-tight">
+                  {!targetPatientId ? `Hola, ${user.fullName.split(" ")[0]}` : "Monitoreo del paciente"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Signos vitales, alertas e IA clínica sincronizados en tiempo real
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> En vivo
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/20 font-medium">
+                <Sparkles className="h-3 w-3" /> Humanix AI
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Patient selector for clinicians */}
         {isClinician && (
           <Card className="p-4 border-sky-500/30 bg-sky-500/5">

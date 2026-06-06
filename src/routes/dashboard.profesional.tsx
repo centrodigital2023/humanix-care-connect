@@ -27,6 +27,7 @@ import {
   AlertCircle,
   CircleCheck,
   BadgeCheck,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,8 @@ import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { ReferencesManager } from "@/components/humanix/ReferencesManager";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
+import { WalletPanel } from "@/components/humanix/WalletPanel";
+import { AiCreditsBalance } from "@/components/humanix/AiCreditsBalance";
 import { NotificationsBell } from "@/components/humanix/NotificationsBell";
 import { PublishGate } from "@/components/humanix/PublishGate";
 import { DangerZoneCard } from "@/components/humanix/DangerZoneCard";
@@ -666,6 +669,19 @@ function ProDashboard() {
               <QuickAction icon={<CalendarDays className="h-5 w-5 text-biosensor" />} label="Mi agenda" sub="Disponibilidad" onClick={() => setTab("agenda")} />
               <QuickAction icon={<TrendingUp className="h-5 w-5 text-fuchsia-neural" />} label="Re-evaluar Trust" sub={`Score: ${trust}/100`} onClick={validateWithAI} loading={validating} />
             </div>
+
+            {/* Billetera — saldo, movimientos y retiros Nequi/PSE/RappiPay */}
+            {userId && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold flex items-center gap-1.5">
+                  <Wallet className="h-4 w-4 text-emerald-600" /> Mi billetera
+                </p>
+                <WalletPanel userId={userId} />
+              </div>
+            )}
+
+            {/* Créditos IA — saldo y consumo del cupo mensual */}
+            {userId && <AiCreditsBalance userId={userId} />}
 
             {/* Referidos — gana meses gratis */}
             {userId && <ReferralCard userId={userId} />}

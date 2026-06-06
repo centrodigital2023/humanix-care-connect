@@ -170,6 +170,33 @@ function EPSPortalPage() {
       badge={{ label: "EPS", tone: "cyber" }}
     >
       <div className="space-y-5 max-w-5xl mx-auto">
+        {/* Hero ejecutivo premium */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-biosensor/10 via-background to-fuchsia-neural/10 border border-border p-5">
+          <div className="absolute -right-12 -top-12 h-44 w-44 rounded-full bg-fuchsia-neural/10 blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-biosensor/10 border border-biosensor/20 flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-6 w-6 text-biosensor" />
+              </div>
+              <div>
+                <p className="text-base font-bold font-display leading-tight">{user.fullName}</p>
+                <p className="text-xs text-muted-foreground">Centro de mando clínico · Multi-tenant</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-biosensor/10 text-biosensor border border-biosensor/20 font-medium">
+                <Heart className="h-3 w-3" /> Monitoreo en vivo
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-fuchsia-neural/10 text-fuchsia-neural border border-fuchsia-neural/20 font-medium">
+                <Stethoscope className="h-3 w-3" /> IA clínica Humanix
+              </span>
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-medium">
+                <ShieldCheck className="h-3 w-3" /> HIPAA · GDPR ready
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-muted/50 rounded-xl overflow-x-auto">
           {TABS.map((t) => (

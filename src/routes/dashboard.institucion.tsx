@@ -25,6 +25,8 @@ import {
   Target,
   Stethoscope,
   ClipboardList,
+  Wallet,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,6 +39,9 @@ import { EnhancedAgendaModule } from "@/components/humanix/EnhancedAgendaModule"
 import { EnhancedReportsWithCRMModule } from "@/components/humanix/EnhancedReportsWithCRMModule";
 import { TalentTab, type ProSummary } from "@/components/humanix/TalentTab";
 import { EnhancedInstitutionOperations } from "@/components/humanix/EnhancedInstitutionOperations";
+import { WalletPanel } from "@/components/humanix/WalletPanel";
+import { AiCreditsBalance } from "@/components/humanix/AiCreditsBalance";
+import { IpsBranchBilling } from "@/components/humanix/IpsBranchBilling";
 import { SmartInstitutionProfileForm } from "@/components/humanix/SmartInstitutionProfileForm";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { NotificationsBell } from "@/components/humanix/NotificationsBell";
@@ -888,6 +893,18 @@ function InstitutionDashboard() {
               <p className="text-sm font-semibold mb-4">Reportes y CRM</p>
               <EnhancedReportsWithCRMModule userId={user.id} />
             </div>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-1.5">
+                <Wallet className="h-4 w-4 text-emerald-600" /> Billetera institucional
+              </p>
+              <WalletPanel userId={user.id} />
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-fuchsia-neural" /> Bolsa de créditos IA
+              </p>
+              <AiCreditsBalance userId={user.id} />
+            </div>
           </div>
         )}
 
@@ -952,6 +969,13 @@ function InstitutionDashboard() {
                   </div>
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-sm font-semibold flex items-center gap-1.5">
+                <Building2 className="h-4 w-4 text-fuchsia-neural" /> Plan IPS Mejorado y sedes
+              </p>
+              <IpsBranchBilling institutionId={user.id} />
             </div>
 
             <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
