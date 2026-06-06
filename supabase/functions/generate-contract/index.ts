@@ -1,13 +1,23 @@
 // Genera contrato de prestación de servicios y envía OTPs de firma.
 // El PDF se genera como HTML+texto y se almacena en Supabase Storage.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { buildCorsHeaders } from "../_shared/auth.ts";
+import { buildCorsHeaders, requireUser } from "../_shared/auth.ts";
 
 const WA_TOKEN = Deno.env.get("WHATSAPP_ACCESS_TOKEN") ?? "";
 const WA_PHONE_ID = Deno.env.get("WHATSAPP_PHONE_NUMBER_ID") ?? "";
 
 function randomOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  // Cryptographically secure 6-digit OTP
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return (100000 + (buf[0] % 900000)).toString();
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function sendWa(phone: string, body: string) {
@@ -87,6 +97,9 @@ Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  const auth = await requireUser(req);
+  if (!auth.ok) return auth.response;
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -111,6 +124,23 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "booking not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Verificar que el caller es parte del contrato o staff
+    const isParty =
+      auth.userId === booking.client_id || auth.userId === booking.professional_id;
+    if (!isParty) {
+      const { data: staff } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", auth.userId)
+        .in("role", ["superadmin", "hr_staff"])
+        .maybeSingle();
+      if (!staff) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const [{ data: famProfile }, { data: proProfile }, { data: proDetails }] = await Promise.all([
