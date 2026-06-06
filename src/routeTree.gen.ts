@@ -69,8 +69,8 @@ import { Route as DashboardWhatsappRouteImport } from './routes/dashboard.whatsa
 import { Route as DashboardProfesionalRouteImport } from './routes/dashboard.profesional'
 import { Route as DashboardMonitoreoRouteImport } from './routes/dashboard.monitoreo'
 import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.institucion'
-import { Route as DashboardEpsRouteImport } from './routes/dashboard.eps'
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
+import { Route as DashboardEpsRouteImport } from './routes/dashboard.eps'
 import { Route as BBannerIdRouteImport } from './routes/b.$bannerId'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
@@ -374,14 +374,14 @@ const DashboardInstitucionRoute = DashboardInstitucionRouteImport.update({
   path: '/institucion',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardEpsRoute = DashboardEpsRouteImport.update({
-  id: '/eps',
-  path: '/eps',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardFamiliaRoute = DashboardFamiliaRouteImport.update({
   id: '/familia',
   path: '/familia',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardEpsRoute = DashboardEpsRouteImport.update({
+  id: '/eps',
+  path: '/eps',
   getParentRoute: () => DashboardRoute,
 } as any)
 const BBannerIdRoute = BBannerIdRouteImport.update({
@@ -1263,18 +1263,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardInstitucionRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/eps': {
-      id: '/dashboard/eps'
-      path: '/eps'
-      fullPath: '/dashboard/eps'
-      preLoaderRoute: typeof DashboardEpsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/familia': {
       id: '/dashboard/familia'
       path: '/familia'
       fullPath: '/dashboard/familia'
       preLoaderRoute: typeof DashboardFamiliaRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/eps': {
+      id: '/dashboard/eps'
+      path: '/eps'
+      fullPath: '/dashboard/eps'
+      preLoaderRoute: typeof DashboardEpsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/b/$bannerId': {
