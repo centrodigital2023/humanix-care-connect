@@ -1,16 +1,50 @@
 // Aplica la recompensa al referidor cuando el referido se suscribe.
 // Llamada desde mp-webhook o manualmente por superadmin.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-import { buildCorsHeaders } from "../_shared/auth.ts";
+import { buildCorsHeaders, requireUser } from "../_shared/auth.ts";
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
 
 Deno.serve(async (req) => {
   const corsHeaders = buildCorsHeaders(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Allow two call paths:
+  //  1. Service-to-service (e.g. mp-webhook) presenting X-Internal-Secret.
+  //  2. Authenticated superadmin via Bearer token.
+  const internalSecret = Deno.env.get("INTERNAL_WEBHOOK_SECRET") ?? "";
+  const providedSecret = req.headers.get("x-internal-secret") ?? "";
+  const isInternalCall =
+    internalSecret.length > 0 &&
+    providedSecret.length > 0 &&
+    timingSafeEqual(providedSecret, internalSecret);
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  if (!isInternalCall) {
+    const auth = await requireUser(req);
+    if (!auth.ok) return auth.response;
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.userId)
+      .eq("role", "superadmin")
+      .maybeSingle();
+    if (!role) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  }
 
   try {
     const { referred_id } = await req.json();
