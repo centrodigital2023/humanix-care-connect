@@ -2730,7 +2730,7 @@ function DocsTab({ reviewerId }: { reviewerId: string }) {
     if (status === "approved" && doc.doc_type === "rethus") {
       await supabase
         .from("professional_profiles")
-        .update({ rethus_verified: true })
+        .update({ rethus_verified: true, rethus_verified_at: new Date().toISOString() } as never)
         .eq("user_id", doc.user_id);
     }
     toast.success(status === "approved" ? "Aprobado" : "Rechazado");

@@ -39,6 +39,7 @@ import { Logo } from "@/components/humanix/Logo";
 import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { AvatarUploader } from "@/components/humanix/AvatarUploader";
 import { DocumentsManager } from "@/components/humanix/DocumentsManager";
+import { HealthComplianceCard } from "@/components/humanix/HealthComplianceCard";
 import { AvailabilityCalendar } from "@/components/humanix/AvailabilityCalendar";
 import { OnboardingTour } from "@/components/humanix/OnboardingTour";
 import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
@@ -958,6 +959,8 @@ function ProDashboard() {
                 <DocumentsManager userId={userId} onCvExtracted={(p) => { applyExtraction(p); setTab("perfil"); }} />
               </div>
             )}
+
+            {userId && <HealthComplianceCard professionalId={userId} />}
           </div>
         )}
 

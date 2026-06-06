@@ -111,3 +111,8 @@ verify_jwt = false
 # compartido propio (X-Wearable-Secret), no con un JWT de Supabase.
 [functions.wearable-ingest]
 verify_jwt = false
+
+# Disparado semanalmente por pg_cron + pg_net con un secreto compartido propio
+# (X-Rethus-Cron-Secret guardado en Supabase Vault), no con un JWT de Supabase.
+[functions.rethus-weekly-check]
+verify_jwt = false
