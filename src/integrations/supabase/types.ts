@@ -2593,6 +2593,132 @@ export type Database = {
         }
         Relationships: []
       }
+      public_institutions_safe: {
+        Row: {
+          city: string | null
+          institution_name: string | null
+          institution_type: string | null
+          lat: number | null
+          lng: number | null
+          user_id: string | null
+          verified: boolean | null
+          visible_on_map: boolean | null
+          website: string | null
+        }
+        Insert: {
+          city?: string | null
+          institution_name?: string | null
+          institution_type?: string | null
+          lat?: number | null
+          lng?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+          visible_on_map?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          city?: string | null
+          institution_name?: string | null
+          institution_type?: string | null
+          lat?: number | null
+          lng?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+          visible_on_map?: boolean | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      public_professionals_safe: {
+        Row: {
+          active: boolean | null
+          ai_preapproved: boolean | null
+          ai_summary: string | null
+          availability: Json | null
+          available: boolean | null
+          avatar_url: string | null
+          avg_rating: number | null
+          certifications: Json | null
+          gender: string | null
+          home_city: string | null
+          hourly_rate: number | null
+          languages: string[] | null
+          lat: number | null
+          lng: number | null
+          monthly_rate: number | null
+          published: boolean | null
+          reserved_until: string | null
+          rethus_verified: boolean | null
+          service_cities: string[] | null
+          shift_rate: number | null
+          specialty: string | null
+          sub_specialties: string[] | null
+          total_jobs: number | null
+          trust_score: number | null
+          user_id: string | null
+          verified: boolean | null
+          years_experience: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          ai_preapproved?: boolean | null
+          ai_summary?: string | null
+          availability?: Json | null
+          available?: boolean | null
+          avatar_url?: string | null
+          avg_rating?: number | null
+          certifications?: Json | null
+          gender?: string | null
+          home_city?: string | null
+          hourly_rate?: number | null
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          monthly_rate?: number | null
+          published?: boolean | null
+          reserved_until?: string | null
+          rethus_verified?: boolean | null
+          service_cities?: string[] | null
+          shift_rate?: number | null
+          specialty?: string | null
+          sub_specialties?: string[] | null
+          total_jobs?: number | null
+          trust_score?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+          years_experience?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          ai_preapproved?: boolean | null
+          ai_summary?: string | null
+          availability?: Json | null
+          available?: boolean | null
+          avatar_url?: string | null
+          avg_rating?: number | null
+          certifications?: Json | null
+          gender?: string | null
+          home_city?: string | null
+          hourly_rate?: number | null
+          languages?: string[] | null
+          lat?: number | null
+          lng?: number | null
+          monthly_rate?: number | null
+          published?: boolean | null
+          reserved_until?: string | null
+          rethus_verified?: boolean | null
+          service_cities?: string[] | null
+          shift_rate?: number | null
+          specialty?: string | null
+          sub_specialties?: string[] | null
+          total_jobs?: number | null
+          trust_score?: number | null
+          user_id?: string | null
+          verified?: boolean | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       public_profiles_safe: {
         Row: {
           avatar_url: string | null
