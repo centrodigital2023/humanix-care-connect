@@ -25,7 +25,6 @@ import {
   Thermometer,
   Wind,
   Droplets,
-  Footprints,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -200,90 +199,94 @@ export function AlertSystem({ patientId }: Props) {
   const [expandedVital, setExpandedVital] = useState<string | null>("heart_rate");
   const [tab, setTab] = useState<"config" | "history">("config");
 
+  // ── Thresholds stored in localStorage (no alert_thresholds table) ────────
+  const THRESH_KEY = `hwx_thresholds_${patientId}`;
+
   const loadData = useCallback(async () => {
     if (!patientId) return;
     try {
-      const [threshRes, alertsRes] = await Promise.all([
-        sb
-          .from("alert_thresholds")
-          .select("*")
-          .eq("patient_id", patientId),
-        sb
-          .from("clinical_alerts")
-          .select("*")
-          .eq("patient_id", patientId)
-          .order("created_at", { ascending: false })
-          .limit(50),
-      ]);
-
-      if (threshRes.data) {
-        const map: Record<string, AlertThreshold> = {};
-        for (const row of threshRes.data as AlertThreshold[]) {
-          map[row.vital_type] = row;
-        }
-
-        // Seed defaults for missing vitals
-        for (const [key, cfg] of Object.entries(VITAL_CONFIGS)) {
-          if (!map[key]) {
-            map[key] = {
-              patient_id: patientId,
-              vital_type: key,
-              min_value: cfg.defaultMin ?? null,
-              max_value: cfg.defaultMax ?? null,
-              enabled: true,
-              notify_whatsapp: true,
-              notify_push: true,
-              notify_email: false,
-            };
-          }
-        }
-        setThresholds(map);
+      // 1. Load thresholds from localStorage
+      let saved: Record<string, AlertThreshold> = {};
+      try { saved = JSON.parse(localStorage.getItem(THRESH_KEY) ?? "{}"); } catch { /* empty */ }
+      const map: Record<string, AlertThreshold> = {};
+      for (const [key, cfg] of Object.entries(VITAL_CONFIGS)) {
+        map[key] = saved[key] ?? {
+          patient_id: patientId,
+          vital_type: key,
+          min_value: cfg.defaultMin ?? null,
+          max_value: cfg.defaultMax ?? null,
+          enabled: true,
+          notify_whatsapp: true,
+          notify_push: true,
+          notify_email: false,
+        };
       }
+      setThresholds(map);
 
-      if (alertsRes.data) {
-        setAlertHistory(alertsRes.data as ClinicalAlert[]);
+      // 2. Derive alert history from vital_signs_readings where severity != 'normal'
+      const THRESH_MAP: Record<string, { min?: number; max?: number; unit: string }> = {
+        heart_rate:         { min: 50,   max: 110, unit: "lpm" },
+        spo2:               { min: 92,             unit: "%" },
+        temperature:        { min: 35.5, max: 37.5, unit: "°C" },
+        blood_pressure_sys: { min: 90,   max: 140, unit: "mmHg" },
+        blood_pressure_dia: { min: 60,   max: 90,  unit: "mmHg" },
+        respiration_rate:   { min: 10,   max: 25,  unit: "resp/min" },
+      };
+      const SEV_MAP: Record<string, ClinicalAlert["severity"]> = {
+        critical: "critical", high: "high", warning: "high", low: "low", medium: "medium",
+      };
+      const { data } = await sb
+        .from("vital_signs_readings")
+        .select("id, reading_type, value, unit, severity, recorded_at")
+        .eq("family_user_id", patientId)
+        .not("severity", "in", "(normal,Normal,NORMAL)")
+        .order("recorded_at", { ascending: false })
+        .limit(50);
+
+      if (data) {
+        const history: ClinicalAlert[] = (data as {
+          id: string; reading_type: string; value: number;
+          unit: string | null; severity: string; recorded_at: string;
+        }[]).map((r) => {
+          const t = THRESH_MAP[r.reading_type];
+          const isHigh = t?.max !== undefined && r.value > t.max;
+          const alertType = isHigh ? `high_${r.reading_type}` : `low_${r.reading_type}`;
+          return {
+            id: r.id,
+            alert_type: alertType,
+            actual_value: r.value,
+            unit: r.unit ?? t?.unit ?? null,
+            severity: SEV_MAP[r.severity.toLowerCase()] ?? "medium",
+            status: "active",
+            created_at: r.recorded_at,
+            acknowledged_at: null,
+            resolved_at: null,
+          };
+        });
+        setAlertHistory(history);
       }
     } catch (err) {
       console.warn("[AlertSystem] loadData:", err);
     } finally {
       setLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const saveThreshold = async (vitalType: string) => {
+  const saveThreshold = (vitalType: string) => {
     const t = thresholds[vitalType];
     if (!t) return;
     setSaving(vitalType);
     try {
-      const payload = {
-        patient_id: patientId,
-        vital_type: vitalType,
-        min_value: t.min_value,
-        max_value: t.max_value,
-        enabled: t.enabled,
-        notify_whatsapp: t.notify_whatsapp,
-        notify_push: t.notify_push,
-        notify_email: t.notify_email,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (t.id) {
-        await sb.from("alert_thresholds").update(payload).eq("id", t.id);
-      } else {
-        const { data, error } = await sb
-          .from("alert_thresholds")
-          .insert(payload)
-          .select()
-          .single();
-        if (error) throw error;
-        if (data) {
-          setThresholds((prev) => ({ ...prev, [vitalType]: { ...t, id: (data as AlertThreshold).id } }));
-        }
-      }
+      // Persist all thresholds to localStorage
+      const saved: Record<string, AlertThreshold> = {};
+      try { Object.assign(saved, JSON.parse(localStorage.getItem(THRESH_KEY) ?? "{}")); } catch { /* empty */ }
+      saved[vitalType] = t;
+      localStorage.setItem(THRESH_KEY, JSON.stringify(saved));
       toast.success("Umbral guardado");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error al guardar");
@@ -299,17 +302,11 @@ export function AlertSystem({ patientId }: Props) {
     }));
   };
 
-  const resolveAlert = async (alertId: string) => {
-    const { error } = await sb
-      .from("clinical_alerts")
-      .update({ status: "resolved", resolved_at: new Date().toISOString() })
-      .eq("id", alertId);
-    if (!error) {
-      setAlertHistory((prev) =>
-        prev.map((a) => (a.id === alertId ? { ...a, status: "resolved" } : a)),
-      );
-      toast.success("Alerta resuelta");
-    }
+  const resolveAlert = (alertId: string) => {
+    setAlertHistory((prev) =>
+      prev.map((a) => (a.id === alertId ? { ...a, status: "resolved" } : a)),
+    );
+    toast.success("Alerta resuelta");
   };
 
   if (loading) {

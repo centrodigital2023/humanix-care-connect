@@ -58,6 +58,7 @@ import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { OpenFamilyNeedsList } from "@/components/humanix/OpenFamilyNeedsList";
 import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
 import { ReferralCard } from "@/components/humanix/ReferralCard";
+import { ClinicalMonitor } from "@/components/humanix/ClinicalMonitor";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -672,6 +673,20 @@ function ProDashboard() {
               <QuickAction icon={<TrendingUp className="h-5 w-5 text-fuchsia-neural" />} label="Re-evaluar Trust" sub={`Score: ${trust}/100`} onClick={validateWithAI} loading={validating} />
               <QuickAction icon={<HeartPulse className="h-5 w-5 text-rose-500" />} label="Monitoreo de pacientes" sub="Signos vitales y alertas en vivo" to="/dashboard/monitoreo" />
             </div>
+
+            {/* Monitoreo Clínico propio del profesional */}
+            {userId && (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold flex items-center gap-1.5">
+                  <HeartPulse className="h-4 w-4 text-rose-500 animate-pulse" />
+                  Mis signos vitales
+                  <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+                  </span>
+                </p>
+                <ClinicalMonitor patientId={userId} showDeviceGuide compact />
+              </div>
+            )}
 
             {/* Billetera — saldo, movimientos y retiros Nequi/PSE/RappiPay */}
             {userId && (

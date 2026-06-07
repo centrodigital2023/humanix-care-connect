@@ -34,6 +34,8 @@ import { PendingRatingsCard } from "@/components/humanix/PendingRatingsCard";
 import { FamilyNeedsCalendar } from "@/components/humanix/FamilyNeedsCalendar";
 import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
 import { CareFeed } from "@/components/humanix/CareFeed";
+import { ClinicalMonitor } from "@/components/humanix/ClinicalMonitor";
+import { WearableConnections } from "@/components/humanix/WearableConnections";
 import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
@@ -554,26 +556,23 @@ function FamilyDashboard() {
           <Kpi icon={ShieldCheck} label="Cubiertas" value={filled} tone="bio" />
         </section>
 
-        {/* Monitoreo clínico en vivo */}
-        <Link
-          to="/dashboard/monitoreo"
-          className="flex items-center gap-4 rounded-2xl border border-rose-500/20 bg-gradient-to-r from-rose-500/10 via-card/95 to-card/95 p-5 transition hover:border-rose-500/40 hover:-translate-y-0.5"
-        >
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-rose-500/15 text-rose-500">
-            <Activity className="h-6 w-6" />
+        {/* Monitoreo clínico en vivo — panel embebido */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <Heart className="h-5 w-5 text-rose-500 animate-pulse" />
+              Monitoreo Clínico
+              <span className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 font-medium">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+              </span>
+            </h2>
+            <Link to="/dashboard/monitoreo" className="text-xs text-biosensor hover:underline flex items-center gap-1">
+              Ver completo <ChevronRight className="h-3 w-3" />
+            </Link>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold text-sm flex items-center gap-1.5">
-              <Heart className="h-3.5 w-3.5 text-rose-500" />
-              Monitoreo clínico en vivo
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Signos vitales en tiempo real, alertas automáticas y riesgo con IA — conecta wearables
-              y revisa el estado de tu ser querido al instante.
-            </p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-        </Link>
+          <WearableConnections patientId={user.id} />
+          <ClinicalMonitor patientId={user.id} showDeviceGuide={false} compact />
+        </section>
 
         {/* Buzón de postulaciones */}
         <section>

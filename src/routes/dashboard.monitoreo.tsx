@@ -113,12 +113,13 @@ function MonitoreoPage() {
         steps: "pasos",
       };
 
-      const { error } = await sb.from("vital_signs").insert({
-        patient_id: patientId,
-        type: manualVital.type,
+      const { error } = await sb.from("vital_signs_readings").insert({
+        family_user_id: patientId,
+        reading_type: manualVital.type,
         value: parseFloat(manualVital.value),
         unit: UNITS[manualVital.type] ?? manualVital.type,
-        device_source: "manual",
+        source: "manual",
+        severity: "normal",
         recorded_at: new Date().toISOString(),
       });
 

@@ -1,7 +1,8 @@
 /**
  * ClinicalMonitor — Panel de monitoreo clínico en tiempo real
- * Integra Apple HealthKit / Google Health Connect vía Supabase Realtime
- * Módulo 4: Monitoreo clínico + Módulo 5: Alertas
+ * Usa la tabla vital_signs_readings (family_user_id, reading_type, value,
+ * value_secondary, unit, severity, source, recorded_at).
+ * Las alertas se derivan en memoria de los umbrales clínicos.
  */
 import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,6 @@ import {
   RefreshCw,
   Smartphone,
   Bell,
-  BellOff,
   ChevronDown,
   ChevronUp,
   Info,
@@ -30,11 +30,8 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
-const sb = supabase as unknown as SupabaseClient;
-
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type VitalType =
   | "heart_rate"
@@ -46,38 +43,41 @@ export type VitalType =
   | "steps"
   | "fall_detected";
 
-interface VitalSign {
+/** Row from vital_signs_readings */
+interface VitalReading {
   id: string;
-  patient_id: string;
-  type: VitalType;
+  family_user_id: string;
+  reading_type: string;
   value: number;
-  unit: string;
-  device_source: string | null;
+  value_secondary: number | null;
+  unit: string | null;
+  severity: string;        // 'normal' | 'warning' | 'critical' | 'low' | 'high'
+  source: string;          // device source
   recorded_at: string;
-  alert_sent: boolean;
+  recorded_by: string | null;
+  patient_label: string | null;
 }
 
-interface ClinicalAlert {
+interface InMemoryAlert {
   id: string;
   alert_type: string;
   actual_value: number;
   unit: string | null;
   severity: "low" | "medium" | "high" | "critical";
-  status: string;
   created_at: string;
 }
 
-// ─── Clinical thresholds (Spanish clinical guidelines) ─────────────────────
+// ─── Clinical thresholds ──────────────────────────────────────────────────────
 
 const THRESHOLDS: Record<VitalType, { min?: number; max?: number; unit: string; range: string }> = {
-  heart_rate:         { min: 50,   max: 110,  unit: "lpm",         range: "50 – 110 lpm" },
-  spo2:               { min: 92,              unit: "%",           range: "≥ 92 %" },
-  temperature:        { min: 35.5, max: 37.5, unit: "°C",          range: "35.5 – 37.5 °C" },
-  blood_pressure_sys: { min: 90,   max: 140,  unit: "mmHg",        range: "90 – 140 mmHg" },
-  blood_pressure_dia: { min: 60,   max: 90,   unit: "mmHg",        range: "60 – 90 mmHg" },
-  respiration_rate:   { min: 10,   max: 25,   unit: "resp/min",    range: "10 – 25 resp/min" },
-  steps:              {                        unit: "pasos",       range: "meta 5000/día" },
-  fall_detected:      {                        unit: "",            range: "ninguna" },
+  heart_rate:         { min: 50,   max: 110,  unit: "lpm",      range: "50 – 110 lpm" },
+  spo2:               { min: 92,              unit: "%",         range: "≥ 92 %" },
+  temperature:        { min: 35.5, max: 37.5, unit: "°C",       range: "35.5 – 37.5 °C" },
+  blood_pressure_sys: { min: 90,   max: 140,  unit: "mmHg",     range: "90 – 140 mmHg" },
+  blood_pressure_dia: { min: 60,   max: 90,   unit: "mmHg",     range: "60 – 90 mmHg" },
+  respiration_rate:   { min: 10,   max: 25,   unit: "resp/min", range: "10 – 25 resp/min" },
+  steps:              {                        unit: "pasos",    range: "meta 5000/día" },
+  fall_detected:      {                        unit: "",         range: "ninguna" },
 };
 
 function computeStatus(type: VitalType, value: number): VitalStatus {
@@ -90,17 +90,35 @@ function computeStatus(type: VitalType, value: number): VitalStatus {
   return "normal";
 }
 
-// ─── Vital config (icon + label) ─────────────────────────────────────────────
+// ─── Vital metadata ───────────────────────────────────────────────────────────
 
 const VITAL_META: Record<VitalType, { icon: React.ReactNode; label: string }> = {
-  heart_rate:         { icon: <Heart className="h-4 w-4 text-rose-500" />,     label: "Frec. Cardíaca" },
-  spo2:               { icon: <Droplets className="h-4 w-4 text-sky-500" />,   label: "SpO₂" },
+  heart_rate:         { icon: <Heart className="h-4 w-4 text-rose-500" />,        label: "Frec. Cardíaca" },
+  spo2:               { icon: <Droplets className="h-4 w-4 text-sky-500" />,      label: "SpO₂" },
   temperature:        { icon: <Thermometer className="h-4 w-4 text-orange-500" />, label: "Temperatura" },
-  blood_pressure_sys: { icon: <Activity className="h-4 w-4 text-violet-500" />, label: "PA Sistólica" },
-  blood_pressure_dia: { icon: <Activity className="h-4 w-4 text-purple-500" />, label: "PA Diastólica" },
-  respiration_rate:   { icon: <Wind className="h-4 w-4 text-teal-500" />,      label: "Respiración" },
-  steps:              { icon: <Footprints className="h-4 w-4 text-lime-500" />, label: "Pasos hoy" },
+  blood_pressure_sys: { icon: <Activity className="h-4 w-4 text-violet-500" />,   label: "PA Sistólica" },
+  blood_pressure_dia: { icon: <Activity className="h-4 w-4 text-purple-500" />,   label: "PA Diastólica" },
+  respiration_rate:   { icon: <Wind className="h-4 w-4 text-teal-500" />,         label: "Respiración" },
+  steps:              { icon: <Footprints className="h-4 w-4 text-lime-500" />,   label: "Pasos hoy" },
   fall_detected:      { icon: <AlertTriangle className="h-4 w-4 text-red-500" />, label: "Caída" },
+};
+
+/** Map reading_type strings to VitalType */
+const READING_TYPE_MAP: Record<string, VitalType> = {
+  heart_rate: "heart_rate",
+  spo2: "spo2",
+  oxygen_saturation: "spo2",
+  temperature: "temperature",
+  body_temperature: "temperature",
+  blood_pressure_sys: "blood_pressure_sys",
+  blood_pressure_systolic: "blood_pressure_sys",
+  blood_pressure_dia: "blood_pressure_dia",
+  blood_pressure_diastolic: "blood_pressure_dia",
+  respiration_rate: "respiration_rate",
+  respiratory_rate: "respiration_rate",
+  steps: "steps",
+  step_count: "steps",
+  fall_detected: "fall_detected",
 };
 
 const SEVERITY_COLORS: Record<string, string> = {
@@ -110,62 +128,79 @@ const SEVERITY_COLORS: Record<string, string> = {
   critical: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20 animate-pulse",
 };
 
-const ALERT_LABELS: Record<string, string> = {
-  high_heart_rate:  "FC elevada",
-  low_heart_rate:   "FC baja",
-  low_spo2:         "SpO₂ baja",
-  high_temperature: "Fiebre",
-  low_temperature:  "Hipotermia",
-  high_blood_pressure: "HTA",
-  low_blood_pressure:  "Hipotensión",
-  fall_detected:    "Caída detectada",
-  inactivity:       "Inactividad prolongada",
-  high_respiration: "Taquipnea",
-  abnormal_glucose: "Glucosa alterada",
-  sos_manual:       "SOS · Botón de pánico",
+const ALERT_LABEL: Record<VitalType, { high: string; low: string }> = {
+  heart_rate:         { high: "FC elevada",    low: "FC baja" },
+  spo2:               { high: "SpO₂ elevada",  low: "SpO₂ baja" },
+  temperature:        { high: "Fiebre",         low: "Hipotermia" },
+  blood_pressure_sys: { high: "HTA sistólica",  low: "Hipotensión" },
+  blood_pressure_dia: { high: "HTA diastólica", low: "Hipotensión" },
+  respiration_rate:   { high: "Taquipnea",      low: "Bradipnea" },
+  steps:              { high: "",               low: "" },
+  fall_detected:      { high: "Caída detectada",low: "" },
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 interface Props {
   patientId: string;
-  bookingId?: string;
   showDeviceGuide?: boolean;
   compact?: boolean;
 }
 
-type VitalsMap = Partial<Record<VitalType, { latest: VitalSign; history: VitalDataPoint[] }>>;
+type VitalsMap = Partial<Record<VitalType, { latest: VitalReading; history: VitalDataPoint[] }>>;
 
 const VITAL_ORDER: VitalType[] = [
-  "heart_rate",
-  "spo2",
-  "temperature",
-  "blood_pressure_sys",
-  "blood_pressure_dia",
-  "respiration_rate",
-  "steps",
-  "fall_detected",
+  "heart_rate", "spo2", "temperature",
+  "blood_pressure_sys", "blood_pressure_dia",
+  "respiration_rate", "steps", "fall_detected",
 ];
 
-export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, compact = false }: Props) {
+export function ClinicalMonitor({ patientId, showDeviceGuide = true, compact = false }: Props) {
   const [vitals, setVitals] = useState<VitalsMap>({});
-  const [alerts, setAlerts] = useState<ClinicalAlert[]>([]);
+  const [alerts, setAlerts] = useState<InMemoryAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [showGuide, setShowGuide] = useState(false);
   const [alertsOpen, setAlertsOpen] = useState(true);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
+  // ── Build alerts in-memory from readings ──────────────────────────────────
+  const buildAlerts = useCallback((map: VitalsMap): InMemoryAlert[] => {
+    const result: InMemoryAlert[] = [];
+    for (const [typeKey, data] of Object.entries(map)) {
+      const type = typeKey as VitalType;
+      if (!data) continue;
+      const value = data.latest.value;
+      const status = computeStatus(type, value);
+      if (status === "normal" || type === "steps") continue;
+      const t = THRESHOLDS[type];
+      const isHigh = t.max !== undefined && value > t.max;
+      const label = ALERT_LABEL[type];
+      const alertLabel = isHigh ? label.high : label.low;
+      if (!alertLabel) continue;
+      result.push({
+        id: `${type}-${data.latest.id}`,
+        alert_type: alertLabel,
+        actual_value: value,
+        unit: t.unit || null,
+        severity: status === "critical" ? "critical" : "high",
+        created_at: data.latest.recorded_at,
+      });
+    }
+    return result;
+  }, []);
+
+  // ── Load vitals from vital_signs_readings ────────────────────────────────
   const loadVitals = useCallback(async () => {
     if (!patientId) return;
     try {
       const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
-      const { data, error } = await sb
-        .from("vital_signs")
-        .select("*")
-        .eq("patient_id", patientId)
+      const { data, error } = await supabase
+        .from("vital_signs_readings")
+        .select("id, family_user_id, reading_type, value, value_secondary, unit, severity, source, recorded_at, recorded_by, patient_label")
+        .eq("family_user_id", patientId)
         .gte("recorded_at", since)
         .order("recorded_at", { ascending: false })
         .limit(500);
@@ -174,53 +209,47 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
       if (!data) return;
 
       const map: VitalsMap = {};
-      for (const sign of (data as VitalSign[]).reverse()) {
-        const t = sign.type as VitalType;
-        if (!map[t]) {
-          map[t] = { latest: sign, history: [] };
+      for (const row of (data as VitalReading[]).reverse()) {
+        const vtype = READING_TYPE_MAP[row.reading_type];
+        if (!vtype) continue;
+        if (!map[vtype]) {
+          map[vtype] = { latest: row, history: [] };
         }
-        map[t]!.history.push({ value: sign.value, recorded_at: sign.recorded_at });
-        map[t]!.latest = sign;
+        map[vtype]!.history.push({ value: row.value, recorded_at: row.recorded_at });
+        map[vtype]!.latest = row;
+      }
+
+      // blood_pressure: if we have sys but not dia, try value_secondary
+      if (map["blood_pressure_sys"] && !map["blood_pressure_dia"]) {
+        const sec = map["blood_pressure_sys"]!.latest.value_secondary;
+        if (sec !== null && sec !== undefined) {
+          map["blood_pressure_dia"] = {
+            latest: { ...map["blood_pressure_sys"]!.latest, reading_type: "blood_pressure_dia", value: sec },
+            history: map["blood_pressure_sys"]!.history.map((h) => ({ ...h, value: sec })),
+          };
+        }
       }
 
       setVitals(map);
       setLastSync(new Date());
+      setAlerts(buildAlerts(map));
     } catch (err) {
       console.warn("[ClinicalMonitor] loadVitals:", err);
     }
-  }, [patientId]);
-
-  const loadAlerts = useCallback(async () => {
-    if (!patientId) return;
-    try {
-      const { data, error } = await sb
-        .from("clinical_alerts")
-        .select("id, alert_type, actual_value, unit, severity, status, created_at")
-        .eq("patient_id", patientId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-      setAlerts((data ?? []) as ClinicalAlert[]);
-    } catch (err) {
-      console.warn("[ClinicalMonitor] loadAlerts:", err);
-    }
-  }, [patientId]);
+  }, [patientId, buildAlerts]);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadVitals(), loadAlerts()]);
+    await loadVitals();
     setRefreshing(false);
-  }, [loadVitals, loadAlerts]);
+  }, [loadVitals]);
 
-  // Initial load
   useEffect(() => {
     setLoading(true);
-    Promise.all([loadVitals(), loadAlerts()]).finally(() => setLoading(false));
-  }, [loadVitals, loadAlerts]);
+    loadVitals().finally(() => setLoading(false));
+  }, [loadVitals]);
 
-  // Realtime subscription
+  // ── Realtime ──────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!patientId) return;
 
@@ -228,68 +257,50 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
       .channel(`clinical:${patientId}`)
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "vital_signs",
-          filter: `patient_id=eq.${patientId}`,
-        },
+        { event: "INSERT", schema: "public", table: "vital_signs_readings", filter: `family_user_id=eq.${patientId}` },
         (payload) => {
-          const sign = payload.new as VitalSign;
-          const t = sign.type as VitalType;
+          const row = payload.new as VitalReading;
+          const vtype = READING_TYPE_MAP[row.reading_type];
+          if (!vtype) return;
+
           setVitals((prev) => {
-            const existing = prev[t];
-            return {
+            const existing = prev[vtype];
+            const next = {
               ...prev,
-              [t]: {
-                latest: sign,
-                history: [
-                  ...(existing?.history ?? []).slice(-23),
-                  { value: sign.value, recorded_at: sign.recorded_at },
-                ],
+              [vtype]: {
+                latest: row,
+                history: [...(existing?.history ?? []).slice(-23), { value: row.value, recorded_at: row.recorded_at }],
               },
             };
+            // re-derive alerts
+            const newAlerts = buildAlerts(next);
+            setAlerts(newAlerts);
+            const status = computeStatus(vtype, row.value);
+            if (status !== "normal") {
+              const label = ALERT_LABEL[vtype];
+              const t = THRESHOLDS[vtype];
+              const isHigh = t.max !== undefined && row.value > t.max;
+              toast.warning(`${isHigh ? label.high : label.low}`, {
+                description: `${row.value} ${t.unit}`,
+              });
+            }
+            return next;
           });
           setLastSync(new Date());
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "clinical_alerts",
-          filter: `patient_id=eq.${patientId}`,
-        },
-        (payload) => {
-          const alert = payload.new as ClinicalAlert;
-          setAlerts((prev) => [alert, ...prev.slice(0, 19)]);
-          toast.warning(`Alerta clínica: ${ALERT_LABELS[alert.alert_type] ?? alert.alert_type}`, {
-            description: `${alert.actual_value} ${alert.unit ?? ""}`,
-          });
         },
       )
       .subscribe();
 
     channelRef.current = channel;
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [patientId]);
+    return () => { channel.unsubscribe(); };
+  }, [patientId, buildAlerts]);
 
-  const acknowledgeAlert = async (alertId: string) => {
-    const { error } = await sb
-      .from("clinical_alerts")
-      .update({ status: "acknowledged", acknowledged_at: new Date().toISOString() })
-      .eq("id", alertId);
-
-    if (!error) {
-      setAlerts((prev) => prev.filter((a) => a.id !== alertId));
-      toast.success("Alerta reconocida");
-    }
+  const dismissAlert = (id: string) => {
+    setDismissedAlerts((prev) => new Set([...prev, id]));
   };
 
-  const hasCritical = alerts.some((a) => a.severity === "critical");
+  const visibleAlerts = alerts.filter((a) => !dismissedAlerts.has(a.id));
+  const hasCritical = visibleAlerts.some((a) => a.severity === "critical");
 
   if (loading) {
     return (
@@ -307,7 +318,7 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
 
   return (
     <div className="space-y-5">
-      {/* Header bar */}
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-xl bg-rose-500/10 flex items-center justify-center">
@@ -317,7 +328,7 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
             <h3 className="font-semibold text-sm">Monitoreo Clínico</h3>
             {lastSync && (
               <p className="text-[10px] text-muted-foreground">
-                Última actualización {formatDistanceToNow(lastSync, { locale: es, addSuffix: true })}
+                Actualizado {formatDistanceToNow(lastSync, { locale: es, addSuffix: true })}
               </p>
             )}
           </div>
@@ -329,30 +340,17 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
         </div>
         <div className="flex items-center gap-2">
           {showDeviceGuide && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowGuide(!showGuide)}
-              className="h-7 text-xs gap-1"
-            >
-              <Smartphone className="h-3 w-3" />
-              Dispositivos
+            <Button variant="outline" size="sm" onClick={() => setShowGuide(!showGuide)} className="h-7 text-xs gap-1">
+              <Smartphone className="h-3 w-3" /> Dispositivos
             </Button>
           )}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={refresh}
-            disabled={refreshing}
-            className="h-7 text-xs gap-1"
-          >
-            <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} />
-            Actualizar
+          <Button variant="outline" size="sm" onClick={refresh} disabled={refreshing} className="h-7 text-xs gap-1">
+            <RefreshCw className={`h-3 w-3 ${refreshing ? "animate-spin" : ""}`} /> Actualizar
           </Button>
         </div>
       </div>
 
-      {/* Device integration guide */}
+      {/* Device guide */}
       {showGuide && (
         <Card className="p-4 border-sky-500/30 bg-sky-500/5">
           <div className="flex items-start gap-3">
@@ -360,30 +358,19 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
             <div className="space-y-2">
               <h4 className="font-semibold text-sm">Sincronización con dispositivos de salud</h4>
               <div className="grid sm:grid-cols-2 gap-3 text-xs text-muted-foreground">
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground flex items-center gap-1">
-                    <span>🍎</span> Apple HealthKit (iOS)
-                  </p>
-                  <p>Descarga la app Humanix en App Store → Ajustes → Salud → Activar sincronización automática</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground flex items-center gap-1">
-                    <span>🤖</span> Google Health Connect (Android)
-                  </p>
-                  <p>Instala Health Connect → Humanix → Permitir permisos → Sincronización cada 5 minutos</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground flex items-center gap-1">
-                    <Zap className="h-3 w-3 text-amber-500" /> Dispositivos IoT
-                  </p>
-                  <p>Pulsioxímetros, tensiómetros y termómetros Bluetooth compatibles con Humanix Connect SDK</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground flex items-center gap-1">
-                    <Activity className="h-3 w-3 text-violet-500" /> Registro manual
-                  </p>
-                  <p>Ingresa mediciones manualmente desde el portal del profesional en cada visita</p>
-                </div>
+                {[
+                  { icon: "🍎", title: "Apple HealthKit (iOS)", desc: "Descarga Humanix en App Store → Ajustes → Salud → Activar sincronización automática" },
+                  { icon: "🤖", title: "Google Health Connect (Android)", desc: "Instala Health Connect → Humanix → Permitir permisos → Sincronización cada 5 min" },
+                  { icon: <Zap className="h-3 w-3 text-amber-500 inline" />, title: "Dispositivos IoT", desc: "Pulsioxímetros, tensiómetros y termómetros Bluetooth compatibles con Humanix SDK" },
+                  { icon: <Activity className="h-3 w-3 text-violet-500 inline" />, title: "Registro manual", desc: "Ingresa mediciones manualmente desde el portal del profesional en cada visita" },
+                ].map((item, i) => (
+                  <div key={i} className="space-y-1">
+                    <p className="font-medium text-foreground flex items-center gap-1">
+                      <span>{item.icon}</span> {item.title}
+                    </p>
+                    <p>{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -391,53 +378,33 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
       )}
 
       {/* Active alerts */}
-      {alerts.length > 0 && (
+      {visibleAlerts.length > 0 && (
         <Card className={`border ${hasCritical ? "border-red-500/40 bg-red-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
-          <button
-            onClick={() => setAlertsOpen(!alertsOpen)}
-            className="w-full flex items-center justify-between p-3 text-sm font-semibold"
-          >
+          <button onClick={() => setAlertsOpen(!alertsOpen)} className="w-full flex items-center justify-between p-3 text-sm font-semibold">
             <div className="flex items-center gap-2">
               <Bell className={`h-4 w-4 ${hasCritical ? "text-red-500 animate-bounce" : "text-amber-500"}`} />
-              <span>{alerts.length} alerta{alerts.length > 1 ? "s" : ""} activa{alerts.length > 1 ? "s" : ""}</span>
+              <span>{visibleAlerts.length} alerta{visibleAlerts.length > 1 ? "s" : ""} activa{visibleAlerts.length > 1 ? "s" : ""}</span>
             </div>
-            {alertsOpen ? (
-              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            )}
+            {alertsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
           </button>
           {alertsOpen && (
             <div className="px-3 pb-3 space-y-2">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="flex items-center justify-between gap-2 p-2 rounded-xl border bg-card"
-                >
+              {visibleAlerts.map((alert) => (
+                <div key={alert.id} className="flex items-center justify-between gap-2 p-2 rounded-xl border bg-card">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${SEVERITY_COLORS[alert.severity]}`}
-                    >
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full border whitespace-nowrap ${SEVERITY_COLORS[alert.severity]}`}>
                       {alert.severity.toUpperCase()}
                     </span>
                     <div className="min-w-0">
-                      <p className="text-xs font-medium truncate">
-                        {ALERT_LABELS[alert.alert_type] ?? alert.alert_type}
-                      </p>
+                      <p className="text-xs font-medium truncate">{alert.alert_type}</p>
                       <p className="text-[10px] text-muted-foreground">
                         {alert.actual_value} {alert.unit} ·{" "}
                         {formatDistanceToNow(new Date(alert.created_at), { locale: es, addSuffix: true })}
                       </p>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-6 text-[10px] px-2 whitespace-nowrap"
-                    onClick={() => acknowledgeAlert(alert.id)}
-                  >
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Reconocer
+                  <Button size="sm" variant="outline" className="h-6 text-[10px] px-2 whitespace-nowrap" onClick={() => dismissAlert(alert.id)}>
+                    <CheckCircle2 className="h-3 w-3 mr-1" /> OK
                   </Button>
                 </div>
               ))}
@@ -446,7 +413,7 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
         </Card>
       )}
 
-      {/* No data state */}
+      {/* No data */}
       {!hasData && (
         <Card className="p-8 text-center border-dashed">
           <div className="h-12 w-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-3">
@@ -457,12 +424,7 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
             Conecta un dispositivo compatible o pide al profesional que registre las mediciones durante la visita.
           </p>
           {showDeviceGuide && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="mt-3 text-xs"
-              onClick={() => setShowGuide(true)}
-            >
+            <Button size="sm" variant="outline" className="mt-3 text-xs" onClick={() => setShowGuide(true)}>
               Ver cómo conectar un dispositivo
             </Button>
           )}
@@ -479,12 +441,9 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
             const threshold = THRESHOLDS[type];
             const value = data?.latest?.value ?? null;
             const status: VitalStatus = value !== null ? computeStatus(type, value) : "unknown";
-
             const sortedHistory = data?.history ?? [];
             const lastTs = data?.latest?.recorded_at;
-            const lastUpdated = lastTs
-              ? formatDistanceToNow(new Date(lastTs), { locale: es, addSuffix: true })
-              : undefined;
+            const lastUpdated = lastTs ? formatDistanceToNow(new Date(lastTs), { locale: es, addSuffix: true }) : undefined;
 
             let trend: "up" | "down" | "stable" | undefined;
             if (sortedHistory.length >= 3) {
@@ -493,8 +452,7 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
               trend = Math.abs(diff) < 1 ? "stable" : diff > 0 ? "up" : "down";
             }
 
-            const deviceLabel = data?.latest?.device_source;
-            const online = !!deviceLabel && deviceLabel !== "manual";
+            const online = !!data?.latest?.source && data.latest.source !== "manual";
 
             return (
               <VitalSignsPanel
@@ -518,7 +476,6 @@ export function ClinicalMonitor({ patientId, bookingId, showDeviceGuide = true, 
         </div>
       )}
 
-      {/* Last data source */}
       {hasData && (
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
           <Clock className="h-3 w-3" />
