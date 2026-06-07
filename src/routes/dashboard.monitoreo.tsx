@@ -104,23 +104,26 @@ function MonitoreoPage() {
     setSavingManual(true);
     try {
       const UNITS: Record<string, string> = {
-        heart_rate: "lpm",
-        spo2: "%",
-        temperature: "°C",
+        heart_rate:         "lpm",
+        spo2:               "%",
+        temperature:        "°C",
         blood_pressure_sys: "mmHg",
         blood_pressure_dia: "mmHg",
-        respiration_rate: "resp/min",
-        steps: "pasos",
+        respiratory_rate:   "resp/min",
+        glucose:            "mg/dL",
       };
+
+      // El tipo seleccionado por el usuario (viene del <select> abajo)
+      const readingType = manualVital.type;
 
       const { error } = await sb.from("vital_signs_readings").insert({
         family_user_id: patientId,
-        reading_type: manualVital.type,
-        value: parseFloat(manualVital.value),
-        unit: UNITS[manualVital.type] ?? manualVital.type,
-        source: "manual",
-        severity: "normal",
-        recorded_at: new Date().toISOString(),
+        reading_type:   readingType,
+        value:          parseFloat(manualVital.value),
+        unit:           UNITS[readingType] ?? "",
+        source:         "manual",
+        severity:       "normal",
+        recorded_at:    new Date().toISOString(),
       });
 
       if (error) throw error;
@@ -287,8 +290,8 @@ function MonitoreoPage() {
                   <option value="temperature">Temperatura (°C)</option>
                   <option value="blood_pressure_sys">Presión sistólica (mmHg)</option>
                   <option value="blood_pressure_dia">Presión diastólica (mmHg)</option>
-                  <option value="respiration_rate">Frec. respiratoria (resp/min)</option>
-                  <option value="steps">Pasos del día</option>
+                  <option value="respiratory_rate">Frec. respiratoria (resp/min)</option>
+                  <option value="glucose">Glucosa (mg/dL)</option>
                 </select>
               </div>
 

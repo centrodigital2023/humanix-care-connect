@@ -1,34 +1,37 @@
 // Recibe lecturas normalizadas de wearables (enviadas por la app móvil de
 // Humanix o por un agregador como Open Wearables) y las inserta en
-// vital_signs usando el código de emparejamiento (external_user_id) guardado
-// en wearable_connections para resolver el paciente.
+// vital_signs_readings usando el código de emparejamiento (external_user_id)
+// guardado en wearable_connections para resolver el paciente.
 //
-// Autenticación: secreto compartido (no es un webhook de un proveedor con
-// firma propia, así que comparamos en tiempo constante contra
-// WEARABLE_INGEST_SECRET, igual que se hace con el resto de integraciones).
+// Autenticación: secreto compartido comparado en tiempo constante contra
+// WEARABLE_INGEST_SECRET.
 //
-// Una vez insertadas las filas, el trigger `evaluate_vital_alert` (migración
-// 20260606180000) decide si crea una clinical_alert, y clinical-alert-notify
-// se encarga de avisar por WhatsApp — este endpoint solo normaliza e inserta.
+// Una vez insertadas las filas, el frontend recibe la actualización vía
+// Supabase Realtime (la tabla vital_signs_readings tiene REPLICA IDENTITY FULL
+// y está en la publicación supabase_realtime).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { buildCorsHeaders } from "../_shared/auth.ts";
 
 const INGEST_SECRET = Deno.env.get("WEARABLE_INGEST_SECRET") ?? "";
 
+// Mapea provider al valor permitido en vital_signs_readings.source
 const DEVICE_SOURCE: Record<string, string> = {
-  apple_healthkit: "apple_healthkit",
-  google_health_connect: "google_health_connect",
-  garmin: "wearable",
-  fitbit: "wearable",
-  oura: "wearable",
-  whoop: "wearable",
-  polar: "wearable",
-  samsung_health: "wearable",
+  apple_healthkit:      "apple_healthkit",
+  google_health_connect:"google_health_connect",
+  garmin:               "wearable",
+  fitbit:               "wearable",
+  oura:                 "wearable",
+  whoop:                "wearable",
+  polar:                "wearable",
+  samsung_health:       "wearable",
 };
 
+// Tipos válidos según el CHECK constraint actualizado en vital_signs_readings
 const VALID_TYPES = new Set([
-  "heart_rate", "spo2", "temperature", "blood_pressure_sys", "blood_pressure_dia",
-  "respiration_rate", "steps", "fall_detected", "glucose", "weight",
+  "heart_rate", "spo2", "temperature",
+  "blood_pressure_sys", "blood_pressure_dia",
+  "respiration_rate", "respiratory_rate",
+  "steps", "fall_detected", "glucose", "weight",
 ]);
 
 interface Reading {
@@ -36,6 +39,7 @@ interface Reading {
   value?: number;
   unit?: string;
   recorded_at?: string;
+  value_secondary?: number;
 }
 
 function timingSafeEqual(a: string, b: string): boolean {
@@ -69,12 +73,15 @@ Deno.serve(async (req) => {
     const readings: Reading[] = Array.isArray(body?.readings) ? body.readings : [];
 
     if (!provider || !externalUserId || readings.length === 0) {
-      return new Response(JSON.stringify({ error: "Payload inválido: provider, external_user_id y readings son requeridos" }), {
+      return new Response(JSON.stringify({
+        error: "Payload inválido: provider, external_user_id y readings son requeridos",
+      }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // Resolver paciente desde el código de emparejamiento
     const { data: connection } = await supabase
       .from("wearable_connections")
       .select("id, patient_id, status")
@@ -96,16 +103,24 @@ Deno.serve(async (req) => {
     }
 
     const deviceSource = DEVICE_SOURCE[provider] ?? "wearable";
+
+    // Construir filas para vital_signs_readings
     const rows = readings
-      .filter((r) => r.type && VALID_TYPES.has(r.type) && typeof r.value === "number" && Number.isFinite(r.value))
+      .filter((r) =>
+        r.type &&
+        VALID_TYPES.has(r.type) &&
+        typeof r.value === "number" &&
+        Number.isFinite(r.value),
+      )
       .map((r) => ({
-        patient_id: connection.patient_id,
-        type: r.type,
-        value: r.value,
-        unit: r.unit ?? "",
-        device_source: deviceSource,
-        device_id: deviceName ?? null,
-        recorded_at: r.recorded_at ?? new Date().toISOString(),
+        family_user_id:  connection.patient_id,
+        reading_type:    r.type,
+        value:           r.value,
+        value_secondary: r.value_secondary ?? null,
+        unit:            r.unit ?? "",
+        source:          deviceSource,
+        severity:        "normal",    // el frontend recalcula según umbrales
+        recorded_at:     r.recorded_at ?? new Date().toISOString(),
       }));
 
     if (rows.length === 0) {
@@ -114,16 +129,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { error: insertError } = await supabase.from("vital_signs").insert(rows);
+    const { error: insertError } = await supabase
+      .from("vital_signs_readings")
+      .insert(rows);
+
     if (insertError) throw insertError;
 
+    // Actualizar marca de último sync en wearable_connections
     await supabase
       .from("wearable_connections")
       .update({
         last_synced_at: new Date().toISOString(),
         ...(deviceName ? { device_name: deviceName } : {}),
-        last_error: null,
-        updated_at: new Date().toISOString(),
+        last_error:  null,
+        updated_at:  new Date().toISOString(),
       })
       .eq("id", connection.id);
 

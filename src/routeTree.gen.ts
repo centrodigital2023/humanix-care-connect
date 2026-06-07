@@ -72,6 +72,7 @@ import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.ins
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 import { Route as DashboardEpsRouteImport } from './routes/dashboard.eps'
 import { Route as BBannerIdRouteImport } from './routes/b.$bannerId'
+import { Route as PairRouteImport } from './routes/pair'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
 const VerificarRoute = VerificarRouteImport.update({
@@ -389,6 +390,11 @@ const BBannerIdRoute = BBannerIdRouteImport.update({
   path: '/b/$bannerId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PairRoute = PairRouteImport.update({
+  id: '/pair',
+  path: '/pair',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardFamiliaOnboardingRoute =
   DashboardFamiliaOnboardingRouteImport.update({
     id: '/onboarding',
@@ -424,6 +430,7 @@ export interface FileRoutesByFullPath {
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
+  '/pair': typeof PairRoute
   '/planes': typeof PlanesRoute
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
@@ -489,6 +496,7 @@ export interface FileRoutesByTo {
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
+  '/pair': typeof PairRoute
   '/planes': typeof PlanesRoute
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
@@ -555,6 +563,7 @@ export interface FileRoutesById {
   '/familias': typeof FamiliasRoute
   '/habeas-data': typeof HabeasDataRoute
   '/mensajes': typeof MensajesRoute
+  '/pair': typeof PairRoute
   '/planes': typeof PlanesRoute
   '/prensa': typeof PrensaRoute
   '/privacidad': typeof PrivacidadRoute
@@ -623,6 +632,7 @@ export interface FileRouteTypes {
     | '/familias'
     | '/habeas-data'
     | '/mensajes'
+    | '/pair'
     | '/planes'
     | '/prensa'
     | '/privacidad'
@@ -688,6 +698,7 @@ export interface FileRouteTypes {
     | '/familias'
     | '/habeas-data'
     | '/mensajes'
+    | '/pair'
     | '/planes'
     | '/prensa'
     | '/privacidad'
@@ -753,6 +764,7 @@ export interface FileRouteTypes {
     | '/familias'
     | '/habeas-data'
     | '/mensajes'
+    | '/pair'
     | '/planes'
     | '/prensa'
     | '/privacidad'
@@ -820,6 +832,7 @@ export interface RootRouteChildren {
   FamiliasRoute: typeof FamiliasRoute
   HabeasDataRoute: typeof HabeasDataRoute
   MensajesRoute: typeof MensajesRoute
+  PairRoute: typeof PairRoute
   PlanesRoute: typeof PlanesRoute
   PrensaRoute: typeof PrensaRoute
   PrivacidadRoute: typeof PrivacidadRoute
@@ -1284,6 +1297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BBannerIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pair': {
+      id: '/pair'
+      path: '/pair'
+      fullPath: '/pair'
+      preLoaderRoute: typeof PairRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard/familia/onboarding': {
       id: '/dashboard/familia/onboarding'
       path: '/onboarding'
@@ -1397,6 +1417,7 @@ const rootRouteChildren: RootRouteChildren = {
   FamiliasRoute: FamiliasRoute,
   HabeasDataRoute: HabeasDataRoute,
   MensajesRoute: MensajesRoute,
+  PairRoute: PairRoute,
   PlanesRoute: PlanesRoute,
   PrensaRoute: PrensaRoute,
   PrivacidadRoute: PrivacidadRoute,
