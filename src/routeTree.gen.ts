@@ -22,6 +22,7 @@ import { Route as ProfesionalesRouteImport } from './routes/profesionales'
 import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as PrensaRouteImport } from './routes/prensa'
 import { Route as PlanesRouteImport } from './routes/planes'
+import { Route as PairRouteImport } from './routes/pair'
 import { Route as MensajesRouteImport } from './routes/mensajes'
 import { Route as HabeasDataRouteImport } from './routes/habeas-data'
 import { Route as FamiliasRouteImport } from './routes/familias'
@@ -72,7 +73,6 @@ import { Route as DashboardInstitucionRouteImport } from './routes/dashboard.ins
 import { Route as DashboardFamiliaRouteImport } from './routes/dashboard.familia'
 import { Route as DashboardEpsRouteImport } from './routes/dashboard.eps'
 import { Route as BBannerIdRouteImport } from './routes/b.$bannerId'
-import { Route as PairRouteImport } from './routes/pair'
 import { Route as DashboardFamiliaOnboardingRouteImport } from './routes/dashboard.familia.onboarding'
 
 const VerificarRoute = VerificarRouteImport.update({
@@ -138,6 +138,11 @@ const PrensaRoute = PrensaRouteImport.update({
 const PlanesRoute = PlanesRouteImport.update({
   id: '/planes',
   path: '/planes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PairRoute = PairRouteImport.update({
+  id: '/pair',
+  path: '/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MensajesRoute = MensajesRouteImport.update({
@@ -388,11 +393,6 @@ const DashboardEpsRoute = DashboardEpsRouteImport.update({
 const BBannerIdRoute = BBannerIdRouteImport.update({
   id: '/b/$bannerId',
   path: '/b/$bannerId',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PairRoute = PairRouteImport.update({
-  id: '/pair',
-  path: '/pair',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardFamiliaOnboardingRoute =
@@ -947,6 +947,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlanesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pair': {
+      id: '/pair'
+      path: '/pair'
+      fullPath: '/pair'
+      preLoaderRoute: typeof PairRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mensajes': {
       id: '/mensajes'
       path: '/mensajes'
@@ -1295,13 +1302,6 @@ declare module '@tanstack/react-router' {
       path: '/b/$bannerId'
       fullPath: '/b/$bannerId'
       preLoaderRoute: typeof BBannerIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pair': {
-      id: '/pair'
-      path: '/pair'
-      fullPath: '/pair'
-      preLoaderRoute: typeof PairRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard/familia/onboarding': {
