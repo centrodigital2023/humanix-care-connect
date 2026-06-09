@@ -412,7 +412,7 @@ export function WearableConnections({ patientId }: { patientId: string }) {
 
     (async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from("wearable_connections")
           .select("provider, external_user_id, status, last_synced_at, connected_at")
           .eq("patient_id", patientId)
@@ -427,7 +427,7 @@ export function WearableConnections({ patientId }: { patientId: string }) {
         }
 
         const dbStore: PairingStore = {};
-        for (const conn of data ?? []) {
+        for (const conn of (data ?? []) as Array<{ provider: string; external_user_id: string; connected_at: string; last_synced_at: string | null }>) {
           dbStore[conn.provider as Provider] = {
             provider:   conn.provider as Provider,
             code:       conn.external_user_id,
@@ -513,7 +513,7 @@ export function WearableConnections({ patientId }: { patientId: string }) {
       const code = genCode(patientId, provider);
 
       // Guardar en wearable_connections (DB) — fuente de verdad para wearable-ingest
-      const { error: dbError } = await supabase
+      const { error: dbError } = await (supabase as any)
         .from("wearable_connections")
         .upsert(
           {
@@ -550,7 +550,7 @@ export function WearableConnections({ patientId }: { patientId: string }) {
 
   const disconnect = async (provider: Provider) => {
     try {
-      await supabase
+      await (supabase as any)
         .from("wearable_connections")
         .update({ status: "disconnected", updated_at: new Date().toISOString() })
         .eq("patient_id", patientId)
@@ -573,7 +573,7 @@ export function WearableConnections({ patientId }: { patientId: string }) {
       if (!existing) return;
       const code = genCode(patientId, provider);
 
-      const { error: dbError } = await supabase
+      const { error: dbError } = await (supabase as any)
         .from("wearable_connections")
         .update({ external_user_id: code, updated_at: new Date().toISOString() })
         .eq("patient_id", patientId)
