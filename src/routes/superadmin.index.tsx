@@ -26,12 +26,17 @@ import {
   PhoneCall,
   Activity,
   ArrowRight,
+  Trash2,
+  Send,
+  Bell,
+  UserCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -95,6 +100,16 @@ type Emergency = {
   created_at: string;
 };
 
+type RegisteredUser = {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  city: string | null;
+  created_at: string;
+  role: AppRole;
+};
+
 function SuperadminPage() {
   const { user, loading, logout } = useAppUser({ allow: ["superadmin"] });
   const [stats, setStats] = useState({ users: 0, professionals: 0, offers: 0, docs: 0, pending_pros: 0, blocked_pros: 0 });
@@ -104,49 +119,97 @@ function SuperadminPage() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<AppRole>("hr_staff");
   const [creating, setCreating] = useState(false);
-
   const [recentAudit, setRecentAudit] = useState<
-    {
-      id: string;
-      action: string;
-      actor_email: string | null;
-      severity: string;
-      created_at: string;
-    }[]
+    { id: string; action: string; actor_email: string | null; severity: string; created_at: string }[]
   >([]);
   const [fraudCount, setFraudCount] = useState(0);
+
+  // Users management
+  const [registeredUsers, setRegisteredUsers] = useState<RegisteredUser[]>([]);
+  const [deleting, setDeleting] = useState<string | null>(null);
+
+  // Evaluator notes
+  const [noteTarget, setNoteTarget] = useState("");
+  const [noteTitle, setNoteTitle] = useState("");
+  const [noteBody, setNoteBody] = useState("");
+  const [sendingNote, setSendingNote] = useState(false);
+
+  const loadUsers = async () => {
+    const [{ data: profiles }, { data: roles }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("user_id, full_name, email, avatar_url, city, created_at")
+        .order("created_at", { ascending: false }),
+      supabase.from("user_roles").select("user_id, role"),
+    ]);
+    const roleMap = new Map<string, AppRole>(
+      (roles ?? []).map((r) => [r.user_id, r.role as AppRole]),
+    );
+    setRegisteredUsers(
+      (profiles ?? []).map((p) => ({
+        ...p,
+        role: roleMap.get(p.user_id) ?? "family",
+      })),
+    );
+  };
+
+  const deleteUser = async (uid: string, name: string) => {
+    if (!window.confirm(`¿Eliminar completamente a "${name}"? Esta acción no se puede deshacer.`)) return;
+    setDeleting(uid);
+    try {
+      await Promise.all([
+        supabase.from("professional_profiles").delete().eq("user_id", uid),
+        supabase.from("family_profiles").delete().eq("user_id", uid),
+        supabase.from("institution_profiles").delete().eq("user_id", uid),
+        supabase.from("user_roles").delete().eq("user_id", uid),
+      ]);
+      await supabase.from("profiles").delete().eq("user_id", uid);
+      toast.success(`Usuario "${name}" eliminado de la plataforma`);
+      setRegisteredUsers((prev) => prev.filter((u) => u.user_id !== uid));
+      setStats((s) => ({ ...s, users: Math.max(0, s.users - 1) }));
+    } catch (err) {
+      toast.error("Error al eliminar usuario");
+      console.error(err);
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const sendNote = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!noteTarget || !noteTitle) return;
+    setSendingNote(true);
+    const { error } = await supabase.from("notifications").insert({
+      user_id: noteTarget,
+      title: noteTitle,
+      body: noteBody || null,
+      type: "evaluator_note",
+      channel: "app",
+    });
+    setSendingNote(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Nota/petición enviada al usuario");
+    setNoteTitle("");
+    setNoteBody("");
+    setNoteTarget("");
+  };
 
   useEffect(() => {
     if (!user) return;
     void loadData();
+    void loadUsers();
 
     const ch = supabase
       .channel("superadmin-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "emergency_incidents" },
-        () => void loadData(),
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "service_ratings" },
-        () => void loadData(),
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "audit_log" },
-        () => void loadData(),
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "fraud_flags" },
-        () => void loadData(),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "emergency_incidents" }, () => void loadData())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "service_ratings" }, () => void loadData())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "audit_log" }, () => void loadData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "fraud_flags" }, () => void loadData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => { void loadData(); void loadUsers(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => void loadUsers())
       .subscribe();
 
-    return () => {
-      void supabase.removeChannel(ch);
-    };
+    return () => { void supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
@@ -758,6 +821,147 @@ function SuperadminPage() {
             tone="bio"
             badge={stats.offers > 0 ? { label: `${stats.offers} ofertas` } : undefined}
           />
+        </section>
+
+        {/* ── Gestión de usuarios ── */}
+        <section>
+          <Card className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+                <UserCircle className="h-4 w-4 text-biosensor" />
+                Usuarios registrados
+                <Badge variant="secondary" className="ml-1 text-xs">{registeredUsers.length}</Badge>
+              </h2>
+              <span className="text-[11px] text-muted-foreground">Eliminar borra perfil y roles de la plataforma</span>
+            </div>
+
+            {registeredUsers.length === 0 ? (
+              <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-5">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Cargando usuarios…</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border/50 max-h-[480px] overflow-y-auto">
+                {registeredUsers.map((u) => {
+                  const roleColors: Record<string, string> = {
+                    superadmin: "bg-fuchsia-neural/15 text-fuchsia-neural border-fuchsia-neural/30",
+                    evaluator:  "bg-amber-500/15 text-amber-600 border-amber-500/30",
+                    hr_staff:   "bg-blue-500/15 text-blue-600 border-blue-500/30",
+                    institution:"bg-violet-500/15 text-violet-600 border-violet-500/30",
+                    family:     "bg-copper/15 text-copper border-copper/30",
+                    professional:"bg-biosensor/15 text-biosensor border-biosensor/30",
+                  };
+                  return (
+                    <div key={u.user_id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                      {u.avatar_url ? (
+                        <img src={u.avatar_url} alt={u.full_name ?? ""} className="h-9 w-9 rounded-full object-cover border border-border shrink-0" />
+                      ) : (
+                        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
+                          {(u.full_name ?? u.email ?? "?").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{u.full_name ?? "Sin nombre"}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{u.email ?? "—"}{u.city ? ` · ${u.city}` : ""}</p>
+                      </div>
+                      <Badge variant="outline" className={`text-[10px] shrink-0 ${roleColors[u.role] ?? "bg-muted/40 text-muted-foreground border-border"}`}>
+                        {u.role}
+                      </Badge>
+                      <span className="text-[10px] text-muted-foreground whitespace-nowrap hidden sm:inline">
+                        {new Date(u.created_at).toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "2-digit" })}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 border-red-500/30 text-red-500 hover:bg-red-500/10 hover:border-red-500/60 shrink-0"
+                        disabled={deleting === u.user_id}
+                        onClick={() => deleteUser(u.user_id, u.full_name ?? u.email ?? u.user_id)}
+                      >
+                        {deleting === u.user_id
+                          ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          : <Trash2 className="h-3.5 w-3.5" />}
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+        </section>
+
+        {/* ── Notas y peticiones del evaluador ── */}
+        <section className="grid lg:grid-cols-2 gap-4">
+          <Card className="p-6">
+            <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
+              <Bell className="h-4 w-4 text-copper" />
+              Enviar nota / petición
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">
+              El evaluador puede enviar mensajes internos a cualquier profesional, familia o institución registrada.
+            </p>
+            <form onSubmit={sendNote} className="space-y-3">
+              <div>
+                <Label>Destinatario</Label>
+                <Select value={noteTarget} onValueChange={setNoteTarget}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un usuario…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {registeredUsers
+                      .filter((u) => ["professional", "family", "institution"].includes(u.role))
+                      .map((u) => (
+                        <SelectItem key={u.user_id} value={u.user_id}>
+                          {u.full_name ?? u.email ?? u.user_id} · {u.role}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Asunto / título</Label>
+                <Input
+                  required
+                  value={noteTitle}
+                  onChange={(e) => setNoteTitle(e.target.value)}
+                  placeholder="Ej: Documentación pendiente, Revisión de perfil…"
+                />
+              </div>
+              <div>
+                <Label>Mensaje (opcional)</Label>
+                <Textarea
+                  rows={3}
+                  value={noteBody}
+                  onChange={(e) => setNoteBody(e.target.value)}
+                  placeholder="Detalle de la nota o petición…"
+                />
+              </div>
+              <Button type="submit" disabled={sendingNote || !noteTarget || !noteTitle} variant="hero" className="w-full gap-2">
+                {sendingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                Enviar notificación
+              </Button>
+            </form>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="font-display text-lg font-semibold mb-1 flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-biosensor" />
+              ¿Cómo funciona?
+            </h2>
+            <p className="text-xs text-muted-foreground mb-4">Guía rápida del módulo de comunicación interna.</p>
+            <ul className="space-y-3 text-sm">
+              {[
+                { icon: Bell, text: "El usuario recibe la nota en su panel como notificación (campana) en tiempo real." },
+                { icon: UserCircle, text: "Solo se muestran profesionales, familias e instituciones como destinatarios." },
+                { icon: Send, text: "Puedes enviar peticiones de documentos, recordatorios o revisiones de perfil." },
+                { icon: CheckCircle2, text: "Las notas quedan registradas en la tabla notifications con tipo evaluator_note." },
+              ].map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-start gap-2.5 text-muted-foreground">
+                  <Icon className="h-4 w-4 text-biosensor shrink-0 mt-0.5" />
+                  <span className="leading-relaxed">{text}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
         </section>
       </div>
     </AppShell>

@@ -20,35 +20,36 @@ export function useActiveUsersCount(_role?: UserRole) {
     const fetchCounts = async () => {
       try {
         const [proTotal, proAvail, famTotal, famVisible, instTotal, instVisible] = await Promise.all([
-          // Total profesionales registrados (no bloqueados)
+          // Total profesionales registrados (rol en plataforma)
           supabase
-            .from("professional_profiles")
+            .from("user_roles")
             .select("*", { count: "exact", head: true })
-            .eq("blocked", false),
-          // Profesionales disponibles ahora
+            .eq("role", "professional"),
+          // Profesionales disponibles ahora (perfil activo + available=true)
           supabase
             .from("professional_profiles")
             .select("*", { count: "exact", head: true })
             .eq("available", true)
             .eq("blocked", false),
-          // Total familias con ubicación
+          // Total familias registradas en la plataforma
           supabase
-            .from("public_family_map_safe")
-            .select("*", { count: "exact", head: true }),
-          // Familias visibles en mapa
+            .from("user_roles")
+            .select("*", { count: "exact", head: true })
+            .eq("role", "family"),
+          // Familias visibles en mapa (con GPS + visible_on_map)
           supabase
             .from("public_family_map_safe")
             .select("*", { count: "exact", head: true })
             .eq("visible_on_map", true),
-          // Total instituciones con ubicación
+          // Total instituciones registradas en la plataforma
+          supabase
+            .from("user_roles")
+            .select("*", { count: "exact", head: true })
+            .eq("role", "institution"),
+          // Instituciones visibles en mapa (con GPS)
           supabase
             .from("public_institutions_safe")
             .select("*", { count: "exact", head: true }),
-          // Instituciones visibles en mapa
-          supabase
-            .from("public_institutions_safe")
-            .select("*", { count: "exact", head: true })
-            .eq("visible_on_map", true),
         ]);
 
         if (active) {
@@ -77,12 +78,8 @@ export function useActiveUsersCount(_role?: UserRole) {
         .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, () => fetchCounts())
         .subscribe(),
       supabase
-        .channel(`active_families_${suffix}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, () => fetchCounts())
-        .subscribe(),
-      supabase
-        .channel(`active_institutions_${suffix}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, () => fetchCounts())
+        .channel(`active_user_roles_${suffix}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => fetchCounts())
         .subscribe(),
     ];
 
