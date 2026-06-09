@@ -50,6 +50,7 @@ import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { InstitutionClinicalMonitoring } from "@/components/humanix/InstitutionClinicalMonitoring";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
+import { LivePulseBar } from "@/components/humanix/LivePulseBar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -529,6 +530,8 @@ function InstitutionDashboard() {
         {/* ══ TAB: INICIO ══ */}
         {tab === "inicio" && (
           <div className="space-y-5">
+
+            <LivePulseBar role="institution" />
 
             {/* KPI row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

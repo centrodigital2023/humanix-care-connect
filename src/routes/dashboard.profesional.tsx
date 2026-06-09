@@ -59,6 +59,7 @@ import { OpenFamilyNeedsList } from "@/components/humanix/OpenFamilyNeedsList";
 import { ProposalsInbox } from "@/components/humanix/ProposalsInbox";
 import { ReferralCard } from "@/components/humanix/ReferralCard";
 import { ClinicalMonitor } from "@/components/humanix/ClinicalMonitor";
+import { LivePulseBar } from "@/components/humanix/LivePulseBar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
@@ -533,6 +534,8 @@ function ProDashboard() {
         {/* ══ TAB: INICIO ══ */}
         {tab === "inicio" && (
           <div className="space-y-4">
+
+            <LivePulseBar role="professional" />
 
             {/* Hero card */}
             <div className="rounded-2xl bg-gradient-to-br from-biosensor/10 via-background to-fuchsia-neural/10 border border-border p-5">

@@ -40,6 +40,7 @@ import { distanceKm, formatKm } from "@/lib/geo";
 import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
+import { LivePulseBar } from "@/components/humanix/LivePulseBar";
 
 export const Route = createFileRoute("/dashboard/familia")({
   head: () => ({ meta: [{ title: "Familia · Humanix" }] }),
@@ -111,6 +112,7 @@ type NearbyPro = {
   lat: number | null;
   lng: number | null;
   km: number | null;
+  available: boolean;
 };
 
 function waLink(phone: string | null | undefined, text: string) {
@@ -141,16 +143,15 @@ function FamilyDashboard() {
   const refreshNearbyPros = useCallback(
     async (fLat: number | null, fLng: number | null, myCity: string) => {
       const { data: prosData } = await supabase
-        .from("professional_profiles")
+        .from("public_professionals_safe")
         .select(
-          "user_id, specialty, avg_rating, hourly_rate, lat, lng, home_city, active, published",
+          "user_id, specialty, avg_rating, hourly_rate, lat, lng, home_city, available",
         )
-        .eq("active", true)
-        .eq("published", true)
         .not("lat", "is", null)
         .not("lng", "is", null)
         .limit(60);
-      const proIds2 = (prosData ?? []).map((p) => p.user_id);
+      const validPros = (prosData ?? []).filter((p): p is typeof p & { user_id: string } => p.user_id != null);
+      const proIds2 = validPros.map((p) => p.user_id);
       let nameMap = new Map<
         string,
         { full_name: string | null; avatar_url: string | null; city: string | null }
@@ -162,7 +163,7 @@ function FamilyDashboard() {
           .in("user_id", proIds2);
         nameMap = new Map((profs ?? []).map((p) => [p.user_id, p]));
       }
-      const computed: NearbyPro[] = (prosData ?? []).map((p) => {
+      const computed: NearbyPro[] = validPros.map((p) => {
         const info = nameMap.get(p.user_id);
         const km =
           fLat != null && fLng != null && p.lat != null && p.lng != null
@@ -179,6 +180,7 @@ function FamilyDashboard() {
           lat: p.lat,
           lng: p.lng,
           km,
+          available: p.available ?? false,
         };
       });
       computed.sort((a, b) => {
@@ -321,16 +323,15 @@ function FamilyDashboard() {
 
         // Profesionales cercanos (con lat/lng) — calcula distancia si la familia tiene coords
         const { data: prosData } = await supabase
-          .from("professional_profiles")
+          .from("public_professionals_safe")
           .select(
-            "user_id, specialty, avg_rating, hourly_rate, lat, lng, home_city, active, published",
+            "user_id, specialty, avg_rating, hourly_rate, lat, lng, home_city, available",
           )
-          .eq("active", true)
-          .eq("published", true)
           .not("lat", "is", null)
           .not("lng", "is", null)
           .limit(60);
-        const proIds2 = (prosData ?? []).map((p) => p.user_id);
+        const validPros2 = (prosData ?? []).filter((p): p is typeof p & { user_id: string } => p.user_id != null);
+        const proIds2 = validPros2.map((p) => p.user_id);
         let nameMap = new Map<
           string,
           { full_name: string | null; avatar_url: string | null; city: string | null }
@@ -344,7 +345,7 @@ function FamilyDashboard() {
         }
         const fLat = fam?.default_lat ?? null;
         const fLng = fam?.default_lng ?? null;
-        const computed: NearbyPro[] = (prosData ?? []).map((p) => {
+        const computed: NearbyPro[] = validPros2.map((p) => {
           const info = nameMap.get(p.user_id);
           const km =
             fLat != null && fLng != null && p.lat != null && p.lng != null
@@ -361,6 +362,7 @@ function FamilyDashboard() {
             lat: p.lat,
             lng: p.lng,
             km,
+            available: p.available ?? false,
           };
         });
         computed.sort((a, b) => {
@@ -680,6 +682,9 @@ function FamilyDashboard() {
           )}
         </section>
 
+        {/* Live status bar */}
+        <LivePulseBar role="family" />
+
         {/* Profesionales cercanos */}
         <section>
           <div>
@@ -705,17 +710,22 @@ function FamilyDashboard() {
               <div className="grid gap-2">
                 {nearbyPros.map((p) => (
                   <Card key={`np-${p.user_id}`} className="p-3 flex items-center gap-3">
-                    {p.avatar_url ? (
-                      <img
-                        src={p.avatar_url}
-                        alt={p.full_name ?? ""}
-                        className="h-10 w-10 rounded-full object-cover border border-border shrink-0"
+                    <div className="relative shrink-0">
+                      {p.avatar_url ? (
+                        <img
+                          src={p.avatar_url}
+                          alt={p.full_name ?? ""}
+                          className="h-10 w-10 rounded-full object-cover border border-border"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-semibold">
+                          {(p.full_name ?? "?").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <span
+                        className={`absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-background ${p.available ? "bg-emerald-500 animate-pulse" : "bg-gray-400"}`}
                       />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
-                        {(p.full_name ?? "?").slice(0, 1).toUpperCase()}
-                      </div>
-                    )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">{p.full_name ?? "Profesional"}</p>
                       <p className="text-[11px] text-muted-foreground truncate">
