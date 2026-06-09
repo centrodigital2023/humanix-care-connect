@@ -400,6 +400,7 @@ export function LiveMarketplaceMap({
           fullName: p.profiles?.full_name ?? null,
           phone: p.whatsapp ?? p.profiles?.phone ?? null,
           meta: p.default_address ?? null,
+          availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
         })),
       );
       setInstitutions(
@@ -416,6 +417,7 @@ export function LiveMarketplaceMap({
           phone: p.profiles?.phone ?? null,
           city: p.city ?? null,
           meta: p.institution_type ?? null,
+          availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
         })),
       );
     } catch (e) {
@@ -706,25 +708,35 @@ export function LiveMarketplaceMap({
       </Card>
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        {effectiveRole !== "professional" && (
-          <Badge variant="outline" className="gap-1.5">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: COLORS.professional }}
-            />
-            Profesionales activos en tiempo real ({filteredPros.length}
-            {filteredPros.length !== pros.length ? ` / ${pros.length}` : ""})
-          </Badge>
-        )}
+        {effectiveRole !== "professional" && (() => {
+          const availPros = pros.filter((p) => p.availabilityStatus === "available").length;
+          const shownPros = filteredPros.length;
+          return (
+            <Badge variant="outline" className="gap-1.5">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span style={{ color: "#22c55e", fontWeight: 700 }}>{availPros}</span>
+              <span className="text-muted-foreground">/ {pros.length} profesionales</span>
+              {shownPros !== pros.length && (
+                <span className="text-muted-foreground">(filtrados: {shownPros})</span>
+              )}
+            </Badge>
+          );
+        })()}
         {(effectiveRole === "professional" || effectiveRole === "guest") && (
           <>
             <Badge variant="outline" className="gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ background: COLORS.family }} />
-              Familias ({families.length})
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+              <span style={{ color: "#22c55e", fontWeight: 700 }}>
+                {families.filter((f) => f.availabilityStatus === "available").length}
+              </span>
+              <span className="text-muted-foreground">/ {families.length} familias</span>
             </Badge>
             <Badge variant="outline" className="gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-sm" style={{ background: COLORS.institution }} />
-              Instituciones ({institutions.length})
+              <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
+              <span style={{ color: "#22c55e", fontWeight: 700 }}>
+                {institutions.filter((i) => i.availabilityStatus === "available").length}
+              </span>
+              <span className="text-muted-foreground">/ {institutions.length} instituciones</span>
             </Badge>
           </>
         )}
