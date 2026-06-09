@@ -13,7 +13,7 @@ const events = [
 
 export function LiveSocialProof() {
   const [i, setI] = useState(0);
-  const { professionals } = useActiveUsersCount();
+  const { professionals, professionalsAvailable } = useActiveUsersCount();
 
   useEffect(() => {
     const t = setInterval(() => setI((x) => (x + 1) % events.length), 4000);
@@ -25,7 +25,7 @@ export function LiveSocialProof() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 py-3 flex items-center gap-3 flex-wrap">
         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-biosensor">
           <span className="h-1.5 w-1.5 rounded-full bg-biosensor animate-pulse-ring" />
-          {professionals} profesionales online
+          <span className="text-emerald-500">{professionalsAvailable}</span> disponibles · <span>{professionals}</span> registrados
         </span>
         <span className="hidden sm:inline-block h-3 w-px bg-border" />
         <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0 flex-1">

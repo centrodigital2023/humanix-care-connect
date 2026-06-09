@@ -58,7 +58,12 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const { professionals, families, institutions, loading: countsLoading } = useActiveUsersCount();
+  const {
+    professionals, professionalsAvailable,
+    families, familiesVisible,
+    institutions, institutionsVisible,
+    loading: countsLoading,
+  } = useActiveUsersCount();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <script
@@ -94,24 +99,33 @@ function Index() {
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 font-medium">
-                    <span className="h-2 w-2 rounded-full bg-blue-600 animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     Profesionales
-                    {!countsLoading && professionals > 0 && (
-                      <span className="font-bold text-blue-600">{professionals}</span>
+                    {!countsLoading && (
+                      <span className="font-bold text-emerald-600">{professionalsAvailable}</span>
+                    )}
+                    {!countsLoading && professionals > professionalsAvailable && (
+                      <span className="text-blue-400">/{professionals}</span>
                     )}
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-copper/25 bg-copper/10 px-2.5 py-1 font-medium">
-                    <span className="h-2 w-2 rounded-full bg-copper animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     Familias
-                    {!countsLoading && families > 0 && (
-                      <span className="font-bold text-copper">{families}</span>
+                    {!countsLoading && (
+                      <span className="font-bold text-emerald-600">{familiesVisible}</span>
+                    )}
+                    {!countsLoading && families > familiesVisible && (
+                      <span className="text-copper/60">/{families}</span>
                     )}
                   </span>
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-neural/25 bg-fuchsia-neural/10 px-2.5 py-1 font-medium">
-                    <span className="h-2 w-2 rounded-sm bg-fuchsia-neural animate-pulse" />
+                    <span className="h-2 w-2 rounded-sm bg-emerald-500 animate-pulse" />
                     Instituciones
-                    {!countsLoading && institutions > 0 && (
-                      <span className="font-bold text-fuchsia-neural">{institutions}</span>
+                    {!countsLoading && (
+                      <span className="font-bold text-emerald-600">{institutionsVisible}</span>
+                    )}
+                    {!countsLoading && institutions > institutionsVisible && (
+                      <span className="text-fuchsia-neural/60">/{institutions}</span>
                     )}
                   </span>
                 </div>

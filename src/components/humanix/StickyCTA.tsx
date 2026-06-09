@@ -7,7 +7,7 @@ export function StickyCTA() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
-  const { professionals } = useActiveUsersCount();
+  const { professionals, professionalsAvailable } = useActiveUsersCount();
 
   useEffect(() => {
     try {
@@ -42,7 +42,7 @@ export function StickyCTA() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold leading-tight">Encuentra cuidador hoy</p>
             <p className="text-[11px] text-muted-foreground leading-tight">
-              {professionals} profesionales online · plan desde $9.000/mes
+              <span className="text-emerald-500 font-bold">{professionalsAvailable}</span> disponibles · {professionals} registrados · desde $9.000/mes
             </p>
           </div>
           <button

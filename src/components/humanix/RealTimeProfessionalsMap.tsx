@@ -14,7 +14,6 @@ import {
   Loader2,
   MapPin,
   Users,
-  Clock,
   Star,
   Filter,
   Zap,
@@ -43,15 +42,11 @@ type ProfessionalLive = {
   avg_rating: number | null;
   hourly_rate: number | null;
   phone: string | null;
-  available_from: string | null;
-  available_until: string | null;
-  availability_status: "available" | "on_shift" | "unavailable" | null;
-  is_online: boolean | null;
-  last_activity: string | null;
-  active_bookings: number | null;
+  availability_status: "available" | "unavailable" | null;
+  is_online: boolean;
 };
 
-type AvailabilityFilter = "all" | "available" | "on_shift" | "unavailable";
+type AvailabilityFilter = "all" | "available" | "unavailable";
 
 export function RealTimeProfessionalsMap({
   institutionCity,
@@ -62,11 +57,11 @@ export function RealTimeProfessionalsMap({
 }) {
   const [professionals, setProfessionals] = useState<ProfessionalLive[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<AvailabilityFilter>("available");
+  const [statusFilter, setStatusFilter] = useState<AvailabilityFilter>("all");
   const [specialtyFilter, setSpecialtyFilter] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [specialties, setSpecialties] = useState<string[]>([]);
-  const [totalActive, setTotalActive] = useState(0);
+  const [tick, setTick] = useState(0);
 
   // Cargar profesionales disponibles
   useEffect(() => {
@@ -76,97 +71,46 @@ export function RealTimeProfessionalsMap({
         let query = supabase
           .from("public_professionals_safe")
           .select(
-            `
-            user_id,
-            specialty,
-            avg_rating,
-            hourly_rate,
-            availability_status,
-            available_from,
-            available_until,
-            active_bookings,
-            profiles:user_id (
-              full_name,
-              avatar_url,
-              city,
-              phone
-            )
-          `
+            `user_id, specialty, avg_rating, hourly_rate, availability_status, available, home_city,
+             profiles:user_id(full_name, avatar_url, phone)`
           )
-          .eq("city", institutionCity);
+          .eq("home_city", institutionCity);
 
-        if (statusFilter !== "all") {
-          query = query.eq("availability_status", statusFilter);
+        if (statusFilter === "available") {
+          query = query.eq("available", true);
+        } else if (statusFilter === "unavailable") {
+          query = query.eq("available", false);
         }
 
-        const { data, error } = await query.order("avg_rating", {
-          ascending: false,
-        });
+        const { data, error } = await query.order("avg_rating", { ascending: false });
 
         if (error) throw error;
         if (!active) return;
 
-        // Transformar datos
         const pros = (data ?? []).map((p: any) => ({
           user_id: p.user_id,
           full_name: p.profiles?.full_name || null,
           avatar_url: p.profiles?.avatar_url || null,
           specialty: p.specialty,
-          city: p.profiles?.city,
+          city: p.home_city || null,
           avg_rating: p.avg_rating,
           hourly_rate: p.hourly_rate,
-          phone: p.profiles?.phone,
-          availability_status: p.availability_status,
-          available_from: p.available_from,
-          available_until: p.available_until,
-          active_bookings: p.active_bookings || 0,
-          is_online: p.availability_status === "available",
-          last_activity: new Date().toISOString(),
+          phone: p.profiles?.phone || null,
+          availability_status: p.availability_status as "available" | "unavailable" | null,
+          is_online: p.available === true,
         }));
 
-        // Obtener especialidades únicas
-        const specs = Array.from(
-          new Set(pros.map((p) => p.specialty).filter(Boolean))
-        ) as string[];
-
+        const specs = Array.from(new Set(pros.map((p) => p.specialty).filter(Boolean))) as string[];
         setProfessionals(pros);
         setSpecialties(specs);
-        setTotalActive(pros.filter((p) => p.is_online).length);
 
-        // Suscribirse a cambios en tiempo real
         const channel = supabase
-          .channel(`professionals:${institutionCity}`)
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "professional_profiles",
-              filter: `city=eq.${institutionCity}`,
-            },
-            (payload: any) => {
-              if (active) {
-                setProfessionals((prev) => {
-                  const updated = [...prev];
-                  const idx = updated.findIndex(
-                    (p) => p.user_id === payload.new.user_id
-                  );
-                  if (idx >= 0) {
-                    updated[idx] = {
-                      ...updated[idx],
-                      ...payload.new,
-                    };
-                  }
-                  return updated;
-                });
-              }
-            }
-          )
+          .channel(`rt_pros_map_${institutionCity}`)
+          .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" },
+            () => { if (active) setTick((n) => n + 1); })
           .subscribe();
 
-        return () => {
-          supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
       } catch (e) {
         console.error("[RealTimeProfessionalsMap] load failed", e);
         if (active) toast.error("Error cargando profesionales");
@@ -178,7 +122,7 @@ export function RealTimeProfessionalsMap({
     return () => {
       active = false;
     };
-  }, [institutionCity, statusFilter]);
+  }, [institutionCity, statusFilter, tick]);
 
   // Filtrar profesionales
   const filtered = professionals.filter((p) => {
@@ -190,9 +134,7 @@ export function RealTimeProfessionalsMap({
   });
 
   const availableCount = filtered.filter((p) => p.is_online).length;
-  const onShiftCount = filtered.filter(
-    (p) => p.availability_status === "on_shift"
-  ).length;
+  const unavailableCount = filtered.filter((p) => !p.is_online).length;
   const averageRating =
     filtered.length > 0
       ? (
@@ -226,13 +168,13 @@ export function RealTimeProfessionalsMap({
           </div>
         </Card>
 
-        <Card className="p-3 bg-gradient-to-br from-blue-50 to-transparent border-blue-200/50">
+        <Card className="p-3 bg-gradient-to-br from-gray-50 to-transparent border-gray-200/50">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">En servicio</p>
-              <p className="text-2xl font-bold text-blue-600">{onShiftCount}</p>
+              <p className="text-xs text-muted-foreground">No disponibles</p>
+              <p className="text-2xl font-bold text-gray-500">{unavailableCount}</p>
             </div>
-            <Activity className="h-5 w-5 text-blue-600 opacity-30" />
+            <Activity className="h-5 w-5 text-gray-400 opacity-30" />
           </div>
         </Card>
 
@@ -295,7 +237,6 @@ export function RealTimeProfessionalsMap({
             <SelectContent>
               <SelectItem value="all">Todos</SelectItem>
               <SelectItem value="available">Disponibles</SelectItem>
-              <SelectItem value="on_shift">En servicio</SelectItem>
               <SelectItem value="unavailable">No disponibles</SelectItem>
             </SelectContent>
           </Select>
@@ -343,16 +284,10 @@ export function RealTimeProfessionalsMap({
                       className={
                         pro.is_online
                           ? "bg-emerald-600/15 text-emerald-700 border-emerald-600/30 text-[10px]"
-                          : pro.availability_status === "on_shift"
-                            ? "bg-blue-600/15 text-blue-700 border-blue-600/30 text-[10px]"
-                            : "bg-gray-600/15 text-gray-700 border-gray-600/30 text-[10px]"
+                          : "bg-gray-600/15 text-gray-700 border-gray-600/30 text-[10px]"
                       }
                     >
-                      {pro.is_online
-                        ? "🟢 Disponible"
-                        : pro.availability_status === "on_shift"
-                          ? "🔵 En servicio"
-                          : "⚪ No disponible"}
+                      {pro.is_online ? "🟢 Disponible" : "⚪ No disponible"}
                     </Badge>
 
                     {pro.avg_rating && pro.avg_rating > 0 && (
@@ -375,29 +310,6 @@ export function RealTimeProfessionalsMap({
                       </span>
                     )}
 
-                    {pro.active_bookings && pro.active_bookings > 0 && (
-                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
-                        {pro.active_bookings} servicio{pro.active_bookings > 1 ? "s" : ""} activo{pro.active_bookings > 1 ? "s" : ""}
-                      </span>
-                    )}
-
-                    {pro.available_from && pro.available_until && (
-                      <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(pro.available_from).toLocaleTimeString("es-CO", {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}{" "}
-                        -{" "}
-                        {new Date(pro.available_until).toLocaleTimeString(
-                          "es-CO",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          }
-                        )}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>
