@@ -2635,6 +2635,7 @@ export type Database = {
           ai_preapproved: boolean | null
           ai_summary: string | null
           availability: Json | null
+          availability_status: string | null
           available: boolean | null
           avatar_url: string | null
           avg_rating: number | null
@@ -2664,6 +2665,7 @@ export type Database = {
           ai_preapproved?: boolean | null
           ai_summary?: string | null
           availability?: Json | null
+          availability_status?: never
           available?: boolean | null
           avatar_url?: string | null
           avg_rating?: number | null
@@ -2693,6 +2695,7 @@ export type Database = {
           ai_preapproved?: boolean | null
           ai_summary?: string | null
           availability?: Json | null
+          availability_status?: never
           available?: boolean | null
           avatar_url?: string | null
           avg_rating?: number | null
