@@ -338,23 +338,25 @@ export function LiveMarketplaceMap({
 
   const loadAll = async () => {
     try {
+      // Las vistas ya incluyen full_name, avatar_url, phone via SQL JOIN (security_invoker=false).
+      // NO se usa profiles:user_id(...) FK-embedding porque las vistas no tienen FK relationships.
       const [proRes, famRes, instRes] = await Promise.all([
         supabase
           .from("public_professionals_safe")
           .select(
-            "user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, profiles:user_id(full_name, avatar_url, phone)",
+            "user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, avatar_url, full_name, phone",
           )
           .not("lat", "is", null)
           .not("lng", "is", null)
           .limit(200),
         supabase
           .from("public_family_map_safe")
-          .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp, profiles:user_id(full_name, avatar_url, phone)")
+          .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp, full_name, avatar_url, phone")
           .limit(200),
         supabase
           .from("public_institutions_safe")
           .select(
-            "user_id, lat, lng, institution_name, city, institution_type, visible_on_map, profiles:user_id(full_name, avatar_url, phone)",
+            "user_id, lat, lng, institution_name, city, institution_type, visible_on_map, full_name, avatar_url, phone",
           )
           .limit(200),
       ]);
@@ -368,11 +370,11 @@ export function LiveMarketplaceMap({
           title: p.specialty || "Profesional disponible",
           subtitle: `${p.home_city ?? ""}${p.hourly_rate ? ` · $${Number(p.hourly_rate).toLocaleString("es-CO")}/h` : ""}`,
           userId: p.user_id,
-          avatarUrl: p.profiles?.avatar_url ?? null,
-          fullName: p.profiles?.full_name ?? null,
+          avatarUrl: p.avatar_url ?? null,
+          fullName: p.full_name ?? null,
           rating: p.avg_rating ?? null,
           hourlyRate: p.hourly_rate ?? null,
-          phone: p.profiles?.phone ?? null,
+          phone: p.phone ?? null,
           city: p.home_city ?? null,
           meta: p.specialty ?? null,
           specialty: p.specialty ?? null,
@@ -396,9 +398,9 @@ export function LiveMarketplaceMap({
           title: p.patient_name ? `Familia · ${p.patient_name}` : "Familia",
           subtitle: p.default_address ?? undefined,
           userId: p.user_id,
-          avatarUrl: p.profiles?.avatar_url ?? null,
-          fullName: p.profiles?.full_name ?? null,
-          phone: p.whatsapp ?? p.profiles?.phone ?? null,
+          avatarUrl: p.avatar_url ?? null,
+          fullName: p.full_name ?? null,
+          phone: p.whatsapp ?? p.phone ?? null,
           meta: p.default_address ?? null,
           availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
         })),
@@ -412,9 +414,9 @@ export function LiveMarketplaceMap({
           title: p.institution_name || "Institución",
           subtitle: `${p.institution_type ?? ""}${p.city ? ` · ${p.city}` : ""}`,
           userId: p.user_id,
-          avatarUrl: p.profiles?.avatar_url ?? null,
-          fullName: p.institution_name ?? p.profiles?.full_name ?? null,
-          phone: p.profiles?.phone ?? null,
+          avatarUrl: p.avatar_url ?? null,
+          fullName: p.institution_name ?? p.full_name ?? null,
+          phone: p.phone ?? null,
           city: p.city ?? null,
           meta: p.institution_type ?? null,
           availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
