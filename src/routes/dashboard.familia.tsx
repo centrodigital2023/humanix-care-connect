@@ -41,6 +41,8 @@ import { toast } from "sonner";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { LivePulseBar } from "@/components/humanix/LivePulseBar";
+import { usePlan } from "@/hooks/use-plan";
+import { PlanNameGate } from "@/components/humanix/PlanNameGate";
 
 export const Route = createFileRoute("/dashboard/familia")({
   head: () => ({ meta: [{ title: "Familia · Humanix" }] }),
@@ -124,6 +126,8 @@ function waLink(phone: string | null | undefined, text: string) {
 
 function FamilyDashboard() {
   const { user, loading, logout } = useAppUser({ allow: ["family", "superadmin"] });
+  const { can: canPlan } = usePlan(user?.id ?? null);
+  const canViewNames = canPlan("view_full_names");
   const [dataLoading, setDataLoading] = useState(true);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [applications, setApplications] = useState<ApplicationRow[]>([]);
@@ -727,7 +731,9 @@ function FamilyDashboard() {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm truncate">{p.full_name ?? "Profesional"}</p>
+                      <p className="font-medium text-sm truncate">
+                        <PlanNameGate name={p.full_name} canView={canViewNames} fallback="Profesional" />
+                      </p>
                       <p className="text-[11px] text-muted-foreground truncate">
                         {p.specialty ?? "Salud"} · {p.city ?? "—"}
                         {p.avg_rating != null && p.avg_rating > 0 && (

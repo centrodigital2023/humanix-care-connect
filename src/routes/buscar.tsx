@@ -29,6 +29,9 @@ import { BookNowButton } from "@/components/humanix/BookNowButton";
 import { distanceKm, formatKm, getBrowserLocation, type LatLng } from "@/lib/geo";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { buildSeo } from "@/lib/seo";
+import { usePlan } from "@/hooks/use-plan";
+import { useAppUser } from "@/hooks/use-app-user";
+import { PlanNameGate } from "@/components/humanix/PlanNameGate";
 
 type SearchParams = {
   tab?: "profesionales" | "ofertas";
@@ -148,6 +151,11 @@ function BuscarPage() {
   const search = Route.useSearch();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const navigate = Route.useNavigate() as any;
+
+  // Plan check — silencioso, no redirige si no está logueado
+  const { user: appUser } = useAppUser({ requireAuth: false });
+  const { can: canPlan } = usePlan(appUser?.id ?? null);
+  const canViewNames = canPlan("view_full_names");
 
   const [pros, setPros] = useState<Pro[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -617,13 +625,13 @@ function BuscarPage() {
               ) : view === "list" ? (
                 <div className="flex flex-col gap-3">
                   {Array.from(new Map(pros.map((p) => [p.user_id, p])).values()).map((p) => (
-                    <ProCardRow key={`pro-${p.user_id}`} pro={p} userLoc={userLoc} />
+                    <ProCardRow key={`pro-${p.user_id}`} pro={p} userLoc={userLoc} canViewNames={canViewNames} />
                   ))}
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Array.from(new Map(pros.map((p) => [p.user_id, p])).values()).map((p) => (
-                    <ProCard key={`pro-${p.user_id}`} pro={p} userLoc={userLoc} />
+                    <ProCard key={`pro-${p.user_id}`} pro={p} userLoc={userLoc} canViewNames={canViewNames} />
                   ))}
                 </div>
               )
@@ -654,7 +662,7 @@ function BuscarPage() {
   );
 }
 
-function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
+function ProCard({ pro, userLoc, canViewNames }: { pro: Pro; userLoc: LatLng | null; canViewNames: boolean }) {
   const name = pro.profiles?.full_name ?? "Profesional Humanix";
   const city = pro.profiles?.city ?? pro.service_cities?.[0] ?? "Colombia";
   const rating = Number(pro.avg_rating ?? 0);
@@ -680,7 +688,9 @@ function ProCard({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold truncate">{name}</h3>
+            <h3 className="font-semibold truncate">
+              <PlanNameGate name={pro.profiles?.full_name ?? null} canView={canViewNames} fallback="Profesional Humanix" />
+            </h3>
             {pro.verified && <CheckCircle2 className="h-4 w-4 text-biosensor shrink-0" />}
             <StatusBadge status={status} reservedUntil={pro.reserved_until} />
           </div>
@@ -891,7 +901,7 @@ function OfferCard({ offer, userLoc }: { offer: Offer; userLoc: LatLng | null })
 
 // ── Vista lista compacta ─────────────────────────────────────────────────────
 
-function ProCardRow({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
+function ProCardRow({ pro, userLoc, canViewNames }: { pro: Pro; userLoc: LatLng | null; canViewNames: boolean }) {
   const name = pro.profiles?.full_name ?? "Profesional Humanix";
   const city = pro.profiles?.city ?? pro.service_cities?.[0] ?? "Colombia";
   const rating = Number(pro.avg_rating ?? 0);
@@ -916,7 +926,7 @@ function ProCardRow({ pro, userLoc }: { pro: Pro; userLoc: LatLng | null }) {
       )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-semibold truncate">{name}</span>
+          <PlanNameGate name={pro.profiles?.full_name ?? null} canView={canViewNames} fallback="Profesional Humanix" className="font-semibold truncate" />
           {pro.verified && <CheckCircle2 className="h-3.5 w-3.5 text-biosensor shrink-0" />}
           <StatusBadge status={status} reservedUntil={pro.reserved_until} />
         </div>

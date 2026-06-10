@@ -11,6 +11,7 @@ export type PlanFeature =
   | "apply_offers"
   | "ai_basic"
   | "inbox_accepted"
+  | "view_full_names"
   | "unlimited_applications"
   | "whatsapp_contact"
   | "live_geo_eta"
@@ -141,7 +142,8 @@ export const FEATURE_MIN_PLAN: Record<PlanFeature, PlanKey> = {
   apply_offers: "free",
   ai_basic: "free",
   inbox_accepted: "free",
-  // Essential+
+  // Essential+ (ver nombres completos de otros usuarios)
+  view_full_names: "essential_monthly",
   unlimited_applications: "essential_monthly",
   whatsapp_contact: "essential_monthly",
   live_geo_eta: "essential_monthly",

@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { usePlan } from "@/hooks/use-plan";
+import { PlanNameGate } from "@/components/humanix/PlanNameGate";
 import { Link } from "@tanstack/react-router";
 import {
   Search,
@@ -150,6 +152,9 @@ export function TalentTab({
   onUpdateApp,
   loading = false,
 }: TalentTabProps) {
+  const { can: canPlan } = usePlan(userId);
+  const canViewNames = canPlan("view_full_names");
+
   // Pool quick-filter tab
   const [poolTab, setPoolTab] = useState<PoolTab>("all");
 
@@ -945,6 +950,7 @@ export function TalentTab({
               updatingApp={updatingApp}
               onUpdateApp={onUpdateApp}
               isApplicant={applicantIds.has(pro.user_id)}
+              canViewNames={canViewNames}
             />
           ))}
         </div>
@@ -956,6 +962,7 @@ export function TalentTab({
           updatingApp={updatingApp}
           onUpdateApp={onUpdateApp}
           applicantIds={applicantIds}
+          canViewNames={canViewNames}
         />
       )}
     </div>
@@ -972,6 +979,7 @@ function ProCard({
   updatingApp,
   onUpdateApp,
   isApplicant,
+  canViewNames,
 }: {
   pro: ProSummary;
   appHistory: ApplicationRow[];
@@ -980,6 +988,7 @@ function ProCard({
   updatingApp: string | null;
   onUpdateApp: (appId: string, status: AppStatus) => void;
   isApplicant: boolean;
+  canViewNames: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const trust = pro.trust_score ?? 0;
@@ -1044,7 +1053,9 @@ function ProCard({
           {/* Name + specialty + city */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <p className="font-semibold text-sm truncate">{pro.full_name ?? "—"}</p>
+              <p className="font-semibold text-sm truncate">
+                <PlanNameGate name={pro.full_name} canView={canViewNames} fallback="—" />
+              </p>
               {pro.verified && <BadgeCheck className="h-3.5 w-3.5 text-biosensor shrink-0" />}
               {pro.rethus_verified && <ShieldCheck className="h-3.5 w-3.5 text-fuchsia-neural shrink-0" />}
             </div>
@@ -1269,6 +1280,7 @@ function TalentTable({
   updatingApp,
   onUpdateApp,
   applicantIds,
+  canViewNames,
 }: {
   pool: ProSummary[];
   latestAppByPro: Record<string, ApplicationRow>;
@@ -1276,6 +1288,7 @@ function TalentTable({
   updatingApp: string | null;
   onUpdateApp: (appId: string, status: AppStatus) => void;
   applicantIds: Set<string>;
+  canViewNames: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
@@ -1321,7 +1334,9 @@ function TalentTable({
               {/* Name + info */}
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className="text-sm font-medium truncate">{pro.full_name ?? "—"}</p>
+                  <p className="text-sm font-medium truncate">
+                    <PlanNameGate name={pro.full_name} canView={canViewNames} fallback="—" />
+                  </p>
                   {pro.verified && <BadgeCheck className="h-3.5 w-3.5 text-biosensor shrink-0" />}
                   {pro.rethus_verified && <ShieldCheck className="h-3.5 w-3.5 text-fuchsia-neural shrink-0" />}
                   <span
