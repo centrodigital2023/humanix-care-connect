@@ -4,13 +4,11 @@ import { Navbar } from "@/components/humanix/Navbar";
 import { Hero } from "@/components/humanix/Hero";
 import { LiveSocialProof } from "@/components/humanix/LiveSocialProof";
 import { TrustBar } from "@/components/humanix/TrustBar";
-import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { AudienceSection } from "@/components/humanix/AudienceSection";
 import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
-import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
