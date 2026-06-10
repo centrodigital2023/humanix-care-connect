@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Sparkles, MapPin, Activity, Zap, TrendingUp, Wifi, Users, Building2, HeartPulse } from "lucide-react";
+import { ArrowRight, Sparkles, MapPin, Activity, Zap, TrendingUp, Wifi, Users, Building2, HeartPulse, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveUsersCount } from "@/hooks/use-active-users-count";
 import { AnimatedCounter } from "./AnimatedCounter";
@@ -13,8 +13,11 @@ export function Hero() {
     professionalsAvailable,
     families,
     institutions,
+    completedServices,
     loading,
   } = useActiveUsersCount();
+
+  const familiesAndIPS = families + institutions;
 
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-28">
@@ -35,54 +38,68 @@ export function Hero() {
             </h1>
 
             <p className="mt-6 text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;150ms. Pagos directos.
+              Tres actores. Un sistema. Profesionales activan su disponibilidad como en Uber. Familias e IPS buscan y contratan en tiempo real. Matching automático en &lt;5km. Pagos directos.
             </p>
 
-            {/* Key Stats — datos reales desde Supabase en tiempo real */}
+            {/* Key Stats — Uber-style, datos reales desde Supabase en tiempo real */}
             <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 pb-8">
+              {/* Profesionales verificados */}
               <div className="space-y-1">
                 {loading ? (
                   <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />
                 ) : (
                   <p className="text-2xl sm:text-3xl font-black text-white flex items-center gap-1.5">
-                    <HeartPulse className="h-5 w-5 text-biosensor" />
+                    <HeartPulse className="h-5 w-5 text-biosensor shrink-0" />
                     <AnimatedCounter value={professionals} suffix="+" immediate={false} />
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">Profesionales registrados</p>
+                <p className="text-xs text-muted-foreground">Profesionales verificados RETHUS</p>
               </div>
+
+              {/* Online ahora mismo */}
               <div className="space-y-1">
                 {loading ? (
                   <div className="h-9 w-16 animate-pulse rounded-md bg-emerald-400/20" />
                 ) : (
                   <p className="text-2xl sm:text-3xl font-black text-emerald-400 flex items-center gap-1.5">
-                    <Wifi className="h-5 w-5 animate-pulse" />
+                    <Wifi className="h-5 w-5 animate-pulse shrink-0" />
                     <AnimatedCounter value={professionalsAvailable} />
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">Disponibles ahora mismo</p>
+                <p className="text-xs text-muted-foreground">Online ahora mismo</p>
               </div>
+
+              {/* Familias e IPS activas */}
               <div className="space-y-1">
                 {loading ? (
                   <div className="h-9 w-16 animate-pulse rounded-md bg-copper/20" />
                 ) : (
                   <p className="text-2xl sm:text-3xl font-black text-copper flex items-center gap-1.5">
-                    <Users className="h-5 w-5" />
-                    <AnimatedCounter value={families} />
+                    <Users className="h-5 w-5 shrink-0" />
+                    <AnimatedCounter value={familiesAndIPS} />
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">Familias registradas</p>
+                <p className="text-xs text-muted-foreground">
+                  Familias e IPS activas
+                  {!loading && institutions > 0 && (
+                    <span className="ml-1 text-fuchsia-400/70">
+                      · <Building2 className="inline h-3 w-3" /> {institutions} IPS
+                    </span>
+                  )}
+                </p>
               </div>
+
+              {/* Servicios completados */}
               <div className="space-y-1">
                 {loading ? (
                   <div className="h-9 w-16 animate-pulse rounded-md bg-fuchsia-500/20" />
                 ) : (
                   <p className="text-2xl sm:text-3xl font-black text-fuchsia-400 flex items-center gap-1.5">
-                    <Building2 className="h-5 w-5" />
-                    <AnimatedCounter value={institutions} />
+                    <CheckCircle2 className="h-5 w-5 shrink-0" />
+                    <AnimatedCounter value={completedServices} suffix="+" />
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">Instituciones activas</p>
+                <p className="text-xs text-muted-foreground">Servicios completados</p>
               </div>
             </div>
 
@@ -126,7 +143,7 @@ export function Hero() {
               <div className="absolute inset-0 bg-gradient-to-t from-cyber/40 via-transparent to-transparent" />
             </div>
 
-            {/* Live Match Animation Card */}
+            {/* Live Match Card */}
             <div className="hidden sm:flex absolute -left-4 bottom-10 items-center gap-3 rounded-2xl bg-card/95 backdrop-blur-xl border border-border p-3.5 pr-5 shadow-[var(--shadow-card)] animate-in slide-in-from-left">
               <div className="h-10 w-10 rounded-xl bg-biosensor/15 flex items-center justify-center">
                 <Activity className="h-5 w-5 text-biosensor animate-pulse" />

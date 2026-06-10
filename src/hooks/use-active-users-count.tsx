@@ -3,15 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 
 type UserRole = "professional" | "family" | "institution";
 
+type Counts = {
+  professionals: number;
+  professionalsAvailable: number;
+  families: number;
+  familiesVisible: number;
+  institutions: number;
+  institutionsVisible: number;
+  completedServices: number;
+};
+
+const INITIAL: Counts = {
+  professionals: 0,
+  professionalsAvailable: 0,
+  families: 0,
+  familiesVisible: 0,
+  institutions: 0,
+  institutionsVisible: 0,
+  completedServices: 0,
+};
+
 export function useActiveUsersCount(_role?: UserRole) {
-  const [counts, setCounts] = useState({
-    professionals: 0,
-    professionalsAvailable: 0,
-    families: 0,
-    familiesVisible: 0,
-    institutions: 0,
-    institutionsVisible: 0,
-  });
+  const [counts, setCounts] = useState<Counts>(INITIAL);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,47 +32,38 @@ export function useActiveUsersCount(_role?: UserRole) {
 
     const fetchCounts = async () => {
       try {
-        const [proTotal, proAvail, famTotal, famVisible, instTotal, instVisible] = await Promise.all([
-          // Total profesionales registrados (rol en plataforma)
-          supabase
-            .from("user_roles")
-            .select("*", { count: "exact", head: true })
-            .eq("role", "professional"),
-          // Profesionales disponibles ahora (perfil activo + available=true)
-          supabase
-            .from("professional_profiles")
-            .select("*", { count: "exact", head: true })
-            .eq("available", true)
-            .eq("blocked", false),
-          // Total familias registradas en la plataforma
-          supabase
-            .from("user_roles")
-            .select("*", { count: "exact", head: true })
-            .eq("role", "family"),
-          // Familias visibles en mapa (con GPS + visible_on_map)
+        // Single SECURITY DEFINER RPC — bypasses RLS, returns real totals
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const [rpcRes, famVisibleRes, instVisibleRes] = await Promise.all([
+          (supabase.rpc as any)("get_platform_counts").single(),
+
+          // Visible-on-map counts (for X/Y display in map badges)
           supabase
             .from("public_family_map_safe")
             .select("*", { count: "exact", head: true })
             .eq("visible_on_map", true),
-          // Total instituciones registradas en la plataforma
-          supabase
-            .from("user_roles")
-            .select("*", { count: "exact", head: true })
-            .eq("role", "institution"),
-          // Instituciones visibles en mapa (con GPS)
+
           supabase
             .from("public_institutions_safe")
             .select("*", { count: "exact", head: true }),
         ]);
 
-        if (active) {
+        if (active && rpcRes.data) {
+          const d = rpcRes.data as unknown as {
+            professionals_total: number;
+            professionals_available: number;
+            families_total: number;
+            institutions_total: number;
+            completed_services: number;
+          };
           setCounts({
-            professionals: proTotal.count ?? 0,
-            professionalsAvailable: proAvail.count ?? 0,
-            families: famTotal.count ?? 0,
-            familiesVisible: famVisible.count ?? 0,
-            institutions: instTotal.count ?? 0,
-            institutionsVisible: instVisible.count ?? 0,
+            professionals: Number(d.professionals_total ?? 0),
+            professionalsAvailable: Number(d.professionals_available ?? 0),
+            families: Number(d.families_total ?? 0),
+            familiesVisible: famVisibleRes.count ?? 0,
+            institutions: Number(d.institutions_total ?? 0),
+            institutionsVisible: instVisibleRes.count ?? 0,
+            completedServices: Number(d.completed_services ?? 0),
           });
         }
       } catch (e) {
@@ -71,6 +75,7 @@ export function useActiveUsersCount(_role?: UserRole) {
 
     fetchCounts();
 
+    // Realtime: re-fetch on any profile change
     const suffix = Math.random().toString(36).slice(2, 8);
     const channels = [
       supabase
@@ -78,8 +83,16 @@ export function useActiveUsersCount(_role?: UserRole) {
         .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, () => fetchCounts())
         .subscribe(),
       supabase
-        .channel(`active_user_roles_${suffix}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => fetchCounts())
+        .channel(`active_families_${suffix}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, () => fetchCounts())
+        .subscribe(),
+      supabase
+        .channel(`active_institutions_${suffix}`)
+        .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, () => fetchCounts())
+        .subscribe(),
+      supabase
+        .channel(`active_bookings_${suffix}`)
+        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_bookings" }, () => fetchCounts())
         .subscribe(),
     ];
 
@@ -90,9 +103,7 @@ export function useActiveUsersCount(_role?: UserRole) {
   }, []);
 
   const getCount = (roleFilter?: UserRole) => {
-    if (!roleFilter) {
-      return counts.professionals + counts.families + counts.institutions;
-    }
+    if (!roleFilter) return counts.professionals + counts.families + counts.institutions;
     switch (roleFilter) {
       case "professional": return counts.professionals;
       case "family": return counts.families;
@@ -102,9 +113,7 @@ export function useActiveUsersCount(_role?: UserRole) {
   };
 
   const getAvailableCount = (roleFilter?: UserRole) => {
-    if (!roleFilter) {
-      return counts.professionalsAvailable + counts.familiesVisible + counts.institutionsVisible;
-    }
+    if (!roleFilter) return counts.professionalsAvailable + counts.familiesVisible + counts.institutionsVisible;
     switch (roleFilter) {
       case "professional": return counts.professionalsAvailable;
       case "family": return counts.familiesVisible;
@@ -118,12 +127,13 @@ export function useActiveUsersCount(_role?: UserRole) {
     loading,
     getCount,
     getAvailableCount,
-    // Total registrados
+    // Totales registrados
     professionals: counts.professionals,
     families: counts.families,
     institutions: counts.institutions,
     total: counts.professionals + counts.families + counts.institutions,
-    // Disponibles/visibles ahora
+    completedServices: counts.completedServices,
+    // Disponibles/visibles ahora mismo
     professionalsAvailable: counts.professionalsAvailable,
     familiesVisible: counts.familiesVisible,
     institutionsVisible: counts.institutionsVisible,
