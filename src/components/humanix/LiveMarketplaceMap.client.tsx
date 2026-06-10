@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { clusterMarkers, isCluster } from "@/lib/marker-clustering";
 import { useThrottle } from "@/hooks/use-throttle";
 import { useNavigate } from "@tanstack/react-router";
+import { useLivePresence } from "@/hooks/use-live-presence";
 
 type Role = "professional" | "family" | "institution" | "guest";
 
@@ -51,6 +52,7 @@ type Point = {
   subSpecialties?: string[] | null;
   availabilityStatus?: "available" | "busy" | "away" | null;
   hasExactLocation?: boolean;
+  isLive?: boolean;
 };
 
 const COLORS = {
@@ -64,31 +66,41 @@ function makeMarkerIcon(
   status: "available" | "busy" | "away" | null = "available",
   selected = false,
   hasExactLocation = true,
+  isLive = false,
 ) {
   const shape = kind === "institution" ? "6px" : "9999px";
   const baseColor = COLORS[kind];
   const color =
     status === "busy" ? "#f59e0b" : status === "away" ? "#9ca3af" : baseColor;
-  const dur = kind === "professional" ? 2 : kind === "family" ? 2.4 : 2.8;
-  const pulse =
-    status === "available" && hasExactLocation
+  // GPS en vivo → pulso rápido; disponible normal → pulso normal; ocupado → pulso lento
+  const dur = isLive ? 0.9 : kind === "professional" ? 2 : kind === "family" ? 2.4 : 2.8;
+  const pulse = isLive
+    ? `animation:livePulse ${dur}s infinite`
+    : status === "available" && hasExactLocation
       ? `animation:livePulse ${dur}s infinite`
       : status === "busy"
         ? "animation:livePulseSlow 3.5s infinite"
         : "";
-  const size = (kind === "institution" ? 24 : 22) + (selected ? 6 : 0);
+  const base = kind === "institution" ? 24 : 22;
+  const size = base + (selected ? 6 : 0) + (isLive ? 2 : 0);
+  // Anillo extra para usuarios con GPS en vivo activo
+  const liveRing = isLive ? `,0 0 0 8px ${color}28,0 0 0 15px ${color}12` : "";
   const ring = selected
-    ? `0 0 0 5px ${color}55,0 0 0 12px ${color}22,0 6px 20px rgba(0,0,0,.45)`
-    : `0 0 0 4px ${color}44,0 4px 14px rgba(0,0,0,.35)`;
+    ? `0 0 0 5px ${color}55,0 0 0 12px ${color}22,0 6px 20px rgba(0,0,0,.45)${liveRing}`
+    : `0 0 0 4px ${color}44,0 4px 14px rgba(0,0,0,.35)${liveRing}`;
   // Ubicación aproximada: borde punteado + opacidad reducida
   const approxStyle = hasExactLocation
     ? `border:3px solid white`
     : `border:2.5px dashed white;opacity:0.72`;
+  // Indicador verde "en vivo" sobre el marcador
+  const liveIndicator = isLive
+    ? `<span style="position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:9999px;background:#22c55e;border:2px solid white;box-shadow:0 0 5px #22c55e80"></span>`
+    : "";
   return L.divIcon({
     className: "live-marker",
-    html: `<div style="width:${size}px;height:${size}px;border-radius:${shape};background:${color};${approxStyle};box-shadow:${ring};${pulse};transition:all .2s ease"></div>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<div style="position:relative;display:inline-block">${liveIndicator}<div style="width:${size}px;height:${size}px;border-radius:${shape};background:${color};${approxStyle};box-shadow:${ring};${pulse};transition:all .15s ease"></div></div>`,
+    iconSize: [size + 4, size + 4],
+    iconAnchor: [(size + 4) / 2, (size + 4) / 2],
   });
 }
 
@@ -179,6 +191,13 @@ export function LiveMarketplaceMap({
   const effectiveRole: Role = role ?? "guest";
   const isGuest = preview || effectiveRole === "guest" || !userId;
   const navigate = useNavigate();
+
+  // ── Presencia GPS en vivo (estilo Uber/InDrive) ───────────────────────────
+  const { liveLocations, isTracking, startTracking, stopTracking } = useLivePresence({
+    userId: !isGuest ? userId : undefined,
+    userType: !isGuest && effectiveRole !== "guest" ? (effectiveRole as any) : undefined,
+    loadAll: true,
+  });
   // Antes esto abría un modal de pantalla completa que tapaba el mapa por
   // completo ("el mapa queda detrás del registro"). En Uber/InDrive puedes
   // explorar el mapa libremente sin cuenta — el registro es una invitación
@@ -587,14 +606,35 @@ export function LiveMarketplaceMap({
     meCoords.lng,
   ]);
 
+  // Fusionar ubicaciones GPS en vivo sobre los puntos estáticos del perfil.
+  // Si el usuario tiene GPS activo, su marcador se mueve en tiempo real y
+  // se muestra con el indicador verde "en vivo".
+  const applyLiveLocations = useCallback(
+    (points: Point[]): Point[] =>
+      points.map((p) => {
+        if (!p.userId) return p;
+        const live = liveLocations.get(p.userId);
+        if (!live?.isOnline) return p;
+        return { ...p, lat: live.lat, lng: live.lng, hasExactLocation: true, isLive: true };
+      }),
+    [liveLocations],
+  );
+
   // Visible layers depend on role:
   // - professional sees families (yellow) + institutions (fuchsia) = offers
   // - family / institution sees professionals (blue)
+  // - guest sees everyone
   const visiblePoints = useMemo<Point[]>(() => {
-    if (effectiveRole === "professional") return [...families, ...institutions];
-    if (effectiveRole === "guest") return [...filteredPros, ...families, ...institutions];
-    return filteredPros;
-  }, [effectiveRole, filteredPros, families, institutions]);
+    if (effectiveRole === "professional")
+      return [...applyLiveLocations(families), ...applyLiveLocations(institutions)];
+    if (effectiveRole === "guest")
+      return [
+        ...applyLiveLocations(filteredPros),
+        ...applyLiveLocations(families),
+        ...applyLiveLocations(institutions),
+      ];
+    return applyLiveLocations(filteredPros);
+  }, [effectiveRole, filteredPros, families, institutions, applyLiveLocations]);
 
   // Cluster by proximity when zoomed out; radius shrinks as user zooms in.
   const clusterRadiusKm = zoomLevel >= 14 ? 0 : zoomLevel >= 12 ? 0.4 : zoomLevel >= 10 ? 1.2 : 3.5;
@@ -697,15 +737,22 @@ export function LiveMarketplaceMap({
                 <span className="truncate">{picking ? "Toca el mapa…" : "Marcar"}</span>
               </Button>
               <Button
-                variant="outline"
+                variant={isTracking ? "hero" : "outline"}
                 size="sm"
                 className="flex-1 sm:flex-initial"
                 onClick={() => {
                   if (requireAuth()) return;
-                  handleGps();
+                  if (isTracking) {
+                    stopTracking();
+                    toast("GPS en vivo desactivado");
+                  } else {
+                    startTracking().then(() => handleGps());
+                    toast.success("GPS en vivo activado — tu posición se actualiza en tiempo real");
+                  }
                 }}
               >
-                <Crosshair className="h-4 w-4 mr-1" /> GPS
+                <Crosshair className="h-4 w-4 mr-1" />
+                {isTracking ? "GPS Activo" : "GPS"}
               </Button>
             </>
           )}
@@ -735,14 +782,26 @@ export function LiveMarketplaceMap({
       </Card>
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
+        {/* Indicador de usuarios con GPS en vivo activo ahora mismo */}
+        {liveLocations.size > 0 && (
+          <Badge variant="outline" className="gap-1.5 border-emerald-500/40">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+            <span style={{ color: "#22c55e", fontWeight: 700 }}>{liveLocations.size}</span>
+            <span className="text-muted-foreground">en vivo ahora</span>
+          </Badge>
+        )}
         {effectiveRole !== "professional" && (() => {
           const availPros = pros.filter((p) => p.availabilityStatus === "available").length;
+          const livePros = pros.filter((p) => p.userId && liveLocations.has(p.userId)).length;
           const shownPros = filteredPros.length;
           return (
             <Badge variant="outline" className="gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
               <span style={{ color: "#22c55e", fontWeight: 700 }}>{availPros}</span>
               <span className="text-muted-foreground">/ {pros.length} profesionales</span>
+              {livePros > 0 && (
+                <span style={{ color: "#22c55e", fontSize: 10 }}>({livePros} GPS)</span>
+              )}
               {shownPros !== pros.length && (
                 <span className="text-muted-foreground">(filtrados: {shownPros})</span>
               )}
@@ -757,6 +816,10 @@ export function LiveMarketplaceMap({
                 {families.filter((f) => f.availabilityStatus === "available").length}
               </span>
               <span className="text-muted-foreground">/ {families.length} familias</span>
+              {(() => {
+                const lf = families.filter((f) => f.userId && liveLocations.has(f.userId)).length;
+                return lf > 0 ? <span style={{ color: "#22c55e", fontSize: 10 }}>({lf} GPS)</span> : null;
+              })()}
             </Badge>
             <Badge variant="outline" className="gap-1.5">
               <span className="h-2.5 w-2.5 rounded-sm bg-emerald-500" />
@@ -764,6 +827,10 @@ export function LiveMarketplaceMap({
                 {institutions.filter((i) => i.availabilityStatus === "available").length}
               </span>
               <span className="text-muted-foreground">/ {institutions.length} instituciones</span>
+              {(() => {
+                const li = institutions.filter((i) => i.userId && liveLocations.has(i.userId)).length;
+                return li > 0 ? <span style={{ color: "#22c55e", fontSize: 10 }}>({li} GPS)</span> : null;
+              })()}
             </Badge>
           </>
         )}
@@ -1106,7 +1173,7 @@ export function LiveMarketplaceMap({
               }
               const p = item as Point;
               const isSelected = selectedId === p.id;
-              const icon = makeMarkerIcon(p.kind, p.availabilityStatus ?? "available", isSelected, p.hasExactLocation !== false);
+              const icon = makeMarkerIcon(p.kind, p.availabilityStatus ?? "available", isSelected, p.hasExactLocation !== false, p.isLive === true);
               const Icon =
                 p.kind === "professional" ? HeartPulse : p.kind === "family" ? Users : Building2;
               const dist =
@@ -1226,7 +1293,13 @@ export function LiveMarketplaceMap({
                           {p.city ? ` · ${p.city}` : ""}
                         </p>
                       )}
-                      {!p.hasExactLocation && (
+                      {p.isLive && (
+                        <p style={{ fontSize: 10, margin: "2px 0", color: "#22c55e", fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "livePulse 1s infinite" }} />
+                          GPS en vivo · posición exacta ahora
+                        </p>
+                      )}
+                      {!p.hasExactLocation && !p.isLive && (
                         <p style={{ fontSize: 10, margin: "2px 0", color: "#9ca3af", fontStyle: "italic" }}>
                           📍 Ubicación aproximada · ciudad
                         </p>

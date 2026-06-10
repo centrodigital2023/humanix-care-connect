@@ -7,10 +7,13 @@ type Counts = {
   professionals: number;
   professionalsAvailable: number;
   professionalsRethus: number;
+  professionalsOnline: number;
   families: number;
   familiesVisible: number;
+  familiesOnline: number;
   institutions: number;
   institutionsVisible: number;
+  institutionsOnline: number;
   completedServices: number;
 };
 
@@ -18,10 +21,13 @@ const INITIAL: Counts = {
   professionals: 0,
   professionalsAvailable: 0,
   professionalsRethus: 0,
+  professionalsOnline: 0,
   families: 0,
   familiesVisible: 0,
+  familiesOnline: 0,
   institutions: 0,
   institutionsVisible: 0,
+  institutionsOnline: 0,
   completedServices: 0,
 };
 
@@ -45,8 +51,11 @@ export function useActiveUsersCount(_role?: UserRole) {
             professionals_total: number;
             professionals_available: number;
             professionals_rethus: number;
+            professionals_online: number;
             families_total: number;
+            families_online: number;
             institutions_total: number;
+            institutions_online: number;
             completed_services: number;
           };
           const [famVisibleRes, instVisibleRes] = await Promise.all([
@@ -64,10 +73,13 @@ export function useActiveUsersCount(_role?: UserRole) {
               professionals:          Number(d.professionals_total     ?? 0),
               professionalsAvailable: Number(d.professionals_available ?? 0),
               professionalsRethus:    Number(d.professionals_rethus    ?? 0),
+              professionalsOnline:    Number(d.professionals_online    ?? 0),
               families:               Number(d.families_total          ?? 0),
               familiesVisible:        famVisibleRes.count              ?? 0,
+              familiesOnline:         Number(d.families_online         ?? 0),
               institutions:           Number(d.institutions_total      ?? 0),
               institutionsVisible:    instVisibleRes.count             ?? 0,
+              institutionsOnline:     Number(d.institutions_online     ?? 0),
               completedServices:      Number(d.completed_services      ?? 0),
             });
           }
@@ -103,13 +115,16 @@ export function useActiveUsersCount(_role?: UserRole) {
             ]);
           if (active) {
             setCounts({
-              professionals:          proTotal.count   ?? 0,
-              professionalsAvailable: proAvail.count   ?? 0,
-              professionalsRethus:    proRethus.count  ?? 0,
-              families:               famTotal.count   ?? 0,
-              familiesVisible:        famVisible.count ?? 0,
-              institutions:           instTotal.count  ?? 0,
+              professionals:          proTotal.count    ?? 0,
+              professionalsAvailable: proAvail.count    ?? 0,
+              professionalsRethus:    proRethus.count   ?? 0,
+              professionalsOnline:    0,
+              families:               famTotal.count    ?? 0,
+              familiesVisible:        famVisible.count  ?? 0,
+              familiesOnline:         0,
+              institutions:           instTotal.count   ?? 0,
               institutionsVisible:    instVisible.count ?? 0,
+              institutionsOnline:     0,
               completedServices:      0,
             });
           }
@@ -123,30 +138,21 @@ export function useActiveUsersCount(_role?: UserRole) {
 
     fetchCounts();
 
-    // Realtime: re-fetch cuando cambia cualquier perfil o booking
+    // Un solo canal Supabase con todas las suscripciones unificadas.
+    // Reduce conexiones WebSocket de 5 a 1 y evita race conditions.
     const suffix = Math.random().toString(36).slice(2, 8);
-    const channels = [
-      supabase
-        .channel(`cnt_pros_${suffix}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, fetchCounts)
-        .subscribe(),
-      supabase
-        .channel(`cnt_fam_${suffix}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, fetchCounts)
-        .subscribe(),
-      supabase
-        .channel(`cnt_inst_${suffix}`)
-        .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, fetchCounts)
-        .subscribe(),
-      supabase
-        .channel(`cnt_bkg_${suffix}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_bookings" }, fetchCounts)
-        .subscribe(),
-    ];
+    const channel = supabase
+      .channel(`humanix-counts-${suffix}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, fetchCounts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, fetchCounts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, fetchCounts)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_bookings" }, fetchCounts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_locations" }, fetchCounts)
+      .subscribe();
 
     return () => {
       active = false;
-      channels.forEach((ch) => supabase.removeChannel(ch));
+      supabase.removeChannel(channel);
     };
   }, []);
 
@@ -189,5 +195,11 @@ export function useActiveUsersCount(_role?: UserRole) {
     institutionsVisible:    counts.institutionsVisible,
     totalAvailable:
       counts.professionalsAvailable + counts.familiesVisible + counts.institutionsVisible,
+    // Con GPS en vivo activo ahora mismo
+    professionalsOnline:    counts.professionalsOnline,
+    familiesOnline:         counts.familiesOnline,
+    institutionsOnline:     counts.institutionsOnline,
+    totalOnline:
+      counts.professionalsOnline + counts.familiesOnline + counts.institutionsOnline,
   };
 }
