@@ -117,6 +117,7 @@ type Pro = {
   hourly_rate: number | null;
   shift_rate: number | null;
   monthly_rate: number | null;
+  home_city: string | null;
   service_cities: string[] | null;
   trust_score: number | null;
   avg_rating: number | null;
@@ -130,6 +131,10 @@ type Pro = {
   lng: number | null;
   certifications: unknown;
   work_experience: unknown;
+  // From the SQL JOIN in the view
+  full_name: string | null;
+  avatar_url: string | null;
+  phone: string | null;
 };
 
 type Doc = {
@@ -172,17 +177,14 @@ function ProfessionalPublicPage() {
     let active = true;
     (async () => {
       try {
-        const [proRes, profRes, docsRes] = await Promise.all([
+        // Usar vistas públicas (security_invoker=false) para bypasar RLS —
+        // professional_profiles tiene RLS que bloquea lecturas de otras familias.
+        const [proRes, docsRes] = await Promise.all([
           supabase
-            .from("professional_profiles")
+            .from("public_professionals_safe")
             .select(
-              "user_id, specialty, sub_specialties, bio, ai_summary, ai_strengths, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, rethus_number, total_jobs, available, reserved_until, lat, lng, certifications, work_experience",
+              "user_id, specialty, sub_specialties, bio, ai_summary, ai_strengths, years_experience, hourly_rate, shift_rate, monthly_rate, service_cities, trust_score, avg_rating, verified, rethus_verified, rethus_number, total_jobs, available, reserved_until, lat, lng, certifications, work_experience, full_name, avatar_url, phone",
             )
-            .eq("user_id", proId)
-            .maybeSingle(),
-          supabase
-            .from("public_profiles_safe")
-            .select("full_name, avatar_url, city, bio")
             .eq("user_id", proId)
             .maybeSingle(),
           supabase
@@ -193,8 +195,16 @@ function ProfessionalPublicPage() {
             .order("created_at", { ascending: false }),
         ]);
         if (!active) return;
-        setPro(proRes.data as Pro | null);
-        setProfile(profRes.data ?? null);
+        const proData = proRes.data as Pro | null;
+        setPro(proData);
+        if (proData) {
+          setProfile({
+            full_name: proData.full_name ?? null,
+            avatar_url: proData.avatar_url ?? null,
+            city: proData.home_city ?? proData.service_cities?.[0] ?? null,
+            bio: proData.bio ?? null,
+          });
+        }
         setDocs((docsRes.data ?? []) as Doc[]);
       } finally {
         if (active) setLoading(false);
