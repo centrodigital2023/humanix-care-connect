@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { geocodeCity, getBrowserLocation, distanceKm, formatKm } from "@/lib/geo";
+import { geocodeCity, getBrowserLocation, distanceKm, formatKm, cityToLatLng, deterministicOffset } from "@/lib/geo";
 import { Star, Phone, MessageCircle, User as UserIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -50,6 +50,7 @@ type Point = {
   yearsExperience?: number | null;
   subSpecialties?: string[] | null;
   availabilityStatus?: "available" | "busy" | "away" | null;
+  hasExactLocation?: boolean;
 };
 
 const COLORS = {
@@ -62,6 +63,7 @@ function makeMarkerIcon(
   kind: "professional" | "family" | "institution",
   status: "available" | "busy" | "away" | null = "available",
   selected = false,
+  hasExactLocation = true,
 ) {
   const shape = kind === "institution" ? "6px" : "9999px";
   const baseColor = COLORS[kind];
@@ -69,7 +71,7 @@ function makeMarkerIcon(
     status === "busy" ? "#f59e0b" : status === "away" ? "#9ca3af" : baseColor;
   const dur = kind === "professional" ? 2 : kind === "family" ? 2.4 : 2.8;
   const pulse =
-    status === "available"
+    status === "available" && hasExactLocation
       ? `animation:livePulse ${dur}s infinite`
       : status === "busy"
         ? "animation:livePulseSlow 3.5s infinite"
@@ -78,9 +80,13 @@ function makeMarkerIcon(
   const ring = selected
     ? `0 0 0 5px ${color}55,0 0 0 12px ${color}22,0 6px 20px rgba(0,0,0,.45)`
     : `0 0 0 4px ${color}44,0 4px 14px rgba(0,0,0,.35)`;
+  // Ubicación aproximada: borde punteado + opacidad reducida
+  const approxStyle = hasExactLocation
+    ? `border:3px solid white`
+    : `border:2.5px dashed white;opacity:0.72`;
   return L.divIcon({
     className: "live-marker",
-    html: `<div style="width:${size}px;height:${size}px;border-radius:${shape};background:${color};border:3px solid white;box-shadow:${ring};${pulse};transition:all .2s ease"></div>`,
+    html: `<div style="width:${size}px;height:${size}px;border-radius:${shape};background:${color};${approxStyle};box-shadow:${ring};${pulse};transition:all .2s ease"></div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size / 2],
   });
@@ -338,89 +344,108 @@ export function LiveMarketplaceMap({
 
   const loadAll = async () => {
     try {
-      // Las vistas ya incluyen full_name, avatar_url, phone via SQL JOIN (security_invoker=false).
-      // NO se usa profiles:user_id(...) FK-embedding porque las vistas no tienen FK relationships.
+      // Las vistas incluyen full_name/avatar_url/phone via SQL JOIN (security_invoker=false).
+      // Sin filtro GPS: todos los registrados aparecen; los sin GPS usan ciudad como fallback.
       const [proRes, famRes, instRes] = await Promise.all([
         supabase
           .from("public_professionals_safe")
           .select(
-            "user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, avatar_url, full_name, phone",
+            "user_id, lat, lng, has_exact_location, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, avatar_url, full_name, phone",
           )
-          .not("lat", "is", null)
-          .not("lng", "is", null)
-          .limit(200),
+          .limit(300),
         supabase
           .from("public_family_map_safe")
-          .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp, full_name, avatar_url, phone")
-          .limit(200),
+          .select("user_id, default_lat, default_lng, has_exact_location, patient_name, default_address, visible_on_map, whatsapp, full_name, avatar_url, phone")
+          .limit(300),
         supabase
           .from("public_institutions_safe")
           .select(
-            "user_id, lat, lng, institution_name, city, institution_type, visible_on_map, full_name, avatar_url, phone",
+            "user_id, lat, lng, has_exact_location, institution_name, city, institution_type, visible_on_map, full_name, avatar_url, phone",
           )
-          .limit(200),
+          .limit(300),
       ]);
 
+      const resolveCoords = (
+        lat: number | null,
+        lng: number | null,
+        city: string | null,
+        userId: string,
+      ): { lat: number; lng: number } => {
+        if (lat != null && lng != null) return { lat: Number(lat), lng: Number(lng) };
+        const base = cityToLatLng(city);
+        const off = deterministicOffset(userId);
+        return { lat: base.lat + off.lat, lng: base.lng + off.lng };
+      };
+
       setPros(
-        (proRes.data ?? []).map((p: any) => ({
-          id: `pro-${p.user_id}`,
-          lat: Number(p.lat),
-          lng: Number(p.lng),
-          kind: "professional" as const,
-          title: p.specialty || "Profesional disponible",
-          subtitle: `${p.home_city ?? ""}${p.hourly_rate ? ` · $${Number(p.hourly_rate).toLocaleString("es-CO")}/h` : ""}`,
-          userId: p.user_id,
-          avatarUrl: p.avatar_url ?? null,
-          fullName: p.full_name ?? null,
-          rating: p.avg_rating ?? null,
-          hourlyRate: p.hourly_rate ?? null,
-          phone: p.phone ?? null,
-          city: p.home_city ?? null,
-          meta: p.specialty ?? null,
-          specialty: p.specialty ?? null,
-          gender: p.gender ?? null,
-          yearsExperience: p.years_experience ?? null,
-          subSpecialties: p.sub_specialties ?? null,
-          availabilityStatus:
-            p.availability_status === "busy"
-              ? "busy"
-              : p.available === true || p.availability_status === "available"
-                ? "available"
-                : "away",
-        })),
+        (proRes.data ?? []).map((p: any) => {
+          const coords = resolveCoords(p.lat, p.lng, p.home_city, p.user_id);
+          return {
+            id: `pro-${p.user_id}`,
+            ...coords,
+            kind: "professional" as const,
+            title: p.specialty || "Profesional disponible",
+            subtitle: `${p.home_city ?? ""}${p.hourly_rate ? ` · $${Number(p.hourly_rate).toLocaleString("es-CO")}/h` : ""}`,
+            userId: p.user_id,
+            avatarUrl: p.avatar_url ?? null,
+            fullName: p.full_name ?? null,
+            rating: p.avg_rating ?? null,
+            hourlyRate: p.hourly_rate ?? null,
+            phone: p.phone ?? null,
+            city: p.home_city ?? null,
+            meta: p.specialty ?? null,
+            specialty: p.specialty ?? null,
+            gender: p.gender ?? null,
+            yearsExperience: p.years_experience ?? null,
+            subSpecialties: p.sub_specialties ?? null,
+            hasExactLocation: p.has_exact_location ?? (p.lat != null),
+            availabilityStatus:
+              p.availability_status === "busy"
+                ? "busy"
+                : p.available === true || p.availability_status === "available"
+                  ? "available"
+                  : "away",
+          };
+        }),
       );
       setFamilies(
-        (famRes.data ?? []).map((p: any) => ({
-          id: `fam-${p.user_id}`,
-          lat: Number(p.default_lat),
-          lng: Number(p.default_lng),
-          kind: "family" as const,
-          title: p.patient_name ? `Familia · ${p.patient_name}` : "Familia",
-          subtitle: p.default_address ?? undefined,
-          userId: p.user_id,
-          avatarUrl: p.avatar_url ?? null,
-          fullName: p.full_name ?? null,
-          phone: p.whatsapp ?? p.phone ?? null,
-          meta: p.default_address ?? null,
-          availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
-        })),
+        (famRes.data ?? []).map((p: any) => {
+          const coords = resolveCoords(p.default_lat, p.default_lng, null, p.user_id);
+          return {
+            id: `fam-${p.user_id}`,
+            ...coords,
+            kind: "family" as const,
+            title: p.patient_name ? `Familia · ${p.patient_name}` : "Familia",
+            subtitle: p.default_address ?? undefined,
+            userId: p.user_id,
+            avatarUrl: p.avatar_url ?? null,
+            fullName: p.full_name ?? null,
+            phone: p.whatsapp ?? p.phone ?? null,
+            meta: p.default_address ?? null,
+            hasExactLocation: p.has_exact_location ?? (p.default_lat != null),
+            availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
+          };
+        }),
       );
       setInstitutions(
-        (instRes.data ?? []).map((p: any) => ({
-          id: `inst-${p.user_id}`,
-          lat: Number(p.lat),
-          lng: Number(p.lng),
-          kind: "institution" as const,
-          title: p.institution_name || "Institución",
-          subtitle: `${p.institution_type ?? ""}${p.city ? ` · ${p.city}` : ""}`,
-          userId: p.user_id,
-          avatarUrl: p.avatar_url ?? null,
-          fullName: p.institution_name ?? p.full_name ?? null,
-          phone: p.phone ?? null,
-          city: p.city ?? null,
-          meta: p.institution_type ?? null,
-          availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
-        })),
+        (instRes.data ?? []).map((p: any) => {
+          const coords = resolveCoords(p.lat, p.lng, p.city, p.user_id);
+          return {
+            id: `inst-${p.user_id}`,
+            ...coords,
+            kind: "institution" as const,
+            title: p.institution_name || "Institución",
+            subtitle: `${p.institution_type ?? ""}${p.city ? ` · ${p.city}` : ""}`,
+            userId: p.user_id,
+            avatarUrl: p.avatar_url ?? null,
+            fullName: p.institution_name ?? p.full_name ?? null,
+            phone: p.phone ?? null,
+            city: p.city ?? null,
+            meta: p.institution_type ?? null,
+            hasExactLocation: p.has_exact_location ?? (p.lat != null),
+            availabilityStatus: p.visible_on_map === true ? ("available" as const) : ("away" as const),
+          };
+        }),
       );
     } catch (e) {
       console.error("[LiveMap] load failed", e);
@@ -1081,7 +1106,7 @@ export function LiveMarketplaceMap({
               }
               const p = item as Point;
               const isSelected = selectedId === p.id;
-              const icon = makeMarkerIcon(p.kind, p.availabilityStatus ?? "available", isSelected);
+              const icon = makeMarkerIcon(p.kind, p.availabilityStatus ?? "available", isSelected, p.hasExactLocation !== false);
               const Icon =
                 p.kind === "professional" ? HeartPulse : p.kind === "family" ? Users : Building2;
               const dist =
@@ -1199,6 +1224,11 @@ export function LiveMarketplaceMap({
                         <p className="text-xs text-muted-foreground" style={{ margin: "2px 0" }}>
                           {p.meta}
                           {p.city ? ` · ${p.city}` : ""}
+                        </p>
+                      )}
+                      {!p.hasExactLocation && (
+                        <p style={{ fontSize: 10, margin: "2px 0", color: "#9ca3af", fontStyle: "italic" }}>
+                          📍 Ubicación aproximada · ciudad
                         </p>
                       )}
 
