@@ -273,15 +273,7 @@ export function HowItWorks() {
           </Link>
         </div>
 
-        {/* Stats counter */}
-        <div
-          ref={statsRef}
-          className="mt-16 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 border-t border-border/40 pt-10"
-        >
-          {STATS.map((s) => (
-            <StatItem key={s.label} {...s} visible={statsVisible} />
-          ))}
-        </div>
+        {/* Stats counter removed */}
       </div>
     </section>
   );
