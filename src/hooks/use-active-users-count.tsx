@@ -144,8 +144,7 @@ export function useActiveUsersCount(_role?: UserRole) {
     const channel = supabase
       .channel(`humanix-counts-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, fetchCounts)
-      .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, fetchCounts)
-      .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, fetchCounts)
+      .on("postgres_changes", { event: "*", schema: "public", table: "job_offers" }, fetchCounts)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "service_bookings" }, fetchCounts)
       .on("postgres_changes", { event: "*", schema: "public", table: "user_locations" }, fetchCounts)
       .subscribe();

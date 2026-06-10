@@ -477,17 +477,9 @@ export function LiveMarketplaceMap({
     loadAll();
     const ch = supabase
       .channel("live-marketplace-map")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "professional_profiles" },
-        () => loadAll(),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, () =>
-        loadAll(),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "institution_profiles" }, () =>
-        loadAll(),
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "job_offers" }, () => loadAll())
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => loadAll())
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
