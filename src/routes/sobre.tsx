@@ -35,7 +35,7 @@ const aboutPageLd = {
 };
 
 const STATS = [
-  { icon: Users, label: "Profesionales activos", value: "+1.200" },
+  { icon: Users, label: "Profesionales activos", value: "+100" },
   { icon: MapPin, label: "Ciudades en Colombia", value: "7+" },
   { icon: Star, label: "Calificación promedio", value: "4.9/5" },
   { icon: Shield, label: "Verificación RETHUS", value: "100%" },
@@ -78,7 +78,7 @@ export const Route = createFileRoute("/sobre")({
       title: "Sobre Humanix · Plataforma de Salud con IA en Colombia",
       path: "/sobre",
       description:
-        "Humanix conecta +1.200 profesionales de salud verificados con familias y clínicas en Colombia. Verificación RETHUS, IA en tiempo real y cobertura en 7+ ciudades.",
+        "Humanix conecta +100 profesionales de salud verificados con familias y clínicas en Colombia. Verificación RETHUS, IA en tiempo real y cobertura en 7+ ciudades.",
     }),
   component: SobrePage,
 });
@@ -205,7 +205,7 @@ function SobrePage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Trabajamos con mentores de universidades líderes, el respaldo de inversionistas que
-              creen en el impacto social, y la confianza de más de 1.200 profesionales y cientos de
+              creen en el impacto social, y la confianza de más de 100 profesionales y cientos de
               familias colombianas que ya usan la plataforma.
             </p>
           </div>

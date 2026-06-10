@@ -436,7 +436,7 @@ function PlansPage() {
               <Zap className="h-3.5 w-3.5 text-copper" /> Activación inmediata
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <Users className="h-3.5 w-3.5 text-fuchsia-neural" /> +1.200 profesionales activos
+              <Users className="h-3.5 w-3.5 text-fuchsia-neural" /> +100 profesionales activos
             </span>
           </div>
         </header>
