@@ -56,12 +56,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const {
-    professionals, professionalsAvailable,
-    families, familiesVisible,
-    institutions, institutionsVisible,
-    loading: countsLoading,
-  } = useActiveUsersCount();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <script
