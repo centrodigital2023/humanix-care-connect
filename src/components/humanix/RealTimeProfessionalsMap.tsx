@@ -44,6 +44,7 @@ type ProfessionalLive = {
   phone: string | null;
   availability_status: "available" | "unavailable" | null;
   is_online: boolean;
+  is_live: boolean;
 };
 
 type AvailabilityFilter = "all" | "available" | "unavailable";
@@ -63,17 +64,28 @@ export function RealTimeProfessionalsMap({
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [tick, setTick] = useState(0);
 
-  // Cargar profesionales disponibles
+  // ── Suscripción realtime (separada de la carga para evitar re-subscribe infinito) ──
+  useEffect(() => {
+    const suffix = Math.random().toString(36).slice(2, 7);
+    const ch = supabase
+      .channel(`rt_pros_map_${institutionCity}_${suffix}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" },
+        () => setTick((n) => n + 1))
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_locations" },
+        () => setTick((n) => n + 1))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [institutionCity]);
+
+  // ── Carga de datos (se re-ejecuta cuando cambia tick o filtros) ───────────
   useEffect(() => {
     let active = true;
     (async () => {
       try {
+        // La vista public_professionals_safe ya incluye full_name, avatar_url, phone
         let query = supabase
           .from("public_professionals_safe")
-          .select(
-            `user_id, specialty, avg_rating, hourly_rate, availability_status, available, home_city,
-             profiles:user_id(full_name, avatar_url, phone)`
-          )
+          .select("user_id, specialty, avg_rating, hourly_rate, availability_status, available, home_city, full_name, avatar_url, phone")
           .eq("home_city", institutionCity);
 
         if (statusFilter === "available") {
@@ -82,35 +94,37 @@ export function RealTimeProfessionalsMap({
           query = query.eq("available", false);
         }
 
-        const { data, error } = await query.order("avg_rating", { ascending: false });
+        // Cargar IDs con GPS en vivo en paralelo
+        const [{ data, error }, { data: liveData }] = await Promise.all([
+          query.order("avg_rating", { ascending: false }),
+          (supabase as any)
+            .from("user_locations")
+            .select("user_id")
+            .eq("is_online", true),
+        ]);
 
         if (error) throw error;
         if (!active) return;
 
+        const liveSet = new Set<string>((liveData ?? []).map((r: any) => r.user_id));
+
         const pros = (data ?? []).map((p: any) => ({
           user_id: p.user_id,
-          full_name: p.profiles?.full_name || null,
-          avatar_url: p.profiles?.avatar_url || null,
+          full_name: p.full_name || null,
+          avatar_url: p.avatar_url || null,
           specialty: p.specialty,
           city: p.home_city || null,
           avg_rating: p.avg_rating,
           hourly_rate: p.hourly_rate,
-          phone: p.profiles?.phone || null,
+          phone: p.phone || null,
           availability_status: p.availability_status as "available" | "unavailable" | null,
           is_online: p.available === true,
+          is_live: liveSet.has(p.user_id),
         }));
 
         const specs = Array.from(new Set(pros.map((p) => p.specialty).filter(Boolean))) as string[];
         setProfessionals(pros);
         setSpecialties(specs);
-
-        const channel = supabase
-          .channel(`rt_pros_map_${institutionCity}`)
-          .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" },
-            () => { if (active) setTick((n) => n + 1); })
-          .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
       } catch (e) {
         console.error("[RealTimeProfessionalsMap] load failed", e);
         if (active) toast.error("Error cargando profesionales");
@@ -118,10 +132,7 @@ export function RealTimeProfessionalsMap({
         if (active) setLoading(false);
       }
     })();
-
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [institutionCity, statusFilter, tick]);
 
   // Filtrar profesionales
@@ -135,6 +146,7 @@ export function RealTimeProfessionalsMap({
 
   const availableCount = filtered.filter((p) => p.is_online).length;
   const unavailableCount = filtered.filter((p) => !p.is_online).length;
+  const liveCount = filtered.filter((p) => p.is_live).length;
   const averageRating =
     filtered.length > 0
       ? (
@@ -160,9 +172,13 @@ export function RealTimeProfessionalsMap({
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-muted-foreground">Disponibles</p>
-              <p className="text-2xl font-bold text-emerald-600">
-                {availableCount}
-              </p>
+              <p className="text-2xl font-bold text-emerald-600">{availableCount}</p>
+              {liveCount > 0 && (
+                <p className="text-[10px] text-emerald-500 flex items-center gap-1 mt-0.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping" />
+                  {liveCount} GPS en vivo
+                </p>
+              )}
             </div>
             <Zap className="h-5 w-5 text-emerald-600 opacity-30" />
           </div>
@@ -290,6 +306,14 @@ export function RealTimeProfessionalsMap({
                       {pro.is_online ? "🟢 Disponible" : "⚪ No disponible"}
                     </Badge>
 
+                    {/* GPS en vivo */}
+                    {pro.is_live && (
+                      <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/40 text-[10px] gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-ping inline-block" />
+                        En vivo
+                      </Badge>
+                    )}
+
                     {pro.avg_rating && pro.avg_rating > 0 && (
                       <span className="inline-flex items-center gap-0.5 text-xs text-amber-600">
                         <Star className="h-3 w-3 fill-amber-600" />
@@ -329,9 +353,9 @@ export function RealTimeProfessionalsMap({
 
       {/* Footer info */}
       <Card className="p-3 bg-muted/50 text-center text-xs text-muted-foreground">
-        <p>
-          Profesionales en {institutionCity} · Actualización en tiempo real cada
-          5 segundos
+        <p className="flex items-center justify-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          Profesionales en {institutionCity} · Sincronización Supabase en tiempo real
         </p>
       </Card>
     </div>
