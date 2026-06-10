@@ -160,7 +160,7 @@ function useCountUp(target: number, duration = 1200, start = false) {
 }
 
 const STATS = [
-  { value: 1200, suffix: "+", label: "Profesionales verificados" },
+  { value: 100, suffix: "+", label: "Profesionales verificados" },
   { value: 7, suffix: "+", label: "Ciudades activas" },
   { value: 4.9, suffix: "/5", label: "Calificación promedio", decimal: true },
   { value: 100, suffix: "%", label: "Certificación RETHUS" },
