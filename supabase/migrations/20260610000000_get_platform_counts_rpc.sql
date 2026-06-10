@@ -4,11 +4,12 @@
 
 CREATE OR REPLACE FUNCTION public.get_platform_counts()
 RETURNS TABLE(
-  professionals_total  bigint,
+  professionals_total     bigint,
   professionals_available bigint,
-  families_total       bigint,
-  institutions_total   bigint,
-  completed_services   bigint
+  professionals_rethus    bigint,
+  families_total          bigint,
+  institutions_total      bigint,
+  completed_services      bigint
 )
 LANGUAGE sql
 STABLE
@@ -24,6 +25,11 @@ AS $$
        FROM public.professional_profiles
       WHERE available = TRUE
         AND blocked IS NOT TRUE)                                        AS professionals_available,
+
+    (SELECT COUNT(*)
+       FROM public.professional_profiles
+      WHERE rethus_verified = TRUE
+        AND blocked IS NOT TRUE)                                        AS professionals_rethus,
 
     (SELECT COUNT(*) FROM public.family_profiles)                      AS families_total,
 

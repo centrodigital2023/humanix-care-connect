@@ -6,6 +6,7 @@ type UserRole = "professional" | "family" | "institution";
 type Counts = {
   professionals: number;
   professionalsAvailable: number;
+  professionalsRethus: number;
   families: number;
   familiesVisible: number;
   institutions: number;
@@ -16,6 +17,7 @@ type Counts = {
 const INITIAL: Counts = {
   professionals: 0,
   professionalsAvailable: 0,
+  professionalsRethus: 0,
   families: 0,
   familiesVisible: 0,
   institutions: 0,
@@ -52,18 +54,20 @@ export function useActiveUsersCount(_role?: UserRole) {
           const d = rpcRes.data as unknown as {
             professionals_total: number;
             professionals_available: number;
+            professionals_rethus: number;
             families_total: number;
             institutions_total: number;
             completed_services: number;
           };
           setCounts({
-            professionals: Number(d.professionals_total ?? 0),
+            professionals:         Number(d.professionals_total     ?? 0),
             professionalsAvailable: Number(d.professionals_available ?? 0),
-            families: Number(d.families_total ?? 0),
-            familiesVisible: famVisibleRes.count ?? 0,
-            institutions: Number(d.institutions_total ?? 0),
-            institutionsVisible: instVisibleRes.count ?? 0,
-            completedServices: Number(d.completed_services ?? 0),
+            professionalsRethus:    Number(d.professionals_rethus    ?? 0),
+            families:               Number(d.families_total          ?? 0),
+            familiesVisible:        famVisibleRes.count              ?? 0,
+            institutions:           Number(d.institutions_total      ?? 0),
+            institutionsVisible:    instVisibleRes.count             ?? 0,
+            completedServices:      Number(d.completed_services      ?? 0),
           });
         }
       } catch (e) {
@@ -129,6 +133,7 @@ export function useActiveUsersCount(_role?: UserRole) {
     getAvailableCount,
     // Totales registrados
     professionals: counts.professionals,
+    professionalsRethus: counts.professionalsRethus,
     families: counts.families,
     institutions: counts.institutions,
     total: counts.professionals + counts.families + counts.institutions,

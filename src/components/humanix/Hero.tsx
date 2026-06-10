@@ -11,6 +11,7 @@ export function Hero() {
   const {
     professionals,
     professionalsAvailable,
+    professionalsRethus,
     families,
     institutions,
     completedServices,
@@ -43,7 +44,7 @@ export function Hero() {
 
             {/* Key Stats — Uber-style, datos reales desde Supabase en tiempo real */}
             <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 pb-8">
-              {/* Profesionales verificados */}
+              {/* Profesionales */}
               <div className="space-y-1">
                 {loading ? (
                   <div className="h-9 w-20 animate-pulse rounded-md bg-white/10" />
@@ -53,7 +54,14 @@ export function Hero() {
                     <AnimatedCounter value={professionals} suffix="+" immediate={false} />
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground">Profesionales verificados RETHUS</p>
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 flex-wrap">
+                  Profesionales registrados
+                  {!loading && professionalsRethus > 0 && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full bg-biosensor/15 px-1.5 py-0.5 text-[10px] font-semibold text-biosensor">
+                      {professionalsRethus} RETHUS ✓
+                    </span>
+                  )}
+                </p>
               </div>
 
               {/* Online ahora mismo */}
