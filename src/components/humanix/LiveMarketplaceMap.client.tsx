@@ -234,8 +234,8 @@ export function LiveMarketplaceMap({
   // Self location persistence for family/institution roles (no external pickLocation prop)
   const selfPersist =
     !pickLocation && !isGuest && (effectiveRole === "family" || effectiveRole === "institution");
-  // Filters (visible to family/institution/guest looking for professionals)
-  const showFilters = effectiveRole !== "professional";
+  // Filters visible to all authenticated roles
+  const showFilters = !isGuest;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterSpecialty, setFilterSpecialty] = useState("");
   const [filterGender, setFilterGender] = useState<string>("any");
@@ -612,21 +612,15 @@ export function LiveMarketplaceMap({
     [liveLocations],
   );
 
-  // Visible layers depend on role:
-  // - professional sees families (yellow) + institutions (fuchsia) = offers
-  // - family / institution sees professionals (blue)
-  // - guest sees everyone
-  const visiblePoints = useMemo<Point[]>(() => {
-    if (effectiveRole === "professional")
-      return [...applyLiveLocations(families), ...applyLiveLocations(institutions)];
-    if (effectiveRole === "guest")
-      return [
-        ...applyLiveLocations(filteredPros),
-        ...applyLiveLocations(families),
-        ...applyLiveLocations(institutions),
-      ];
-    return applyLiveLocations(filteredPros);
-  }, [effectiveRole, filteredPros, families, institutions, applyLiveLocations]);
+  // All roles see everyone: professionals (blue) + families (yellow) + institutions (fuchsia)
+  const visiblePoints = useMemo<Point[]>(
+    () => [
+      ...applyLiveLocations(filteredPros),
+      ...applyLiveLocations(families),
+      ...applyLiveLocations(institutions),
+    ],
+    [filteredPros, families, institutions, applyLiveLocations],
+  );
 
   // Cluster by proximity when zoomed out; radius shrinks as user zooms in.
   const clusterRadiusKm = zoomLevel >= 14 ? 0 : zoomLevel >= 12 ? 0.4 : zoomLevel >= 10 ? 1.2 : 3.5;
@@ -782,7 +776,7 @@ export function LiveMarketplaceMap({
             <span className="text-muted-foreground">en vivo ahora</span>
           </Badge>
         )}
-        {effectiveRole !== "professional" && (() => {
+        {(() => {
           const availPros = pros.filter((p) => p.availabilityStatus === "available").length;
           const livePros = pros.filter((p) => p.userId && liveLocations.has(p.userId)).length;
           const shownPros = filteredPros.length;
@@ -800,7 +794,7 @@ export function LiveMarketplaceMap({
             </Badge>
           );
         })()}
-        {(effectiveRole === "professional" || effectiveRole === "guest") && (
+        {(
           <>
             <Badge variant="outline" className="gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
