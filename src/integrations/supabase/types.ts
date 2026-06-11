@@ -2756,6 +2756,20 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_platform_counts: {
+        Args: never
+        Returns: {
+          completed_services: number
+          families_online: number
+          families_total: number
+          institutions_online: number
+          institutions_total: number
+          professionals_available: number
+          professionals_online: number
+          professionals_rethus: number
+          professionals_total: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
