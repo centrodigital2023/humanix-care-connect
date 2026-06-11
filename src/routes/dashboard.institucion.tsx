@@ -48,6 +48,7 @@ import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { NotificationsBell } from "@/components/humanix/NotificationsBell";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { InstitutionClinicalMonitoring } from "@/components/humanix/InstitutionClinicalMonitoring";
+import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { LivePulseBar } from "@/components/humanix/LivePulseBar";
@@ -877,16 +878,24 @@ function InstitutionDashboard() {
 
         {/* ══ TAB: TALENTO ══ */}
         {tab === "talento" && (
-          <TalentTab
-            userId={user.id}
-            applications={applications}
-            proMap={proMap}
-            offers={offers.map((o) => ({ id: o.id, title: o.title }))}
-            instCity={instProfile?.city ?? ""}
-            updatingApp={updatingApp}
-            onUpdateApp={updateAppStatus}
-            loading={talentLoading}
-          />
+          <div className="space-y-5">
+            <LiveMarketplaceMap
+              role="institution"
+              userId={user.id}
+              height={380}
+              selfPersist
+            />
+            <TalentTab
+              userId={user.id}
+              applications={applications}
+              proMap={proMap}
+              offers={offers.map((o) => ({ id: o.id, title: o.title }))}
+              instCity={instProfile?.city ?? ""}
+              updatingApp={updatingApp}
+              onUpdateApp={updateAppStatus}
+              loading={talentLoading}
+            />
+          </div>
         )}
 
         {/* ══ TAB: OPERACIONES ══ */}
