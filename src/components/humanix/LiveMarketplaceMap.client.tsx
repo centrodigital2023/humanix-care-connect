@@ -429,7 +429,7 @@ export function LiveMarketplaceMap({
       );
       setFamilies(
         (famRes.data ?? []).map((p: any) => {
-          const coords = resolveCoords(p.default_lat, p.default_lng, null, p.user_id);
+          const coords = resolveCoords(p.default_lat, p.default_lng, p.default_address ?? null, p.user_id);
           return {
             id: `fam-${p.user_id}`,
             ...coords,
