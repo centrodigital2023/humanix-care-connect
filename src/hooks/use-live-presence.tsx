@@ -59,8 +59,9 @@ export function useLivePresence({ userId, userType, loadAll = true }: Options) {
 
     loadOnline();
 
+    const suffix = Math.random().toString(36).slice(2, 8);
     const ch = supabase
-      .channel("humanix-live-locations")
+      .channel(`humanix-live-locations-${suffix}`)
       .on(
         "postgres_changes" as any,
         { event: "*", schema: "public", table: "user_locations" },
