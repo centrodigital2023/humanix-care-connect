@@ -9,6 +9,7 @@ import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
+import { LiveMapSection } from "@/components/humanix/LiveMapSection";
 
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
@@ -72,6 +73,9 @@ function Index() {
         <LiveSocialProof />
         <TrustBar />
         <AudienceSection />
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+          <LiveMapSection role="guest" height={460} />
+        </section>
         <Suspense fallback={<div className="min-h-[200px]" />}>
           <HowItWorks />
           <TechSection />
