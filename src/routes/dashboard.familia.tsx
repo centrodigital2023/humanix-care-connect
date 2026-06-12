@@ -25,7 +25,7 @@ import { Card } from "@/components/ui/card";
 import { AppShell, type NavItem } from "@/components/humanix/AppShell";
 import { HiringCopilot } from "@/components/humanix/HiringCopilot";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
-import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
+import { LiveMapSection } from "@/components/humanix/LiveMapSection";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
 import { SmartFamilyProfileForm } from "@/components/humanix/SmartFamilyProfileForm";
 
@@ -527,15 +527,8 @@ function FamilyDashboard() {
         {user && <SmartFamilyProfileForm userId={user.id} />}
 
         {user && (
-          <section className="rounded-2xl border border-border bg-card/95 p-6">
-            <div className="mb-4">
-              <h2 className="font-semibold">Mapa en vivo · Profesionales y tu ubicación</h2>
-              <p className="text-sm text-muted-foreground">
-                Puntos azules = profesionales conectados. Marca tu ubicación (toca el mapa o usa GPS)
-                para calcular la distancia exacta a cada profesional.
-              </p>
-            </div>
-            <LiveMarketplaceMap
+          <div>
+            <LiveMapSection
               role="family"
               userId={user.id}
               height={520}
@@ -551,7 +544,7 @@ function FamilyDashboard() {
                 <Loader2 className="h-3 w-3 animate-spin inline mr-1" /> Guardando ubicación…
               </p>
             )}
-          </section>
+          </div>
         )}
 
         {/* KPIs */}

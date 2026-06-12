@@ -48,7 +48,7 @@ import { HumanixAssistant } from "@/components/humanix/HumanixAssistant";
 import { NotificationsBell } from "@/components/humanix/NotificationsBell";
 import { OffersMap, type MapPoint } from "@/components/humanix/OffersMap";
 import { InstitutionClinicalMonitoring } from "@/components/humanix/InstitutionClinicalMonitoring";
-import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
+import { LiveMapSection } from "@/components/humanix/LiveMapSection";
 import { useAppUser } from "@/hooks/use-app-user";
 import { useRealtimeRefresh } from "@/hooks/use-realtime-refresh";
 import { LivePulseBar } from "@/components/humanix/LivePulseBar";
@@ -879,12 +879,7 @@ function InstitutionDashboard() {
         {/* ══ TAB: TALENTO ══ */}
         {tab === "talento" && (
           <div className="space-y-5">
-            <LiveMarketplaceMap
-              role="institution"
-              userId={user.id}
-              height={380}
-              selfPersist
-            />
+            <LiveMapSection role="institution" userId={user.id} height={420} />
             <TalentTab
               userId={user.id}
               applications={applications}
