@@ -496,8 +496,9 @@ export function LiveMarketplaceMap({
 
   useEffect(() => {
     loadAll();
+    const suffix = Math.random().toString(36).slice(2, 8);
     const ch = supabase
-      .channel("live-marketplace-map")
+      .channel(`live-marketplace-map-${suffix}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => loadAll())
       .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, () => loadAll())
       .on("postgres_changes", { event: "*", schema: "public", table: "family_profiles" }, () => loadAll())
