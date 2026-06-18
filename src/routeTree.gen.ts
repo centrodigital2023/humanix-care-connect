@@ -44,6 +44,7 @@ import { Route as CuidadoPaliativoRouteImport } from './routes/cuidado-paliativo
 import { Route as CuidadoAdultoMayorRouteImport } from './routes/cuidado-adulto-mayor'
 import { Route as CosmosRouteImport } from './routes/cosmos'
 import { Route as ContactoRouteImport } from './routes/contacto'
+import { Route as ConfianzaRouteImport } from './routes/confianza'
 import { Route as CarrerasRouteImport } from './routes/carreras'
 import { Route as CalculadoraRouteImport } from './routes/calculadora'
 import { Route as BuscarRouteImport } from './routes/buscar'
@@ -250,6 +251,11 @@ const ContactoRoute = ContactoRouteImport.update({
   path: '/contacto',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConfianzaRoute = ConfianzaRouteImport.update({
+  id: '/confianza',
+  path: '/confianza',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CarrerasRoute = CarrerasRouteImport.update({
   id: '/carreras',
   path: '/carreras',
@@ -409,6 +415,7 @@ export interface FileRoutesByFullPath {
   '/buscar': typeof BuscarRoute
   '/calculadora': typeof CalculadoraRoute
   '/carreras': typeof CarrerasRoute
+  '/confianza': typeof ConfianzaRoute
   '/contacto': typeof ContactoRoute
   '/cosmos': typeof CosmosRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
@@ -476,6 +483,7 @@ export interface FileRoutesByTo {
   '/buscar': typeof BuscarRoute
   '/calculadora': typeof CalculadoraRoute
   '/carreras': typeof CarrerasRoute
+  '/confianza': typeof ConfianzaRoute
   '/contacto': typeof ContactoRoute
   '/cosmos': typeof CosmosRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
@@ -542,6 +550,7 @@ export interface FileRoutesById {
   '/buscar': typeof BuscarRoute
   '/calculadora': typeof CalculadoraRoute
   '/carreras': typeof CarrerasRoute
+  '/confianza': typeof ConfianzaRoute
   '/contacto': typeof ContactoRoute
   '/cosmos': typeof CosmosRoute
   '/cuidado-adulto-mayor': typeof CuidadoAdultoMayorRoute
@@ -611,6 +620,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/calculadora'
     | '/carreras'
+    | '/confianza'
     | '/contacto'
     | '/cosmos'
     | '/cuidado-adulto-mayor'
@@ -678,6 +688,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/calculadora'
     | '/carreras'
+    | '/confianza'
     | '/contacto'
     | '/cosmos'
     | '/cuidado-adulto-mayor'
@@ -743,6 +754,7 @@ export interface FileRouteTypes {
     | '/buscar'
     | '/calculadora'
     | '/carreras'
+    | '/confianza'
     | '/contacto'
     | '/cosmos'
     | '/cuidado-adulto-mayor'
@@ -811,6 +823,7 @@ export interface RootRouteChildren {
   BuscarRoute: typeof BuscarRoute
   CalculadoraRoute: typeof CalculadoraRoute
   CarrerasRoute: typeof CarrerasRoute
+  ConfianzaRoute: typeof ConfianzaRoute
   ContactoRoute: typeof ContactoRoute
   CosmosRoute: typeof CosmosRoute
   CuidadoAdultoMayorRoute: typeof CuidadoAdultoMayorRoute
@@ -1099,6 +1112,13 @@ declare module '@tanstack/react-router' {
       path: '/contacto'
       fullPath: '/contacto'
       preLoaderRoute: typeof ContactoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confianza': {
+      id: '/confianza'
+      path: '/confianza'
+      fullPath: '/confianza'
+      preLoaderRoute: typeof ConfianzaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/carreras': {
@@ -1396,6 +1416,7 @@ const rootRouteChildren: RootRouteChildren = {
   BuscarRoute: BuscarRoute,
   CalculadoraRoute: CalculadoraRoute,
   CarrerasRoute: CarrerasRoute,
+  ConfianzaRoute: ConfianzaRoute,
   ContactoRoute: ContactoRoute,
   CosmosRoute: CosmosRoute,
   CuidadoAdultoMayorRoute: CuidadoAdultoMayorRoute,
