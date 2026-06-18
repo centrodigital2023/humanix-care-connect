@@ -119,12 +119,13 @@ const PROVIDER_INFO: Record<string, { label: string; emoji: string; instructions
   },
   samsung_health: {
     label: "Samsung Health",
-    emoji: "🌐",
+    emoji: "⌚",
     instructions: [
-      "Abre Samsung Health en tu teléfono.",
-      "Inicio → Administrar → Humanix.",
-      "Ingresa el código de emparejamiento que aparece abajo.",
-      "Tus métricas diarias se sincronizarán.",
+      "Instala la app Humanix Care desde Google Play (Android 10+).",
+      "Asegúrate de tener Samsung Health y Health Connect instalados (Android 14+ ya lo trae).",
+      "Abre Humanix Care → Conectar Samsung Health e ingresa el código de abajo.",
+      "Autoriza Samsung Health y Health Connect (FC, SpO₂, sueño, pasos, temperatura).",
+      "La sincronización es automática cada 5 minutos · datos en tiempo real en Humanix.",
     ],
   },
 };
