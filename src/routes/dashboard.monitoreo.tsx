@@ -11,6 +11,7 @@ import { ClinicalMonitor } from "@/components/humanix/ClinicalMonitor";
 import { AlertSystem } from "@/components/humanix/AlertSystem";
 import { PatientRiskCard } from "@/components/humanix/PatientRiskCard";
 import { WearableConnections } from "@/components/humanix/WearableConnections";
+import { SamsungHealthCard } from "@/components/humanix/SamsungHealthCard";
 import { SosFamiliarButton } from "@/components/humanix/SosFamiliarButton";
 import {
   Loader2,
@@ -227,7 +228,12 @@ function MonitoreoPage() {
         )}
 
         {/* Vinculación de wearables (solo sobre los propios datos del usuario) */}
-        {!targetPatientId && <WearableConnections patientId={patientId} />}
+        {!targetPatientId && (
+          <>
+            <SamsungHealthCard patientId={patientId} />
+            <WearableConnections patientId={patientId} />
+          </>
+        )}
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-muted/50 rounded-xl overflow-x-auto">
