@@ -67,6 +67,14 @@ const STEPS: string[] = [
   "Sincronización automática · cada 5 min",
 ];
 
+// Modelos Samsung compatibles vía Health Connect
+const COMPATIBLE_DEVICES = [
+  "Galaxy Watch 4 / 5 / 6 / 7 / Ultra",
+  "Galaxy Ring",
+  "Galaxy Fit 3",
+  "Galaxy S / Note / Z (Android 10+)",
+];
+
 interface SamsungConnection {
   code: string;
   pairedAt: string;
@@ -261,6 +269,49 @@ export function SamsungHealthCard({ patientId }: { patientId: string }) {
     toast.success("Código renovado");
   }, [conn, patientId]);
 
+  // Demo: simula la primera lectura para validar el flujo en tiempo real
+  // (útil para probar la integración antes de instalar Humanix Care).
+  const simulate = useCallback(async () => {
+    setBusy(true);
+    try {
+      const now = new Date().toISOString();
+      const samples = [
+        { reading_type: "heart_rate", value: 72, unit: "bpm" },
+        { reading_type: "spo2", value: 98, unit: "%" },
+        { reading_type: "steps", value: 8450, unit: "steps" },
+      ];
+      const { error } = await (supabase as any)
+        .from("vital_signs_readings")
+        .insert(
+          samples.map((s) => ({
+            family_user_id: patientId,
+            recorded_by: patientId,
+            ...s,
+            source: "wearable",
+            severity: "normal",
+            recorded_at: now,
+          })),
+        );
+      if (error) {
+        toast.error("No se pudo simular la sincronización", {
+          description: error.message,
+        });
+        return;
+      }
+      await (supabase as any)
+        .from("wearable_connections")
+        .update({
+          last_synced_at: now,
+          device_name: "Galaxy Watch (demo)",
+          updated_at: now,
+        })
+        .eq("patient_id", patientId)
+        .eq("provider", PROVIDER);
+    } finally {
+      setBusy(false);
+    }
+  }, [patientId]);
+
   const isActive = !!conn;
   const isSyncing = !!conn?.syncing;
   const url = conn ? buildPairingUrl(conn.code, patientId) : "";
@@ -389,15 +440,32 @@ export function SamsungHealthCard({ patientId }: { patientId: string }) {
               </div>
 
               <div className="px-5 pb-5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full h-8 text-xs gap-1.5 border-blue-500/30 text-blue-600 hover:bg-blue-500/10"
+                  onClick={simulate}
+                  disabled={busy}
+                >
+                  {busy ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Probar sincronización (demo)
+                </Button>
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(url);
                     toast.success("Enlace copiado");
                   }}
-                  className="w-full text-[10px] text-blue-600 hover:underline"
+                  className="w-full text-[10px] text-muted-foreground hover:text-foreground hover:underline mt-2"
                 >
                   ¿Sin app? Copia el enlace de emparejamiento
                 </button>
+                <p className="mt-3 text-[10px] text-muted-foreground">
+                  Compatibles: {COMPATIBLE_DEVICES.join(" · ")}
+                </p>
               </div>
             </div>
           </div>
