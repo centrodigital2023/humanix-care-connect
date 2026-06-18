@@ -2379,6 +2379,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wearable_connections: {
+        Row: {
+          connected_at: string
+          device_name: string | null
+          external_user_id: string
+          id: string
+          last_error: string | null
+          last_synced_at: string | null
+          patient_id: string
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string
+          device_name?: string | null
+          external_user_id?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          patient_id: string
+          provider: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string
+          device_name?: string | null
+          external_user_id?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          patient_id?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_contacts: {
         Row: {
           ai_enabled: boolean
