@@ -2793,6 +2793,22 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      wearable_ingest_by_pairing_code: {
+        Args: {
+          blood_pressure_dia?: number
+          blood_pressure_sys?: number
+          device_name?: string
+          heart_rate?: number
+          measured_at?: string
+          p_provider?: string
+          pairing_code: string
+          source?: string
+          spo2?: number
+          steps?: number
+          temperature?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:
