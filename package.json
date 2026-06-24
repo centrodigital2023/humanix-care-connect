@@ -74,8 +74,10 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.1",
     "tw-animate-css": "^1.3.4",
+    "undici": "^8.5.0",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
+    "ws": "^8.21.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -101,5 +103,13 @@
     "typescript-eslint": "^8.56.1",
     "vite": "^7.3.1",
     "vitest": "^4.1.6"
+  },
+  "overrides": {
+    "undici": "^7.16.0",
+    "ws": "^8.18.3"
+  },
+  "resolutions": {
+    "undici": "^7.16.0",
+    "ws": "^8.18.3"
   }
 }
