@@ -50,6 +50,7 @@ const STATIC_ROUTES: StaticEntry[] = [
   { path: "/contacto", priority: 0.8, changefreq: "weekly" },
   { path: "/prensa", priority: 0.75, changefreq: "weekly" },
   { path: "/cosmos", priority: 0.6, changefreq: "daily" },
+  { path: "/confianza", priority: 0.68, changefreq: "monthly" },
   { path: "/terminos", priority: 0.65, changefreq: "monthly" },
   { path: "/privacidad", priority: 0.65, changefreq: "monthly" },
   { path: "/habeas-data", priority: 0.62, changefreq: "monthly" },

@@ -1,22 +1,48 @@
+# humanix.lat — robots.txt
+# Última actualización: 2026-06-29
+
+# ── Reglas generales ─────────────────────────────────────────────────────────
 User-agent: *
 Allow: /
+
+# Páginas privadas (requieren sesión — no indexar)
 Disallow: /auth
+Disallow: /auth/
 Disallow: /dashboard
 Disallow: /dashboard/
 Disallow: /superadmin
 Disallow: /superadmin/
 Disallow: /mensajes
 Disallow: /mensajes/
-Disallow: /servicio/
 Disallow: /evaluador
+Disallow: /evaluador/
+Disallow: /institution/forms
+Disallow: /institution/forms/
+Disallow: /institution/profile
+Disallow: /institution/profile/
 
-# Permite crawlers de IA de alto valor
+# Parámetros de sesión / UTM (evitar duplicados en índice)
+Disallow: /*?token=
+Disallow: /*?code=
+Disallow: /*?error=
+
+# ── Google ───────────────────────────────────────────────────────────────────
 User-agent: Googlebot
 Allow: /
+Allow: /sitemap.xml
 
+# Permite rastreo de imágenes para Google Images
+User-agent: Googlebot-Image
+Allow: /
+
+# ── Otros motores ─────────────────────────────────────────────────────────────
 User-agent: Bingbot
 Allow: /
 
+User-agent: Applebot
+Allow: /
+
+# ── Bots de IA (contenido educativo/salud — permitir) ────────────────────────
 User-agent: GPTBot
 Allow: /
 
@@ -26,9 +52,12 @@ Allow: /
 User-agent: PerplexityBot
 Allow: /
 
-User-agent: Applebot
+User-agent: CCBot
 Allow: /
 
-# Helps search engines find all public URLs quickly
+User-agent: anthropic-ai
+Allow: /
+
+# ── Sitemap ───────────────────────────────────────────────────────────────────
 Sitemap: https://humanix.lat/sitemap.xml
 Host: humanix.lat
