@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Sparkles, X, Send, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -48,11 +49,17 @@ export function HumanixAssistant({
     try {
       abortRef.current = new AbortController();
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/humanix-assistant`;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        upsert("🔒 Inicia sesión para usar el asistente.");
+        return;
+      }
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           persona,
