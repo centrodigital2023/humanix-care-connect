@@ -206,9 +206,11 @@ export function localBusinessLd() {
     priceRange: "$$",
     address: {
       "@type": "PostalAddress",
-      addressCountry: "CO",
-      addressRegion: "Cundinamarca",
+      streetAddress: "Plataforma digital — sin sede física",
       addressLocality: "Bogotá",
+      addressRegion: "Cundinamarca",
+      postalCode: "110111",
+      addressCountry: "CO",
     },
     areaServed: [
       { "@type": "City", name: "Bogotá" },
@@ -220,7 +222,15 @@ export function localBusinessLd() {
     openingHoursSpecification: [
       {
         "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        dayOfWeek: [
+          "https://schema.org/Monday",
+          "https://schema.org/Tuesday",
+          "https://schema.org/Wednesday",
+          "https://schema.org/Thursday",
+          "https://schema.org/Friday",
+          "https://schema.org/Saturday",
+          "https://schema.org/Sunday",
+        ],
         opens: "00:00",
         closes: "23:59",
       },
