@@ -45,7 +45,7 @@ import { AvailabilityCalendar } from "@/components/humanix/AvailabilityCalendar"
 import { OnboardingTour } from "@/components/humanix/OnboardingTour";
 import { AiFingerprintCard } from "@/components/humanix/AiFingerprintCard";
 import { SemanticOffers } from "@/components/humanix/SemanticOffers";
-import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
+import { LiveMapSection } from "@/components/humanix/LiveMapSection";
 import { LocationPicker } from "@/components/humanix/LocationPicker";
 import { ReferencesManager } from "@/components/humanix/ReferencesManager";
 import { MercadoPagoSubscription } from "@/components/humanix/MercadoPagoSubscription";
@@ -1095,13 +1095,23 @@ function ProDashboard() {
 
             {/* Map */}
             {userId && (
-              <div className="rounded-2xl border border-border bg-card/95 overflow-hidden">
-                <div className="p-4 border-b border-border">
-                  <p className="text-sm font-semibold">Mapa en vivo</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Familias en amarillo · instituciones en fucsia. Activa disponibilidad para aparecer.</p>
-                </div>
-                <LiveMarketplaceMap role="professional" userId={userId} height={400} />
-              </div>
+              <LiveMapSection
+                role="professional"
+                userId={userId}
+                height={440}
+                pickLocation={{
+                  lat: profile?.lat ?? null,
+                  lng: profile?.lng ?? null,
+                  defaultCity: profile?.home_city ?? undefined,
+                  onChange: async (lat, lng, address) => {
+                    await supabase
+                      .from("professional_profiles")
+                      .update({ lat, lng, home_city: address ?? profile?.home_city ?? null } as never)
+                      .eq("user_id", userId);
+                    setProfile((prev) => prev ? { ...prev, lat, lng, home_city: address ?? prev.home_city } : prev);
+                  },
+                }}
+              />
             )}
           </div>
         )}

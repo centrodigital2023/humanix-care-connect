@@ -52,6 +52,7 @@ const cols: { title: string; links: FooterLink[] }[] = [
       { label: "Privacidad", to: "/privacidad" },
       { label: "Habeas Data", to: "/habeas-data" },
       { label: "Cumplimiento", to: "/cumplimiento" },
+      { label: "Confianza", to: "/confianza" },
     ],
   },
 ];

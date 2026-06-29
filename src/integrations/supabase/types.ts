@@ -2379,6 +2379,45 @@ export type Database = {
         }
         Relationships: []
       }
+      wearable_connections: {
+        Row: {
+          connected_at: string
+          device_name: string | null
+          external_user_id: string
+          id: string
+          last_error: string | null
+          last_synced_at: string | null
+          patient_id: string
+          provider: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string
+          device_name?: string | null
+          external_user_id?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          patient_id: string
+          provider: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string
+          device_name?: string | null
+          external_user_id?: string
+          id?: string
+          last_error?: string | null
+          last_synced_at?: string | null
+          patient_id?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_contacts: {
         Row: {
           ai_enabled: boolean
@@ -2562,70 +2601,34 @@ export type Database = {
       }
       public_family_map_safe: {
         Row: {
+          avatar_url: string | null
           default_address: string | null
           default_lat: number | null
           default_lng: number | null
+          full_name: string | null
+          has_exact_location: boolean | null
           patient_name: string | null
-          patient_relation: string | null
+          phone: string | null
           user_id: string | null
           visible_on_map: boolean | null
           whatsapp: string | null
-        }
-        Insert: {
-          default_address?: string | null
-          default_lat?: number | null
-          default_lng?: number | null
-          patient_name?: string | null
-          patient_relation?: string | null
-          user_id?: string | null
-          visible_on_map?: boolean | null
-          whatsapp?: string | null
-        }
-        Update: {
-          default_address?: string | null
-          default_lat?: number | null
-          default_lng?: number | null
-          patient_name?: string | null
-          patient_relation?: string | null
-          user_id?: string | null
-          visible_on_map?: boolean | null
-          whatsapp?: string | null
         }
         Relationships: []
       }
       public_institutions_safe: {
         Row: {
+          address: string | null
+          avatar_url: string | null
           city: string | null
+          full_name: string | null
+          has_exact_location: boolean | null
           institution_name: string | null
           institution_type: string | null
           lat: number | null
           lng: number | null
+          phone: string | null
           user_id: string | null
-          verified: boolean | null
           visible_on_map: boolean | null
-          website: string | null
-        }
-        Insert: {
-          city?: string | null
-          institution_name?: string | null
-          institution_type?: string | null
-          lat?: number | null
-          lng?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-          visible_on_map?: boolean | null
-          website?: string | null
-        }
-        Update: {
-          city?: string | null
-          institution_name?: string | null
-          institution_type?: string | null
-          lat?: number | null
-          lng?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-          visible_on_map?: boolean | null
-          website?: string | null
         }
         Relationships: []
       }
@@ -2633,20 +2636,25 @@ export type Database = {
         Row: {
           active: boolean | null
           ai_preapproved: boolean | null
+          ai_strengths: string[] | null
           ai_summary: string | null
           availability: Json | null
           availability_status: string | null
           available: boolean | null
           avatar_url: string | null
           avg_rating: number | null
+          bio: string | null
           certifications: Json | null
+          full_name: string | null
           gender: string | null
+          has_exact_location: boolean | null
           home_city: string | null
           hourly_rate: number | null
           languages: string[] | null
           lat: number | null
           lng: number | null
           monthly_rate: number | null
+          phone: string | null
           published: boolean | null
           reserved_until: string | null
           rethus_verified: boolean | null
@@ -2658,67 +2666,8 @@ export type Database = {
           trust_score: number | null
           user_id: string | null
           verified: boolean | null
+          work_experience: Json | null
           years_experience: number | null
-        }
-        Insert: {
-          active?: boolean | null
-          ai_preapproved?: boolean | null
-          ai_summary?: string | null
-          availability?: Json | null
-          availability_status?: never
-          available?: boolean | null
-          avatar_url?: string | null
-          avg_rating?: number | null
-          certifications?: Json | null
-          gender?: string | null
-          home_city?: string | null
-          hourly_rate?: number | null
-          languages?: string[] | null
-          lat?: number | null
-          lng?: number | null
-          monthly_rate?: number | null
-          published?: boolean | null
-          reserved_until?: string | null
-          rethus_verified?: boolean | null
-          service_cities?: string[] | null
-          shift_rate?: number | null
-          specialty?: string | null
-          sub_specialties?: string[] | null
-          total_jobs?: number | null
-          trust_score?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-          years_experience?: number | null
-        }
-        Update: {
-          active?: boolean | null
-          ai_preapproved?: boolean | null
-          ai_summary?: string | null
-          availability?: Json | null
-          availability_status?: never
-          available?: boolean | null
-          avatar_url?: string | null
-          avg_rating?: number | null
-          certifications?: Json | null
-          gender?: string | null
-          home_city?: string | null
-          hourly_rate?: number | null
-          languages?: string[] | null
-          lat?: number | null
-          lng?: number | null
-          monthly_rate?: number | null
-          published?: boolean | null
-          reserved_until?: string | null
-          rethus_verified?: boolean | null
-          service_cities?: string[] | null
-          shift_rate?: number | null
-          specialty?: string | null
-          sub_specialties?: string[] | null
-          total_jobs?: number | null
-          trust_score?: number | null
-          user_id?: string | null
-          verified?: boolean | null
-          years_experience?: number | null
         }
         Relationships: []
       }
@@ -2755,6 +2704,20 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      get_platform_counts: {
+        Args: never
+        Returns: {
+          completed_services: number
+          families_online: number
+          families_total: number
+          institutions_online: number
+          institutions_total: number
+          professionals_available: number
+          professionals_online: number
+          professionals_rethus: number
+          professionals_total: number
+        }[]
       }
       has_role: {
         Args: {
@@ -2829,6 +2792,22 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      wearable_ingest_by_pairing_code: {
+        Args: {
+          blood_pressure_dia?: number
+          blood_pressure_sys?: number
+          device_name?: string
+          heart_rate?: number
+          measured_at?: string
+          p_provider?: string
+          pairing_code: string
+          source?: string
+          spo2?: number
+          steps?: number
+          temperature?: number
+        }
+        Returns: Json
       }
     }
     Enums: {

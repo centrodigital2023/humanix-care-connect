@@ -4,13 +4,12 @@ import { Navbar } from "@/components/humanix/Navbar";
 import { Hero } from "@/components/humanix/Hero";
 import { LiveSocialProof } from "@/components/humanix/LiveSocialProof";
 import { TrustBar } from "@/components/humanix/TrustBar";
-import { LiveMarketplaceMap } from "@/components/humanix/LiveMarketplaceMap";
 import { AudienceSection } from "@/components/humanix/AudienceSection";
 import { Footer } from "@/components/humanix/Footer";
 import { HabeasDataConsent } from "@/components/humanix/HabeasDataConsent";
 import { QuickCareWizard } from "@/components/humanix/QuickCareWizard";
 import { LaunchBar } from "@/components/humanix/LaunchBar";
-import { useActiveUsersCount } from "@/hooks/use-active-users-count";
+import { LiveMapSection } from "@/components/humanix/LiveMapSection";
 
 import { faqs } from "@/components/humanix/FAQ";
 import * as seo from "@/lib/seo";
@@ -58,12 +57,6 @@ export const Route = createFileRoute("/")({
 });
 
 function Index() {
-  const {
-    professionals, professionalsAvailable,
-    families, familiesVisible,
-    institutions, institutionsVisible,
-    loading: countsLoading,
-  } = useActiveUsersCount();
   return (
     <div className="min-h-screen bg-background text-foreground">
       <script
@@ -79,68 +72,10 @@ function Index() {
         </section>
         <LiveSocialProof />
         <TrustBar />
-        <section className="relative overflow-hidden border-y border-foreground/5 bg-gradient-to-b from-card/70 via-background to-background py-8 sm:py-12">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-biosensor/50 to-transparent" />
-          <div className="mx-auto max-w-7xl px-4 sm:px-6">
-            <div className="mb-5 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-              <div>
-                <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-biosensor/25 bg-biosensor/10 px-3 py-1 text-[11px] font-semibold uppercase text-biosensor">
-                  <span className="h-1.5 w-1.5 rounded-full bg-biosensor animate-pulse" />
-                  Sincronizado en tiempo real
-                </div>
-                <h2 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold leading-tight text-gradient-cyber">
-                  Mapa en vivo · Talento humano en salud
-                </h2>
-                <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl">
-                  Profesionales activos, familias e instituciones conectados ahora mismo. Toca un
-                  punto para ver perfil, distancia, calificación y canales de contacto.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 font-medium">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Profesionales
-                    {!countsLoading && (
-                      <span className="font-bold text-emerald-600">{professionalsAvailable}</span>
-                    )}
-                    {!countsLoading && professionals > professionalsAvailable && (
-                      <span className="text-blue-400">/{professionals}</span>
-                    )}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-copper/25 bg-copper/10 px-2.5 py-1 font-medium">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Familias
-                    {!countsLoading && (
-                      <span className="font-bold text-emerald-600">{familiesVisible}</span>
-                    )}
-                    {!countsLoading && families > familiesVisible && (
-                      <span className="text-copper/60">/{families}</span>
-                    )}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-neural/25 bg-fuchsia-neural/10 px-2.5 py-1 font-medium">
-                    <span className="h-2 w-2 rounded-sm bg-emerald-500 animate-pulse" />
-                    Instituciones
-                    {!countsLoading && (
-                      <span className="font-bold text-emerald-600">{institutionsVisible}</span>
-                    )}
-                    {!countsLoading && institutions > institutionsVisible && (
-                      <span className="text-fuchsia-neural/60">/{institutions}</span>
-                    )}
-                  </span>
-                </div>
-                <a
-                  href="/auth"
-                  className="inline-flex h-9 items-center justify-center rounded-md bg-biosensor px-4 text-sm font-semibold text-biosensor-foreground shadow-[var(--shadow-glow-bio)] transition hover:-translate-y-0.5 hover:bg-biosensor/90"
-                >
-                  Crear cuenta gratis →
-                </a>
-              </div>
-            </div>
-            <LiveMarketplaceMap preview height={360} />
-          </div>
-        </section>
         <AudienceSection />
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+          <LiveMapSection role="guest" height={460} />
+        </section>
         <Suspense fallback={<div className="min-h-[200px]" />}>
           <HowItWorks />
           <TechSection />

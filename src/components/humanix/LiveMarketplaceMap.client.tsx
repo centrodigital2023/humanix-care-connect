@@ -234,8 +234,8 @@ export function LiveMarketplaceMap({
   // Self location persistence for family/institution roles (no external pickLocation prop)
   const selfPersist =
     !pickLocation && !isGuest && (effectiveRole === "family" || effectiveRole === "institution");
-  // Filters (visible to family/institution/guest looking for professionals)
-  const showFilters = effectiveRole !== "professional";
+  // Filters visible to all authenticated roles
+  const showFilters = !isGuest;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [filterSpecialty, setFilterSpecialty] = useState("");
   const [filterGender, setFilterGender] = useState<string>("any");
@@ -363,9 +363,11 @@ export function LiveMarketplaceMap({
 
   const loadAll = async () => {
     try {
-      // Las vistas incluyen full_name/avatar_url/phone via SQL JOIN (security_invoker=false).
-      // Sin filtro GPS: todos los registrados aparecen; los sin GPS usan ciudad como fallback.
-      const [proRes, famRes, instRes] = await Promise.all([
+      // Intento 1: columnas completas (funciona luego de aplicar la migración).
+      // Intento 2: columnas garantizadas (funciona antes de la migración).
+      const isColErr = (r: { error: any }) => r.error?.code === "42703";
+
+      const [proFull, famFull, instFull] = await Promise.all([
         supabase
           .from("public_professionals_safe")
           .select(
@@ -382,6 +384,25 @@ export function LiveMarketplaceMap({
             "user_id, lat, lng, has_exact_location, institution_name, city, institution_type, visible_on_map, full_name, avatar_url, phone",
           )
           .limit(300),
+      ]);
+
+      // Retry con columnas mínimas si la vista aún no tiene los nuevos campos
+      const [proRes, famRes, instRes] = await Promise.all([
+        isColErr(proFull)
+          ? supabase.from("public_professionals_safe")
+              .select("user_id, lat, lng, specialty, sub_specialties, gender, years_experience, home_city, hourly_rate, avg_rating, available, availability_status, avatar_url")
+              .limit(300)
+          : Promise.resolve(proFull),
+        isColErr(famFull)
+          ? supabase.from("public_family_map_safe")
+              .select("user_id, default_lat, default_lng, patient_name, default_address, visible_on_map, whatsapp")
+              .limit(300)
+          : Promise.resolve(famFull),
+        isColErr(instFull)
+          ? supabase.from("public_institutions_safe")
+              .select("user_id, lat, lng, institution_name, city, institution_type, visible_on_map")
+              .limit(300)
+          : Promise.resolve(instFull),
       ]);
 
       const resolveCoords = (
@@ -429,7 +450,7 @@ export function LiveMarketplaceMap({
       );
       setFamilies(
         (famRes.data ?? []).map((p: any) => {
-          const coords = resolveCoords(p.default_lat, p.default_lng, null, p.user_id);
+          const coords = resolveCoords(p.default_lat, p.default_lng, p.default_address ?? null, p.user_id);
           return {
             id: `fam-${p.user_id}`,
             ...coords,
@@ -475,6 +496,7 @@ export function LiveMarketplaceMap({
 
   useEffect(() => {
     loadAll();
+    const suffix = Math.random().toString(36).slice(2, 8);
     const ch = supabase
       .channel("live-marketplace-map")
       .on("postgres_changes", { event: "*", schema: "public", table: "professional_profiles" }, () => loadAll())
@@ -800,7 +822,7 @@ export function LiveMarketplaceMap({
             </Badge>
           );
         })()}
-        {(effectiveRole === "professional" || effectiveRole === "guest") && (
+        {(
           <>
             <Badge variant="outline" className="gap-1.5">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />

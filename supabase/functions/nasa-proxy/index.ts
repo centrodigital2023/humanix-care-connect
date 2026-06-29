@@ -49,6 +49,34 @@ Deno.serve(async (req) => {
       if (!auth.ok) return auth.response;
     }
 
+    // Proxy de imagen EPIC: evita exponer la API key de NASA en la URL pública.
+    if (endpoint === "epic-image") {
+      const date = url.searchParams.get("date") || "";
+      const image = url.searchParams.get("image") || "";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^[A-Za-z0-9_.-]+$/.test(image)) {
+        return new Response(JSON.stringify({ error: "parámetros inválidos" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const [y, m, d] = date.split("-");
+      const upstreamImg = `https://api.nasa.gov/EPIC/archive/natural/${y}/${m}/${d}/png/${image}.png?api_key=${NASA_API_KEY}`;
+      const imgResp = await fetch(upstreamImg);
+      if (!imgResp.ok) {
+        return new Response(JSON.stringify({ error: `NASA EPIC: ${imgResp.status}` }), {
+          status: 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(imgResp.body, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": imgResp.headers.get("Content-Type") || "image/png",
+          "Cache-Control": "public, max-age=86400",
+        },
+      });
+    }
+
     let upstream: string;
     if (endpoint === "apod") {
       const date = url.searchParams.get("date");
@@ -99,7 +127,13 @@ Deno.serve(async (req) => {
       const img = first?.image
         ? (() => {
             const d = first.date.split(" ")[0].split("-");
-            return `https://api.nasa.gov/EPIC/archive/natural/${d[0]}/${d[1]}/${d[2]}/png/${first.image}.png?api_key=${NASA_API_KEY}`;
+            const proxyBase = `${url.origin}${url.pathname}`;
+            const params = new URLSearchParams({
+              endpoint: "epic-image",
+              date: `${d[0]}-${d[1]}-${d[2]}`,
+              image: first.image,
+            });
+            return `${proxyBase}?${params}`;
           })()
         : null;
       normalized = {
