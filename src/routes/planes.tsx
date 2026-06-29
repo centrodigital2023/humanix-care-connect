@@ -19,7 +19,7 @@ import { Card } from "@/components/ui/card";
 import { Navbar } from "@/components/humanix/Navbar";
 import { Footer } from "@/components/humanix/Footer";
 import { BreadcrumbJsonLd } from "@/components/humanix/BreadcrumbJsonLd";
-import { buildSeo, jsonLdString, faqLd, breadcrumbLd, SITE_URL } from "@/lib/seo";
+import { buildSeo, jsonLdString, faqLd, breadcrumbLd, SITE_URL, SOCIAL_IMAGE_URL } from "@/lib/seo";
 import { toast } from "sonner";
 import { PLAN_CATALOG, type PlanKey } from "@/lib/plans";
 import { usePlan } from "@/hooks/use-plan";
@@ -53,6 +53,36 @@ const PLAN_FAQS = [
   },
 ];
 
+// Campos compartidos por todas las ofertas de planes digitales.
+// shippingDetails: servicio digital — entrega inmediata, sin envío físico.
+// hasMerchantReturnPolicy: sin permanencia; cancela antes del siguiente ciclo.
+const PLAN_BRAND = { "@type": "Brand", name: "Humanix" };
+const PLAN_IMAGE = [
+  {
+    "@type": "ImageObject",
+    url: SOCIAL_IMAGE_URL,
+    width: 1200,
+    height: 630,
+  },
+];
+const PLAN_SHIPPING = {
+  "@type": "OfferShippingDetails",
+  shippingRate: { "@type": "MonetaryAmount", value: "0", currency: "COP" },
+  shippingDestination: { "@type": "DefinedRegion", addressCountry: "CO" },
+  deliveryTime: {
+    "@type": "ShippingDeliveryTime",
+    handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "HUR" },
+    transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "HUR" },
+  },
+};
+const PLAN_RETURN_POLICY = {
+  "@type": "MerchantReturnPolicy",
+  applicableCountry: "CO",
+  returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+  description:
+    "Sin permanencia mínima. Cancela en cualquier momento desde tu perfil. El plan permanece activo hasta el final del periodo pagado. No se realizan reembolsos por periodos parciales.",
+};
+
 const pricingProductLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
@@ -67,12 +97,16 @@ const pricingProductLd = {
         name: "Humanix Free",
         description: "Plan gratuito para conocer Humanix sin compromiso.",
         url: `${SITE_URL}/planes`,
+        image: PLAN_IMAGE,
+        brand: PLAN_BRAND,
         offers: {
           "@type": "Offer",
           price: "0",
           priceCurrency: "COP",
           availability: "https://schema.org/InStock",
           priceValidUntil: "2026-12-31",
+          shippingDetails: PLAN_SHIPPING,
+          hasMerchantReturnPolicy: PLAN_RETURN_POLICY,
         },
       },
     },
@@ -84,12 +118,16 @@ const pricingProductLd = {
         name: "Humanix Esencial",
         description: "Para familias y profesionales que quieren todo activo.",
         url: `${SITE_URL}/planes`,
+        image: PLAN_IMAGE,
+        brand: PLAN_BRAND,
         offers: {
           "@type": "Offer",
           price: "9000",
           priceCurrency: "COP",
           availability: "https://schema.org/InStock",
           priceValidUntil: "2026-12-31",
+          shippingDetails: PLAN_SHIPPING,
+          hasMerchantReturnPolicy: PLAN_RETURN_POLICY,
         },
       },
     },
@@ -101,12 +139,16 @@ const pricingProductLd = {
         name: "Humanix Pro Profesional",
         description: "Para profesionales que quieren visibilidad máxima y coach IA.",
         url: `${SITE_URL}/planes`,
+        image: PLAN_IMAGE,
+        brand: PLAN_BRAND,
         offers: {
           "@type": "Offer",
           price: "29000",
           priceCurrency: "COP",
           availability: "https://schema.org/InStock",
           priceValidUntil: "2026-12-31",
+          shippingDetails: PLAN_SHIPPING,
+          hasMerchantReturnPolicy: PLAN_RETURN_POLICY,
         },
       },
     },
@@ -118,12 +160,16 @@ const pricingProductLd = {
         name: "Humanix Institución (IPS)",
         description: "Para clínicas, hospitales y agencias de cuidado.",
         url: `${SITE_URL}/planes`,
+        image: PLAN_IMAGE,
+        brand: PLAN_BRAND,
         offers: {
           "@type": "Offer",
           price: "99000",
           priceCurrency: "COP",
           availability: "https://schema.org/InStock",
           priceValidUntil: "2026-12-31",
+          shippingDetails: PLAN_SHIPPING,
+          hasMerchantReturnPolicy: PLAN_RETURN_POLICY,
         },
       },
     },
