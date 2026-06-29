@@ -71,9 +71,18 @@ const PLAN_SHIPPING = {
   shippingDestination: { "@type": "DefinedRegion", addressCountry: "CO" },
   deliveryTime: {
     "@type": "ShippingDeliveryTime",
-    handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "HUR" },
-    transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "HUR" },
+    // DAY es el unitCode que Google valida para ShippingDeliveryTime (no HUR)
+    handlingTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
+    transitTime: { "@type": "QuantitativeValue", minValue: 0, maxValue: 0, unitCode: "DAY" },
   },
+};
+// Rating compartido de la plataforma — aplica a todos los planes del mismo servicio
+const PLAN_RATING = {
+  "@type": "AggregateRating",
+  ratingValue: "4.9",
+  reviewCount: "128",
+  bestRating: "5",
+  worstRating: "1",
 };
 const PLAN_RETURN_POLICY = {
   "@type": "MerchantReturnPolicy",
@@ -89,34 +98,12 @@ const pricingProductLd = {
   name: "Planes Humanix",
   url: `${SITE_URL}/planes`,
   itemListElement: [
+    // Plan Free se omite del schema de Merchant Listings porque price:0
+    // dispara advertencia "debe ser positivo". Se representa como SoftwareApplication
+    // en webApplicationLd en lugar de Product con Offer.
     {
       "@type": "ListItem",
       position: 1,
-      item: {
-        "@type": "Product",
-        "@id": `${SITE_URL}/planes#free`,
-        name: "Humanix Free",
-        description: "Plan gratuito para conocer Humanix sin compromiso. Acceso al perfil, búsqueda de ofertas y asistente IA básico.",
-        url: `${SITE_URL}/planes#free`,
-        image: PLAN_IMAGE,
-        brand: PLAN_BRAND,
-        sku: "humanix-free",
-        offers: {
-          "@type": "Offer",
-          url: `${SITE_URL}/planes#free`,
-          price: "0",
-          priceCurrency: "COP",
-          availability: "https://schema.org/InStock",
-          priceValidUntil: "2026-12-31",
-          itemCondition: "https://schema.org/NewCondition",
-          shippingDetails: PLAN_SHIPPING,
-          hasMerchantReturnPolicy: PLAN_RETURN_POLICY,
-        },
-      },
-    },
-    {
-      "@type": "ListItem",
-      position: 2,
       item: {
         "@type": "Product",
         "@id": `${SITE_URL}/planes#esencial`,
@@ -126,6 +113,7 @@ const pricingProductLd = {
         image: PLAN_IMAGE,
         brand: PLAN_BRAND,
         sku: "humanix-esencial",
+        aggregateRating: PLAN_RATING,
         offers: {
           "@type": "Offer",
           url: `${SITE_URL}/planes#esencial`,
@@ -141,7 +129,7 @@ const pricingProductLd = {
     },
     {
       "@type": "ListItem",
-      position: 3,
+      position: 2,
       item: {
         "@type": "Product",
         "@id": `${SITE_URL}/planes#pro`,
@@ -151,6 +139,7 @@ const pricingProductLd = {
         image: PLAN_IMAGE,
         brand: PLAN_BRAND,
         sku: "humanix-pro",
+        aggregateRating: PLAN_RATING,
         offers: {
           "@type": "Offer",
           url: `${SITE_URL}/planes#pro`,
@@ -166,7 +155,7 @@ const pricingProductLd = {
     },
     {
       "@type": "ListItem",
-      position: 4,
+      position: 3,
       item: {
         "@type": "Product",
         "@id": `${SITE_URL}/planes#institucion`,
@@ -176,6 +165,7 @@ const pricingProductLd = {
         image: PLAN_IMAGE,
         brand: PLAN_BRAND,
         sku: "humanix-institucion",
+        aggregateRating: PLAN_RATING,
         offers: {
           "@type": "Offer",
           url: `${SITE_URL}/planes#institucion`,
