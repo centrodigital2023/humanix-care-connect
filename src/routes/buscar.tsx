@@ -48,7 +48,9 @@ type SearchParams = {
 export const Route = createFileRoute("/buscar")({
   validateSearch: (search: Record<string, unknown>): SearchParams => {
     const tabRaw = search.tab;
-    const tab = tabRaw === "ofertas" ? "ofertas" : "profesionales";
+    // Omit `tab` from returned params when it is the default ("profesionales")
+    // so that /buscar stays as /buscar (no 307 redirect to ?tab=profesionales).
+    const tab: SearchParams["tab"] = tabRaw === "ofertas" ? "ofertas" : undefined;
     const modalityRaw = search.modality;
     const modality =
       modalityRaw === "hour" ||
