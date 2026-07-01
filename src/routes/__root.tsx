@@ -131,9 +131,9 @@ function RootShell({ children }: { children: React.ReactNode }) {
         />
         {/* Google AdSense — carga diferida para no penalizar CWV */}
         <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){var P='${import.meta.env.VITE_ADSENSE_PUBLISHER_ID||""}';if(!P||P.includes('XXXX'))return;function loadAds(){if(document.querySelector('script[src*="adsbygoogle"]'))return;var s=document.createElement('script');s.async=true;s.crossOrigin='anonymous';s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+P;document.head.appendChild(s);}if('requestIdleCallback' in window){requestIdleCallback(loadAds,{timeout:5000})}else{setTimeout(loadAds,4000)}})();`,
-          }}
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${import.meta.env.VITE_ADSENSE_PUBLISHER_ID || "ca-pub-8031748290470507"}`}
+          crossOrigin="anonymous"
         />
         {/* Defer Meta Pixel hasta idle para no bloquear el hilo principal */}
         <script
